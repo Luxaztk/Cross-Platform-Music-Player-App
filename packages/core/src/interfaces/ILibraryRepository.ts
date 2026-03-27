@@ -1,0 +1,14 @@
+import type { Song, Playlist, PlaylistDetail, ImportResult } from '@music/types';
+
+export interface ILibraryRepository {
+  getLibrary(): Promise<{ songs: Song[]; library: Playlist }>;
+  getPlaylists(): Promise<Playlist[]>;
+  getPlaylistById(id: string): Promise<PlaylistDetail | null>;
+  createPlaylist(name: string): Promise<Playlist>;
+  updatePlaylist(playlist: Playlist): Promise<Playlist>;
+  updateSong(song: Song): Promise<Song>;
+  deleteSong(songId: string): Promise<boolean>;
+  deletePlaylist(playlistId: string): Promise<boolean>;
+  importFiles(): Promise<ImportResult>;
+  importFolder(): Promise<ImportResult>;
+}

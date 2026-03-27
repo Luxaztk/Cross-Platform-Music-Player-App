@@ -1,0 +1,224 @@
+.sidebar {
+  width: 23%;
+  min-width: 240px;
+  background-color: var(--bg-sidebar);
+  /* slightly darker than main bg for contrast */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-right: 1px solid var(--border-color);
+  padding: var(--spacing-md);
+  box-sizing: border-box;
+  transition: width var(--transition-fast), padding var(--transition-fast);
+}
+
+.sidebar.collapsed {
+  width: 72px;
+  min-width: 72px;
+  padding: var(--spacing-md) var(--spacing-xs);
+  align-items: center;
+}
+
+.library-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+  position: relative;
+  height: 24px;
+}
+
+.sidebar-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-md);
+  opacity: 0;
+  width: 0;
+  margin-right: 0;
+  overflow: hidden;
+  transition: width 0.2s ease, opacity 0.2s ease, margin-right 0.2s ease, background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+}
+
+.library-header:hover .sidebar-toggle-btn {
+  opacity: 1;
+  width: 24px;
+  margin-right: var(--spacing-xs);
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-text-main);
+}
+
+.sidebar-nav {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.nav-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.nav-section h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+  padding-right: var(--spacing-sm);
+}
+
+.add-playlist-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xl);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  opacity: 0;
+}
+
+.section-header:hover .add-playlist-btn {
+  opacity: 1;
+}
+
+.add-playlist-btn:hover {
+  color: var(--color-text-main);
+  background-color: var(--bg-surface-hover);
+}
+
+.empty-playlists {
+  padding: var(--spacing-md) var(--spacing-sm);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  text-align: center;
+  margin: 0 var(--spacing-xs);
+}
+
+.empty-playlists p {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing-sm);
+}
+
+.create-first-btn {
+  background-color: var(--bg-inverse);
+  color: var(--color-inverse);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 500px;
+  font-size: var(--font-size-xs);
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.create-first-btn:hover {
+  transform: scale(1.05);
+}
+
+.nav-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-main);
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+  gap: 12px;
+}
+
+.nav-item:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.nav-item.active {
+  background-color: var(--bg-surface);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.sidebar-loading {
+  padding-left: var(--spacing-sm);
+  color: var(--color-text-dim);
+  font-size: var(--font-size-base);
+}
+
+.sidebar-nav.mini {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  align-items: center;
+  width: 100%;
+}
+
+.nav-item.mini {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity var(--transition-fast), background-color var(--transition-fast);
+}
+
+.sidebar-nav.mini:hover .nav-item.mini {
+  opacity: 1;
+}
+
+.nav-item.mini.accent {
+  color: var(--color-primary);
+  background-color: var(--bg-surface);
+}
+
+.more-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.nav-item:hover .more-btn {
+  opacity: 1;
+}
+
+.more-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-text-main);
+}

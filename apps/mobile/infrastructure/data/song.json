@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1",
+    "title": "Blinding Lights",
+    "artist": "The Weeknd",
+    "duration": 200,
+    "audioUrl": "https://example.com/audio1.mp3"
+  },
+  {
+    "id": "2",
+    "title": "Levitating",
+    "artist": "Dua Lipa",
+    "duration": 203,
+    "audioUrl": "https://example.com/audio2.mp3"
+  },
+  {
+    "id": "3",
+    "title": "Peaches",
+    "artist": "Justin Bieber",
+    "duration": 198,
+    "audioUrl": "https://example.com/audio3.mp3"
+  },
+  {
+    "id": "4",
+    "title": "Stay",
+    "artist": "The Kid LAROI",
+    "duration": 141,
+    "audioUrl": "https://example.com/audio4.mp3"
+  }
+]

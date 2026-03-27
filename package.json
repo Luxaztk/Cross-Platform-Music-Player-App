@@ -1,0 +1,35 @@
+{
+  "name": "melovista",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "desktop": "npm run dev --workspace=desktop",
+    "mobile": "npm run android --workspace=mobile",
+    "test": "echo \"No test configured\"",
+    "format": "prettier --write .",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Luxaztk/Cross-Platform-Music-Player-App.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Melovista - Cross platform music player (Electron + React Native)",
+  "bugs": {
+    "url": "https://github.com/Luxaztk/Cross-Platform-Music-Player-App/issues"
+  },
+  "homepage": "https://github.com/Luxaztk/Cross-Platform-Music-Player-App#readme",
+  "dependencies": {
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.4"
+  }
+}

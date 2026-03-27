@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "title": "Liked Songs",
+    "description": "Your favorite tracks",
+    "thumbnail": "https://picsum.photos/300?1",
+    "songIds": ["1", "2", "3", "4"],
+    "createdAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "2",
+    "title": "Chill Vibes",
+    "description": "Relax & focus",
+    "thumbnail": "https://picsum.photos/300?2",
+    "songIds": ["2", "3"],
+    "createdAt": "2026-01-02T00:00:00Z"
+  },
+  {
+    "id": "3",
+    "title": "Workout Mix",
+    "description": "High energy tracks",
+    "thumbnail": "https://picsum.photos/300?3",
+    "songIds": ["1", "4"],
+    "createdAt": "2026-01-03T00:00:00Z"
+  }
+]

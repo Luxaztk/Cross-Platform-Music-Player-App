@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@core": ["packages/core/src/index.ts"],
+      "@core/*": ["packages/core/src/*"],
+
+      "@player": ["packages/player/src/index.ts"],
+      "@player/*": ["packages/player/src/*"],
+
+      "@types": ["packages/types/src/index.ts"],
+      "@types/*": ["packages/types/src/*"],
+
+      "@utils": ["packages/utils/src/index.ts"],
+      "@utils/*": ["packages/utils/src/*"],
+
+      "@hooks": ["packages/hooks/src/index.ts"],
+      "@hooks/*": ["packages/hooks/src/*"],
+
+      "@ui": ["packages/ui/src/index.ts"],
+      "@ui/*": ["packages/ui/src/*"]
+    }
+  }
+}

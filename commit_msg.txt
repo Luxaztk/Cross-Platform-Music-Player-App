@@ -1,0 +1,8 @@
+refactor: unify application layer and implement adapter pattern
+
+- Move shared Use Cases to packages/core.
+- Define ILibraryRepository port in packages/core.
+- Implement Electron and Mobile Library Repositories as Adapters.
+- Update Desktop/Mobile hooks to consume core Use Cases.
+- Consolidate PlaylistDetail model into shared types.
+- Remove redundant local domain models and use cases.
