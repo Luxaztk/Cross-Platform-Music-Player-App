@@ -11,6 +11,7 @@
     display: flex;
     flex-grow: 1;
     overflow: hidden;
+    min-height: 0; // Ensure it can shrink within the flex container
   }
 
   .main-area {
@@ -18,5 +19,6 @@
     overflow-y: auto;
     padding: var(--spacing-md) var(--spacing-lg);
     background: linear-gradient(to bottom, #1a1a1a 0%, var(--bg-primary) 100%);
+    min-height: 0; // Allow content to be contained with scrollbar
   }
 }

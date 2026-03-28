@@ -33,7 +33,9 @@ export const PlaylistDetailPage: React.FC = () => {
 
   // New States
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
+  const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
   const [editingSong, setEditingSong] = React.useState<Song | null>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
 
   const {
     handleImportFiles,
@@ -69,10 +71,16 @@ export const PlaylistDetailPage: React.FC = () => {
 
   // Click out to close menu
   React.useEffect(() => {
-    const handleClickOut = () => setActiveMenuId(null);
-    window.addEventListener('click', handleClickOut);
+    const handleClickOut = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveMenuId(null);
+      }
+    };
+    if (activeMenuId) {
+      window.addEventListener('click', handleClickOut);
+    }
     return () => window.removeEventListener('click', handleClickOut);
-  }, []);
+  }, [activeMenuId]);
 
   const onSaveMetadata = async (updated: any) => {
     if (editingSong) {
@@ -232,7 +240,7 @@ export const PlaylistDetailPage: React.FC = () => {
           <p className="no-songs">{t('playlist.noSongs')}</p>
         ) : (
           localSongs.map((song, index) => (
-            <div key={song.id} className="song-row">
+            <div key={song.id} className={`song-row ${activeMenuId === song.id ? 'menu-open' : ''}`}>
               <div className="col-idx">{index + 1}</div>
               <div className="col-title">
                 <div className="song-cell">
@@ -263,13 +271,25 @@ export const PlaylistDetailPage: React.FC = () => {
                   className={`row-more-btn ${activeMenuId === song.id ? 'active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setActiveMenuId(activeMenuId === song.id ? null : song.id);
+                    if (activeMenuId === song.id) {
+                      setActiveMenuId(null);
+                    } else {
+                      // Calculate placement
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const spaceBelow = window.innerHeight - rect.bottom;
+                      const menuHeight = 120;
+                      
+                      setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
+                      setActiveMenuId(song.id);
+                    }
                   }}
                 >
                   <MoreVertical size={ICON_SIZES.SMALL} />
                 </button>
                 {activeMenuId === song.id && (
-                  <div className="more-menu" onClick={(e) => e.stopPropagation()}>
+                  <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} 
+                    ref={menuRef}
+                    onClick={(e) => e.stopPropagation()}>
                     <button className="menu-item" onClick={() => {
                       setEditingSong(song);
                       setIsEditModalOpen(true);

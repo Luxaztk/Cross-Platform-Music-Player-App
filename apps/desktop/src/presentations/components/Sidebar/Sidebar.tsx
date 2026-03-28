@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
+import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { useLibrary } from '../../../application/hooks';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
@@ -17,6 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
+  const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
   const [editingPlaylist, setEditingPlaylist] = React.useState<any | null>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -27,9 +28,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       }
     };
     if (activeMenuId) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('click', handleClickOutside);
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, [activeMenuId]);
 
   const onCreatePlaylist = async () => {
@@ -66,7 +67,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   const toggleMenu = (e: React.MouseEvent, playlistId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setActiveMenuId(activeMenuId === playlistId ? null : playlistId);
+
+    if (activeMenuId === playlistId) {
+      setActiveMenuId(null);
+    } else {
+      // Calculate placement
+      const rect = e.currentTarget.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const menuHeight = 120; // Estimated height for edit/delete menu
+
+      setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
+      setActiveMenuId(playlistId);
+    }
   };
 
   // Filter out library playlist (id=0) for the Playlists section
@@ -76,7 +88,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {!isCollapsed && (
         <nav className="sidebar-nav">
-          <div className="nav-section">
+          <div className="nav-section-library">
             <div className="library-header">
               <button className="sidebar-toggle-btn" onClick={onToggle} title={t('common.edit')}>
                 <ChevronLeft size={ICON_SIZES.SMALL} />
@@ -87,7 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
               <li>
                 <NavLink
                   to="/playlist/0"
-                  className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                  className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${activeMenuId === '0' ? 'menu-open' : ''}`}
                 >
                   <Music className="icon" size={ICON_SIZES.SMALL} />
                   <span className="text">{t('sidebar.allSongs')}</span>
@@ -99,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
             </ul>
           </div>
 
-          <div className="nav-section">
+          <div className="nav-section-playlists">
             <div className="section-header">
               <h3>{t('sidebar.playlists')}</h3>
               <button className="add-playlist-btn" title={t('sidebar.createPlaylist')} onClick={onCreatePlaylist}>
@@ -114,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
             ) : (
               <ul>
                 {customPlaylists.map(playlist => (
-                  <li key={playlist.id}>
+                  <li key={playlist.id} className={activeMenuId === playlist.id ? 'menu-open' : ''}>
                     <NavLink
                       to={`/playlist/${playlist.id}`}
                       className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -122,20 +134,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                       <ListMusic className="icon" size={ICON_SIZES.SMALL} />
                       <span className="text">{playlist.name}</span>
                       <div className="col-more">
-                        <button 
-                          className={`more-btn ${activeMenuId === playlist.id ? 'active' : ''}`} 
-                          onClick={(e) => toggleMenu(e, playlist.id)} 
+                        <button
+                          className={`more-btn ${activeMenuId === playlist.id ? 'active' : ''}`}
+                          onClick={(e) => toggleMenu(e, playlist.id)}
                           title={t('header.settings')}
                         >
                           <MoreVertical size={ICON_SIZES.TINY} />
                         </button>
-                        
+
                         {activeMenuId === playlist.id && (
-                          <div className="more-menu" ref={menuRef}>
+                          <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} ref={menuRef}>
                             <button className="menu-item" onClick={(e) => onEditPlaylist(e, playlist)}>
+                              <Edit2 size={14} />
                               <span>{t('common.edit')}</span>
                             </button>
                             <button className="menu-item delete" onClick={(e) => onDeletePlaylist(e, playlist.id)}>
+                              <Trash2 size={14} />
                               <span>{t('common.delete')}</span>
                             </button>
                           </div>

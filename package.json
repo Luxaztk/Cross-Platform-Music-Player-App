@@ -7,8 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "desktop": "npm run dev --workspace=desktop",
-    "mobile": "npm run android --workspace=mobile",
+    "desktop": "npm run dev --workspace=apps/desktop",
+    "mobile": "npm run android --workspace=apps/mobile",
     "test": "echo \"No test configured\"",
     "format": "prettier --write .",
     "lint": "eslint ."
