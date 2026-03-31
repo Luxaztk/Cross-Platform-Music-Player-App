@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2 } from 'lucide-react';
-import { useLibrary } from '../../../application/hooks';
+import { useLibraryContext } from '../Library';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { EditModal } from '../EditModal';
@@ -14,7 +14,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
-  const { playlists, handleCreatePlaylist, handleDeletePlaylist, handleUpdatePlaylist } = useLibrary();
+  const { playlists, handleCreatePlaylist, handleDeletePlaylist, handleUpdatePlaylist } = useLibraryContext();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);

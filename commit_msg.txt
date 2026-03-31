@@ -1,18 +1,10 @@
-refactor: integrate Inter font offline + project-wide cleanup
+fix: resolve Sass deprecation warnings and Vite font loading errors
 
-Font Integration:
-- Add Inter v5.2.8 with @font-face declarations (latin, latin-ext, vietnamese)
-- Create fonts.scss with woff2 sources for weights 100-900
-- Update typography.scss/json to use 'Inter' as primary font
-- Add @music/brand alias in vite.config.ts
-- Import brand typography in ThemeProvider.scss
+Dart Sass Updates:
+- Replace deprecated `@import` with `@use` in `typography.scss` and `ThemeProvider.scss`
+- Refactor `_declare-inter` mixin in `fonts.scss` to completely eliminate the deprecated Sass `if()` function by passing explicit suffix and style arguments.
 
-Project Cleanup (post-audit):
-- Remove duplicate ILibraryRepository (domain/) and dead LibraryUseCases
-- Standardize imports: relative paths → @music/types, @music/core
-- Delete 10 legacy .css files (migrated to .scss), fix NotificationProvider import
-- Remove dead PlaylistsPage component (no route), unused useLibrary hook
-- Remove unused tsconfig.base.json (stale aliases never referenced)
-- Delete default Vite assets (react.svg, vite.svg, hero.png)
-- Add pickImage to Window.electronAPI type, fix EditModal type safety
-- Add README placeholders for packages/hooks, packages/player, packages/ui
+Font Loading Fix (OTS parsing error):
+- Fix `Failed to decode downloaded font` caused by invalid relative paths returning the `index.html` fallback.
+- Update `$_inter-path` in `fonts.scss` to use the `@music/brand` Vite workspace alias, ensuring `.woff2` fonts are correctly resolved, hashed, and served by Vite's asset pipeline.
+- Hard-clear Vite cache (`node_modules/.vite`) and inject a cache-busting comment in `ThemeProvider.scss` to force CSS recompilation across the workspace boundary.

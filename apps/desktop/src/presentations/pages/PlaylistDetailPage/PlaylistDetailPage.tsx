@@ -1,7 +1,8 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2 } from 'lucide-react';
-import { useLibrary, useNotification } from '../../../application/hooks';
+import { useNotification } from '../../../application/hooks';
+import { useLibraryContext } from '../../components/Library';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { EditModal } from '../../components/EditModal';
@@ -46,7 +47,7 @@ export const PlaylistDetailPage: React.FC = () => {
     handleUpdatePlaylist,
     handleUpdateSong,
     handleDeleteSong
-  } = useLibrary();
+  } = useLibraryContext();
 
   const { showNotification } = useNotification();
   const { t } = useLanguage();

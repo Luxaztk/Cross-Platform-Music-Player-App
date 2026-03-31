@@ -1,23 +1,22 @@
 // Inter Font Faces (v5.2.8)
 // Using local woff2 files for optimal performance in Electron
 
-$inter-path: './fonts/inter_5.2.8/webfonts';
+$_inter-path: '@music/brand/typography/fonts/inter_5.2.8/webfonts';
 
-@mixin declare-inter($weight, $style: normal) {
-  $suffix: if($style == italic, '-italic', '-normal');
+@mixin _declare-inter($weight, $suffix, $style) {
   @font-face {
     font-family: 'Inter';
     font-style: $style;
     font-weight: $weight;
     font-display: swap;
-    src: url('#{$inter-path}/inter-latin-#{$weight}#{$suffix}.woff2') format('woff2'),
-         url('#{$inter-path}/inter-latin-ext-#{$weight}#{$suffix}.woff2') format('woff2'),
-         url('#{$inter-path}/inter-vietnamese-#{$weight}#{$suffix}.woff2') format('woff2');
+    src: url('#{$_inter-path}/inter-latin-#{$weight}#{$suffix}.woff2') format('woff2'),
+         url('#{$_inter-path}/inter-latin-ext-#{$weight}#{$suffix}.woff2') format('woff2'),
+         url('#{$_inter-path}/inter-vietnamese-#{$weight}#{$suffix}.woff2') format('woff2');
   }
 }
 
-// Weights: 100 to 900
+// Weights: 100 to 900, normal + italic
 @each $w in (100, 200, 300, 400, 500, 600, 700, 800, 900) {
-  @include declare-inter($w, normal);
-  @include declare-inter($w, italic);
+  @include _declare-inter($w, '-normal', normal);
+  @include _declare-inter($w, '-italic', italic);
 }
