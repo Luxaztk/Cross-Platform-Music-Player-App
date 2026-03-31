@@ -5,6 +5,7 @@ import { useLibrary } from '../../../application/hooks';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { EditModal } from '../EditModal';
+import { DeleteConfirmationModal } from '../DeleteConfirmationModal/DeleteConfirmationModal';
 import './Sidebar.scss';
 
 interface SidebarProps {
@@ -19,6 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
   const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
   const [editingPlaylist, setEditingPlaylist] = React.useState<any | null>(null);
+  const [deletingPlaylist, setDeletingPlaylist] = React.useState<any | null>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -49,17 +51,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     setActiveMenuId(null);
   };
 
-  const onDeletePlaylist = async (e: React.MouseEvent, playlistId: string) => {
+  const onDeletePlaylist = (e: React.MouseEvent, playlist: any) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm(t('common.confirmDelete') || 'Are you sure you want to delete this playlist?')) {
-      const success = await handleDeletePlaylist(playlistId);
-      if (success) {
-        setActiveMenuId(null);
-        // If we are currently on the deleted playlist page, navigate home
-        if (window.location.hash.includes(`/playlist/${playlistId}`)) {
-          navigate('/playlist/0');
-        }
+    setDeletingPlaylist(playlist);
+    setActiveMenuId(null);
+  };
+
+  const confirmDeletePlaylist = async () => {
+    if (!deletingPlaylist) return;
+
+    const success = await handleDeletePlaylist(deletingPlaylist.id);
+    if (success) {
+      setDeletingPlaylist(null);
+      // If we are currently on the deleted playlist page, navigate home
+      if (window.location.hash.includes(`/playlist/${deletingPlaylist.id}`)) {
+        navigate('/playlist/0');
       }
     }
   };
@@ -148,7 +155,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                               <Edit2 size={14} />
                               <span>{t('common.edit')}</span>
                             </button>
-                            <button className="menu-item delete" onClick={(e) => onDeletePlaylist(e, playlist.id)}>
+                            <button className="menu-item delete" onClick={(e) => onDeletePlaylist(e, playlist)}>
                               <Trash2 size={14} />
                               <span>{t('common.delete')}</span>
                             </button>
@@ -190,6 +197,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
           }}
         />
       )}
+
+      <DeleteConfirmationModal
+        isOpen={!!deletingPlaylist}
+        onClose={() => setDeletingPlaylist(null)}
+        onConfirm={confirmDeletePlaylist}
+        title={t('modal.deletePlaylistTitle')}
+        message={t('modal.deletePlaylistQuestion')}
+        itemName={deletingPlaylist?.name}
+      />
     </aside>
   );
 };

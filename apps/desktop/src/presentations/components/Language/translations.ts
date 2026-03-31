@@ -59,6 +59,12 @@ export const translations = {
       songAlbum: 'Album',
       choosePhoto: 'Chọn ảnh',
       disclaimer: 'Bằng cách tiếp tục, bạn đồng ý cho phép Melovista truy cập vào hình ảnh bạn chọn tải lên. Vui lòng đảm bảo bạn có quyền tải lên hình ảnh này.',
+      deletePlaylistTitle: 'Xóa danh sách phát',
+      deletePlaylistQuestion: 'Bạn có chắc chắn muốn xóa danh sách phát',
+      deleteSongTitle: 'Xóa bài hát',
+      deleteSongQuestion: 'Bạn có chắc chắn muốn xóa bài hát',
+      deleteSongFromPlaylist: 'khỏi danh sách phát này?',
+      undoneWarning: 'Hành động này không thể hoàn tác.',
     }
   },
   en: {
@@ -119,6 +125,12 @@ export const translations = {
       songAlbum: 'Album',
       choosePhoto: 'Choose photo',
       disclaimer: 'By proceeding, you agree to give Melovista access to the image you choose to upload. Please make sure you have the right to upload the image.',
+      deletePlaylistTitle: 'Delete playlist',
+      deletePlaylistQuestion: 'Are you sure you want to delete the playlist',
+      deleteSongTitle: 'Delete song',
+      deleteSongQuestion: 'Are you sure you want to remove the song',
+      deleteSongFromPlaylist: 'from this playlist?',
+      undoneWarning: 'This action cannot be undone.',
     }
   }
 };

@@ -1,0 +1,44 @@
+{
+  "theme": {
+    "dark": {
+      "background": {
+        "primary": "#0a0a0a",
+        "surface": "rgba(255, 255, 255, 0.05)",
+        "surfaceHover": "rgba(255, 255, 255, 0.08)",
+        "surfaceSolid": "#1c1c1c"
+      },
+      "colors": {
+        "primary": "#10b981",
+        "primaryHover": "#059669",
+        "textMain": "#ffffff",
+        "textMuted": "#888888",
+        "textDim": "#666666",
+        "inverse": "#000000"
+      },
+      "border": {
+        "default": "rgba(255, 255, 255, 0.1)",
+        "focus": "rgba(16, 185, 129, 0.5)"
+      }
+    },
+    "light": {
+      "background": {
+        "primary": "#f8f9fa",
+        "surface": "rgba(0, 0, 0, 0.03)",
+        "surfaceHover": "rgba(0, 0, 0, 0.06)",
+        "surfaceSolid": "#ffffff"
+      },
+      "colors": {
+        "primary": "#10b981",
+        "primaryHover": "#059669",
+        "textMain": "#1a1a1a",
+        "textMuted": "#555555",
+        "textDim": "#888888",
+        "inverse": "#ffffff"
+      },
+      "border": {
+        "default": "rgba(0, 0, 0, 0.1)",
+        "focus": "rgba(16, 185, 129, 0.4)"
+      }
+    }
+  }
+}

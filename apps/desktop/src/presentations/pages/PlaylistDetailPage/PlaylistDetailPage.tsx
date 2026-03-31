@@ -5,6 +5,7 @@ import { useLibrary, useNotification } from '../../../application/hooks';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { EditModal } from '../../components/EditModal';
+import { DeleteConfirmationModal } from '../../components/DeleteConfirmationModal/DeleteConfirmationModal';
 import { useLanguage } from '../../components/Language';
 import './PlaylistDetailPage.scss';
 
@@ -35,6 +36,7 @@ export const PlaylistDetailPage: React.FC = () => {
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
   const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
   const [editingSong, setEditingSong] = React.useState<Song | null>(null);
+  const [deletingSong, setDeletingSong] = React.useState<Song | null>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   const {
@@ -100,13 +102,19 @@ export const PlaylistDetailPage: React.FC = () => {
     setIsEditModalOpen(false);
   };
 
-  const onDeleteSong = async (songId: string) => {
-    if (window.confirm(t('common.delete') + '?')) {
-      const success = await handleDeleteSong(songId);
-      if (success) {
-        setLocalSongs(prev => prev.filter(s => s.id !== songId));
-        showNotification('success', t('playlist.deleteSongSuccess'));
-      }
+  const onDeleteSong = (song: Song) => {
+    setDeletingSong(song);
+    setActiveMenuId(null);
+  };
+
+  const confirmDeleteSong = async () => {
+    if (!deletingSong) return;
+
+    const success = await handleDeleteSong(deletingSong.id);
+    if (success) {
+      setLocalSongs(prev => prev.filter(s => s.id !== deletingSong.id));
+      showNotification('success', t('playlist.deleteSongSuccess'));
+      setDeletingSong(null);
     }
   };
 
@@ -299,7 +307,7 @@ export const PlaylistDetailPage: React.FC = () => {
                       {t('common.edit')}
                     </button>
                     <button className="menu-item delete" onClick={() => {
-                      onDeleteSong(song.id);
+                      onDeleteSong(song);
                       setActiveMenuId(null);
                     }}>
                       <Trash2 size={16} />
@@ -322,6 +330,15 @@ export const PlaylistDetailPage: React.FC = () => {
           setEditingSong(null);
         }}
         onSave={onSaveMetadata}
+      />
+      <DeleteConfirmationModal
+        isOpen={!!deletingSong}
+        onClose={() => setDeletingSong(null)}
+        onConfirm={confirmDeleteSong}
+        title={t('modal.deleteSongTitle')}
+        message={t('modal.deleteSongQuestion')}
+        itemName={deletingSong?.title}
+        messageSuffix={t('modal.deleteSongFromPlaylist')}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import Store from 'electron-store';
 import type { Song, Playlist } from '@music/types';
-import type { IStorageAdapter } from '../../../../../packages/core/src/index';
+import type { IStorageAdapter } from '@music/core';
 
 interface StoreSchema {
   library: Playlist;

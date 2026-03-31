@@ -1,0 +1,28 @@
+// Melovista Typography
+@import "./fonts.scss";
+
+$font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+// Sizes
+$f-xs: 0.75rem;     // 12px
+$f-sm: 0.8125rem;   // 13px
+$f-base: 0.9375rem; // 15px
+$f-md: 1rem;        // 16px
+$f-lg: 1.25rem;     // 20px
+$f-xl: 1.5rem;      // 24px
+$f-2xl: 2.25rem;    // 36px
+
+// Weights
+$w-light: 300;
+$w-regular: 400;
+$w-medium: 500;
+$w-semibold: 600;
+$w-bold: 700;
+$w-black: 900;
+
+// Mixins
+@mixin text-gradient {
+  background: linear-gradient(135deg, $color-primary, $color-primary-hover);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

@@ -4,9 +4,15 @@ import babel from '@rolldown/plugin-babel'
 import { builtinModules } from 'node:module'
 
 import electron from 'vite-plugin-electron/simple'
+import path from 'node:path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@music/brand': path.resolve(__dirname, '../../packages/brand'),
+    },
+  },
   plugins: [
     react(),
     babel({ presets: [reactCompilerPreset()] }),

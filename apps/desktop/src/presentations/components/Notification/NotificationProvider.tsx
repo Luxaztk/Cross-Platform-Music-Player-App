@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { NotificationContext } from '../../../application/hooks';
 import type { Notification, NotificationType } from '../../../application/hooks';
 import { NotificationItem } from './Notification';
-import './Notification.css';
+import './Notification.scss';
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);

@@ -1,5 +1,5 @@
-import type { Song, Playlist, PlaylistDetail, ImportResult } from '../../../../../packages/types/index';
-import type { ILibraryRepository } from '../../../../../packages/core/src/index';
+import type { Song, Playlist, PlaylistDetail, ImportResult } from '@music/types';
+import type { ILibraryRepository } from '@music/core';
 
 // Declare global types for electronAPI
 declare global {
@@ -14,6 +14,7 @@ declare global {
       deletePlaylist: (playlistId: string) => Promise<boolean>;
       importFiles: () => Promise<ImportResult>;
       importFolder: () => Promise<ImportResult>;
+      pickImage: () => Promise<string | null>;
     }
   }
 }

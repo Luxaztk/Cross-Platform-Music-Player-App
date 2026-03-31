@@ -64,7 +64,7 @@ export const EditModal: React.FC<EditModalProps> = ({
 
   const handleChooseImage = async () => {
     try {
-      const path = await (window as any).electronAPI.pickImage();
+      const path = await window.electronAPI.pickImage();
       if (path) {
         if (type === 'playlist') {
           setThumbnail(path);
