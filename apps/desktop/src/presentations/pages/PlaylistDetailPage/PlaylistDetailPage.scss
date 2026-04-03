@@ -176,12 +176,19 @@
 
             .title-text {
               color: var(--color-text-main);
-              font-weight: 600;
+              font-weight: 500;
               font-size: 1rem;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
               display: block;
+              cursor: pointer;
+              transition: font-weight 0.2s ease, text-decoration 0.2s ease;
+
+              &:hover {
+                text-decoration: underline;
+                font-weight: 700;
+              }
             }
 
             .artist-text {

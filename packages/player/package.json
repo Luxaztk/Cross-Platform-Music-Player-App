@@ -3,5 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "main": "src/index.ts",
-  "types": "src/index.ts"
+  "types": "src/index.ts",
+  "dependencies": {
+    "howler": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/howler": "^2.2.12"
+  }
 }

@@ -5,6 +5,7 @@ import { NotificationProvider } from './presentations/components/Notification'
 import { ThemeProvider } from './presentations/components/Theme'
 import { LanguageProvider } from './presentations/components/Language'
 import { LibraryProvider } from './presentations/components/Library'
+import { PlayerProvider } from '@music/hooks'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -12,7 +13,9 @@ createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         <NotificationProvider>
           <LibraryProvider>
-            <App />
+            <PlayerProvider>
+              <App />
+            </PlayerProvider>
           </LibraryProvider>
         </NotificationProvider>
       </ThemeProvider>

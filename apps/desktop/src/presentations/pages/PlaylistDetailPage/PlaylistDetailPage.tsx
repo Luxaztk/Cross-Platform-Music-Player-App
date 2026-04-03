@@ -1,8 +1,9 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2 } from 'lucide-react';
+import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare } from 'lucide-react';
 import { useNotification } from '../../../application/hooks';
 import { useLibraryContext } from '../../components/Library';
+import { usePlayer } from '@music/hooks';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { EditModal } from '../../components/EditModal';
@@ -51,6 +52,7 @@ export const PlaylistDetailPage: React.FC = () => {
 
   const { showNotification } = useNotification();
   const { t } = useLanguage();
+  const { playList, playNext, addToQueue, currentSong } = usePlayer();
 
   const isLibrary = id === '0';
 
@@ -249,8 +251,17 @@ export const PlaylistDetailPage: React.FC = () => {
           <p className="no-songs">{t('playlist.noSongs')}</p>
         ) : (
           localSongs.map((song, index) => (
-            <div key={song.id} className={`song-row ${activeMenuId === song.id ? 'menu-open' : ''}`}>
-              <div className="col-idx">{index + 1}</div>
+            <div 
+              key={song.id} 
+              className={`song-row ${activeMenuId === song.id ? 'menu-open' : ''} ${currentSong?.id === song.id ? 'playing' : ''}`}
+            >
+              <div className="col-idx">
+                {currentSong?.id === song.id ? (
+                  <Play size={14} className="playing-icon" />
+                ) : (
+                  index + 1
+                )}
+              </div>
               <div className="col-title">
                 <div className="song-cell">
                   {song.coverArt ? (
@@ -261,7 +272,13 @@ export const PlaylistDetailPage: React.FC = () => {
                     </div>
                   )}
                   <div className="song-details">
-                    <span className="title-text">{song.title}</span>
+                    <span 
+                      className="title-text" 
+                      style={{ color: currentSong?.id === song.id ? 'var(--color-primary)' : undefined }}
+                      onClick={() => playList(localSongs, index)}
+                    >
+                      {song.title}
+                    </span>
                     <span className="artist-text">{song.artist}</span>
                   </div>
                 </div>
@@ -286,7 +303,7 @@ export const PlaylistDetailPage: React.FC = () => {
                       // Calculate placement
                       const rect = e.currentTarget.getBoundingClientRect();
                       const spaceBelow = window.innerHeight - rect.bottom;
-                      const menuHeight = 120;
+                      const menuHeight = 200;
                       
                       setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
                       setActiveMenuId(song.id);
@@ -299,6 +316,28 @@ export const PlaylistDetailPage: React.FC = () => {
                   <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} 
                     ref={menuRef}
                     onClick={(e) => e.stopPropagation()}>
+                    <button className="menu-item" onClick={() => {
+                      playList(localSongs, index);
+                      setActiveMenuId(null);
+                    }}>
+                      <Play size={16} />
+                      {t('playlist.playNow') || 'Phát ngay'}
+                    </button>
+                    <button className="menu-item" onClick={() => {
+                      playNext(song);
+                      setActiveMenuId(null);
+                    }}>
+                      <PlaySquare size={16} />
+                      {t('playlist.playNext') || 'Phát tiếp theo'}
+                    </button>
+                    <button className="menu-item" onClick={() => {
+                      addToQueue(song);
+                      setActiveMenuId(null);
+                    }}>
+                      <ListPlus size={16} />
+                      {t('playlist.addToQueue') || 'Thêm vào hàng đợi'}
+                    </button>
+                    <div className="menu-divider" style={{height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0'}}></div>
                     <button className="menu-item" onClick={() => {
                       setEditingSong(song);
                       setIsEditModalOpen(true);

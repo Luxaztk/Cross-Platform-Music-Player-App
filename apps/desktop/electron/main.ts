@@ -1,7 +1,12 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol, net, session } from 'electron';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { setupLibraryIPC } from './ipc/library';
+
+// Register custom scheme BEFORE app is ready
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'melovista', privileges: { secure: true, supportFetchAPI: true, bypassCSP: true, stream: true } }
+]);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +53,32 @@ app.on('activate', () => {
 });
 
 app.whenReady().then(() => {
+  // Protocol handler for melovista://
+  protocol.handle('melovista', (request) => {
+    const url = request.url;
+    const prefix = 'melovista://';
+    const filePath = decodeURIComponent(url.slice(prefix.length));
+    const targetUrl = pathToFileURL(filePath).toString();
+    return net.fetch(targetUrl);
+  });
+
+  // Inject CSP headers dynamically based on environment
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const isDev = !!VITE_DEV_SERVER_URL;
+    
+    // In Dev, we need 'unsafe-eval' for Vite HMR. In Prod, we strip it out.
+    const csp = isDev 
+      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: melovista:; media-src 'self' melovista:; connect-src 'self' http://localhost:5173 ws://localhost:5173;" 
+      : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: melovista:; media-src 'self' melovista:; connect-src 'self';";
+
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [csp]
+      }
+    });
+  });
+
   setupLibraryIPC();
   createWindow();
 });
