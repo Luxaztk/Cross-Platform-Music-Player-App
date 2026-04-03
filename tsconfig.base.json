@@ -7,23 +7,19 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@core": ["packages/core/src/index.ts"],
-      "@core/*": ["packages/core/src/*"],
-
-      "@player": ["packages/player/src/index.ts"],
-      "@player/*": ["packages/player/src/*"],
-
-      "@types": ["packages/types/src/index.ts"],
-      "@types/*": ["packages/types/src/*"],
-
-      "@utils": ["packages/utils/src/index.ts"],
-      "@utils/*": ["packages/utils/src/*"],
-
-      "@hooks": ["packages/hooks/src/index.ts"],
-      "@hooks/*": ["packages/hooks/src/*"],
-
-      "@ui": ["packages/ui/src/index.ts"],
-      "@ui/*": ["packages/ui/src/*"]
+      "@music/core": ["packages/core/src/index.ts"],
+      "@music/core/*": ["packages/core/src/*"],
+      "@music/player": ["packages/player/src/index.ts"],
+      "@music/player/*": ["packages/player/src/*"],
+      "@music/types": ["packages/types/index.ts"],
+      "@music/types/*": ["packages/types/*"],
+      "@music/hooks": ["packages/hooks/index.ts"],
+      "@music/hooks/*": ["packages/hooks/*"],
+      "@music/utils": ["packages/utils/src/index.ts"],
+      "@music/utils/*": ["packages/utils/src/*"],
+      "@music/ui": ["packages/ui/index.ts"],
+      "@music/ui/*": ["packages/ui/*"],
+      "@music/brand": ["packages/brand"]
     }
   }
 }

@@ -39,7 +39,8 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 
 ### 🔴 GIAI ĐOẠN 1: Hoàn thiện MVP (Mức độ ưu tiên CAO)
 Mục tiêu: Đảm bảo người dùng có thể sử dụng hàng ngày ổn định.
-- [ ] **Tìm kiếm toàn cục (Global Search)**: Tìm kiếm nhanh Song, Artist, Album.
+- [ ] **Tìm kiếm toàn cục (Global Search Overlay)**: Thanh công cụ ở Header để tìm kiếm nhanh Song, Artist, Album với giao diện Pop-up.
+- [ ] **Lọc danh sách Playlist (Sidebar Filter)**: Ô nhập liệu nhỏ ở Sidebar để lọc nhanh danh sách Playlist hiện có.
 - [ ] **Lưu trữ trạng thái (Persistence)**: Tự động lưu lại Queue và History khi tắt/mở app.
 - [ ] **Bộ lọc & Sắp xếp (Filter/Sort)**: Sắp xếp danh sách theo tên, ngày thêm, thời lượng.
 
@@ -53,6 +54,8 @@ Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 Mục tiêu: "Wow" người dùng bằng các tính năng cao cấp.
 - [ ] **Chủ đề (Themes)**: Chế độ Dark/Light và System auto-switch.
 - [ ] **Lời bài hát (Lyrics)**: Tự động tìm kiếm và hiển thị lời bài hát (Local hoặc Online).
+- [ ] **Trang Hồ sơ Nghệ sĩ (Artist Profile)**: Hiển thị các bài hát, album và thông tin chi tiết của từng nghệ sĩ.
+- [ ] **Lịch sử tìm kiếm (Recent Searches)**: Lưu và hiển thị các tìm kiếm gần đây.
 - [ ] **Hiệu ứng âm thanh (Audio FX)**: Bộ chỉnh âm (Equalizer), Visualizer (Sóng nhạc).
 
 ### 🔵 GIAI ĐOẠN 4: Triển khai Mobile (Transform)

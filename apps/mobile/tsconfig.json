@@ -3,15 +3,29 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@music/core": ["../../packages/core/src/index.ts"],
+      "@music/core/*": ["../../packages/core/src/*"],
+      "@music/types": ["../../packages/types/index.ts"],
+      "@music/types/*": ["../../packages/types/*"],
+      "@music/hooks": ["../../packages/hooks/index.ts"],
+      "@music/hooks/*": ["../../packages/hooks/*"],
+      "@music/player": ["../../packages/player/src/index.ts"],
+      "@music/player/*": ["../../packages/player/src/*"],
+      "@music/utils": ["../../packages/utils/src/index.ts"],
+      "@music/utils/*": ["../../packages/utils/src/*"],
+      "@music/ui": ["../../packages/ui/index.ts"],
+      "@music/ui/*": ["../../packages/ui/*"],
+      "@music/brand": ["../../packages/brand"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "../../packages/*/src/**/*.ts",
+    "../../packages/*/src/**/*.tsx",
+    "../../packages/*/index.ts"
   ]
 }

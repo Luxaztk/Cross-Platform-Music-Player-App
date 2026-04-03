@@ -1,7 +1,12 @@
-feat(player): upgrade core audio engine and security landscape
-- Implement advanced PlayerProvider with Queue, History (16 songs), Shuffle, and Repeat logic.
-- Refactor PlayerBar UI with native range inputs for smooth scrubbing and volume control.
-- Add Queue Popover panel with optimized 50-item rendering for performance.
-- Implement dynamic Environment-based CSP in Electron main process (Development vs. Production).
-- Update PlaylistDetailPage interaction logic (Single click on title to play, remove double-click).
-- Create and prioritize project roadmap in root task.md (MVP > Optimization > Visuals > Mobile).
+style(monorepo): standardize monorepo structure and fix workspace aliases
+
+- Remove duplicated `domain/` and `application/usecases/` in desktop app.
+- Fix TS aliases in base `tsconfig.base.json` to map `@music/*`.
+- Update desktop and mobile `tsconfig.json` for correct module resolution.
+- Standardize `packages/types` entry point and remove empty files.
+- Redesign Sidebar search UI with expandable input and smart toggle logic.
+- Add Sort and Filter placeholder icons to Sidebar with i18n support.
+- Improve Global Search Overlay UI popup menu logic resolving placement clipping.
+- Fix PlaylistDetailPage UI to display playlist information and songs.
+- Add Sort and Filter placeholder icons to Sidebar with i18n support.
+- Fix PlaylistDetailPage UI to display playlist information and songs.

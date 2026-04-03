@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ListFilter, ArrowUpDown } from 'lucide-react';
 import { useLibraryContext } from '../Library';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
@@ -21,7 +21,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
   const [editingPlaylist, setEditingPlaylist] = React.useState<any | null>(null);
   const [deletingPlaylist, setDeletingPlaylist] = React.useState<any | null>(null);
+  const [playlistQuery, setPlaylistQuery] = React.useState('');
+  const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -88,8 +91,28 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     }
   };
 
-  // Filter out library playlist (id=0) for the Playlists section
-  const customPlaylists = playlists.filter(p => String(p.id) !== '0');
+  const handleSearchToggle = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent blur from firing before toggle
+    if (isSearchExpanded) {
+      setIsSearchExpanded(false);
+      if (playlistQuery) setPlaylistQuery('');
+    } else {
+      setIsSearchExpanded(true);
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
+  };
+
+  const handleSearchBlur = () => {
+    // Only collapse if query is empty
+    if (!playlistQuery) {
+      setIsSearchExpanded(false);
+    }
+  };
+
+  // Filter out library playlist (id=0) and apply search query
+  const customPlaylists = playlists
+    .filter(p => String(p.id) !== '0')
+    .filter(p => p.name.toLowerCase().includes(playlistQuery.toLowerCase()));
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -121,9 +144,43 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
           <div className="nav-section-playlists">
             <div className="section-header">
               <h3>{t('sidebar.playlists')}</h3>
-              <button className="add-playlist-btn" title={t('sidebar.createPlaylist')} onClick={onCreatePlaylist}>
-                <Plus size={ICON_SIZES.SMALL} />
-              </button>
+              <div className="section-actions">
+                <button className="add-playlist-btn" title={t('sidebar.createPlaylist')} onClick={onCreatePlaylist}>
+                  <Plus size={ICON_SIZES.SMALL} />
+                </button>
+              </div>
+            </div>
+
+            <div className="library-controls">
+              <div className={`search-container ${isSearchExpanded ? 'expanded' : ''}`}>
+                <button 
+                  className={`search-btn ${playlistQuery ? 'has-query' : ''}`}
+                  onMouseDown={handleSearchToggle}
+                  title={t('header.searchPlaceholder')}
+                >
+                  <Search size={16} />
+                </button>
+                <div className="search-input-wrapper">
+                  <input 
+                    ref={searchInputRef}
+                    type="text" 
+                    placeholder={t('header.searchPlaceholder')} 
+                    value={playlistQuery}
+                    onChange={(e) => setPlaylistQuery(e.target.value)}
+                    onBlur={handleSearchBlur}
+                    className="playlist-search-input"
+                  />
+                </div>
+              </div>
+
+              <div className="controls-right-group">
+                <button className="control-btn placeholder" title={t('sidebar.sort')}>
+                  <ArrowUpDown size={16} />
+                </button>
+                <button className="control-btn placeholder" title={t('sidebar.filter')}>
+                  <ListFilter size={16} />
+                </button>
+              </div>
             </div>
             {customPlaylists.length === 0 ? (
               <div className="empty-playlists">

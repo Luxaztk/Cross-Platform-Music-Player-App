@@ -1,0 +1,56 @@
+import { useMemo } from 'react';
+import Fuse from 'fuse.js';
+import type { Song, Playlist } from '@music/types';
+
+export interface SearchResults {
+  songs: Song[];
+  playlists: Playlist[];
+  albums: { id: string; name: string; artist: string; coverArt?: string }[];
+  artists: { id: string; name: string; avatar?: string }[];
+}
+
+export const useSearch = (songs: Song[], playlists: Playlist[], query: string) => {
+  const songFuse = useMemo(() => new Fuse(songs, {
+    keys: ['title', 'artist', 'album'],
+    threshold: 0.3,
+    includeMatches: true,
+  }), [songs]);
+
+  const playlistFuse = useMemo(() => new Fuse(playlists, {
+    keys: ['name'],
+    threshold: 0.4,
+    includeMatches: true,
+  }), [playlists]);
+
+  const results = useMemo((): SearchResults => {
+    if (!query) return { songs: [], playlists: [], albums: [], artists: [] };
+
+    const songResults = songFuse.search(query).map((res: { item: Song }) => res.item);
+    const playlistResults = playlistFuse.search(query).map((res: { item: Playlist }) => res.item);
+
+    // Derive unique albums from matching songs
+    const albumMap = new Map<string, any>();
+    songs.forEach(song => {
+      if (song.album && song.album.toLowerCase().includes(query.toLowerCase())) {
+        albumMap.set(song.album, { id: `album-${song.album}`, name: song.album, artist: song.artist, coverArt: song.coverArt });
+      }
+    });
+
+    // Derive unique artists from matching songs
+    const artistMap = new Map<string, any>();
+    songs.forEach(song => {
+      if (song.artist && song.artist.toLowerCase().includes(query.toLowerCase())) {
+        artistMap.set(song.artist, { id: `artist-${song.artist}`, name: song.artist, avatar: song.coverArt }); // Using coverArt as placeholder avatar
+      }
+    });
+
+    return {
+      songs: songResults.slice(0, 10), // Limit to top 10 songs
+      playlists: playlistResults,
+      albums: Array.from(albumMap.values()).slice(0, 5),
+      artists: Array.from(artistMap.values()).slice(0, 5),
+    };
+  }, [songFuse, playlistFuse, query, songs]);
+
+  return results;
+};

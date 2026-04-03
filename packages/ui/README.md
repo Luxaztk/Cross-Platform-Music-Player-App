@@ -1,7 +1,8 @@
 # @music/ui
 
-> ⚠️ **Placeholder Package** — Dành cho tương lai.
+> Placeholder — Shared UI components for Melovista.
 
-Package này được dự trữ để chứa các UI components dùng chung (buttons, modals, inputs...) giữa Desktop và Mobile.
+This package is reserved for cross-platform UI primitives (buttons, inputs, etc.) that can be consumed by both `apps/desktop` and `apps/mobile`.
 
-**Khi nào sẽ dùng**: Khi cần tách các component tái sử dụng ra khỏi `apps/desktop` để chia sẻ với `apps/mobile`.
+## Status
+🚧 **Not implemented yet.** This package will be populated when the desktop UI stabilizes and shared components are extracted.

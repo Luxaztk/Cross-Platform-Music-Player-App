@@ -1,39 +1,89 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Search, User, Languages, Settings, LogOut } from 'lucide-react';
+import { Home, Search, User, Languages, Settings, LogOut, X, SlidersHorizontal } from 'lucide-react';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
+import { useSearch, useLibrary } from '../../../application/hooks';
+import { usePlayer } from '@music/hooks';
+import type { Song } from '@music/types';
+import { SearchOverlay } from './SearchOverlay';
 import './Header.scss';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
+  const { songs, playlists, setLibraryFilter } = useLibrary();
+  const { playList, playNext, addToQueue } = usePlayer();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [isSearchFocused, setIsSearchFocused] = React.useState(false);
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+  
+  const searchResults = useSearch(songs, playlists, searchQuery);
   const profileRef = React.useRef<HTMLDivElement>(null);
+  const searchRef = React.useRef<HTMLDivElement>(null);
+
+  const flatResults = [
+    ...searchResults.songs.map((s: Song) => ({ type: 'song', item: s })),
+    ...searchResults.artists.map((a: any) => ({ type: 'artist', item: a })),
+    ...searchResults.albums.map((al: any) => ({ type: 'album', item: al })),
+  ];
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
       }
-    };
-
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setShowProfileMenu(false);
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false);
       }
     };
 
-    if (showProfileMenu) {
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowProfileMenu(false);
+        setIsSearchFocused(false);
+      }
+
+      if (isSearchFocused && searchQuery) {
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          setSelectedIndex(prev => Math.min(prev + 1, flatResults.length - 1));
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          setSelectedIndex(prev => Math.max(prev - 1, 0));
+        } else if (event.key === 'Enter') {
+          const selected = flatResults[selectedIndex];
+          if (selected) handleSelectResult(selected);
+        }
+      }
+    };
+
+    if (showProfileMenu || isSearchFocused) {
       document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEsc);
+      document.addEventListener('keydown', handleKeydown);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEsc);
+      document.removeEventListener('keydown', handleKeydown);
     };
-  }, [showProfileMenu]);
+  }, [showProfileMenu, isSearchFocused, selectedIndex, flatResults, searchQuery]);
+
+  const handleSelectResult = (result: any) => {
+    if (result.type === 'song') {
+      const songIdx = songs.findIndex(s => s.id === result.item.id);
+      if (songIdx !== -1) playList(songs, songIdx);
+    } else if (result.type === 'artist') {
+        setLibraryFilter({ type: 'artist', value: result.item.name });
+        navigate('/playlist/0');
+    } else if (result.type === 'album') {
+        setLibraryFilter({ type: 'album', value: result.item.name });
+        navigate('/playlist/0');
+    }
+    setIsSearchFocused(false);
+    setSearchQuery('');
+  };
 
   return (
     <header className="app-header">
@@ -51,9 +101,40 @@ const Header: React.FC = () => {
         >
           <Home size={ICON_SIZES.LARGE} />
         </button>
-        <div className="search-bar">
+        <div className="search-bar" ref={searchRef}>
           <Search className="search-icon" size={ICON_SIZES.SMALL} />
-          <input type="text" placeholder={t('header.searchPlaceholder')} disabled />
+          <input 
+            type="text" 
+            placeholder={t('header.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setSelectedIndex(0);
+              setIsSearchFocused(true);
+            }}
+            onFocus={() => setIsSearchFocused(true)}
+          />
+          {searchQuery && (
+            <button className="clear-search" onClick={() => setSearchQuery('')}>
+              <X size={14} />
+            </button>
+          )}
+          <div className="search-divider" />
+          <button className="filter-options-btn">
+            <SlidersHorizontal size={14} />
+          </button>
+
+          {isSearchFocused && searchQuery && (
+             <SearchOverlay 
+                query={searchQuery}
+                results={searchResults}
+                selectedIndex={selectedIndex}
+                onSelect={handleSelectResult}
+                onPlayNext={playNext}
+                onAddToQueue={addToQueue}
+                onClose={() => setIsSearchFocused(false)}
+             />
+          )}
         </div>
       </div>
 

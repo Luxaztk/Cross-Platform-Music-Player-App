@@ -27,6 +27,8 @@ export const translations = {
       createPlaylist: 'Danh sách phát',
       noPlaylists: 'Chưa có danh sách phát nào.',
       createFirst: 'Tạo danh sách phát đầu tiên',
+      sort: 'Sắp xếp theo',
+      filter: 'Lọc danh sách',
     },
     playlist: {
       songs: 'bài hát',
@@ -47,6 +49,9 @@ export const translations = {
       scanSuccess: 'Đã quét và thêm {count} bài hát!',
       processingData: 'Đang xử lý dữ liệu...',
       libraryTitle: 'Thư viện Nhạc',
+      playNow: 'Phát ngay',
+      playNext: 'Phát tiếp theo',
+      addToQueue: 'Thêm vào hàng đợi',
     },
     modal: {
       editDetails: 'Chỉnh sửa chi tiết',
@@ -65,6 +70,15 @@ export const translations = {
       deleteSongQuestion: 'Bạn có chắc chắn muốn xóa bài hát',
       deleteSongFromPlaylist: 'khỏi danh sách phát này?',
       undoneWarning: 'Hành động này không thể hoàn tác.',
+    },
+    search: {
+       songs: 'Bài hát',
+       artists: 'Nghệ sĩ',
+       albums: 'Album',
+       noResults: 'Không tìm thấy kết quả cho',
+       moveHint: 'Di chuyển',
+       playHint: 'Phát ngay',
+       filteringBy: 'Đang lọc:',
     }
   },
   en: {
@@ -93,6 +107,8 @@ export const translations = {
       createPlaylist: 'Playlist',
       noPlaylists: 'No playlists yet.',
       createFirst: 'Create your first',
+      sort: 'Sort by',
+      filter: 'Filter list',
     },
     playlist: {
       songs: 'songs',
@@ -113,6 +129,9 @@ export const translations = {
       scanSuccess: 'Scanned and added {count} songs!',
       processingData: 'Processing data...',
       libraryTitle: 'Music Library',
+      playNow: 'Play now',
+      playNext: 'Play next',
+      addToQueue: 'Add to queue',
     },
     modal: {
       editDetails: 'Edit details',
@@ -131,6 +150,15 @@ export const translations = {
       deleteSongQuestion: 'Are you sure you want to remove the song',
       deleteSongFromPlaylist: 'from this playlist?',
       undoneWarning: 'This action cannot be undone.',
+    },
+    search: {
+       songs: 'Songs',
+       artists: 'Artists',
+       albums: 'Albums',
+       noResults: 'No results found for',
+       moveHint: 'Move',
+       playHint: 'Play now',
+       filteringBy: 'Filtering by:',
     }
   }
 };

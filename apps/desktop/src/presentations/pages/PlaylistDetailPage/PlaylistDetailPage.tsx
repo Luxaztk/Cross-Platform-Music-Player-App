@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare } from 'lucide-react';
+import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare, X } from 'lucide-react';
 import { useNotification } from '../../../application/hooks';
 import { useLibraryContext } from '../../components/Library';
 import { usePlayer } from '@music/hooks';
@@ -47,7 +47,9 @@ export const PlaylistDetailPage: React.FC = () => {
     handleGetPlaylistDetail,
     handleUpdatePlaylist,
     handleUpdateSong,
-    handleDeleteSong
+    handleDeleteSong,
+    libraryFilter,
+    setLibraryFilter
   } = useLibraryContext();
 
   const { showNotification } = useNotification();
@@ -121,7 +123,22 @@ export const PlaylistDetailPage: React.FC = () => {
     }
   };
 
-  const totalDuration = localSongs.reduce((acc, song) => acc + (song.duration || 0), 0);
+  const filteredSongs = React.useMemo(() => {
+    if (isLibrary && libraryFilter.type !== 'none') {
+      return localSongs.filter(song => {
+        if (libraryFilter.type === 'artist') {
+          return song.artist.toLowerCase() === libraryFilter.value.toLowerCase();
+        }
+        if (libraryFilter.type === 'album') {
+          return song.album?.toLowerCase() === libraryFilter.value.toLowerCase();
+        }
+        return true;
+      });
+    }
+    return localSongs;
+  }, [localSongs, libraryFilter, isLibrary]);
+
+  const totalDuration = filteredSongs.reduce((acc, song) => acc + (song.duration || 0), 0);
 
   const onImportFiles = async () => {
     setIsImporting(true);
@@ -200,12 +217,23 @@ export const PlaylistDetailPage: React.FC = () => {
                   {localSongs.length > 0 && (
                     <>
                       <span className="metadata-separator">•</span>
-                      <span className="metadata-item">{localSongs.length} {t('playlist.songs')}</span>
+                      <span className="metadata-item">
+                        {libraryFilter.type !== 'none' ? `${filteredSongs.length} / ${localSongs.length}` : localSongs.length} {t('playlist.songs')}
+                      </span>
                       <span className="metadata-separator">•</span>
                       <span className="metadata-item">{formatTotalDuration(totalDuration, t)}</span>
                     </>
                   )}
                 </div>
+
+                {isLibrary && libraryFilter.type !== 'none' && (
+                  <div className="active-filter-badge">
+                    <span>{t('search.filteringBy')} <strong>{libraryFilter.value}</strong></span>
+                    <button className="clear-filter-btn" onClick={() => setLibraryFilter({ type: 'none', value: '' })}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
 
                 {/* Inline Actions */}
                 <div className="header-actions-inline">
@@ -247,10 +275,10 @@ export const PlaylistDetailPage: React.FC = () => {
           <div className="col-duration">{t('playlist.duration')}</div>
           <div className="col-more"></div>
         </div>
-        {localSongs.length === 0 ? (
+        {filteredSongs.length === 0 ? (
           <p className="no-songs">{t('playlist.noSongs')}</p>
         ) : (
-          localSongs.map((song, index) => (
+          filteredSongs.map((song, index) => (
             <div 
               key={song.id} 
               className={`song-row ${activeMenuId === song.id ? 'menu-open' : ''} ${currentSong?.id === song.id ? 'playing' : ''}`}
@@ -297,19 +325,21 @@ export const PlaylistDetailPage: React.FC = () => {
                   className={`row-more-btn ${activeMenuId === song.id ? 'active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (activeMenuId === song.id) {
-                      setActiveMenuId(null);
-                    } else {
-                      // Calculate placement
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const spaceBelow = window.innerHeight - rect.bottom;
-                      const menuHeight = 200;
-                      
-                      setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
-                      setActiveMenuId(song.id);
-                    }
-                  }}
-                >
+                      if (activeMenuId === song.id) {
+                        setActiveMenuId(null);
+                      } else {
+                        // Calculate placement relative to visible area (above player bar)
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const playerHeight = 90; 
+                        const visibleBottom = window.innerHeight - playerHeight;
+                        const spaceBelow = visibleBottom - rect.bottom;
+                        const menuHeight = 200;
+                        
+                        setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
+                        setActiveMenuId(song.id);
+                      }
+                    }}
+                  >
                   <MoreVertical size={ICON_SIZES.SMALL} />
                 </button>
                 {activeMenuId === song.id && (

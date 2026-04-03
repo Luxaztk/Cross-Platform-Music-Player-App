@@ -19,6 +19,8 @@ interface LibraryContextType {
   songs: Song[];
   library: Playlist | null;
   playlists: Playlist[];
+  libraryFilter: { type: 'artist' | 'album' | 'none'; value: string };
+  setLibraryFilter: (filter: { type: 'artist' | 'album' | 'none'; value: string }) => void;
   handleImportFiles: () => Promise<{ success: boolean; count: number }>;
   handleImportFolder: () => Promise<{ success: boolean; count: number }>;
   handleCreatePlaylist: (name?: string) => Promise<Playlist | null>;
@@ -37,6 +39,10 @@ export const LibraryProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [songs, setSongs] = useState<Song[]>([]);
   const [library, setLibrary] = useState<Playlist | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [libraryFilter, setLibraryFilter] = useState<{ type: 'artist' | 'album' | 'none'; value: string }>({ 
+    type: 'none', 
+    value: '' 
+  });
 
   const fetchLibrary = async () => {
     const data = await getLibraryUc.execute();
@@ -117,6 +123,8 @@ export const LibraryProvider: React.FC<{ children: ReactNode }> = ({ children })
       songs, 
       library, 
       playlists, 
+      libraryFilter,
+      setLibraryFilter,
       handleImportFiles, 
       handleImportFolder, 
       handleCreatePlaylist, 
