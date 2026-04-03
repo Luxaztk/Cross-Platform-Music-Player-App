@@ -1,10 +1,7 @@
-fix: resolve Sass deprecation warnings and Vite font loading errors
-
-Dart Sass Updates:
-- Replace deprecated `@import` with `@use` in `typography.scss` and `ThemeProvider.scss`
-- Refactor `_declare-inter` mixin in `fonts.scss` to completely eliminate the deprecated Sass `if()` function by passing explicit suffix and style arguments.
-
-Font Loading Fix (OTS parsing error):
-- Fix `Failed to decode downloaded font` caused by invalid relative paths returning the `index.html` fallback.
-- Update `$_inter-path` in `fonts.scss` to use the `@music/brand` Vite workspace alias, ensuring `.woff2` fonts are correctly resolved, hashed, and served by Vite's asset pipeline.
-- Hard-clear Vite cache (`node_modules/.vite`) and inject a cache-busting comment in `ThemeProvider.scss` to force CSS recompilation across the workspace boundary.
+feat(player): upgrade core audio engine and security landscape
+- Implement advanced PlayerProvider with Queue, History (16 songs), Shuffle, and Repeat logic.
+- Refactor PlayerBar UI with native range inputs for smooth scrubbing and volume control.
+- Add Queue Popover panel with optimized 50-item rendering for performance.
+- Implement dynamic Environment-based CSP in Electron main process (Development vs. Production).
+- Update PlaylistDetailPage interaction logic (Single click on title to play, remove double-click).
+- Create and prioritize project roadmap in root task.md (MVP > Optimization > Visuals > Mobile).
