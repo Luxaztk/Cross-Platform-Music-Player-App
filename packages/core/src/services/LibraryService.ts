@@ -1,4 +1,5 @@
-import type { Song, Playlist } from '@music/types';
+import type { Song, Playlist, PlaylistDetail } from '@music/types';
+
 import type { IStorageAdapter } from '../interfaces/IStorageAdapter';
 
 // We'll use a simple fallback if crypto.randomUUID is not available (e.g. in some mobile environments)
@@ -33,9 +34,9 @@ export class LibraryService {
    * Priority 1: File Path match
    * Priority 2 & 3: File Name + Artist match
    */
-  public processAndAddSongs(newSongs: Song[]): { addedCount: number; duplicatePaths: string[] } {
-    const currentSongs = this.storageAdapter.getSongs();
-    const currentLibrary = this.storageAdapter.getLibrary();
+  public async processAndAddSongs(newSongs: Song[]): Promise<{ addedCount: number; duplicatePaths: string[] }> {
+    const currentSongs = await this.storageAdapter.getSongs();
+    const currentLibrary = await this.storageAdapter.getLibrary();
     
     // Clone purely for immutability and predictability
     const songs = { ...currentSongs };
@@ -75,8 +76,8 @@ export class LibraryService {
     }
 
     // Save back using the adapter
-    this.storageAdapter.saveSongs(songs);
-    this.storageAdapter.saveLibrary(libraryUpdate);
+    await this.storageAdapter.saveSongs(songs);
+    await this.storageAdapter.saveLibrary(libraryUpdate);
 
     return { addedCount, duplicatePaths };
   }
@@ -84,8 +85,8 @@ export class LibraryService {
   /**
    * Creates a new empty playlist with a default name and unique ID.
    */
-  public createPlaylist(name: string): Playlist {
-    const playlists = this.storageAdapter.getPlaylists();
+  public async createPlaylist(name: string): Promise<Playlist> {
+    const playlists = await this.storageAdapter.getPlaylists();
     
     // Filter out the "0" (Library) playlist if it exists in the keys
     const customPlaylists = { ...playlists };
@@ -101,7 +102,7 @@ export class LibraryService {
     };
 
     customPlaylists[id] = newPlaylist;
-    this.storageAdapter.savePlaylists(customPlaylists);
+    await this.storageAdapter.savePlaylists(customPlaylists);
 
     return newPlaylist;
   }
@@ -109,12 +110,12 @@ export class LibraryService {
   /**
    * Updates an existing playlist.
    */
-  public updatePlaylist(updatedPlaylist: Playlist): Playlist {
-    const playlists = this.storageAdapter.getPlaylists();
+  public async updatePlaylist(updatedPlaylist: Playlist): Promise<Playlist> {
+    const playlists = await this.storageAdapter.getPlaylists();
     
     // Check if it's the library (cannot edit library name/desc this way usually)
     if (updatedPlaylist.id === '0') {
-      this.storageAdapter.saveLibrary(updatedPlaylist);
+      await this.storageAdapter.saveLibrary(updatedPlaylist);
       return updatedPlaylist;
     }
 
@@ -122,7 +123,7 @@ export class LibraryService {
     delete customPlaylists['0'];
     
     customPlaylists[updatedPlaylist.id] = updatedPlaylist;
-    this.storageAdapter.savePlaylists(customPlaylists);
+    await this.storageAdapter.savePlaylists(customPlaylists);
 
     return updatedPlaylist;
   }
@@ -130,31 +131,31 @@ export class LibraryService {
   /**
    * Updates an existing song's metadata.
    */
-  public updateSong(updatedSong: Song): Song {
-    const songs = this.storageAdapter.getSongs();
+  public async updateSong(updatedSong: Song): Promise<Song> {
+    const songs = await this.storageAdapter.getSongs();
     songs[updatedSong.id] = updatedSong;
-    this.storageAdapter.saveSongs(songs);
+    await this.storageAdapter.saveSongs(songs);
     return updatedSong;
   }
 
   /**
    * Deletes a song from the library and all playlists.
    */
-  public deleteSong(songId: string): boolean {
-    const songs = this.storageAdapter.getSongs();
+  public async deleteSong(songId: string): Promise<boolean> {
+    const songs = await this.storageAdapter.getSongs();
     if (!songs[songId]) return false;
 
     // 1. Remove from songs record
     delete songs[songId];
-    this.storageAdapter.saveSongs(songs);
+    await this.storageAdapter.saveSongs(songs);
 
     // 2. Remove from library songIds
-    const library = this.storageAdapter.getLibrary();
+    const library = await this.storageAdapter.getLibrary();
     library.songIds = library.songIds.filter(id => id !== songId);
-    this.storageAdapter.saveLibrary(library);
+    await this.storageAdapter.saveLibrary(library);
 
     // 3. Remove from all playlists
-    const playlists = this.storageAdapter.getPlaylists();
+    const playlists = await this.storageAdapter.getPlaylists();
     let updatedPlaylists = false;
     
     for (const id in playlists) {
@@ -166,7 +167,7 @@ export class LibraryService {
     }
 
     if (updatedPlaylists) {
-      this.storageAdapter.savePlaylists(playlists);
+      await this.storageAdapter.savePlaylists(playlists);
     }
 
     return true;
@@ -175,8 +176,8 @@ export class LibraryService {
   /**
    * Deletes a playlist by ID.
    */
-  public deletePlaylist(playlistId: string): boolean {
-    const playlists = this.storageAdapter.getPlaylists();
+  public async deletePlaylist(playlistId: string): Promise<boolean> {
+    const playlists = await this.storageAdapter.getPlaylists();
     if (!playlists[playlistId]) return false;
 
     // Cannot delete the main Library playlist ("0")
@@ -184,8 +185,60 @@ export class LibraryService {
 
     const customPlaylists = { ...playlists };
     delete customPlaylists[playlistId];
-    this.storageAdapter.savePlaylists(customPlaylists);
+    await this.storageAdapter.savePlaylists(customPlaylists);
 
     return true;
   }
+
+  /**
+   * Gets the entire library (Song objects and the main Library playlist).
+   */
+  public async getLibrary(): Promise<{ songs: Song[]; library: Playlist }> {
+    const songs = await this.storageAdapter.getSongs();
+    const library = await this.storageAdapter.getLibrary();
+    return { 
+      songs: Object.values(songs), 
+      library 
+    };
+  }
+
+  /**
+   * Gets all playlists including custom ones.
+   */
+  public async getPlaylists(): Promise<Playlist[]> {
+    const playlistsMap = await this.storageAdapter.getPlaylists();
+    const playlists = Object.values(playlistsMap);
+    
+    // Ensure Library ("0") is always included at the start if available
+    const library = await this.storageAdapter.getLibrary();
+    return [library, ...playlists];
+  }
+
+  /**
+   * Gets a playlist by ID with full song details.
+   */
+  public async getPlaylistById(id: string): Promise<PlaylistDetail | null> {
+    let playlist: Playlist | null = null;
+    if (id === '0') {
+      playlist = await this.storageAdapter.getLibrary();
+    } else {
+      const playlists = await this.storageAdapter.getPlaylists();
+      playlist = playlists[id] || null;
+    }
+
+    if (!playlist) return null;
+
+    const allSongs = await this.storageAdapter.getSongs();
+    const songs = playlist.songIds
+      .map(songId => allSongs[songId])
+      .filter(song => !!song);
+
+    return {
+      ...playlist,
+      songs,
+      songCount: songs.length
+    };
+  }
 }
+
+

@@ -1,24 +1,6 @@
 import type { Song, Playlist, PlaylistDetail, ImportResult } from '@music/types';
 import type { ILibraryRepository } from '@music/core';
 
-// Declare global types for electronAPI
-declare global {
-  interface Window {
-    electronAPI: {
-      getLibrary: () => Promise<{ songs: Song[], library: Playlist }>;
-      getPlaylists: () => Promise<Playlist[]>;
-      createPlaylist: (name: string) => Promise<Playlist>;
-      updatePlaylist: (playlist: Playlist) => Promise<Playlist>;
-      updateSong: (song: Song) => Promise<Song>;
-      deleteSong: (songId: string) => Promise<boolean>;
-      deletePlaylist: (playlistId: string) => Promise<boolean>;
-      importFiles: () => Promise<ImportResult>;
-      importFolder: () => Promise<ImportResult>;
-      pickImage: () => Promise<string | null>;
-    }
-  }
-}
-
 export class ElectronLibraryRepository implements ILibraryRepository {
   async getLibrary(): Promise<{ songs: Song[], library: Playlist }> {
     return window.electronAPI.getLibrary();

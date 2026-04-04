@@ -4,6 +4,7 @@ import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Pla
 import { useNotification } from '../../../application/hooks';
 import { useLibraryContext } from '../../components/Library';
 import { usePlayer } from '@music/hooks';
+import { formatTime } from '@music/utils';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { EditModal } from '../../components/EditModal';
@@ -64,7 +65,8 @@ export const PlaylistDetailPage: React.FC = () => {
       setPlaylist(null);
       setLocalSongs([]);
 
-      handleGetPlaylistDetail(id).then(data => {
+      handleGetPlaylistDetail(id).then((data: PlaylistDetail | null) => {
+
         if (data) {
           setPlaylist(data);
           setLocalSongs(data.songs || []);
@@ -312,14 +314,7 @@ export const PlaylistDetailPage: React.FC = () => {
                 </div>
               </div>
               <div className="col-album">{song.album || '-'}</div>
-              <div className="col-duration">
-                {(() => {
-                  const d = Math.round(song.duration || 0);
-                  const m = Math.floor(d / 60);
-                  const s = d % 60;
-                  return `${m}:${s.toString().padStart(2, '0')}`;
-                })()}
-              </div>
+              <div className="col-duration">{formatTime(song.duration || 0)}</div>
               <div className="col-more">
                 <button
                   className={`row-more-btn ${activeMenuId === song.id ? 'active' : ''}`}

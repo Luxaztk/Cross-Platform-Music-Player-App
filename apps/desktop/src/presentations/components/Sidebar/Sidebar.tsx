@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ListFilter, ArrowUpDown } from 'lucide-react';
-import { useLibraryContext } from '../Library';
+import type { Playlist } from '@music/types';
+import { useLibraryContext } from '../Library/LibraryProvider';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { EditModal } from '../EditModal';
@@ -39,7 +40,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   }, [activeMenuId]);
 
   const onCreatePlaylist = async () => {
-    const nextNum = playlists.filter(p => p.id !== '0').length + 1;
+    const nextNum = playlists.filter((p: Playlist) => p.id !== '0').length + 1;
+
     const playlistName = t('sidebar.createPlaylist') + ` #${nextNum}`;
     const newPlaylist = await handleCreatePlaylist(playlistName);
     if (newPlaylist) {
@@ -111,8 +113,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
 
   // Filter out library playlist (id=0) and apply search query
   const customPlaylists = playlists
-    .filter(p => String(p.id) !== '0')
-    .filter(p => p.name.toLowerCase().includes(playlistQuery.toLowerCase()));
+    .filter((p: Playlist) => String(p.id) !== '0')
+    .filter((p: Playlist) => p.name.toLowerCase().includes(playlistQuery.toLowerCase()));
+
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -189,7 +192,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
               </div>
             ) : (
               <ul>
-                {customPlaylists.map(playlist => (
+                {customPlaylists.map((playlist: Playlist) => (
+
                   <li key={playlist.id} className={activeMenuId === playlist.id ? 'menu-open' : ''}>
                     <NavLink
                       to={`/playlist/${playlist.id}`}

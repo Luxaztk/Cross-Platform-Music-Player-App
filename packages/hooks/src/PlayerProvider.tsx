@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import type { Song } from '@music/types';
+import type { Song, PlayerState } from '@music/types';
+import type { IStorageAdapter } from '@music/core';
 import { AudioEngine } from '@music/player';
 
 export type RepeatMode = 'OFF' | 'ALL' | 'ONE';
@@ -44,7 +45,13 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return newArr;
 };
 
-export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface PlayerProviderProps {
+  children: React.ReactNode;
+  storage?: IStorageAdapter;
+  allSongs?: Song[];
+}
+
+export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storage, allSongs = [] }) => {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -56,6 +63,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [originalContext, setOriginalContext] = useState<Song[]>([]);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('OFF');
   const [isShuffle, setIsShuffle] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   
   const engineRef = useRef<AudioEngine | null>(null);
 
@@ -67,11 +75,82 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const repeatModeRef = useRef(repeatMode); repeatModeRef.current = repeatMode;
   const isShuffleRef = useRef(isShuffle); isShuffleRef.current = isShuffle;
 
+  // Hydration effect - load from storage on mount
+  useEffect(() => {
+    const hydrate = async () => {
+      if (!storage || allSongs.length === 0) {
+        setIsHydrated(true); // Nothing to hydrate or songs not ready yet
+        return;
+      }
+
+      try {
+        const savedState = await storage.getPlayerState();
+        if (savedState) {
+          const findSong = (id: string | null) => allSongs.find(s => s.id === id) || null;
+          
+          if (savedState.currentSongId) {
+            const song = findSong(savedState.currentSongId);
+            if (song) {
+              setCurrentSong(song);
+              // Load but don't autoplay as per user request
+              engineRef.current?.load(song.filePath, false);
+            }
+          }
+
+          setQueue(savedState.queueIds.map(findSong).filter((s): s is Song => s !== null));
+          setHistory(savedState.historyIds.map(findSong).filter((s): s is Song => s !== null));
+          setOriginalContext(savedState.originalContextIds.map(findSong).filter((s): s is Song => s !== null));
+          setVolumeState(savedState.volume);
+          setRepeatMode(savedState.repeatMode);
+          setIsShuffle(savedState.isShuffle);
+          
+          if (engineRef.current) {
+            engineRef.current.setVolume(savedState.volume);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to hydrate player state:', error);
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+
+    // Delay hydration until allSongs is populated
+    if (allSongs.length > 0 && !isHydrated) {
+      hydrate();
+    }
+  }, [storage, allSongs.length, isHydrated]);
+
+  // Persistence effect - save to storage on changes
+  useEffect(() => {
+    const persist = async () => {
+      if (!storage || !isHydrated) return;
+
+      const state: PlayerState = {
+        currentSongId: currentSong?.id || null,
+        queueIds: queue.map(s => s.id),
+        historyIds: history.map(s => s.id),
+        originalContextIds: originalContext.map(s => s.id),
+        volume,
+        repeatMode,
+        isShuffle
+      };
+
+      try {
+        await storage.savePlayerState(state);
+      } catch (error) {
+        console.error('Failed to save player state:', error);
+      }
+    };
+
+    persist();
+  }, [storage, isHydrated, currentSong, queue, history, originalContext, volume, repeatMode, isShuffle]);
+
   const pushToHistory = (song: Song) => {
     setHistory(prev => {
       // most recently played item at index 0
       const newHistory = [song, ...prev];
-      if (newHistory.length > 16) {
+      if (newHistory.length > 32) { // Increased history size slightly
          newHistory.pop(); // Remove oldest (the end of array)
       }
       return newHistory;
@@ -109,7 +188,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const engine = new AudioEngine({
       onProgress: (p, d) => {
         setProgress(p);
-        setDuration(d);
+        setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
       },
       onPlay: () => setIsPlaying(true),
       onPause: () => setIsPlaying(false),
@@ -128,7 +207,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       },
       onLoad: (d) => {
-        setDuration(d);
+        setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
       }
     });
     

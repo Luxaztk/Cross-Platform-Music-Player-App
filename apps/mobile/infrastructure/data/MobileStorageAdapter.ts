@@ -1,5 +1,6 @@
 import type { IStorageAdapter } from '../../../../packages/core/src/index';
-import type { Song, Playlist } from '../../../../packages/types/index';
+import type { Song, Playlist, PlayerState } from '../../../../packages/types/index';
+
 import sampleSongs from './song.json';
 import samplePlaylists from './playlist.json';
 
@@ -30,20 +31,40 @@ const defaultLibrary: Playlist = {
 let currentLibrary = defaultLibrary;
 let currentSongs = songMap;
 
+let currentPlaylists: Record<string, Playlist> = {};
+let currentPlayerState: PlayerState | null = null;
+
 export class MobileStorageAdapter implements IStorageAdapter {
-  getLibrary(): Playlist {
+  async getLibrary(): Promise<Playlist> {
     return currentLibrary;
   }
 
-  getSongs(): Record<string, Song> {
+  async getSongs(): Promise<Record<string, Song>> {
     return currentSongs;
   }
 
-  saveLibrary(library: Playlist): void {
+  async getPlaylists(): Promise<Record<string, Playlist>> {
+    return currentPlaylists;
+  }
+
+  async saveLibrary(library: Playlist): Promise<void> {
     currentLibrary = library;
   }
 
-  saveSongs(songs: Record<string, Song>): void {
+  async saveSongs(songs: Record<string, Song>): Promise<void> {
     currentSongs = songs;
   }
+
+  async savePlaylists(playlists: Record<string, Playlist>): Promise<void> {
+    currentPlaylists = playlists;
+  }
+
+  async getPlayerState(): Promise<PlayerState | null> {
+    return currentPlayerState;
+  }
+
+  async savePlayerState(state: PlayerState): Promise<void> {
+    currentPlayerState = state;
+  }
 }
+

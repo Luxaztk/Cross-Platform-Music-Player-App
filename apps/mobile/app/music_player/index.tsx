@@ -8,6 +8,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { formatTime } from '@music/utils';
 
 interface Track {
   id: string;
@@ -29,11 +30,6 @@ const MusicPlayer: React.FC = () => {
     image: 'https://via.placeholder.com/300',
   };
 
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);

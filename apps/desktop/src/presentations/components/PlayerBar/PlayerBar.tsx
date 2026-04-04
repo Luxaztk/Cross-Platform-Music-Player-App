@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, ListMusic, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayer } from '@music/hooks';
+import { formatTime } from '@music/utils';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import './PlayerBar.scss';
 
-const formatTime = (seconds: number) => {
-  if (isNaN(seconds) || seconds < 0) return '0:00';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
-};
 
 const PlayerBar: React.FC = () => {
   const { 

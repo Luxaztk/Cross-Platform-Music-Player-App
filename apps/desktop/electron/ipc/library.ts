@@ -1,11 +1,12 @@
 import { ipcMain, dialog } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { ElectronStorageAdapter, MetadataService } from '../../src/infrastructure/services';
+import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
+import { MainMetadataService } from '../infrastructure/MainMetadataService';
 import type { Song } from '@music/types';
 import { LibraryService } from '@music/core';
 
-const storageAdapter = new ElectronStorageAdapter();
+const storageAdapter = new MainStorageAdapter();
 const libraryService = new LibraryService(storageAdapter);
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.aac', '.wav', '.m4a', '.ogg'];
@@ -33,36 +34,38 @@ async function scanDirectory(dir: string): Promise<string[]> {
 }
 
 export function setupLibraryIPC() {
-  ipcMain.handle('library:get', () => {
+  ipcMain.handle('library:get', async () => {
     return {
-      songs: storageAdapter.getSongList(),
-      library: storageAdapter.getLibrary()
+      songs: await storageAdapter.getSongList(),
+      library: await storageAdapter.getLibrary()
     };
   });
 
-  ipcMain.handle('library:getPlaylists', () => {
-    return Object.values(storageAdapter.getPlaylists());
+  ipcMain.handle('library:getPlaylists', async () => {
+    const playlists = await storageAdapter.getPlaylists();
+    return Object.values(playlists);
   });
 
-  ipcMain.handle('library:createPlaylist', (_event, name: string) => {
-    return libraryService.createPlaylist(name);
+  ipcMain.handle('library:createPlaylist', async (_event, name: string) => {
+    return await libraryService.createPlaylist(name);
   });
 
-  ipcMain.handle('library:updatePlaylist', (_event, playlist: any) => {
-    return libraryService.updatePlaylist(playlist);
+  ipcMain.handle('library:updatePlaylist', async (_event, playlist: any) => {
+    return await libraryService.updatePlaylist(playlist);
   });
 
-  ipcMain.handle('library:updateSong', (_event, song: any) => {
-    return libraryService.updateSong(song);
+  ipcMain.handle('library:updateSong', async (_event, song: any) => {
+    return await libraryService.updateSong(song);
   });
 
-  ipcMain.handle('library:deleteSong', (_event, songId: string) => {
-    return libraryService.deleteSong(songId);
+  ipcMain.handle('library:deleteSong', async (_event, songId: string) => {
+    return await libraryService.deleteSong(songId);
   });
 
-  ipcMain.handle('library:deletePlaylist', (_event, playlistId: string) => {
-    return libraryService.deletePlaylist(playlistId);
+  ipcMain.handle('library:deletePlaylist', async (_event, playlistId: string) => {
+    return await libraryService.deletePlaylist(playlistId);
   });
+
 
   ipcMain.handle('library:pickImage', async () => {
     const result = await dialog.showOpenDialog({
@@ -101,15 +104,16 @@ export function setupLibraryIPC() {
       const newSongs: Song[] = [];
       for (const filePath of result.filePaths) {
         try {
-          const songData = await MetadataService.extractMetadata(filePath);
+          const songData = await MainMetadataService.extractMetadata(filePath);
           if (songData) newSongs.push(songData);
         } catch (err) {
           console.error(`Metadata error for ${filePath}:`, err);
         }
       }
 
-      const { addedCount, duplicatePaths } = libraryService.processAndAddSongs(newSongs);
+      const { addedCount, duplicatePaths } = await libraryService.processAndAddSongs(newSongs);
       return {
+
         success: true,
         count: addedCount,
         duplicates: duplicatePaths,
@@ -137,15 +141,16 @@ export function setupLibraryIPC() {
       const newSongs: Song[] = [];
       for (const filePath of audioFiles) {
         try {
-          const songData = await MetadataService.extractMetadata(filePath);
+          const songData = await MainMetadataService.extractMetadata(filePath);
           if (songData) newSongs.push(songData);
         } catch (err) {
           console.error(`Metadata error for ${filePath}:`, err);
         }
       }
 
-      const { addedCount, duplicatePaths } = libraryService.processAndAddSongs(newSongs);
+      const { addedCount, duplicatePaths } = await libraryService.processAndAddSongs(newSongs);
       return {
+
         success: true,
         count: addedCount,
         duplicates: duplicatePaths,

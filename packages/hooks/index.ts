@@ -1,1 +1,2 @@
-export * from './src/PlayerProvider';
+export * from './src';
+

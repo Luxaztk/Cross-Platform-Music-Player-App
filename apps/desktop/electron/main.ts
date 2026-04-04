@@ -2,6 +2,7 @@ import { app, BrowserWindow, protocol, net, session } from 'electron';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { setupLibraryIPC } from './ipc/library';
+import { setupStorageIPC } from './ipc/storage';
 
 // Register custom scheme BEFORE app is ready
 protocol.registerSchemesAsPrivileged([
@@ -80,5 +81,6 @@ app.whenReady().then(() => {
   });
 
   setupLibraryIPC();
+  setupStorageIPC();
   createWindow();
 });

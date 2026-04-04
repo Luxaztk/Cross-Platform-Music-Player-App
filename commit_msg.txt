@@ -1,12 +1,9 @@
-style(monorepo): standardize monorepo structure and fix workspace aliases
-
-- Remove duplicated `domain/` and `application/usecases/` in desktop app.
-- Fix TS aliases in base `tsconfig.base.json` to map `@music/*`.
-- Update desktop and mobile `tsconfig.json` for correct module resolution.
-- Standardize `packages/types` entry point and remove empty files.
-- Redesign Sidebar search UI with expandable input and smart toggle logic.
-- Add Sort and Filter placeholder icons to Sidebar with i18n support.
-- Improve Global Search Overlay UI popup menu logic resolving placement clipping.
-- Fix PlaylistDetailPage UI to display playlist information and songs.
-- Add Sort and Filter placeholder icons to Sidebar with i18n support.
-- Fix PlaylistDetailPage UI to display playlist information and songs.
+fixes: Resolve 24+ TypeScript errors and synchronize mobile/desktop infrastructure
+- Fixed export errors in @music/hooks and updated LibraryProvider.
+- Synchronized LibraryService with getter methods and handled asynchronous operations.
+- Updated MobileStorageAdapter to async/await (AsyncStorage).
+- Fixed icon mapping error ('library-music' -> 'library') in @music/ui.
+- Fixed 'implicitly has an any type' errors in Desktop components.
+- Configured tsconfig.app.json to recognize Node.js types (Buffer, path, crypto).
+- Added eslint.config.js (Flat Config) to the root directory to support ESLint v9.
+- Updated task.md to reflect project progress (Completed Search, Filter, Persistence).

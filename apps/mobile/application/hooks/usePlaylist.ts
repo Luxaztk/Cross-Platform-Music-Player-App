@@ -7,7 +7,8 @@ export const usePlaylist = () => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const repo = new MobileLibraryRepository(null); // Assuming null or valid storage
+  const repo = new MobileLibraryRepository();
+
   const getPlaylistsUc = new GetPlaylistsUseCase(repo);
   const createPlaylistUc = new CreatePlaylistUseCase(repo);
 

@@ -39,10 +39,11 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 
 ### 🔴 GIAI ĐOẠN 1: Hoàn thiện MVP (Mức độ ưu tiên CAO)
 Mục tiêu: Đảm bảo người dùng có thể sử dụng hàng ngày ổn định.
-- [ ] **Tìm kiếm toàn cục (Global Search Overlay)**: Thanh công cụ ở Header để tìm kiếm nhanh Song, Artist, Album với giao diện Pop-up.
-- [ ] **Lọc danh sách Playlist (Sidebar Filter)**: Ô nhập liệu nhỏ ở Sidebar để lọc nhanh danh sách Playlist hiện có.
-- [ ] **Lưu trữ trạng thái (Persistence)**: Tự động lưu lại Queue và History khi tắt/mở app.
+- [x] **Tìm kiếm toàn cục (Global Search Overlay)**: Thanh công cụ ở Header để tìm kiếm nhanh Song, Artist, Album với giao diện Pop-up.
+- [x] **Lọc danh sách Playlist (Sidebar Filter)**: Ô nhập liệu nhỏ ở Sidebar để lọc nhanh danh sách Playlist hiện có.
+- [x] **Lưu trữ trạng thái (Persistence)**: Tự động lưu lại Queue và History khi tắt/mở app (Đã tích hợp AsyncStorage/ElectronStore).
 - [ ] **Bộ lọc & Sắp xếp (Filter/Sort)**: Sắp xếp danh sách theo tên, ngày thêm, thời lượng.
+
 
 ### 🟡 GIAI ĐOẠN 2: Tối ưu & Chức năng Phụ (Mức độ ưu tiên TRUNG BÌNH)
 Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
@@ -60,8 +61,9 @@ Mục tiêu: "Wow" người dùng bằng các tính năng cao cấp.
 
 ### 🔵 GIAI ĐOẠN 4: Triển khai Mobile (Transform)
 Mục tiêu: Đưa trải nghiệm lên các nền tảng di động.
-- [ ] **React Native Mobile App**: Xây dựng ứng dụng mobile dựa trên các UseCases/Hooks đã có.
+- [/] **React Native Mobile App**: Xây dựng ứng dụng mobile dựa trên các UseCases/Hooks đã có (Đã xong Core Integration & Layout).
 - [ ] **Đồng bộ hóa (Sync)**: (Tùy chọn) Đồng bộ playlist và sở thích giữa Desktop & Mobile.
+
 
 ---
 

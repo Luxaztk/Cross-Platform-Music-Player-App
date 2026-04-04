@@ -5,7 +5,7 @@ import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { useSearch, useLibrary } from '../../../application/hooks';
 import { usePlayer } from '@music/hooks';
-import type { Song } from '@music/types';
+import type { Song, Playlist } from '@music/types';
 import { SearchOverlay } from './SearchOverlay';
 import './Header.scss';
 
@@ -72,7 +72,8 @@ const Header: React.FC = () => {
 
   const handleSelectResult = (result: any) => {
     if (result.type === 'song') {
-      const songIdx = songs.findIndex(s => s.id === result.item.id);
+      const songIdx = songs.findIndex((s: Song) => s.id === result.item.id);
+
       if (songIdx !== -1) playList(songs, songIdx);
     } else if (result.type === 'artist') {
         setLibraryFilter({ type: 'artist', value: result.item.name });
