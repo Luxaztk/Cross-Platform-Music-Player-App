@@ -126,19 +126,19 @@ export const PlaylistDetailPage: React.FC = () => {
   };
 
   const filteredSongs = React.useMemo(() => {
-    if (isLibrary && libraryFilter.type !== 'none') {
-      return localSongs.filter(song => {
-        if (libraryFilter.type === 'artist') {
-          return song.artist.toLowerCase() === libraryFilter.value.toLowerCase();
-        }
-        if (libraryFilter.type === 'album') {
-          return song.album?.toLowerCase() === libraryFilter.value.toLowerCase();
-        }
-        return true;
-      });
-    }
-    return localSongs;
+    const sorted = [...(isLibrary && libraryFilter.type !== 'none' ? localSongs.filter(song => {
+      if (libraryFilter.type === 'artist') {
+        return song.artist.toLowerCase() === libraryFilter.value.toLowerCase();
+      }
+      if (libraryFilter.type === 'album') {
+        return song.album?.toLowerCase() === libraryFilter.value.toLowerCase();
+      }
+      return true;
+    }) : localSongs)];
+
+    return sorted.sort((a, b) => a.title.localeCompare(b.title));
   }, [localSongs, libraryFilter, isLibrary]);
+
 
   const totalDuration = filteredSongs.reduce((acc, song) => acc + (song.duration || 0), 0);
 

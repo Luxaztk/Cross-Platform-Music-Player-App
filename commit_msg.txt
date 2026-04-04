@@ -1,9 +1,8 @@
-fixes: Resolve 24+ TypeScript errors and synchronize mobile/desktop infrastructure
-- Fixed export errors in @music/hooks and updated LibraryProvider.
-- Synchronized LibraryService with getter methods and handled asynchronous operations.
-- Updated MobileStorageAdapter to async/await (AsyncStorage).
-- Fixed icon mapping error ('library-music' -> 'library') in @music/ui.
-- Fixed 'implicitly has an any type' errors in Desktop components.
-- Configured tsconfig.app.json to recognize Node.js types (Buffer, path, crypto).
-- Added eslint.config.js (Flat Config) to the root directory to support ESLint v9.
-- Updated task.md to reflect project progress (Completed Search, Filter, Persistence).
+feat(desktop): simplify playlist management and enhance sidebar UI/UX
+
+- Implement default alphabetical (A-Z) sorting for all song lists in PlaylistDetailPage.
+- Redesign sidebar controls: merge sort/filter placeholders into a single functional pop-up menu.
+- Add playlist sorting options (Name A-Z, Name Z-A, Default) to the sidebar.
+- Improve sidebar search: correctly hide non-matching playlists and show "No results found" message.
+- Enhance collapsed (mini) sidebar: always visible icons, added scrollable playlist thumbnails, and fixed navigation layout.
+- Polish UI/UX: standardized circular hover backgrounds, fixed alignment between action buttons, and smoothed out sidebar toggle transitions to remove visual artifacts.

@@ -29,6 +29,10 @@ export const translations = {
       createFirst: 'Tạo danh sách phát đầu tiên',
       sort: 'Sắp xếp theo',
       filter: 'Lọc danh sách',
+      sortAZ: 'Tên (A-Z)',
+      sortZA: 'Tên (Z-A)',
+      sortDefault: 'Mặc định',
+      noResults: 'Không tìm thấy kết quả nào.',
     },
     playlist: {
       songs: 'bài hát',
@@ -109,6 +113,10 @@ export const translations = {
       createFirst: 'Create your first',
       sort: 'Sort by',
       filter: 'Filter list',
+      sortAZ: 'Name (A-Z)',
+      sortZA: 'Name (Z-A)',
+      sortDefault: 'Default',
+      noResults: 'No results found.',
     },
     playlist: {
       songs: 'songs',

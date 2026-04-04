@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ListFilter, ArrowUpDown } from 'lucide-react';
+import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ArrowUpDown } from 'lucide-react';
+
+
+
 import type { Playlist } from '@music/types';
 import { useLibraryContext } from '../Library/LibraryProvider';
 import { ICON_SIZES } from '../../constants/IconSizes';
@@ -24,20 +27,28 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   const [deletingPlaylist, setDeletingPlaylist] = React.useState<any | null>(null);
   const [playlistQuery, setPlaylistQuery] = React.useState('');
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
+  const [sortMode, setSortMode] = React.useState<'az' | 'za' | 'default'>('default');
+  const [isSortMenuOpen, setIsSortMenuOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const sortMenuRef = React.useRef<HTMLDivElement>(null);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
+
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setActiveMenuId(null);
       }
+      if (sortMenuRef.current && !sortMenuRef.current.contains(event.target as Node)) {
+        setIsSortMenuOpen(false);
+      }
     };
-    if (activeMenuId) {
+    if (activeMenuId || isSortMenuOpen) {
       document.addEventListener('click', handleClickOutside);
     }
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [activeMenuId]);
+  }, [activeMenuId, isSortMenuOpen]);
+
 
   const onCreatePlaylist = async () => {
     const nextNum = playlists.filter((p: Playlist) => p.id !== '0').length + 1;
@@ -112,9 +123,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   };
 
   // Filter out library playlist (id=0) and apply search query
-  const customPlaylists = playlists
-    .filter((p: Playlist) => String(p.id) !== '0')
-    .filter((p: Playlist) => p.name.toLowerCase().includes(playlistQuery.toLowerCase()));
+  const customPlaylists = React.useMemo(() => {
+    let filtered = playlists
+      .filter((p: Playlist) => String(p.id) !== '0')
+      .filter((p: Playlist) => p.name.toLowerCase().includes(playlistQuery.toLowerCase()));
+
+    if (sortMode === 'az') {
+      filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortMode === 'za') {
+      filtered = [...filtered].sort((a, b) => b.name.localeCompare(a.name));
+    }
+    
+    return filtered;
+  }, [playlists, playlistQuery, sortMode]);
 
 
   return (
@@ -177,18 +198,52 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
               </div>
 
               <div className="controls-right-group">
-                <button className="control-btn placeholder" title={t('sidebar.sort')}>
-                  <ArrowUpDown size={16} />
-                </button>
-                <button className="control-btn placeholder" title={t('sidebar.filter')}>
-                  <ListFilter size={16} />
-                </button>
+                <div className="sort-filter-container" ref={sortMenuRef}>
+                    <button 
+                        className={`control-btn ${sortMode !== 'default' ? 'active' : ''}`} 
+                        title={t('sidebar.sort')}
+                        onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
+                    >
+                        <ArrowUpDown size={16} />
+
+
+                    </button>
+                    {isSortMenuOpen && (
+                        <div className="sort-menu open-down">
+                            <div className="menu-label">{t('sidebar.sort') || 'Sắp xếp'}</div>
+                            <button 
+                                className={`menu-item ${sortMode === 'az' ? 'active' : ''}`} 
+                                onClick={() => { setSortMode('az'); setIsSortMenuOpen(false); }}
+                            >
+                                <span>{t('sidebar.sortAZ') || 'Tên (A-Z)'}</span>
+                            </button>
+                            <button 
+                                className={`menu-item ${sortMode === 'za' ? 'active' : ''}`} 
+                                onClick={() => { setSortMode('za'); setIsSortMenuOpen(false); }}
+                            >
+                                <span>{t('sidebar.sortZA') || 'Tên (Z-A)'}</span>
+                            </button>
+                            <button 
+                                className={`menu-item ${sortMode === 'default' ? 'active' : ''}`} 
+                                onClick={() => { setSortMode('default'); setIsSortMenuOpen(false); }}
+                            >
+                                <span>{t('sidebar.sortDefault') || 'Mặc định'}</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
               </div>
             </div>
             {customPlaylists.length === 0 ? (
               <div className="empty-playlists">
-                <p>{t('sidebar.noPlaylists')}</p>
-                <button className="create-first-btn" onClick={onCreatePlaylist}>{t('sidebar.createFirst')}</button>
+                {playlistQuery ? (
+                  <p>{t('sidebar.noResults') || 'No results found.'}</p>
+                ) : (
+                  <>
+                    <p>{t('sidebar.noPlaylists')}</p>
+                    <button className="create-first-btn" onClick={onCreatePlaylist}>{t('sidebar.createFirst')}</button>
+                  </>
+                )}
               </div>
             ) : (
               <ul>
@@ -234,17 +289,38 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
 
       {isCollapsed && (
         <nav className="sidebar-nav mini">
-          <button className="nav-item mini" onClick={onToggle} title={t('common.edit')}>
-            <ChevronRight size={ICON_SIZES.MEDIUM} />
-          </button>
-          <NavLink to="/playlist/0" className="nav-item mini" title={t('sidebar.allSongs')}>
-            <Music size={ICON_SIZES.MEDIUM} />
-          </NavLink>
-          <button className="nav-item mini accent" title={t('sidebar.createPlaylist')} onClick={onCreatePlaylist}>
-            <Plus size={ICON_SIZES.MEDIUM} />
-          </button>
+          <div className="mini-top-actions">
+            <button className="nav-item mini" onClick={onToggle} title={t('common.edit')}>
+              <ChevronRight size={ICON_SIZES.MEDIUM} />
+            </button>
+            <NavLink to="/playlist/0" className="nav-item mini" title={t('sidebar.allSongs')}>
+              <Music size={ICON_SIZES.MEDIUM} />
+            </NavLink>
+          </div>
+          
+          <div className="mini-divider" />
+          
+          <div className="mini-playlists-scroll">
+            {customPlaylists.map((playlist: Playlist) => (
+              <NavLink 
+                key={playlist.id} 
+                to={`/playlist/${playlist.id}`} 
+                className={({ isActive }) => `nav-item mini ${isActive ? 'active' : ''}`}
+                title={playlist.name}
+              >
+                <ListMusic size={ICON_SIZES.MEDIUM} />
+              </NavLink>
+            ))}
+          </div>
+
+          <div className="mini-bottom-actions">
+            <button className="nav-item mini accent" title={t('sidebar.createPlaylist')} onClick={onCreatePlaylist}>
+              <Plus size={ICON_SIZES.MEDIUM} />
+            </button>
+          </div>
         </nav>
       )}
+
 
       {editingPlaylist && (
         <EditModal

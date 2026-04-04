@@ -40,9 +40,10 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 ### 🔴 GIAI ĐOẠN 1: Hoàn thiện MVP (Mức độ ưu tiên CAO)
 Mục tiêu: Đảm bảo người dùng có thể sử dụng hàng ngày ổn định.
 - [x] **Tìm kiếm toàn cục (Global Search Overlay)**: Thanh công cụ ở Header để tìm kiếm nhanh Song, Artist, Album với giao diện Pop-up.
-- [x] **Lọc danh sách Playlist (Sidebar Filter)**: Ô nhập liệu nhỏ ở Sidebar để lọc nhanh danh sách Playlist hiện có.
+- [x] **Lọc & Sắp xếp Playlist (Sidebar)**: Một nút duy nhất mở Pop-up quản lý tìm kiếm và sắp xếp Playlist (A-Z, Z-A, Default).
 - [x] **Lưu trữ trạng thái (Persistence)**: Tự động lưu lại Queue và History khi tắt/mở app (Đã tích hợp AsyncStorage/ElectronStore).
-- [ ] **Bộ lọc & Sắp xếp (Filter/Sort)**: Sắp xếp danh sách theo tên, ngày thêm, thời lượng.
+- [x] **Sắp xếp mặc định (A-Z Sort)**: Danh sách bài hát luôn được sắp xếp theo bảng chữ cái từ A-Z.
+- [ ] **Bộ lọc & Sắp xếp nâng cao (Filter/Sort)**: (Tùy chọn) Thêm bộ lọc theo thời lượng hoặc ngày thêm trong tương lai.
 
 
 ### 🟡 GIAI ĐOẠN 2: Tối ưu & Chức năng Phụ (Mức độ ưu tiên TRUNG BÌNH)
