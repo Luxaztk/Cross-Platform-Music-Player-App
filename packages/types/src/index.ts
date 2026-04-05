@@ -9,6 +9,8 @@ export interface Song {
   year: number | null;
   coverArt: string | null; // base64 data URL
   lyrics?: string; // embedded USLT tag from ID3
+  hash?: string; // Content hash for de-duplication
+  fileSize?: number; // Size in bytes
 }
 
 export interface Playlist {
@@ -25,6 +27,7 @@ export interface ImportResult {
   count: number;
   songs?: Song[];
   duplicates?: string[];
+  duplicateSongs?: Song[]; // Full song objects for resolution
   reason?: 'CANCELED' | 'ERROR';
   message?: string;
   totalAttempted?: number;

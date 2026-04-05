@@ -26,22 +26,20 @@ export class AudioEngine {
     this.events = events;
   }
 
+  private lastUrl: string | null = null;
+
   public load(filePath: string, autoplay: boolean = false) {
     this.stop(); // Stop anything currently playing
 
     // Convert file path to custom protocol
     const url = `melovista://${encodeURIComponent(filePath)}`;
+    this.lastUrl = url;
 
     this.howl = new Howl({
       src: [url],
-      html5: true, // Force HTML5 Web Audio for large files to avoid loading entire file into memory
+      html5: true, // Use HTML5 Audio for streaming large files
       autoplay: autoplay,
       format: ['mp3', 'flac', 'wav', 'm4a', 'aac', 'ogg'],
-      onload: () => {
-        if (this.events.onLoad && this.howl) {
-          this.events.onLoad(this.howl.duration());
-        }
-      },
       onplay: () => {
         if (this.events.onPlay) this.events.onPlay();
         this.startTrackingProgress();
@@ -50,30 +48,51 @@ export class AudioEngine {
         if (this.events.onPause) this.events.onPause();
         this.stopTrackingProgress();
       },
-      onend: () => {
-        if (this.events.onEnd) this.events.onEnd();
-        this.stopTrackingProgress();
-      },
       onstop: () => {
         if (this.events.onStop) this.events.onStop();
         this.stopTrackingProgress();
       },
+      onend: () => {
+        if (this.events.onEnd) this.events.onEnd();
+        this.stopTrackingProgress();
+      },
+      onload: () => {
+        const duration = this.howl?.duration() || 0;
+        if (this.events.onLoad) this.events.onLoad(duration);
+      },
       onloaderror: (_id: number, err: unknown) => {
+        console.error('Howler load error:', err);
         if (this.events.onLoadError) this.events.onLoadError(err);
       },
       onplayerror: (_id: number, err: unknown) => {
+        console.error('Howler play error:', err);
         if (this.events.onPlayError) this.events.onPlayError(err);
         this.howl?.once('unlock', () => {
           this.howl?.play();
         });
       }
     });
+
+    if (autoplay) {
+       this.howl.play();
+    }
   }
 
   public play() {
-    if (this.howl && !this.howl.playing()) {
+    if (this.howl) {
+      if (this.howl.state() === 'unloaded') {
+        this.howl.load();
+      }
       this.howl.play();
     }
+  }
+
+  public state(): 'unloaded' | 'loading' | 'loaded' {
+    return this.howl ? this.howl.state() : 'unloaded';
+  }
+
+  public getSource(): string | null {
+    return this.lastUrl;
   }
 
   public pause() {
@@ -111,6 +130,10 @@ export class AudioEngine {
 
   public isPlaying(): boolean {
     return this.howl ? this.howl.playing() : false;
+  }
+
+  public hasSource(): boolean {
+    return this.howl !== null;
   }
 
   private startTrackingProgress() {

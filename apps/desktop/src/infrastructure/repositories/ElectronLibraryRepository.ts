@@ -23,7 +23,15 @@ export class ElectronLibraryRepository implements ILibraryRepository {
   }
 
   async deleteSong(songId: string): Promise<boolean> {
-    return window.electronAPI.deleteSong(songId);
+    return await window.electronAPI.deleteSong(songId);
+  }
+
+  async deleteSongs(songIds: string[]): Promise<boolean> {
+    return await window.electronAPI.deleteSongs(songIds);
+  }
+
+  async removeSongsFromPlaylist(playlistId: string, songIds: string[]): Promise<boolean> {
+    return await window.electronAPI.removeSongsFromPlaylist(playlistId, songIds);
   }
 
   async deletePlaylist(playlistId: string): Promise<boolean> {
@@ -52,5 +60,9 @@ export class ElectronLibraryRepository implements ILibraryRepository {
 
   async importFolder(): Promise<ImportResult> {
     return window.electronAPI.importFolder();
+  }
+
+  async addSongs(songs: Song[]): Promise<{ success: boolean; count: number }> {
+    return window.electronAPI.addSongs(songs);
   }
 }

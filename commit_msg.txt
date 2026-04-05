@@ -1,8 +1,6 @@
-feat(desktop): simplify playlist management and enhance sidebar UI/UX
+fix(player): resolve hydration playback and volume toggle issues
 
-- Implement default alphabetical (A-Z) sorting for all song lists in PlaylistDetailPage.
-- Redesign sidebar controls: merge sort/filter placeholders into a single functional pop-up menu.
-- Add playlist sorting options (Name A-Z, Name Z-A, Default) to the sidebar.
-- Improve sidebar search: correctly hide non-matching playlists and show "No results found" message.
-- Enhance collapsed (mini) sidebar: always visible icons, added scrollable playlist thumbnails, and fixed navigation layout.
-- Polish UI/UX: standardized circular hover backgrounds, fixed alignment between action buttons, and smoothed out sidebar toggle transitions to remove visual artifacts.
+- PlayerProvider: Implemented Just-In-Time (JIT) audio loading. Bypassed background `engine.load()` during hydration to avoid browser autoplay policy restrictions. Audio files are now dynamically loaded upon initial user interaction (play/seek).
+- AudioEngine: Exposed `state()` and `getSource()` methods to accurately track Howler's readiness and support JIT fallback loading.
+- PlayerBar: Added `lastVolume` state to properly restore the previous audio level when toggling mute, rather than defaulting to 100%.
+- PlaylistDetailPage: Synced UI index by invoking `playList` with the `filteredSongs` array instead of raw `localSongs`, ensuring accurate song playback from sorted playlists.

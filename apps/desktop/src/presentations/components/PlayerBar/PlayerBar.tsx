@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, ListMusic, Shuffle, Repeat, Repeat1 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, VolumeX, Music, ListMusic, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayer } from '@music/hooks';
 import { formatTime } from '@music/utils';
 import { ICON_SIZES } from '../../constants/IconSizes';
@@ -14,22 +14,46 @@ const PlayerBar: React.FC = () => {
   } = usePlayer();
   
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const isSeeking = useRef(false);
+  const [localProgress, setLocalProgress] = useState(0);
+  const [lastVolume, setLastVolume] = useState(1);
 
   const handlePlayPause = () => {
     if (isPlaying) pause();
     else if (currentSong) play();
   };
 
+  const handleSeekStart = () => {
+    isSeeking.current = true;
+    setLocalProgress(progress);
+  };
+
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    seek(parseFloat(e.target.value));
+    const val = parseFloat(e.target.value);
+    setLocalProgress(val);
+  };
+
+  const handleSeekEnd = (e: React.PointerEvent<HTMLInputElement>) => {
+    if (isSeeking.current) {
+      const val = parseFloat(e.currentTarget.value);
+      seek(val);
+      isSeeking.current = false;
+    }
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVolume(parseFloat(e.target.value));
+    const val = parseFloat(e.target.value);
+    setVolume(val);
+    if (val > 0) setLastVolume(val);
   };
 
   const toggleMute = () => {
-    setVolume(volume > 0 ? 0 : 1);
+    if (volume > 0) {
+      setLastVolume(volume);
+      setVolume(0);
+    } else {
+      setVolume(lastVolume || 1);
+    }
   };
 
   const toggleRepeat = () => {
@@ -38,7 +62,8 @@ const PlayerBar: React.FC = () => {
     else setRepeatMode('OFF');
   };
 
-  const progressPercent = duration ? (progress / duration) * 100 : 0;
+  const displayProgress = isSeeking.current ? localProgress : progress;
+  const progressPercent = duration ? (displayProgress / duration) * 100 : 0;
   const volumePercent = volume * 100;
 
   return (
@@ -83,14 +108,16 @@ const PlayerBar: React.FC = () => {
         </div>
         
         <div className="playback-bar">
-          <span className="time-current">{formatTime(progress)}</span>
+          <span className="time-current">{formatTime(displayProgress)}</span>
           <input 
             type="range"
             min="0"
             max={duration || 100}
             step="0.1"
-            value={progress || 0}
+            value={displayProgress || 0}
+            onPointerDown={handleSeekStart}
             onChange={handleSeekChange}
+            onPointerUp={handleSeekEnd}
             className="styled-range progress-range"
             style={{ '--range-progress': `${progressPercent}%` } as React.CSSProperties}
             disabled={!currentSong || !duration}
@@ -130,8 +157,16 @@ const PlayerBar: React.FC = () => {
         )}
 
         <div className="volume-control">
-          <button className="control-btn" onClick={toggleMute} style={{ padding: 0 }}>
-            {volume === 0 ? <VolumeX className="volume-icon" size={ICON_SIZES.SMALL} /> : <Volume2 className="volume-icon" size={ICON_SIZES.SMALL} />}
+          <button className="control-btn volume-btn" onClick={toggleMute} title={volume === 0 ? "Unmute" : "Mute"}>
+            {volume === 0 ? (
+              <VolumeX size={ICON_SIZES.SMALL} />
+            ) : volume < 0.3 ? (
+              <Volume size={ICON_SIZES.SMALL} />
+            ) : volume < 0.7 ? (
+              <Volume1 size={ICON_SIZES.SMALL} />
+            ) : (
+              <Volume2 size={ICON_SIZES.SMALL} />
+            )}
           </button>
           <input 
             type="range"

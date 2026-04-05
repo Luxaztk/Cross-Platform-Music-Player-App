@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare, X } from 'lucide-react';
+import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare, X, CheckSquare, Square, Trash } from 'lucide-react';
 import { useNotification } from '../../../application/hooks';
 import { useLibraryContext } from '../../components/Library';
 import { usePlayer } from '@music/hooks';
@@ -12,9 +12,6 @@ import { DeleteConfirmationModal } from '../../components/DeleteConfirmationModa
 import { useLanguage } from '../../components/Language';
 import './PlaylistDetailPage.scss';
 
-/**
- * Helper to format duration in seconds to "X hr Y min" or "Y min Z sec"
- */
 const formatTotalDuration = (seconds: number, t: (key: string) => string) => {
   const totalSeconds = Math.round(seconds);
   const hrs = Math.floor(totalSeconds / 3600);
@@ -35,11 +32,15 @@ export const PlaylistDetailPage: React.FC = () => {
   const [isImporting, setIsImporting] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
 
-  // New States
+  // Selection state
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+
+  // Existing Menus/Modals state
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
   const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
   const [editingSong, setEditingSong] = React.useState<Song | null>(null);
   const [deletingSong, setDeletingSong] = React.useState<Song | null>(null);
+  const [bulkDeleteMode, setBulkDeleteMode] = React.useState<'library' | 'playlist' | null>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   const {
@@ -49,6 +50,8 @@ export const PlaylistDetailPage: React.FC = () => {
     handleUpdatePlaylist,
     handleUpdateSong,
     handleDeleteSong,
+    handleDeleteSongs,
+    handleRemoveSongsFromPlaylist,
     libraryFilter,
     setLibraryFilter
   } = useLibraryContext();
@@ -64,9 +67,9 @@ export const PlaylistDetailPage: React.FC = () => {
       setIsLoading(true);
       setPlaylist(null);
       setLocalSongs([]);
+      setSelectedIds(new Set());
 
       handleGetPlaylistDetail(id).then((data: PlaylistDetail | null) => {
-
         if (data) {
           setPlaylist(data);
           setLocalSongs(data.songs || []);
@@ -90,6 +93,20 @@ export const PlaylistDetailPage: React.FC = () => {
     }
     return () => window.removeEventListener('click', handleClickOut);
   }, [activeMenuId]);
+
+  // Keyboard shortcut for Delete
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' && selectedIds.size > 0) {
+        // Prevent if typing in an input
+        if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
+        
+        onBulkDelete(isLibrary ? 'library' : 'playlist');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIds, isLibrary]);
 
   const onSaveMetadata = async (updated: any) => {
     if (editingSong) {
@@ -122,7 +139,59 @@ export const PlaylistDetailPage: React.FC = () => {
       setLocalSongs(prev => prev.filter(s => s.id !== deletingSong.id));
       showNotification('success', t('playlist.deleteSongSuccess'));
       setDeletingSong(null);
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        next.delete(deletingSong.id);
+        return next;
+      });
     }
+  };
+
+  const onBulkDelete = (mode: 'library' | 'playlist') => {
+    setBulkDeleteMode(mode);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (!bulkDeleteMode || selectedIds.size === 0) return;
+
+    const ids = Array.from(selectedIds);
+    let success = false;
+
+    if (bulkDeleteMode === 'library') {
+      success = await handleDeleteSongs(ids);
+    } else if (id) {
+      success = await handleRemoveSongsFromPlaylist(id, ids);
+    }
+
+    if (success) {
+      setLocalSongs(prev => prev.filter(s => !selectedIds.has(s.id)));
+      showNotification('success', t('playlist.bulkDeleteSuccess', { count: selectedIds.size }));
+      setSelectedIds(new Set());
+    }
+    setBulkDeleteMode(null);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredSongs.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredSongs.map(s => s.id)));
+    }
+  };
+
+  const toggleSelect = (songId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(songId)) {
+        next.delete(songId);
+      } else {
+        next.add(songId);
+      }
+      return next;
+    });
   };
 
   const filteredSongs = React.useMemo(() => {
@@ -138,7 +207,6 @@ export const PlaylistDetailPage: React.FC = () => {
 
     return sorted.sort((a, b) => a.title.localeCompare(b.title));
   }, [localSongs, libraryFilter, isLibrary]);
-
 
   const totalDuration = filteredSongs.reduce((acc, song) => acc + (song.duration || 0), 0);
 
@@ -237,7 +305,6 @@ export const PlaylistDetailPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Inline Actions */}
                 <div className="header-actions-inline">
                   {isLibrary ? (
                     <div className="import-btns">
@@ -271,7 +338,15 @@ export const PlaylistDetailPage: React.FC = () => {
 
       <div className="songs-list-container">
         <div className="list-header">
-          <div className="col-idx">#</div>
+          <div className="col-idx">
+            <button className="checkbox-header-btn" onClick={toggleSelectAll}>
+              {selectedIds.size === filteredSongs.length && filteredSongs.length > 0 ? (
+                <CheckSquare size={16} className="text-primary" />
+              ) : (
+                <Square size={16} />
+              )}
+            </button>
+          </div>
           <div className="col-title">{t('playlist.title')}</div>
           <div className="col-album">{t('playlist.album')}</div>
           <div className="col-duration">{t('playlist.duration')}</div>
@@ -283,14 +358,19 @@ export const PlaylistDetailPage: React.FC = () => {
           filteredSongs.map((song, index) => (
             <div 
               key={song.id} 
-              className={`song-row ${activeMenuId === song.id ? 'menu-open' : ''} ${currentSong?.id === song.id ? 'playing' : ''}`}
+              className={`song-row ${selectedIds.has(song.id) ? 'selected' : ''} ${activeMenuId === song.id ? 'menu-open' : ''} ${currentSong?.id === song.id ? 'playing' : ''}`}
+              onClick={() => toggleSelect(song.id)}
             >
               <div className="col-idx">
-                {currentSong?.id === song.id ? (
-                  <Play size={14} className="playing-icon" />
-                ) : (
-                  index + 1
-                )}
+                <div className="checkbox-cell" onClick={(e) => toggleSelect(song.id, e)}>
+                  {selectedIds.has(song.id) ? (
+                    <CheckSquare size={16} className="text-primary" />
+                  ) : currentSong?.id === song.id ? (
+                    <Play size={14} className="playing-icon" />
+                  ) : (
+                    index + 1
+                  )}
+                </div>
               </div>
               <div className="col-title">
                 <div className="song-cell">
@@ -305,7 +385,10 @@ export const PlaylistDetailPage: React.FC = () => {
                     <span 
                       className="title-text" 
                       style={{ color: currentSong?.id === song.id ? 'var(--color-primary)' : undefined }}
-                      onClick={() => playList(localSongs, index)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playList(filteredSongs, index);
+                      }}
                     >
                       {song.title}
                     </span>
@@ -320,21 +403,20 @@ export const PlaylistDetailPage: React.FC = () => {
                   className={`row-more-btn ${activeMenuId === song.id ? 'active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                      if (activeMenuId === song.id) {
-                        setActiveMenuId(null);
-                      } else {
-                        // Calculate placement relative to visible area (above player bar)
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const playerHeight = 90; 
-                        const visibleBottom = window.innerHeight - playerHeight;
-                        const spaceBelow = visibleBottom - rect.bottom;
-                        const menuHeight = 200;
-                        
-                        setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
-                        setActiveMenuId(song.id);
-                      }
-                    }}
-                  >
+                    if (activeMenuId === song.id) {
+                      setActiveMenuId(null);
+                    } else {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const playerHeight = 90; 
+                      const visibleBottom = window.innerHeight - playerHeight;
+                      const spaceBelow = visibleBottom - rect.bottom;
+                      const menuHeight = 200;
+                      
+                      setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
+                      setActiveMenuId(song.id);
+                    }
+                  }}
+                >
                   <MoreVertical size={ICON_SIZES.SMALL} />
                 </button>
                 {activeMenuId === song.id && (
@@ -342,7 +424,7 @@ export const PlaylistDetailPage: React.FC = () => {
                     ref={menuRef}
                     onClick={(e) => e.stopPropagation()}>
                     <button className="menu-item" onClick={() => {
-                      playList(localSongs, index);
+                      playList(filteredSongs, index);
                       setActiveMenuId(null);
                     }}>
                       <Play size={16} />
@@ -386,6 +468,31 @@ export const PlaylistDetailPage: React.FC = () => {
         )}
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="bulk-actions-bar">
+          <div className="selection-info">
+            <span className="count">{selectedIds.size}</span>
+            <span className="text">{t('playlist.songsSelected') || 'bài hát được chọn'}</span>
+          </div>
+          <div className="bulk-btns">
+            {!isLibrary && (
+              <button className="bulk-btn secondary" onClick={() => onBulkDelete('playlist')}>
+                <X size={16} />
+                {t('playlist.removeFromPlaylist') || 'Gỡ khỏi playlist'}
+              </button>
+            )}
+            <button className="bulk-btn delete" onClick={() => onBulkDelete('library')}>
+              <Trash size={16} />
+              {t('playlist.deleteFromLibrary') || 'Xóa khỏi thư viện'}
+            </button>
+            <div className="bulk-divider" />
+            <button className="bulk-btn close" onClick={() => setSelectedIds(new Set())}>
+              {t('common.cancel')}
+            </button>
+          </div>
+        </div>
+      )}
+
       <EditModal
         type={editingSong ? 'song' : 'playlist'}
         data={editingSong || playlist}
@@ -397,13 +504,22 @@ export const PlaylistDetailPage: React.FC = () => {
         onSave={onSaveMetadata}
       />
       <DeleteConfirmationModal
-        isOpen={!!deletingSong}
-        onClose={() => setDeletingSong(null)}
-        onConfirm={confirmDeleteSong}
-        title={t('modal.deleteSongTitle')}
-        message={t('modal.deleteSongQuestion')}
+        isOpen={!!deletingSong || !!bulkDeleteMode}
+        onClose={() => {
+          setDeletingSong(null);
+          setBulkDeleteMode(null);
+        }}
+        onConfirm={deletingSong ? confirmDeleteSong : confirmBulkDelete}
+        title={bulkDeleteMode ? (t('modal.bulkDeleteTitle') || 'Xóa hàng loạt') : t('modal.deleteSongTitle')}
+        message={
+          bulkDeleteMode === 'library' 
+            ? (t('modal.bulkDeleteLibraryMessage', { count: selectedIds.size }) || `Bạn có chắc muốn xóa vĩnh viễn ${selectedIds.size} bài hát đã chọn khỏi thư viện?`)
+            : bulkDeleteMode === 'playlist'
+            ? (t('modal.bulkRemovePlaylistMessage', { count: selectedIds.size }) || `Bạn có chắc muốn gỡ ${selectedIds.size} bài hát khỏi playlist này?`)
+            : t('modal.deleteSongQuestion')
+        }
         itemName={deletingSong?.title}
-        messageSuffix={t('modal.deleteSongFromPlaylist')}
+        messageSuffix={deletingSong ? t('modal.deleteSongFromPlaylist') : undefined}
       />
     </div>
   );

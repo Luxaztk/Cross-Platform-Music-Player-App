@@ -8,12 +8,11 @@ import {
   GetPlaylistByIdUseCase, 
   UpdatePlaylistUseCase, 
   UpdateSongUseCase, 
-  DeleteSongUseCase, 
   DeletePlaylistUseCase,
   type ILibraryRepository
 } from '@music/core';
 
-import type { Song, Playlist } from '@music/types';
+import type { Song, Playlist, ImportResult } from '@music/types';
 
 interface LibraryContextType {
   songs: Song[];
@@ -21,13 +20,18 @@ interface LibraryContextType {
   playlists: Playlist[];
   libraryFilter: { type: 'artist' | 'album' | 'none'; value: string };
   setLibraryFilter: (filter: { type: 'artist' | 'album' | 'none'; value: string }) => void;
-  handleImportFiles: () => Promise<{ success: boolean; count: number }>;
-  handleImportFolder: () => Promise<{ success: boolean; count: number }>;
+  handleImportFiles: () => Promise<ImportResult>;
+  handleImportFolder: () => Promise<ImportResult>;
+  handleAddSongs: (songs: Song[]) => Promise<{ success: boolean; count: number }>;
+  duplicateSongs: Song[];
+  clearDuplicates: () => void;
   handleCreatePlaylist: (name?: string) => Promise<Playlist | null>;
   handleGetPlaylistDetail: (id: string) => Promise<any>;
   handleUpdatePlaylist: (playlist: Playlist) => Promise<Playlist | null>;
   handleUpdateSong: (song: Song) => Promise<Song | null>;
   handleDeleteSong: (songId: string) => Promise<boolean>;
+  handleDeleteSongs: (songIds: string[]) => Promise<boolean>;
+  handleRemoveSongsFromPlaylist: (playlistId: string, songIds: string[]) => Promise<boolean>;
   handleDeletePlaylist: (playlistId: string) => Promise<boolean>;
   refreshPlaylists: () => Promise<void>;
   refreshLibrary: () => Promise<void>;
@@ -44,6 +48,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   const [songs, setSongs] = useState<Song[]>([]);
   const [library, setLibrary] = useState<Playlist | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [duplicateSongs, setDuplicateSongs] = useState<Song[]>([]);
   const [libraryFilter, setLibraryFilter] = useState<{ type: 'artist' | 'album' | 'none'; value: string }>({ 
     type: 'none', 
     value: '' 
@@ -57,7 +62,6 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   const getPlaylistByIdUc = new GetPlaylistByIdUseCase(repository);
   const updatePlaylistUc = new UpdatePlaylistUseCase(repository);
   const updateSongUc = new UpdateSongUseCase(repository);
-  const deleteSongUc = new DeleteSongUseCase(repository);
   const deletePlaylistUc = new DeletePlaylistUseCase(repository);
 
   const fetchLibrary = async () => {
@@ -79,8 +83,13 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   const handleImportFiles = async () => {
     const res = await importFilesUc.execute();
     if (res.success) {
-      await fetchLibrary();
-      await fetchPlaylists();
+      if (res.count > 0) {
+        await fetchLibrary();
+        await fetchPlaylists();
+      }
+      if (res.duplicateSongs && res.duplicateSongs.length > 0) {
+        setDuplicateSongs(res.duplicateSongs);
+      }
     }
     return res;
   };
@@ -88,11 +97,28 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   const handleImportFolder = async () => {
     const res = await importFolderUc.execute();
     if (res.success) {
-      await fetchLibrary();
-      await fetchPlaylists();
+      if (res.count > 0) {
+        await fetchLibrary();
+        await fetchPlaylists();
+      }
+      if (res.duplicateSongs && res.duplicateSongs.length > 0) {
+        setDuplicateSongs(res.duplicateSongs);
+      }
     }
     return res;
   };
+
+  const handleAddSongs = async (songsToAdd: Song[]) => {
+    const res = await repository.addSongs(songsToAdd);
+    if (res.success) {
+      await fetchLibrary();
+      await fetchPlaylists();
+    }
+    setDuplicateSongs([]); // Clear after resolution
+    return res;
+  };
+
+  const clearDuplicates = () => setDuplicateSongs([]);
 
   const handleCreatePlaylist = async (name: string = 'New Playlist') => {
     const newPlaylist = await createPlaylistUc.execute(name);
@@ -118,7 +144,25 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   };
 
   const handleDeleteSong = async (songId: string) => {
-    const res = await deleteSongUc.execute(songId);
+    const res = await repository.deleteSong(songId);
+    if (res) {
+      await fetchLibrary();
+      await fetchPlaylists();
+    }
+    return res;
+  };
+
+  const handleDeleteSongs = async (songIds: string[]) => {
+    const res = await repository.deleteSongs(songIds);
+    if (res) {
+      await fetchLibrary();
+      await fetchPlaylists();
+    }
+    return res;
+  };
+
+  const handleRemoveSongsFromPlaylist = async (playlistId: string, songIds: string[]) => {
+    const res = await repository.removeSongsFromPlaylist(playlistId, songIds);
     if (res) {
       await fetchLibrary();
       await fetchPlaylists();
@@ -143,11 +187,16 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
       setLibraryFilter,
       handleImportFiles, 
       handleImportFolder, 
+      handleAddSongs,
+      duplicateSongs,
+      clearDuplicates,
       handleCreatePlaylist, 
       handleGetPlaylistDetail, 
       handleUpdatePlaylist,
       handleUpdateSong,
       handleDeleteSong,
+      handleDeleteSongs,
+      handleRemoveSongsFromPlaylist,
       handleDeletePlaylist,
       refreshPlaylists: fetchPlaylists,
       refreshLibrary: fetchLibrary

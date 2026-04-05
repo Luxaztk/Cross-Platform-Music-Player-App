@@ -11,6 +11,9 @@ export const translations = {
       delete: 'Xóa',
       edit: 'Sửa',
       search: 'Tìm kiếm',
+      selectAll: 'Chọn tất cả',
+      deselectAll: 'Bỏ chọn hết',
+      addSelected: 'Thêm bài đã chọn',
     },
     header: {
       searchPlaceholder: 'Bạn muốn nghe gì?',
@@ -74,6 +77,8 @@ export const translations = {
       deleteSongQuestion: 'Bạn có chắc chắn muốn xóa bài hát',
       deleteSongFromPlaylist: 'khỏi danh sách phát này?',
       undoneWarning: 'Hành động này không thể hoàn tác.',
+      duplicatesFound: 'Phát hiện trùng lặp',
+      duplicatesDescription: 'Phát hiện các bài hát đã tồn tại trong thư viện của bạn (dựa trên nội dung file). Bạn có muốn tiếp tục thêm các bản copy này không?',
     },
     search: {
        songs: 'Bài hát',
@@ -95,6 +100,9 @@ export const translations = {
       delete: 'Delete',
       edit: 'Edit',
       search: 'Search',
+      selectAll: 'Select all',
+      deselectAll: 'Deselect all',
+      addSelected: 'Add selected',
     },
     header: {
       searchPlaceholder: 'What do you want to play?',
@@ -158,6 +166,8 @@ export const translations = {
       deleteSongQuestion: 'Are you sure you want to remove the song',
       deleteSongFromPlaylist: 'from this playlist?',
       undoneWarning: 'This action cannot be undone.',
+      duplicatesFound: 'Duplicates Found',
+      duplicatesDescription: 'Found songs that already exist in your library (based on file content). Do you want to add these copies anyway?',
     },
     search: {
        songs: 'Songs',

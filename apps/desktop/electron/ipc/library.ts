@@ -62,6 +62,14 @@ export function setupLibraryIPC() {
     return await libraryService.deleteSong(songId);
   });
 
+  ipcMain.handle('library:deleteSongs', async (_event, songIds: string[]) => {
+    return await libraryService.deleteSongs(songIds);
+  });
+
+  ipcMain.handle('library:removeSongsFromPlaylist', async (_event, playlistId: string, songIds: string[]) => {
+    return await libraryService.removeSongsFromPlaylist(playlistId, songIds);
+  });
+
   ipcMain.handle('library:deletePlaylist', async (_event, playlistId: string) => {
     return await libraryService.deletePlaylist(playlistId);
   });
@@ -111,12 +119,12 @@ export function setupLibraryIPC() {
         }
       }
 
-      const { addedCount, duplicatePaths } = await libraryService.processAndAddSongs(newSongs);
+      const { addedCount, duplicatePaths, duplicateSongs } = await libraryService.processAndAddSongs(newSongs);
       return {
-
         success: true,
         count: addedCount,
         duplicates: duplicatePaths,
+        duplicateSongs: duplicateSongs,
         totalAttempted: result.filePaths.length
       };
     } catch (err) {
@@ -148,17 +156,48 @@ export function setupLibraryIPC() {
         }
       }
 
-      const { addedCount, duplicatePaths } = await libraryService.processAndAddSongs(newSongs);
+      const { addedCount, duplicatePaths, duplicateSongs } = await libraryService.processAndAddSongs(newSongs);
       return {
-
         success: true,
         count: addedCount,
         duplicates: duplicatePaths,
+        duplicateSongs: duplicateSongs,
         totalAttempted: audioFiles.length
       };
     } catch (err) {
       console.error('IPC importFolder error:', err);
       return { success: false, count: 0, reason: 'ERROR', message: String(err) };
+    }
+  });
+
+  // New handler to force add songs (e.g. from duplicate resolution)
+  ipcMain.handle('library:addSongs', async (_event, songsToAdd: Song[]) => {
+    try {
+      // We manually add them without deduplication check or with a "force" flag
+      // For now, we'll just use a simple manual addition since they are already processed
+      const currentSongs = await storageAdapter.getSongs();
+      const currentLibrary = await storageAdapter.getLibrary();
+      
+      const updatedSongs = { ...currentSongs };
+      const updatedLibrary = { ...currentLibrary, songIds: [...currentLibrary.songIds] };
+      
+      let addedCount = 0;
+      for (const song of songsToAdd) {
+        // Even in force add, we avoid adding the EXACT same object if it somehow already exists by ID
+        updatedSongs[song.id] = song;
+        if (!updatedLibrary.songIds.includes(song.id)) {
+          updatedLibrary.songIds.push(song.id);
+          addedCount++;
+        }
+      }
+      
+      await storageAdapter.saveSongs(updatedSongs);
+      await storageAdapter.saveLibrary(updatedLibrary);
+      
+      return { success: true, count: addedCount };
+    } catch (err) {
+      console.error('IPC addSongs error:', err);
+      return { success: false, count: 0, message: String(err) };
     }
   });
 }

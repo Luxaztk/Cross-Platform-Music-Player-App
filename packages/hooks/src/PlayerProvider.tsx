@@ -13,16 +13,16 @@ export interface PlayerContextProps {
   volume: number;
   queue: Song[];
   history: Song[];
-  
+
   repeatMode: RepeatMode;
   isShuffle: boolean;
-  
+
   playNow: (song: Song) => void;
   playNext: (song: Song) => void;
   addToQueue: (song: Song) => void;
   playList: (songs: Song[], startIndex: number) => void;
   removeFromQueue: (index: number) => void;
-  
+
   play: () => void;
   pause: () => void;
   next: () => void;
@@ -58,13 +58,13 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(1);
   const [queue, setQueue] = useState<Song[]>([]);
-  
+
   const [history, setHistory] = useState<Song[]>([]);
   const [originalContext, setOriginalContext] = useState<Song[]>([]);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('OFF');
   const [isShuffle, setIsShuffle] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
-  
+
   const engineRef = useRef<AudioEngine | null>(null);
 
   // We need refs to latest state for the AudioEngine callbacks
@@ -75,11 +75,52 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
   const repeatModeRef = useRef(repeatMode); repeatModeRef.current = repeatMode;
   const isShuffleRef = useRef(isShuffle); isShuffleRef.current = isShuffle;
 
+  // Engine initialization effect - MUST run before hydration
+  useEffect(() => {
+    const engine = new AudioEngine({
+      onProgress: (p, d) => {
+        setProgress(p);
+        setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
+      },
+      onPlay: () => setIsPlaying(true),
+      onPause: () => setIsPlaying(false),
+      onStop: () => {
+        setIsPlaying(false);
+        setProgress(0);
+      },
+      onEnd: () => {
+        setIsPlaying(false);
+        setProgress(0);
+        if (repeatModeRef.current === 'ONE') {
+          engineRef.current?.seek(0);
+          engineRef.current?.play();
+        } else {
+          handleNext();
+        }
+      },
+      onLoad: (d) => {
+        setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
+      }
+    });
+
+    engine.setVolume(1);
+    engineRef.current = engine;
+
+    return () => {
+      engine.stop();
+    };
+  }, []);
+
   // Hydration effect - load from storage on mount
   useEffect(() => {
     const hydrate = async () => {
-      if (!storage || allSongs.length === 0) {
-        setIsHydrated(true); // Nothing to hydrate or songs not ready yet
+      // Wait for both storage and engine to be ready
+      if (!storage || allSongs.length === 0 || !engineRef.current) {
+        if (allSongs.length > 0 && storage) {
+          // If storage/songs are ready but engine isn't, we'll try again next render
+        } else {
+          setIsHydrated(true);
+        }
         return;
       }
 
@@ -87,13 +128,15 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
         const savedState = await storage.getPlayerState();
         if (savedState) {
           const findSong = (id: string | null) => allSongs.find(s => s.id === id) || null;
-          
+
           if (savedState.currentSongId) {
             const song = findSong(savedState.currentSongId);
             if (song) {
               setCurrentSong(song);
-              // Load but don't autoplay as per user request
-              engineRef.current?.load(song.filePath, false);
+              setDuration(song.duration || 0);
+              // Do NOT load the audio engine in the background here.
+              // Browsers/Electron block audio instantiation without user gesture.
+              // It will JIT load when the user hits Play.
             }
           }
 
@@ -103,7 +146,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
           setVolumeState(savedState.volume);
           setRepeatMode(savedState.repeatMode);
           setIsShuffle(savedState.isShuffle);
-          
+
           if (engineRef.current) {
             engineRef.current.setVolume(savedState.volume);
           }
@@ -115,7 +158,6 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
       }
     };
 
-    // Delay hydration until allSongs is populated
     if (allSongs.length > 0 && !isHydrated) {
       hydrate();
     }
@@ -150,8 +192,8 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
     setHistory(prev => {
       // most recently played item at index 0
       const newHistory = [song, ...prev];
-      if (newHistory.length > 32) { // Increased history size slightly
-         newHistory.pop(); // Remove oldest (the end of array)
+      if (newHistory.length > 32) {
+        newHistory.pop(); // Remove oldest
       }
       return newHistory;
     });
@@ -159,7 +201,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
 
   const handleNext = () => {
     if (currentSongRef.current) {
-        pushToHistory(currentSongRef.current);
+      pushToHistory(currentSongRef.current);
     }
 
     if (queueRef.current.length > 0) {
@@ -172,7 +214,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
         // Restart the context
         let newQueue = [...originalContextRef.current];
         if (isShuffleRef.current) {
-           newQueue = shuffleArray(newQueue);
+          newQueue = shuffleArray(newQueue);
         }
         const nextSong = newQueue[0];
         setQueue(newQueue.slice(1));
@@ -183,41 +225,6 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
       }
     }
   };
-
-  useEffect(() => {
-    const engine = new AudioEngine({
-      onProgress: (p, d) => {
-        setProgress(p);
-        setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
-      },
-      onPlay: () => setIsPlaying(true),
-      onPause: () => setIsPlaying(false),
-      onStop: () => {
-        setIsPlaying(false);
-        setProgress(0);
-      },
-      onEnd: () => {
-        setIsPlaying(false);
-        setProgress(0);
-        if (repeatModeRef.current === 'ONE') {
-           engineRef.current?.seek(0);
-           engineRef.current?.play();
-        } else {
-           handleNext();
-        }
-      },
-      onLoad: (d) => {
-        setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
-      }
-    });
-    
-    engine.setVolume(1);
-    engineRef.current = engine;
-    
-    return () => {
-      engine.stop();
-    };
-  }, []);
 
   const playSong = (song: Song) => {
     setCurrentSong(song);
@@ -231,11 +238,11 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
     setOriginalContext(songs);
     // DO NOT clear history, just append the current one if any
     if (currentSongRef.current) pushToHistory(currentSongRef.current);
-    
+
     const startSong = songs[startIndex];
     let upcomingQueue = songs.slice(startIndex + 1);
     if (isShuffleRef.current) {
-       upcomingQueue = shuffleArray(upcomingQueue);
+      upcomingQueue = shuffleArray(upcomingQueue);
     }
     setQueue(upcomingQueue);
     playSong(startSong);
@@ -255,31 +262,41 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
   };
 
   const removeFromQueue = (index: number) => {
-     setQueue(prev => prev.filter((_, i) => i !== index));
+    setQueue(prev => prev.filter((_, i) => i !== index));
   };
 
   const toggleShuffle = () => {
     const nextVal = !isShuffle;
     setIsShuffle(nextVal);
-    
+
     if (nextVal) {
-       // Turned ON: Shuffle the current queue
-       setQueue(prev => shuffleArray([...prev]));
+      // Turned ON: Shuffle the current queue
+      setQueue(prev => shuffleArray([...prev]));
     } else {
-       // Turned OFF: Restore the original context straight from the current playing sequence
-       const currentId = currentSongRef.current?.id;
-       if (currentId && originalContextRef.current.length > 0) {
-          const idx = originalContextRef.current.findIndex(s => s.id === currentId);
-          if (idx !== -1) {
-             setQueue(originalContextRef.current.slice(idx + 1));
-          }
-       }
+      // Turned OFF: Restore the original context straight from the current playing sequence
+      const currentId = currentSongRef.current?.id;
+      if (currentId && originalContextRef.current.length > 0) {
+        const idx = originalContextRef.current.findIndex(s => s.id === currentId);
+        if (idx !== -1) {
+          setQueue(originalContextRef.current.slice(idx + 1));
+        }
+      }
     }
   };
 
   const play = () => {
     if (currentSong && engineRef.current) {
-      engineRef.current.play();
+      const engineState = engineRef.current.state();
+      const currentSrc = engineRef.current.getSource();
+      const expectedUrl = `melovista://${encodeURIComponent(currentSong.filePath)}`;
+      
+      if (engineState !== 'loaded' || currentSrc !== expectedUrl) {
+        // Just-in-time loading for hydrated or failed-to-load songs
+        // Calling load with true will autoplay it immediately
+        engineRef.current.load(currentSong.filePath, true);
+      } else {
+        engineRef.current.play();
+      }
     }
   };
 
@@ -298,23 +315,32 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
       engineRef.current?.seek(0);
     } else {
       if (historyRef.current.length > 0) {
-         const newHistory = [...historyRef.current];
-         const prevSong = newHistory.shift()!; // Get the most recent history item
-         setHistory(newHistory);
-         
-         if (currentSongRef.current) {
-            setQueue(q => [currentSongRef.current!, ...q]); // pushing current song to queue
-         }
-         playSong(prevSong);
+        const newHistory = [...historyRef.current];
+        const prevSong = newHistory.shift()!; // Get the most recent history item
+        setHistory(newHistory);
+
+        if (currentSongRef.current) {
+          setQueue(q => [currentSongRef.current!, ...q]); // pushing current song to queue
+        }
+        playSong(prevSong);
       } else {
-         engineRef.current?.seek(0);
-         if (!isPlaying) engineRef.current?.play();
+        engineRef.current?.seek(0);
+        if (!isPlaying) engineRef.current?.play();
       }
     }
   };
 
   const seek = (time: number) => {
-    if (engineRef.current) {
+    if (currentSong && engineRef.current) {
+      const engineState = engineRef.current.state();
+      const currentSrc = engineRef.current.getSource();
+      const expectedUrl = `melovista://${encodeURIComponent(currentSong.filePath)}`;
+      
+      if (engineState !== 'loaded' || currentSrc !== expectedUrl) {
+        // JIT load on seek
+        engineRef.current.load(currentSong.filePath, false);
+      }
+      
       engineRef.current.seek(time);
       setProgress(time);
     }

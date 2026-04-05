@@ -32,29 +32,31 @@ export class LibraryService {
    * checking for duplicates, and saving the updated state back via the adapter.
    * 
    * Priority 1: File Path match
-   * Priority 2 & 3: File Name + Artist match
+   * Priority 2: File Content Hash match
+   * Priority 3: File Name + Artist match
    */
-  public async processAndAddSongs(newSongs: Song[]): Promise<{ addedCount: number; duplicatePaths: string[] }> {
+  public async processAndAddSongs(newSongs: Song[]): Promise<{ addedCount: number; duplicatePaths: string[]; duplicateSongs: Song[] }> {
     const currentSongs = await this.storageAdapter.getSongs();
     const currentLibrary = await this.storageAdapter.getLibrary();
-    
+
     // Clone purely for immutability and predictability
     const songs = { ...currentSongs };
-    const libraryUpdate = { 
-      ...currentLibrary, 
-      songIds: [...currentLibrary.songIds] 
+    const libraryUpdate = {
+      ...currentLibrary,
+      songIds: [...currentLibrary.songIds]
     };
-    
+
     const existingSongs = Object.values(songs);
-    
+
     // Priority 1: File Path
     const existingPaths = new Set(existingSongs.map(s => s.filePath));
-    // Priority 2 & 3: File Name + Artist
+    const existingHashes = new Set(existingSongs.map(s => s.hash).filter(Boolean));
     const existingNameArtistKeys = new Set(
       existingSongs.map(s => `${this.getBaseName(s.filePath).toLowerCase()}|${s.artist.toLowerCase()}`)
     );
 
     const duplicatePaths: string[] = [];
+    const duplicateSongs: Song[] = [];
     let addedCount = 0;
 
     for (const song of newSongs) {
@@ -63,11 +65,27 @@ export class LibraryService {
       const nameArtistKey = `${fileName}|${artist}`;
 
       // Check Prioritized levels
-      if (existingPaths.has(song.filePath) || existingNameArtistKeys.has(nameArtistKey)) {
+      const isDuplicateHash = song.hash && existingHashes.has(song.hash);
+      const isDuplicatePath = existingPaths.has(song.filePath);
+      const isDuplicateMetadata = existingNameArtistKeys.has(nameArtistKey);
+
+      if (isDuplicatePath || isDuplicateHash || isDuplicateMetadata) {
         duplicatePaths.push(song.filePath);
+        // Return only essential info to avoid IPC overhead (exclude heavy fields like coverArt)
+        duplicateSongs.push({
+          id: song.id,
+          title: song.title,
+          artist: song.artist,
+          filePath: song.filePath,
+        } as Song);
         continue;
       }
-      
+
+      // Update our temporary sets to catch duplicates within the SAME batch
+      existingPaths.add(song.filePath);
+      if (song.hash) existingHashes.add(song.hash);
+      existingNameArtistKeys.add(nameArtistKey);
+
       songs[song.id] = song;
       if (!libraryUpdate.songIds.includes(song.id)) {
         libraryUpdate.songIds.push(song.id);
@@ -76,10 +94,12 @@ export class LibraryService {
     }
 
     // Save back using the adapter
-    await this.storageAdapter.saveSongs(songs);
-    await this.storageAdapter.saveLibrary(libraryUpdate);
+    if (addedCount > 0) {
+      await this.storageAdapter.saveSongs(songs);
+      await this.storageAdapter.saveLibrary(libraryUpdate);
+    }
 
-    return { addedCount, duplicatePaths };
+    return { addedCount, duplicatePaths, duplicateSongs };
   }
 
   /**
@@ -87,7 +107,7 @@ export class LibraryService {
    */
   public async createPlaylist(name: string): Promise<Playlist> {
     const playlists = await this.storageAdapter.getPlaylists();
-    
+
     // Filter out the "0" (Library) playlist if it exists in the keys
     const customPlaylists = { ...playlists };
     delete customPlaylists['0'];
@@ -112,7 +132,7 @@ export class LibraryService {
    */
   public async updatePlaylist(updatedPlaylist: Playlist): Promise<Playlist> {
     const playlists = await this.storageAdapter.getPlaylists();
-    
+
     // Check if it's the library (cannot edit library name/desc this way usually)
     if (updatedPlaylist.id === '0') {
       await this.storageAdapter.saveLibrary(updatedPlaylist);
@@ -121,7 +141,7 @@ export class LibraryService {
 
     const customPlaylists = { ...playlists };
     delete customPlaylists['0'];
-    
+
     customPlaylists[updatedPlaylist.id] = updatedPlaylist;
     await this.storageAdapter.savePlaylists(customPlaylists);
 
@@ -157,7 +177,7 @@ export class LibraryService {
     // 3. Remove from all playlists
     const playlists = await this.storageAdapter.getPlaylists();
     let updatedPlaylists = false;
-    
+
     for (const id in playlists) {
       const playlist = playlists[id];
       if (playlist.songIds.includes(songId)) {
@@ -171,6 +191,72 @@ export class LibraryService {
     }
 
     return true;
+  }
+
+  /**
+   * Deletes multiple songs from the library and all playlists.
+   */
+  public async deleteSongs(songIds: string[]): Promise<boolean> {
+    if (!songIds || songIds.length === 0) return true;
+
+    const songs = await this.storageAdapter.getSongs();
+    const playlists = await this.storageAdapter.getPlaylists();
+    const library = await this.storageAdapter.getLibrary();
+    let anyDeleted = false;
+    let anyPlaylistUpdated = false;
+
+    for (const songId of songIds) {
+      if (songs[songId]) {
+        delete songs[songId];
+        anyDeleted = true;
+      }
+
+      // Remove from library songIds
+      if (library.songIds.includes(songId)) {
+        library.songIds = library.songIds.filter(id => id !== songId);
+      }
+
+      // Remove from all playlists
+      for (const pId in playlists) {
+        const playlist = playlists[pId];
+        if (playlist.songIds.includes(songId)) {
+          playlist.songIds = playlist.songIds.filter(id => id !== songId);
+          anyPlaylistUpdated = true;
+        }
+      }
+    }
+
+    if (anyDeleted) {
+      await this.storageAdapter.saveSongs(songs);
+      await this.storageAdapter.saveLibrary(library);
+      if (anyPlaylistUpdated) {
+        await this.storageAdapter.savePlaylists(playlists);
+      }
+    }
+
+    return anyDeleted;
+  }
+
+  /**
+   * Removes multiple songs from a specific playlist.
+   */
+  public async removeSongsFromPlaylist(playlistId: string, songIds: string[]): Promise<boolean> {
+    if (playlistId === '0') return await this.deleteSongs(songIds);
+
+    const playlists = await this.storageAdapter.getPlaylists();
+    if (!playlists[playlistId]) return false;
+
+    const playlist = playlists[playlistId];
+    const initialCount = playlist.songIds.length;
+    
+    playlist.songIds = playlist.songIds.filter(id => !songIds.includes(id));
+    
+    if (playlist.songIds.length !== initialCount) {
+      await this.storageAdapter.savePlaylists(playlists);
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -196,9 +282,9 @@ export class LibraryService {
   public async getLibrary(): Promise<{ songs: Song[]; library: Playlist }> {
     const songs = await this.storageAdapter.getSongs();
     const library = await this.storageAdapter.getLibrary();
-    return { 
-      songs: Object.values(songs), 
-      library 
+    return {
+      songs: Object.values(songs),
+      library
     };
   }
 
@@ -208,7 +294,7 @@ export class LibraryService {
   public async getPlaylists(): Promise<Playlist[]> {
     const playlistsMap = await this.storageAdapter.getPlaylists();
     const playlists = Object.values(playlistsMap);
-    
+
     // Ensure Library ("0") is always included at the start if available
     const library = await this.storageAdapter.getLibrary();
     return [library, ...playlists];

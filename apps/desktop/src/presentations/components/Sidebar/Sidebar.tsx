@@ -2,14 +2,13 @@ import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ArrowUpDown } from 'lucide-react';
 
-
-
-import type { Playlist } from '@music/types';
+import type { Playlist, Song, ImportResult } from '@music/types';
 import { useLibraryContext } from '../Library/LibraryProvider';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { EditModal } from '../EditModal';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal/DeleteConfirmationModal';
+import { DuplicateResolutionModal } from '../DuplicateResolutionModal/DuplicateResolutionModal';
 import './Sidebar.scss';
 
 interface SidebarProps {
@@ -18,7 +17,15 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
-  const { playlists, handleCreatePlaylist, handleDeletePlaylist, handleUpdatePlaylist } = useLibraryContext();
+  const { 
+    playlists, 
+    handleCreatePlaylist, 
+    handleDeletePlaylist, 
+    handleUpdatePlaylist,
+    handleImportFiles,
+    handleImportFolder,
+    handleAddSongs
+  } = useLibraryContext();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
@@ -87,6 +94,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     }
   };
 
+  const onImportFiles = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveMenuId(null);
+    await handleImportFiles();
+  };
+
+  const onImportFolder = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveMenuId(null);
+    await handleImportFolder();
+  };
+
   const toggleMenu = (e: React.MouseEvent, playlistId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -153,13 +174,32 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
               <li>
                 <NavLink
                   to="/playlist/0"
-                  className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${activeMenuId === '0' ? 'menu-open' : ''}`}
+                  className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isActive || activeMenuId === '0' ? 'menu-open' : ''}`}
                 >
                   <Music className="icon" size={ICON_SIZES.SMALL} />
                   <span className="text">{t('sidebar.allSongs')}</span>
-                  <button className="more-btn" onClick={(e) => e.preventDefault()} title={t('header.settings')}>
-                    <MoreVertical size={ICON_SIZES.TINY} />
-                  </button>
+                  <div className="col-more">
+                    <button
+                      className={`more-btn ${activeMenuId === '0' ? 'active' : ''}`}
+                      onClick={(e) => toggleMenu(e, '0')}
+                      title={t('header.settings')}
+                    >
+                      <MoreVertical size={ICON_SIZES.TINY} />
+                    </button>
+
+                    {activeMenuId === '0' && (
+                      <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} ref={menuRef}>
+                        <button className="menu-item" onClick={onImportFiles}>
+                          <Music size={14} />
+                          <span>{t('playlist.importFiles')}</span>
+                        </button>
+                        <button className="menu-item" onClick={onImportFolder}>
+                          <ListMusic size={14} />
+                          <span>{t('playlist.importFolder')}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </NavLink>
               </li>
             </ul>

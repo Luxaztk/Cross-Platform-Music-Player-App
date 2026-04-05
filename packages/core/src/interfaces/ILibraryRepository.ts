@@ -8,7 +8,10 @@ export interface ILibraryRepository {
   updatePlaylist(playlist: Playlist): Promise<Playlist>;
   updateSong(song: Song): Promise<Song>;
   deleteSong(songId: string): Promise<boolean>;
+  deleteSongs(songIds: string[]): Promise<boolean>;
+  removeSongsFromPlaylist(playlistId: string, songIds: string[]): Promise<boolean>;
   deletePlaylist(playlistId: string): Promise<boolean>;
   importFiles(): Promise<ImportResult>;
   importFolder(): Promise<ImportResult>;
+  addSongs(songs: Song[]): Promise<{ success: boolean; count: number }>;
 }
