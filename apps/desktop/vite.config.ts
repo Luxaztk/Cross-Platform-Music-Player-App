@@ -11,6 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@music/brand': path.resolve(__dirname, '../../packages/brand'),
+      '@music/utils': path.resolve(__dirname, '../../packages/utils/src'),
     },
   },
   plugins: [

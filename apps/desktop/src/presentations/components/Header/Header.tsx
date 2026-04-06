@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Search, User, Languages, Settings, LogOut, X, SlidersHorizontal } from 'lucide-react';
+import { Home, Search, User, Languages, Settings, LogOut, X, SlidersHorizontal, Headphones, Check, ChevronRight } from 'lucide-react';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { useSearch, useLibrary } from '../../../application/hooks';
-import { usePlayer } from '@music/hooks';
-import type { Song, Playlist } from '@music/types';
+import { usePlayer, useAudioDevices } from '@music/hooks';
+import type { Song } from '@music/types';
 import { SearchOverlay } from './SearchOverlay';
 import './Header.scss';
 
@@ -18,6 +18,8 @@ const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const [showDeviceMenu, setShowDeviceMenu] = React.useState(false);
+  const { devices, currentDeviceId, setAudioDevice } = useAudioDevices();
   
   const searchResults = useSearch(songs, playlists, searchQuery);
   const profileRef = React.useRef<HTMLDivElement>(null);
@@ -33,6 +35,7 @@ const Header: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
+        setShowDeviceMenu(false);
       }
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setIsSearchFocused(false);
@@ -84,6 +87,36 @@ const Header: React.FC = () => {
     }
     setIsSearchFocused(false);
     setSearchQuery('');
+  };
+
+  const handleTestSound = () => {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const ctx = new AudioContextClass();
+    if (typeof (ctx as any).setSinkId === 'function') {
+      (ctx as any).setSinkId(currentDeviceId).then(() => {
+        playBeep(ctx);
+      }).catch((e: any) => {
+        console.error('Failed to set sinkId on audio context', e);
+        playBeep(ctx);
+      });
+    } else {
+      playBeep(ctx);
+    }
+  };
+
+  const playBeep = (ctx: AudioContext) => {
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, ctx.currentTime);
+    gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+    
+    osc.start();
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
+    osc.stop(ctx.currentTime + 0.5);
   };
 
   return (
@@ -144,7 +177,14 @@ const Header: React.FC = () => {
           <button
             className={`user-profile-btn ${showProfileMenu ? 'active' : ''}`}
             title={t('header.profile')}
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            onClick={() => {
+              if (showProfileMenu) {
+                setShowProfileMenu(false);
+                setShowDeviceMenu(false);
+              } else {
+                setShowProfileMenu(true);
+              }
+            }}
           >
             <div className="avatar">
               <User size={ICON_SIZES.MEDIUM} />
@@ -170,6 +210,61 @@ const Header: React.FC = () => {
                 </div>
               </div>
               <div className="dropdown-divider" />
+              
+              {/* Output Device Selection */}
+              <div 
+                className="dropdown-item nested-dropdown-trigger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeviceMenu(!showDeviceMenu);
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Headphones size={16} />
+                  <span>{t('settings.audioOutput') || 'Đầu ra âm thanh'}</span>
+                </div>
+                <ChevronRight size={14} className={`chevron ${showDeviceMenu ? 'open' : ''}`} />
+
+                {showDeviceMenu && (
+                  <div className="nested-dropdown-menu">
+                    <button 
+                      className={`device-btn ${currentDeviceId === 'default' ? 'selected' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAudioDevice('default');
+                      }}
+                    >
+                      <span>{t('settings.defaultDevice') || 'Mặc định'}</span>
+                      {currentDeviceId === 'default' && <Check size={14} className="check-icon" />}
+                    </button>
+                    {devices.filter(d => d.deviceId !== 'default' && d.deviceId !== 'communications').map(d => (
+                      <button 
+                        key={d.deviceId}
+                        className={`device-btn ${currentDeviceId === d.deviceId ? 'selected' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAudioDevice(d.deviceId);
+                        }}
+                      >
+                        <span title={d.label}>{d.label}</span>
+                        {currentDeviceId === d.deviceId && <Check size={14} className="check-icon" />}
+                      </button>
+                    ))}
+                    <div className="dropdown-divider" style={{ margin: '4px 0' }} />
+                    <button 
+                      className="device-btn test-btn" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTestSound();
+                      }}
+                    >
+                      <span>{t('settings.testSound') || 'Kiểm tra âm thanh'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="dropdown-divider" />
+
               <button className="dropdown-item">
                 <Settings size={16} />
                 <span>{t('header.settings')}</span>

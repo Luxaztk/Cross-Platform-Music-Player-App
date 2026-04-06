@@ -12,6 +12,7 @@ declare global {
       deleteSong: (songId: string) => Promise<boolean>;
       deleteSongs: (songIds: string[]) => Promise<boolean>;
       removeSongsFromPlaylist: (playlistId: string, songIds: string[]) => Promise<boolean>;
+      addSongsToPlaylist: (playlistId: string, songIds: string[]) => Promise<boolean>;
       deletePlaylist: (playlistId: string) => Promise<boolean>;
       importFiles: () => Promise<ImportResult>;
       importFolder: () => Promise<ImportResult>;

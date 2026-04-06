@@ -15,6 +15,7 @@ export class AudioEngine {
   private howl: Howl | null = null;
   private animationFrameId: number | null = null;
   private events: AudioEngineEvents = {};
+  private currentSinkId: string = 'default';
   
   constructor(events?: AudioEngineEvents) {
     if (events) {
@@ -24,6 +25,24 @@ export class AudioEngine {
 
   public setEvents(events: AudioEngineEvents) {
     this.events = events;
+  }
+
+  public async setSinkId(deviceId: string) {
+    this.currentSinkId = deviceId;
+    if (!this.howl) return;
+
+    const sounds = (this.howl as any)._sounds;
+    if (sounds) {
+      for (const sound of sounds) {
+        if (sound._node && typeof sound._node.setSinkId === 'function') {
+          try {
+            await sound._node.setSinkId(deviceId);
+          } catch (e) {
+            console.error('Failed to set sinkId on node:', e);
+          }
+        }
+      }
+    }
   }
 
   private lastUrl: string | null = null;
@@ -59,6 +78,10 @@ export class AudioEngine {
       onload: () => {
         const duration = this.howl?.duration() || 0;
         if (this.events.onLoad) this.events.onLoad(duration);
+        // Apply the sink ID as soon as it loads and nodes are created
+        if (this.currentSinkId !== 'default') {
+          this.setSinkId(this.currentSinkId);
+        }
       },
       onloaderror: (_id: number, err: unknown) => {
         console.error('Howler load error:', err);

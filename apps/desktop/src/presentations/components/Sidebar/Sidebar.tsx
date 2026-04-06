@@ -2,13 +2,12 @@ import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ArrowUpDown } from 'lucide-react';
 
-import type { Playlist, Song, ImportResult } from '@music/types';
+import type { Playlist } from '@music/types';
 import { useLibraryContext } from '../Library/LibraryProvider';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { EditModal } from '../EditModal';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal/DeleteConfirmationModal';
-import { DuplicateResolutionModal } from '../DuplicateResolutionModal/DuplicateResolutionModal';
 import './Sidebar.scss';
 
 interface SidebarProps {
@@ -16,7 +15,7 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) => {
   const { 
     playlists, 
     handleCreatePlaylist, 
@@ -24,7 +23,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     handleUpdatePlaylist,
     handleImportFiles,
     handleImportFolder,
-    handleAddSongs
   } = useLibraryContext();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -385,6 +383,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       />
     </aside>
   );
-};
+});
 
 export default Sidebar;

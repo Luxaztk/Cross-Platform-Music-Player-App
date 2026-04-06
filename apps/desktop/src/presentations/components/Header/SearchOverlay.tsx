@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Music, CornerDownLeft, ArrowUp, ArrowDown, User, Disc, Play, PlaySquare, ListPlus, MoreVertical } from 'lucide-react';
+import { Music, CornerDownLeft, ArrowUp, ArrowDown, Disc, Play, PlaySquare, ListPlus, MoreVertical } from 'lucide-react';
 import type { Song } from '@music/types';
 import type { SearchResults } from '../../../application/hooks';
 import { useLanguage } from '../Language';
@@ -194,7 +194,9 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         {artist.avatar ? (
                           <img src={artist.avatar} alt="" className="song-thumb circular" />
                         ) : (
-                          <div className="song-thumb-placeholder circular"><User size={14} /></div>
+                          <div className="song-thumb-placeholder circular initial-placeholder">
+                            {artist.name.charAt(0).toUpperCase()}
+                          </div>
                         )}
                         <div className="song-meta">
                           <span className="song-title">{artist.name}</span>

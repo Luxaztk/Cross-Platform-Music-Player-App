@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import type { Song, PlayerState } from '@music/types';
 import type { IStorageAdapter } from '@music/core';
 import { AudioEngine } from '@music/player';
+import { useAudioDevices } from './useAudioDevices';
 
 export type RepeatMode = 'OFF' | 'ALL' | 'ONE';
 
@@ -64,6 +65,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('OFF');
   const [isShuffle, setIsShuffle] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const { currentDeviceId } = useAudioDevices();
 
   const engineRef = useRef<AudioEngine | null>(null);
 
@@ -110,6 +112,12 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
       engine.stop();
     };
   }, []);
+
+  useEffect(() => {
+    if (engineRef.current && currentDeviceId) {
+      engineRef.current.setSinkId(currentDeviceId);
+    }
+  }, [currentDeviceId]);
 
   // Hydration effect - load from storage on mount
   useEffect(() => {

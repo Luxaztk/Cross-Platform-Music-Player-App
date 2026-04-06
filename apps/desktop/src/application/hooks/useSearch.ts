@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import Fuse from 'fuse.js';
 import type { Song, Playlist } from '@music/types';
+import { splitArtists } from '@music/utils';
 
 export interface SearchResults {
   songs: Song[];
@@ -39,9 +40,18 @@ export const useSearch = (songs: Song[], playlists: Playlist[], query: string) =
     // Derive unique artists from matching songs
     const artistMap = new Map<string, any>();
     songs.forEach(song => {
-      if (song.artist && song.artist.toLowerCase().includes(query.toLowerCase())) {
-        artistMap.set(song.artist, { id: `artist-${song.artist}`, name: song.artist, avatar: song.coverArt }); // Using coverArt as placeholder avatar
-      }
+      // Robust runtime split: handle both cases (already array vs joined string)
+      // to ensure even legacy data is correctly separated.
+      const individualArtists = (song.artists && song.artists.length > 0)
+        ? song.artists.flatMap(a => splitArtists(a))
+        : splitArtists(song.artist);
+      
+      individualArtists.forEach(artistName => {
+        if (artistName && artistName.toLowerCase().includes(query.toLowerCase())) {
+          // Option B: Don't use song cover, allow UI to handle placeholder
+          artistMap.set(artistName, { id: `artist-${artistName}`, name: artistName });
+        }
+      });
     });
 
     return {

@@ -1,6 +1,0 @@
-fix(player): resolve hydration playback and volume toggle issues
-
-- PlayerProvider: Implemented Just-In-Time (JIT) audio loading. Bypassed background `engine.load()` during hydration to avoid browser autoplay policy restrictions. Audio files are now dynamically loaded upon initial user interaction (play/seek).
-- AudioEngine: Exposed `state()` and `getSource()` methods to accurately track Howler's readiness and support JIT fallback loading.
-- PlayerBar: Added `lastVolume` state to properly restore the previous audio level when toggling mute, rather than defaulting to 100%.
-- PlaylistDetailPage: Synced UI index by invoking `playList` with the `filteredSongs` array instead of raw `localSongs`, ensuring accurate song playback from sorted playlists.

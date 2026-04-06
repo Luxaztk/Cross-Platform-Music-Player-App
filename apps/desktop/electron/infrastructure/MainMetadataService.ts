@@ -2,8 +2,8 @@ import * as mm from 'music-metadata';
 import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
 import type { Song } from '@music/types';
+import { splitArtists } from '@music/utils';
 
 export class MainMetadataService {
   private static async calculateQuickHash(filePath: string): Promise<string> {
@@ -47,6 +47,13 @@ export class MainMetadataService {
 
       const quickHash = await this.calculateQuickHash(filePath);
 
+      const rawArtist = common.artist || 'Unknown Artist';
+      // Always flatMap and split every element, even if already an array, 
+      // as some metadata sources provide combined strings inside an array.
+      const artists = (common.artists && common.artists.length > 0) 
+        ? common.artists.flatMap(a => splitArtists(a))
+        : splitArtists(rawArtist);
+
       return {
         id: randomUUID(),
         filePath,
@@ -54,7 +61,8 @@ export class MainMetadataService {
           .replace(/[-_]/g, ' ')
           .replace(/\s+/g, ' ')
           .trim(),
-        artist: common.artist || 'Unknown Artist',
+        artist: rawArtist,
+        artists: artists,
         album: common.album || 'Unknown Album',
         duration: isFinite(format.duration || 0) ? (format.duration || 0) : 0,
         genre: common.genre ? common.genre.join(', ') : 'Unknown Genre',

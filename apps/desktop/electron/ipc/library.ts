@@ -70,6 +70,10 @@ export function setupLibraryIPC() {
     return await libraryService.removeSongsFromPlaylist(playlistId, songIds);
   });
 
+  ipcMain.handle('library:addSongsToPlaylist', async (_event, playlistId: string, songIds: string[]) => {
+    return await libraryService.addSongsToPlaylist(playlistId, songIds);
+  });
+
   ipcMain.handle('library:deletePlaylist', async (_event, playlistId: string) => {
     return await libraryService.deletePlaylist(playlistId);
   });

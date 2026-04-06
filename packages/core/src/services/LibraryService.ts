@@ -260,6 +260,29 @@ export class LibraryService {
   }
 
   /**
+   * Adds multiple songs to a specific playlist, avoiding duplicates.
+   */
+  public async addSongsToPlaylist(playlistId: string, songIds: string[]): Promise<boolean> {
+    if (playlistId === '0') return false; // Cannot add to library this way (use processAndAddSongs)
+
+    const playlists = await this.storageAdapter.getPlaylists();
+    if (!playlists[playlistId]) return false;
+
+    const playlist = playlists[playlistId];
+    
+    // Add only IDs that are not already present
+    const newIds = songIds.filter(id => !playlist.songIds.includes(id));
+    
+    if (newIds.length > 0) {
+      playlist.songIds = [...playlist.songIds, ...newIds];
+      await this.storageAdapter.savePlaylists(playlists);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Deletes a playlist by ID.
    */
   public async deletePlaylist(playlistId: string): Promise<boolean> {

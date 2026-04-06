@@ -2,7 +2,8 @@ export interface Song {
   id: string; // UUID generated on import
   filePath: string; // absolute path to local file
   title: string;
-  artist: string;
+  artist: string; // Original joined string
+  artists: string[]; // Separated artist list
   album: string;
   duration: number; // seconds
   genre: string;

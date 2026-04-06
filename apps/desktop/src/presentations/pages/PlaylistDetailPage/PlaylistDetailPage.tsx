@@ -1,14 +1,15 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare, X, CheckSquare, Square, Trash } from 'lucide-react';
+import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare, X, CheckSquare, Square, Trash, ChevronRight, Filter } from 'lucide-react';
 import { useNotification } from '../../../application/hooks';
 import { useLibraryContext } from '../../components/Library';
 import { usePlayer } from '@music/hooks';
-import { formatTime } from '@music/utils';
+import { formatTime, splitArtists } from '@music/utils';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { EditModal } from '../../components/EditModal';
 import { DeleteConfirmationModal } from '../../components/DeleteConfirmationModal/DeleteConfirmationModal';
+import { SongPickerModal } from '../../components/SongPickerModal/SongPickerModal';
 import { useLanguage } from '../../components/Language';
 import './PlaylistDetailPage.scss';
 
@@ -31,12 +32,14 @@ export const PlaylistDetailPage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [isImporting, setIsImporting] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isSongPickerOpen, setIsSongPickerOpen] = React.useState(false);
 
   // Selection state
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
 
   // Existing Menus/Modals state
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
+  const [activeSubMenuId, setActiveSubMenuId] = React.useState<string | null>(null);
   const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
   const [editingSong, setEditingSong] = React.useState<Song | null>(null);
   const [deletingSong, setDeletingSong] = React.useState<Song | null>(null);
@@ -52,6 +55,9 @@ export const PlaylistDetailPage: React.FC = () => {
     handleDeleteSong,
     handleDeleteSongs,
     handleRemoveSongsFromPlaylist,
+    handleAddSongsToPlaylist,
+    songs: allSongs,
+    playlists,
     libraryFilter,
     setLibraryFilter
   } = useLibraryContext();
@@ -79,13 +85,19 @@ export const PlaylistDetailPage: React.FC = () => {
         setIsLoading(false);
       });
     }
-  }, [id, handleGetPlaylistDetail]);
+
+    // Task: Clear filter when navigating between lists (e.g. from Library to a specific Playlist)
+    return () => {
+      setLibraryFilter({ type: 'none', values: [] });
+    };
+  }, [id, handleGetPlaylistDetail, setLibraryFilter]);
 
   // Click out to close menu
   React.useEffect(() => {
     const handleClickOut = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setActiveMenuId(null);
+        setActiveSubMenuId(null);
       }
     };
     if (activeMenuId) {
@@ -193,14 +205,49 @@ export const PlaylistDetailPage: React.FC = () => {
       return next;
     });
   };
+  
+  const toggleFilter = (type: 'artist' | 'album', value: string) => {
+    if (libraryFilter.type !== type && libraryFilter.type !== 'none') {
+      // If switching type (e.g. from artist to album), we reset to the new type
+      setLibraryFilter({ type, values: [value] });
+      return;
+    }
+
+    const currentValues = libraryFilter.values;
+    const index = currentValues.indexOf(value);
+    
+    if (index > -1) {
+      // Remove if exists
+      const next = currentValues.filter(v => v !== value);
+      setLibraryFilter({
+        type: next.length === 0 ? 'none' : type,
+        values: next
+      });
+    } else {
+      // Add if new
+      setLibraryFilter({
+        type,
+        values: [...currentValues, value]
+      });
+    }
+  };
 
   const filteredSongs = React.useMemo(() => {
-    const sorted = [...(isLibrary && libraryFilter.type !== 'none' ? localSongs.filter(song => {
+    const sorted = [...(libraryFilter.type !== 'none' && libraryFilter.values.length > 0 ? localSongs.filter(song => {
       if (libraryFilter.type === 'artist') {
-        return song.artist.toLowerCase() === libraryFilter.value.toLowerCase();
+        const queries = libraryFilter.values
+          .flatMap(v => splitArtists(v)) // Split queries too!
+          .map(v => v.toLowerCase().trim());
+        
+        const allArtists = (song.artists || [song.artist])
+          .flatMap(a => splitArtists(a))
+          .map(a => a.toLowerCase().trim());
+
+        return queries.every(q => allArtists.includes(q));
       }
       if (libraryFilter.type === 'album') {
-        return song.album?.toLowerCase() === libraryFilter.value.toLowerCase();
+        const queries = libraryFilter.values.map(v => v.toLowerCase().trim());
+        return queries.includes(song.album?.toLowerCase().trim() || '');
       }
       return true;
     }) : localSongs)];
@@ -243,7 +290,27 @@ export const PlaylistDetailPage: React.FC = () => {
   };
 
   const onAddFromSystem = () => {
-    showNotification('info', t('playlist.addFromLibrary') + ' - Coming soon!');
+    setIsSongPickerOpen(true);
+  };
+
+  const onAddSongsToPlaylist = async (playlistId: string, songIds: string[]) => {
+    const targetPlaylist = playlists.find(p => p.id === playlistId);
+    if (!targetPlaylist) return;
+
+    const success = await handleAddSongsToPlaylist(playlistId, songIds);
+    if (success) {
+      showNotification('success', t('playlist.addSongsSuccess', { count: songIds.length, name: targetPlaylist.name }));
+      if (id === playlistId) {
+        // Refresh local playlist if we added to the CURRENT one
+        const updated = await handleGetPlaylistDetail(id);
+        if (updated) {
+          setPlaylist(updated);
+          setLocalSongs(updated.songs);
+        }
+      }
+    }
+    setActiveMenuId(null);
+    setActiveSubMenuId(null);
   };
 
   return (
@@ -288,22 +355,13 @@ export const PlaylistDetailPage: React.FC = () => {
                     <>
                       <span className="metadata-separator">•</span>
                       <span className="metadata-item">
-                        {libraryFilter.type !== 'none' ? `${filteredSongs.length} / ${localSongs.length}` : localSongs.length} {t('playlist.songs')}
+                        {libraryFilter.type !== 'none' && libraryFilter.values.length > 0 ? `${filteredSongs.length} / ${localSongs.length}` : localSongs.length} {t('playlist.songs')}
                       </span>
                       <span className="metadata-separator">•</span>
                       <span className="metadata-item">{formatTotalDuration(totalDuration, t)}</span>
                     </>
                   )}
                 </div>
-
-                {isLibrary && libraryFilter.type !== 'none' && (
-                  <div className="active-filter-badge">
-                    <span>{t('search.filteringBy')} <strong>{libraryFilter.value}</strong></span>
-                    <button className="clear-filter-btn" onClick={() => setLibraryFilter({ type: 'none', value: '' })}>
-                      <X size={12} />
-                    </button>
-                  </div>
-                )}
 
                 <div className="header-actions-inline">
                   {isLibrary ? (
@@ -337,6 +395,36 @@ export const PlaylistDetailPage: React.FC = () => {
       </div>
 
       <div className="songs-list-container">
+        {libraryFilter.type !== 'none' && libraryFilter.values.length > 0 && (
+          <div className="filter-chip-container">
+            <div className="active-filter-label">
+              <Filter size={12} className="filter-icon" />
+              <span className="filter-text">{t('playlist.filteringBy')}</span>
+            </div>
+            
+            <div className="filter-tags-list">
+              {libraryFilter.values.map((val) => (
+                <div key={val} className="active-filter-tag">
+                  <span className="tag-value">{val}</span>
+                  <button
+                    className="remove-tag-btn"
+                    onClick={() => {
+                      const next = libraryFilter.values.filter(v => v !== val);
+                      setLibraryFilter({
+                        type: next.length === 0 ? 'none' : libraryFilter.type,
+                        values: next
+                      });
+                    }}
+                    title={t('common.clear')}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="list-header">
           <div className="col-idx">
             <button className="checkbox-header-btn" onClick={toggleSelectAll}>
@@ -392,7 +480,22 @@ export const PlaylistDetailPage: React.FC = () => {
                     >
                       {song.title}
                     </span>
-                    <span className="artist-text">{song.artist}</span>
+                    <div className="artist-text">
+                      {(song.artists || [song.artist]).flatMap(a => splitArtists(a)).map((artist, i, arr) => (
+                        <React.Fragment key={artist + i}>
+                          <span 
+                            className="clickable-artist" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFilter('artist', artist);
+                            }}
+                          >
+                            {artist}
+                          </span>
+                          {i < arr.length - 1 && <span className="artist-separator"> ft.&nbsp;</span>}
+                        </React.Fragment>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -444,6 +547,49 @@ export const PlaylistDetailPage: React.FC = () => {
                       <ListPlus size={16} />
                       {t('playlist.addToQueue') || 'Thêm vào hàng đợi'}
                     </button>
+                    
+                    <div className="menu-divider" style={{height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0'}}></div>
+
+                    <div 
+                      className={`menu-item nested-trigger ${activeSubMenuId === song.id ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSubMenuId(activeSubMenuId === song.id ? null : song.id);
+                      }}
+                      onMouseEnter={() => setActiveSubMenuId(song.id)}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <FolderPlus size={16} />
+                        {t('playlist.addToPlaylist') || 'Thêm vào danh sách phát'}
+                      </div>
+                      <ChevronRight size={14} />
+
+                      {activeSubMenuId === song.id && (
+                        <div className="nested-menu">
+                          {playlists.filter(p => p.id !== '0' && p.id !== id).length === 0 ? (
+                            <div className="menu-item disabled">
+                              {t('sidebar.noPlaylists')}
+                            </div>
+                          ) : (
+                            playlists
+                              .filter(p => p.id !== '0' && p.id !== id)
+                              .map(p => (
+                                <button 
+                                  key={p.id} 
+                                  className="menu-item"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAddSongsToPlaylist(p.id, [song.id]);
+                                  }}
+                                >
+                                  {p.name}
+                                </button>
+                              ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="menu-divider" style={{height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0'}}></div>
                     <button className="menu-item" onClick={() => {
                       setEditingSong(song);
@@ -520,6 +666,14 @@ export const PlaylistDetailPage: React.FC = () => {
         }
         itemName={deletingSong?.title}
         messageSuffix={deletingSong ? t('modal.deleteSongFromPlaylist') : undefined}
+      />
+
+      <SongPickerModal
+        isOpen={isSongPickerOpen}
+        onClose={() => setIsSongPickerOpen(false)}
+        allSongs={allSongs}
+        existingSongIds={localSongs.map(s => s.id)}
+        onAdd={(songIds) => id && onAddSongsToPlaylist(id, songIds)}
       />
     </div>
   );

@@ -30,8 +30,11 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 ### 4. Giao diện Desktop (UI/UX)
 - [x] Layout Spotify-style (Sidebar + Main Content).
 - [x] Sidebar co giãn (Collapsible) và Responsive.
+- [x] **Độ ổn định Sidebar**: Cố định kích thước (280px) và tối ưu hiệu năng (React.memo) để triệt tiêu hiện tượng giật lag khi chuyển trang.
 - [x] Thanh PlayerBar với giao diện Queue Panel nổi (Popover).
 - [x] Chuyển đổi toàn bộ sang SCSS với hệ thống Design Tokens.
+- [x] **Bộ lọc nghệ sĩ cao cấp**: Hỗ trợ lọc đa lựa chọn (AND logic), bóc tách chính xác nghệ sĩ kết hợp (ft, feat...) và nhấn để lọc (Click-to-filter).
+- [x] **Giao diện Filter Tag**: Thiết kế Glassmorphism hiện đại với hệ thống thẻ tag thông minh.
 
 ---
 
@@ -48,7 +51,7 @@ Mục tiêu: Đảm bảo người dùng có thể sử dụng hàng ngày ổn 
 
 ### 🟡 GIAI ĐOẠN 2: Tối ưu & Chức năng Phụ (Mức độ ưu tiên TRUNG BÌNH)
 Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
-- [ ] **Cài đặt hệ thống (Settings)**: Thay đổi ngôn ngữ UI, lựa chọn thiết bị đầu ra âm thanh.
+- [x] **Cài đặt hệ thống (Settings)**: Lựa chọn thiết bị đầu ra âm thanh (Ngôn ngữ đã có trong Profile).
 - [ ] **Biên tập Metadata (ID3 Editor)**: Cho phép sửa trực tiếp thông tin bài hát (Title, Artist...) ngay trong app.
 - [ ] **Quản lý Hàng đợi nâng cao**: Kéo thả để thay đổi thứ tự ngay trong Queue Panel.
 

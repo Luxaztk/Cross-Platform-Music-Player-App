@@ -34,6 +34,10 @@ export class ElectronLibraryRepository implements ILibraryRepository {
     return await window.electronAPI.removeSongsFromPlaylist(playlistId, songIds);
   }
 
+  async addSongsToPlaylist(playlistId: string, songIds: string[]): Promise<boolean> {
+    return await window.electronAPI.addSongsToPlaylist(playlistId, songIds);
+  }
+
   async deletePlaylist(playlistId: string): Promise<boolean> {
     return window.electronAPI.deletePlaylist(playlistId);
   }

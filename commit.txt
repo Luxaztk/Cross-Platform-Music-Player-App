@@ -1,0 +1,7 @@
+feat(desktop): implement premium multi-select artist filtering and improve sidebar stability
+
+- Sidebar: Fixed width at 280px and applied React.memo to eliminate jittering, layout shifts, and resize flickering during page navigation.
+- Filtering: Upgraded the filtering system to support multi-value selection with intersection-based matching (AND logic).
+- UI: Implemented a modern Glassmorphism-style multi-tag interface with smart label aggregation and Emerald glow effects.
+- Click-to-filter: Enabled direct artist-name click filtering from the track list, including accurate extraction of individual artists from collaborative tracks (ft, feat, and, etc.).
+- Bugfixes: Fixed the artist name parsing regex issue that caused trailing period artifacts, and automatically cleared filters on navigation to ensure state consistency.

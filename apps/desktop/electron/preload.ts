@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteSong: (songId: string) => ipcRenderer.invoke('library:deleteSong', songId),
   deleteSongs: (songIds: string[]) => ipcRenderer.invoke('library:deleteSongs', songIds),
   removeSongsFromPlaylist: (playlistId: string, songIds: string[]) => ipcRenderer.invoke('library:removeSongsFromPlaylist', playlistId, songIds),
+  addSongsToPlaylist: (playlistId: string, songIds: string[]) => ipcRenderer.invoke('library:addSongsToPlaylist', playlistId, songIds),
   deletePlaylist: (playlistId: string) => ipcRenderer.invoke('library:deletePlaylist', playlistId),
   pickImage: () => ipcRenderer.invoke('library:pickImage'),
   addSongs: (songs: any[]) => ipcRenderer.invoke('library:addSongs', songs),

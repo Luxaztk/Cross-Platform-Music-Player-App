@@ -107,6 +107,97 @@
     background: rgba(0, 0, 0, 0.2);
     flex-grow: 1;
 
+    .filter-chip-container {
+      padding: 12px 0;
+      display: flex;
+      flex-wrap: wrap; 
+      gap: 12px;
+      align-items: center;
+      position: relative;
+      z-index: 100;
+
+      .active-filter-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-text-dim);
+        padding-right: 4px;
+
+        .filter-icon {
+          color: var(--color-primary);
+          filter: drop-shadow(0 0 4px rgba(var(--color-primary-rgb), 0.6));
+        }
+
+        .filter-text {
+          font-size: 0.65rem;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          font-weight: 800;
+        }
+      }
+
+      .filter-tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .active-filter-tag {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 10px;
+          background: rgba(var(--color-primary-rgb), 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+          border-radius: 500px;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: fadeInScale 0.3s ease-out;
+
+          &:hover {
+            background: rgba(var(--color-primary-rgb), 0.15);
+            border-color: rgba(var(--color-primary-rgb), 0.5);
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.2);
+          }
+
+          .tag-value {
+            font-size: 0.85rem;
+            color: white;
+            font-weight: 600;
+          }
+
+          .remove-tag-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+
+            &:hover {
+              color: #ef4444;
+              background: rgba(239, 68, 68, 0.15);
+            }
+          }
+        }
+      }
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
     .list-header {
       display: grid;
       grid-template-columns: 50px 1.5fr 1fr 120px 50px;
@@ -293,6 +384,20 @@
               overflow: hidden;
               text-overflow: ellipsis;
               display: block;
+
+              .clickable-artist {
+                cursor: pointer;
+                transition: color 0.2s ease;
+
+                &:hover {
+                  color: var(--color-primary);
+                  text-decoration: underline;
+                }
+              }
+
+              .artist-separator {
+                opacity: 0.6;
+              }
             }
           }
         }
@@ -348,7 +453,7 @@
           border-radius: 4px;
           box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
           padding: 4px;
-          min-width: 160px;
+          min-width: 200px;
           z-index: 1100; // Above bulk actions bar if needed
           border: 1px solid rgba(255, 255, 255, 0.1);
 
@@ -382,6 +487,40 @@
 
             &.delete {
               color: #ff5252;
+            }
+
+            &.nested-trigger {
+              justify-content: space-between;
+              position: relative;
+
+              &.active,
+              &:hover {
+                background: rgba(255, 255, 255, 0.1);
+              }
+
+              .nested-menu {
+                position: absolute;
+                right: 100%;
+                top: 0;
+                margin-right: 4px;
+                background: #282828;
+                border-radius: 4px;
+                box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3);
+                padding: 4px;
+                min-width: 180px;
+                z-index: 1200;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                animation: fadeIn 0.2s ease-out;
+
+                .menu-item {
+                  &.disabled {
+                    color: var(--color-text-dim);
+                    cursor: default;
+                    pointer-events: none;
+                    font-style: italic;
+                  }
+                }
+              }
             }
           }
         }
@@ -423,9 +562,10 @@
     .count {
       background: var(--color-primary);
       color: white;
-      width: 24px;
+      min-width: 24px;
       height: 24px;
-      border-radius: 50%;
+      padding: 0 8px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -490,6 +630,16 @@
         }
       }
     }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
 

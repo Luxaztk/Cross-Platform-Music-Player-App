@@ -18,8 +18,8 @@ interface LibraryContextType {
   songs: Song[];
   library: Playlist | null;
   playlists: Playlist[];
-  libraryFilter: { type: 'artist' | 'album' | 'none'; value: string };
-  setLibraryFilter: (filter: { type: 'artist' | 'album' | 'none'; value: string }) => void;
+  libraryFilter: { type: 'artist' | 'album' | 'none'; values: string[] };
+  setLibraryFilter: (filter: { type: 'artist' | 'album' | 'none'; values: string[] }) => void;
   handleImportFiles: () => Promise<ImportResult>;
   handleImportFolder: () => Promise<ImportResult>;
   handleAddSongs: (songs: Song[]) => Promise<{ success: boolean; count: number }>;
@@ -32,6 +32,7 @@ interface LibraryContextType {
   handleDeleteSong: (songId: string) => Promise<boolean>;
   handleDeleteSongs: (songIds: string[]) => Promise<boolean>;
   handleRemoveSongsFromPlaylist: (playlistId: string, songIds: string[]) => Promise<boolean>;
+  handleAddSongsToPlaylist: (playlistId: string, songIds: string[]) => Promise<boolean>;
   handleDeletePlaylist: (playlistId: string) => Promise<boolean>;
   refreshPlaylists: () => Promise<void>;
   refreshLibrary: () => Promise<void>;
@@ -49,9 +50,9 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   const [library, setLibrary] = useState<Playlist | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [duplicateSongs, setDuplicateSongs] = useState<Song[]>([]);
-  const [libraryFilter, setLibraryFilter] = useState<{ type: 'artist' | 'album' | 'none'; value: string }>({ 
+  const [libraryFilter, setLibraryFilter] = useState<{ type: 'artist' | 'album' | 'none'; values: string[] }>({ 
     type: 'none', 
-    value: '' 
+    values: [] 
   });
 
   const getLibraryUc = new GetLibraryUseCase(repository);
@@ -170,6 +171,15 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
     return res;
   };
 
+  const handleAddSongsToPlaylist = async (playlistId: string, songIds: string[]) => {
+    const res = await repository.addSongsToPlaylist(playlistId, songIds);
+    if (res) {
+      await fetchLibrary();
+      await fetchPlaylists();
+    }
+    return res;
+  };
+
   const handleDeletePlaylist = async (playlistId: string) => {
     const res = await deletePlaylistUc.execute(playlistId);
     if (res) {
@@ -197,6 +207,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
       handleDeleteSong,
       handleDeleteSongs,
       handleRemoveSongsFromPlaylist,
+      handleAddSongsToPlaylist,
       handleDeletePlaylist,
       refreshPlaylists: fetchPlaylists,
       refreshLibrary: fetchLibrary
