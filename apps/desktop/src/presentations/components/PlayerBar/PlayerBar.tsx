@@ -3,6 +3,7 @@ import { Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, VolumeX, 
 import { usePlayer } from '@music/hooks';
 import { formatTime } from '@music/utils';
 import { ICON_SIZES } from '../../constants/IconSizes';
+import QueuePanel from './QueuePanel';
 import './PlayerBar.scss';
 
 
@@ -132,29 +133,8 @@ const PlayerBar: React.FC = () => {
           <span className="queue-count">{queue.length}</span>
         </button>
         
-        {/* Simplified Queue Popover logic for MVP UI */}
-        {isQueueOpen && (
-          <div className="queue-popover">
-            <div className="queue-header">
-              <h3>Up Next</h3>
-              <span className="queue-total">{queue.length} tracks</span>
-            </div>
-            <div className="queue-list">
-              {queue.length === 0 ? (
-                <div className="queue-empty">Queue is empty</div>
-              ) : (
-                queue.slice(0, 50).map((song, idx) => (
-                  <div key={`${song.id}-${idx}`} className="queue-item">
-                    <div className="queue-item-info">
-                      <div className="queue-item-title">{song.title}</div>
-                      <div className="queue-item-artist">{song.artist}</div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
+        {/* Advanced Queue Popover with Drag & Drop */}
+        {isQueueOpen && <QueuePanel />}
 
         <div className="volume-control">
           <button className="control-btn volume-btn" onClick={toggleMute} title={volume === 0 ? "Unmute" : "Mute"}>

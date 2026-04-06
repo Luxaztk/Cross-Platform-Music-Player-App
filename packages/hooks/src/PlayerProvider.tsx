@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Song, PlayerState } from '@music/types';
 import type { IStorageAdapter } from '@music/core';
 import { AudioEngine } from '@music/player';
@@ -6,13 +6,18 @@ import { useAudioDevices } from './useAudioDevices';
 
 export type RepeatMode = 'OFF' | 'ALL' | 'ONE';
 
+export interface QueueItem {
+  uid: string;
+  song: Song;
+}
+
 export interface PlayerContextProps {
   currentSong: Song | null;
   isPlaying: boolean;
   progress: number;
   duration: number;
   volume: number;
-  queue: Song[];
+  queue: QueueItem[];
   history: Song[];
 
   repeatMode: RepeatMode;
@@ -23,6 +28,7 @@ export interface PlayerContextProps {
   addToQueue: (song: Song) => void;
   playList: (songs: Song[], startIndex: number) => void;
   removeFromQueue: (index: number) => void;
+  reorderQueue: (startIndex: number, endIndex: number) => void;
 
   play: () => void;
   pause: () => void;
@@ -58,7 +64,9 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(1);
-  const [queue, setQueue] = useState<Song[]>([]);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+
+  const generateUid = useCallback(() => Math.random().toString(36).substring(2, 11) + Date.now().toString(36), []);
 
   const [history, setHistory] = useState<Song[]>([]);
   const [originalContext, setOriginalContext] = useState<Song[]>([]);
@@ -77,7 +85,70 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
   const repeatModeRef = useRef(repeatMode); repeatModeRef.current = repeatMode;
   const isShuffleRef = useRef(isShuffle); isShuffleRef.current = isShuffle;
 
-  // Engine initialization effect - MUST run before hydration
+  const pushToHistory = useCallback((song: Song) => {
+    setHistory(prev => {
+      const newHistory = [song, ...prev];
+      if (newHistory.length > 32) {
+        newHistory.pop();
+      }
+      return newHistory;
+    });
+  }, []);
+
+  const playSong = useCallback((song: Song) => {
+    setCurrentSong(song);
+    setProgress(0);
+    if (engineRef.current) {
+      engineRef.current.load(song.filePath, true);
+    }
+  }, []);
+
+  const handleNext = useCallback(() => {
+    if (currentSongRef.current) {
+      pushToHistory(currentSongRef.current);
+    }
+
+    if (queueRef.current.length > 0) {
+      const nextItem = queueRef.current[0];
+      setQueue(prev => prev.slice(1));
+      playSong(nextItem.song);
+    } else {
+      if (repeatModeRef.current === 'ALL' && originalContextRef.current.length > 0) {
+        let newSongs = [...originalContextRef.current];
+        if (isShuffleRef.current) {
+          newSongs = shuffleArray(newSongs);
+        }
+        const nextSong = newSongs[0];
+        setQueue(newSongs.slice(1).map(song => ({ uid: generateUid(), song })));
+        playSong(nextSong);
+      } else {
+        engineRef.current?.stop();
+      }
+    }
+  }, [playSong, pushToHistory, generateUid]);
+
+  const handlePrev = useCallback(() => {
+    // We use the progress state which is synchronized with the engine
+    if (progress > 3) {
+      engineRef.current?.seek(0);
+    } else {
+      if (historyRef.current.length > 0) {
+        const newHistory = [...historyRef.current];
+        const prevSong = newHistory.shift()!;
+        setHistory(newHistory);
+
+        if (currentSongRef.current) {
+          setQueue(q => [{ uid: generateUid(), song: currentSongRef.current! }, ...q]);
+        }
+        playSong(prevSong);
+      } else {
+        engineRef.current?.seek(0);
+        if (!engineRef.current?.isPlaying()) engineRef.current?.play();
+      }
+    }
+  }, [playSong, generateUid, progress]);
+
+  // Engine initialization effect
   useEffect(() => {
     const engine = new AudioEngine({
       onProgress: (p, d) => {
@@ -111,7 +182,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
     return () => {
       engine.stop();
     };
-  }, []);
+  }, [handleNext]);
 
   useEffect(() => {
     if (engineRef.current && currentDeviceId) {
@@ -119,14 +190,11 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
     }
   }, [currentDeviceId]);
 
-  // Hydration effect - load from storage on mount
+  // Hydration effect
   useEffect(() => {
     const hydrate = async () => {
-      // Wait for both storage and engine to be ready
       if (!storage || allSongs.length === 0 || !engineRef.current) {
-        if (allSongs.length > 0 && storage) {
-          // If storage/songs are ready but engine isn't, we'll try again next render
-        } else {
+        if (!(allSongs.length > 0 && storage)) {
           setIsHydrated(true);
         }
         return;
@@ -142,13 +210,10 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
             if (song) {
               setCurrentSong(song);
               setDuration(song.duration || 0);
-              // Do NOT load the audio engine in the background here.
-              // Browsers/Electron block audio instantiation without user gesture.
-              // It will JIT load when the user hits Play.
             }
           }
 
-          setQueue(savedState.queueIds.map(findSong).filter((s): s is Song => s !== null));
+          setQueue(savedState.queueIds.map(findSong).filter((s): s is Song => s !== null).map(song => ({ uid: generateUid(), song })));
           setHistory(savedState.historyIds.map(findSong).filter((s): s is Song => s !== null));
           setOriginalContext(savedState.originalContextIds.map(findSong).filter((s): s is Song => s !== null));
           setVolumeState(savedState.volume);
@@ -169,225 +234,165 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
     if (allSongs.length > 0 && !isHydrated) {
       hydrate();
     }
-  }, [storage, allSongs.length, isHydrated]);
+  }, [storage, allSongs, isHydrated, generateUid]);
 
-  // Persistence effect - save to storage on changes
+  // Persistence effect
   useEffect(() => {
-    const persist = async () => {
-      if (!storage || !isHydrated) return;
+    if (!storage || !isHydrated) return;
 
-      const state: PlayerState = {
-        currentSongId: currentSong?.id || null,
-        queueIds: queue.map(s => s.id),
-        historyIds: history.map(s => s.id),
-        originalContextIds: originalContext.map(s => s.id),
-        volume,
-        repeatMode,
-        isShuffle
-      };
-
-      try {
-        await storage.savePlayerState(state);
-      } catch (error) {
-        console.error('Failed to save player state:', error);
-      }
+    const state: PlayerState = {
+      currentSongId: currentSong?.id || null,
+      queueIds: queue.map(item => item.song.id),
+      historyIds: history.map(s => s.id),
+      originalContextIds: originalContext.map(s => s.id),
+      volume,
+      repeatMode,
+      isShuffle
     };
 
-    persist();
+    storage.savePlayerState(state).catch(err => console.error('Failed to save player state:', err));
   }, [storage, isHydrated, currentSong, queue, history, originalContext, volume, repeatMode, isShuffle]);
 
-  const pushToHistory = (song: Song) => {
-    setHistory(prev => {
-      // most recently played item at index 0
-      const newHistory = [song, ...prev];
-      if (newHistory.length > 32) {
-        newHistory.pop(); // Remove oldest
-      }
-      return newHistory;
-    });
-  };
-
-  const handleNext = () => {
-    if (currentSongRef.current) {
-      pushToHistory(currentSongRef.current);
-    }
-
-    if (queueRef.current.length > 0) {
-      const nextSong = queueRef.current[0];
-      setQueue(prev => prev.slice(1));
-      playSong(nextSong);
-    } else {
-      // queue empty
-      if (repeatModeRef.current === 'ALL' && originalContextRef.current.length > 0) {
-        // Restart the context
-        let newQueue = [...originalContextRef.current];
-        if (isShuffleRef.current) {
-          newQueue = shuffleArray(newQueue);
-        }
-        const nextSong = newQueue[0];
-        setQueue(newQueue.slice(1));
-        playSong(nextSong);
-      } else {
-        // End of queue
-        engineRef.current?.stop();
-      }
-    }
-  };
-
-  const playSong = (song: Song) => {
-    setCurrentSong(song);
-    setProgress(0);
-    if (engineRef.current) {
-      engineRef.current.load(song.filePath, true); // true = autoplay
-    }
-  };
-
-  const playList = (songs: Song[], startIndex: number) => {
+  const playList = useCallback((songs: Song[], startIndex: number) => {
     setOriginalContext(songs);
-    // DO NOT clear history, just append the current one if any
     if (currentSongRef.current) pushToHistory(currentSongRef.current);
 
     const startSong = songs[startIndex];
-    let upcomingQueue = songs.slice(startIndex + 1);
+    let upcomingSongs = songs.slice(startIndex + 1);
     if (isShuffleRef.current) {
-      upcomingQueue = shuffleArray(upcomingQueue);
+      upcomingSongs = shuffleArray(upcomingSongs);
     }
-    setQueue(upcomingQueue);
+    setQueue(upcomingSongs.map(song => ({ uid: generateUid(), song })));
     playSong(startSong);
-  };
+  }, [playSong, pushToHistory, generateUid]);
 
-  const playNow = (song: Song) => {
+  const playNow = useCallback((song: Song) => {
     if (currentSongRef.current) pushToHistory(currentSongRef.current);
     playSong(song);
-  };
+  }, [playSong, pushToHistory]);
 
-  const playNext = (song: Song) => {
-    setQueue(prev => [song, ...prev]);
-  };
+  const playNext = useCallback((song: Song) => {
+    setQueue(prev => [{ uid: generateUid(), song }, ...prev]);
+  }, [generateUid]);
 
-  const addToQueue = (song: Song) => {
-    setQueue(prev => [...prev, song]);
-  };
+  const addToQueue = useCallback((song: Song) => {
+    setQueue(prev => [...prev, { uid: generateUid(), song }]);
+  }, [generateUid]);
 
-  const removeFromQueue = (index: number) => {
+  const removeFromQueue = useCallback((index: number) => {
     setQueue(prev => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
-  const toggleShuffle = () => {
-    const nextVal = !isShuffle;
+  const reorderQueue = useCallback((startIndex: number, endIndex: number) => {
+    setQueue(prev => {
+      const result = Array.from(prev);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      return result;
+    });
+  }, []);
+
+  const toggleShuffle = useCallback(() => {
+    const nextVal = !isShuffleRef.current;
     setIsShuffle(nextVal);
 
     if (nextVal) {
-      // Turned ON: Shuffle the current queue
       setQueue(prev => shuffleArray([...prev]));
     } else {
-      // Turned OFF: Restore the original context straight from the current playing sequence
       const currentId = currentSongRef.current?.id;
       if (currentId && originalContextRef.current.length > 0) {
         const idx = originalContextRef.current.findIndex(s => s.id === currentId);
         if (idx !== -1) {
-          setQueue(originalContextRef.current.slice(idx + 1));
+          const remainingSongs = originalContextRef.current.slice(idx + 1);
+          setQueue(remainingSongs.map(song => ({ uid: generateUid(), song })));
         }
       }
     }
-  };
+  }, [generateUid]);
 
-  const play = () => {
-    if (currentSong && engineRef.current) {
+  const play = useCallback(() => {
+    if (currentSongRef.current && engineRef.current) {
       const engineState = engineRef.current.state();
       const currentSrc = engineRef.current.getSource();
-      const expectedUrl = `melovista://${encodeURIComponent(currentSong.filePath)}`;
+      const expectedUrl = `melovista://${encodeURIComponent(currentSongRef.current.filePath)}`;
       
       if (engineState !== 'loaded' || currentSrc !== expectedUrl) {
-        // Just-in-time loading for hydrated or failed-to-load songs
-        // Calling load with true will autoplay it immediately
-        engineRef.current.load(currentSong.filePath, true);
+        engineRef.current.load(currentSongRef.current.filePath, true);
       } else {
         engineRef.current.play();
       }
     }
-  };
+  }, []);
 
-  const pause = () => {
+  const pause = useCallback(() => {
     if (engineRef.current) {
       engineRef.current.pause();
     }
-  };
+  }, []);
 
-  const next = () => {
+  const next = useCallback(() => {
     handleNext();
-  };
+  }, [handleNext]);
 
-  const prev = () => {
-    if (progress > 3) {
-      engineRef.current?.seek(0);
-    } else {
-      if (historyRef.current.length > 0) {
-        const newHistory = [...historyRef.current];
-        const prevSong = newHistory.shift()!; // Get the most recent history item
-        setHistory(newHistory);
+  const prev = useCallback(() => {
+    handlePrev();
+  }, [handlePrev]);
 
-        if (currentSongRef.current) {
-          setQueue(q => [currentSongRef.current!, ...q]); // pushing current song to queue
-        }
-        playSong(prevSong);
-      } else {
-        engineRef.current?.seek(0);
-        if (!isPlaying) engineRef.current?.play();
-      }
-    }
-  };
-
-  const seek = (time: number) => {
-    if (currentSong && engineRef.current) {
+  const seek = useCallback((time: number) => {
+    if (currentSongRef.current && engineRef.current) {
       const engineState = engineRef.current.state();
       const currentSrc = engineRef.current.getSource();
-      const expectedUrl = `melovista://${encodeURIComponent(currentSong.filePath)}`;
+      const expectedUrl = `melovista://${encodeURIComponent(currentSongRef.current.filePath)}`;
       
       if (engineState !== 'loaded' || currentSrc !== expectedUrl) {
-        // JIT load on seek
-        engineRef.current.load(currentSong.filePath, false);
+        engineRef.current.load(currentSongRef.current.filePath, false);
       }
       
       engineRef.current.seek(time);
       setProgress(time);
     }
-  };
+  }, []);
 
-  const setVolume = (vol: number) => {
+  const setVolume = useCallback((vol: number) => {
     setVolumeState(vol);
     if (engineRef.current) {
       engineRef.current.setVolume(vol);
     }
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    currentSong,
+    isPlaying,
+    progress,
+    duration,
+    volume,
+    queue,
+    history,
+    repeatMode,
+    isShuffle,
+    playNow,
+    playNext,
+    addToQueue,
+    playList,
+    removeFromQueue,
+    reorderQueue,
+    play,
+    pause,
+    next,
+    prev,
+    seek,
+    setVolume,
+    setRepeatMode,
+    toggleShuffle
+  }), [
+    currentSong, isPlaying, progress, duration, volume, queue, history,
+    repeatMode, isShuffle, playNow, playNext, addToQueue, playList,
+    removeFromQueue, reorderQueue, play, pause, next, prev, seek,
+    setVolume, toggleShuffle
+  ]);
 
   return (
-    <PlayerContext.Provider
-      value={{
-        currentSong,
-        isPlaying,
-        progress,
-        duration,
-        volume,
-        queue,
-        history,
-        repeatMode,
-        isShuffle,
-        playNow,
-        playNext,
-        addToQueue,
-        playList,
-        removeFromQueue,
-        play,
-        pause,
-        next,
-        prev,
-        seek,
-        setVolume,
-        setRepeatMode,
-        toggleShuffle
-      }}
-    >
+    <PlayerContext.Provider value={contextValue}>
       {children}
     </PlayerContext.Provider>
   );

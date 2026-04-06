@@ -52,8 +52,7 @@ Mục tiêu: Đảm bảo người dùng có thể sử dụng hàng ngày ổn 
 ### 🟡 GIAI ĐOẠN 2: Tối ưu & Chức năng Phụ (Mức độ ưu tiên TRUNG BÌNH)
 Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 - [x] **Cài đặt hệ thống (Settings)**: Lựa chọn thiết bị đầu ra âm thanh (Ngôn ngữ đã có trong Profile).
-- [ ] **Biên tập Metadata (ID3 Editor)**: Cho phép sửa trực tiếp thông tin bài hát (Title, Artist...) ngay trong app.
-- [ ] **Quản lý Hàng đợi nâng cao**: Kéo thả để thay đổi thứ tự ngay trong Queue Panel.
+- [x] **Quản lý Hàng đợi nâng cao**: Kéo thả để thay đổi thứ tự ngay trong Queue Panel.
 
 ### 3. Debugging & QA
 - [x] **Debug Playback Mapping**: Đồng bộ index của PlayListDetailPage với PlayerProvider. (Đã sửa lỗi chọn sai bài hát khi dùng danh sách đã sắp xếp).
@@ -73,8 +72,12 @@ Mục tiêu: Đưa trải nghiệm lên các nền tảng di động.
 - [/] **React Native Mobile App**: Xây dựng ứng dụng mobile dựa trên các UseCases/Hooks đã có (Đã xong Core Integration & Layout).
 - [ ] **Đồng bộ hóa (Sync)**: (Tùy chọn) Đồng bộ playlist và sở thích giữa Desktop & Mobile.
 
-
 ---
+
+### ⚪ HẠNG MỤC MỞ RỘNG (Optional - Thấp nhất)
+- [ ] **Biên tập Metadata (Ghi vào file nhạc)**: Hỗ trợ ghi đè trực tiếp ID3 tags vào file vật lý (.mp3, .flac...) để thay đổi thông tin vĩnh viễn (Chỉ thực hiện khi có nhu cầu chuyên sâu).
+
+----
 
 > [!TIP]
 > File này sẽ được cập nhật thường xuyên để theo dõi tiến độ dự án. Hãy tham khảo `README.md` để biết thêm chi tiết kỹ thuật.

@@ -14,6 +14,7 @@ export const translations = {
       selectAll: 'Chọn tất cả',
       deselectAll: 'Bỏ chọn hết',
       addSelected: 'Thêm bài đã chọn',
+      songs: 'bài hát',
     },
     header: {
       searchPlaceholder: 'Bạn muốn nghe gì?',
@@ -66,6 +67,8 @@ export const translations = {
       deleteFromLibrary: 'Xóa khỏi thư viện',
       addSongsSuccess: 'Đã thêm {count} bài hát vào {name}',
       filteringBy: 'Lọc theo:',
+      upNext: 'Tiếp theo',
+      queueEmpty: 'Hàng đợi đang trống',
     },
     modal: {
       editDetails: 'Chỉnh sửa chi tiết',
@@ -120,6 +123,7 @@ export const translations = {
       selectAll: 'Select all',
       deselectAll: 'Deselect all',
       addSelected: 'Add selected',
+      songs: 'songs',
     },
     header: {
       searchPlaceholder: 'What do you want to play?',
@@ -172,6 +176,8 @@ export const translations = {
       deleteFromLibrary: 'Delete from library',
       addSongsSuccess: 'Added {count} songs to {name}',
       filteringBy: 'Filter:',
+      upNext: 'Up Next',
+      queueEmpty: 'Queue is empty',
     },
     modal: {
       editDetails: 'Edit details',

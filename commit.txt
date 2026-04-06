@@ -1,7 +1,9 @@
-feat(desktop): implement premium multi-select artist filtering and improve sidebar stability
+perf(queue): implement smooth drag-and-drop with context memoization and optimistic UI
 
-- Sidebar: Fixed width at 280px and applied React.memo to eliminate jittering, layout shifts, and resize flickering during page navigation.
-- Filtering: Upgraded the filtering system to support multi-value selection with intersection-based matching (AND logic).
-- UI: Implemented a modern Glassmorphism-style multi-tag interface with smart label aggregation and Emerald glow effects.
-- Click-to-filter: Enabled direct artist-name click filtering from the track list, including accurate extraction of individual artists from collaborative tracks (ft, feat, and, etc.).
-- Bugfixes: Fixed the artist name parsing regex issue that caused trailing period artifacts, and automatically cleared filters on navigation to ensure state consistency.
+- Refactor queue state to use unique UIDs for stable React keys.
+- Implement React Portal for dragged items to prevent overflow clipping.
+- Optimize PlayerProvider performance using useMemo for context and useCallback for actions.
+- Add local optimistic state in QueuePanel for zero-latency drop feedback.
+- Remove expensive backdrop-filter from queue items to reduce GPU load.
+- Fix SCSS syntax errors and improve Emerald Glow aesthetics.
+- Ensure correct i18n translation keys in QueuePanel.
