@@ -26,4 +26,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   savePlaylistsData: (playlists: any) => ipcRenderer.invoke('storage:savePlaylists', playlists),
   getPlayerState: () => ipcRenderer.invoke('storage:getPlayerState'),
   savePlayerState: (state: any) => ipcRenderer.invoke('storage:savePlayerState', state),
+  getRecentSearches: () => ipcRenderer.invoke('storage:getRecentSearches'),
+  saveRecentSearches: (searches: any) => ipcRenderer.invoke('storage:saveRecentSearches', searches),
 });

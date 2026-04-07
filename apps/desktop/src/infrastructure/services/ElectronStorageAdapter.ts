@@ -1,4 +1,4 @@
-import type { Song, Playlist, PlayerState } from '@music/types';
+import type { Song, Playlist, PlayerState, RecentSearch } from '@music/types';
 import type { IStorageAdapter } from '@music/core';
 
 export class ElectronStorageAdapter implements IStorageAdapter {
@@ -38,5 +38,12 @@ export class ElectronStorageAdapter implements IStorageAdapter {
     const songs = await this.getSongs();
     return Object.values(songs);
   }
-}
 
+  async getRecentSearches(): Promise<RecentSearch[]> {
+    return window.electronAPI.getRecentSearches();
+  }
+
+  async saveRecentSearches(searches: RecentSearch[]): Promise<void> {
+    await window.electronAPI.saveRecentSearches(searches);
+  }
+}

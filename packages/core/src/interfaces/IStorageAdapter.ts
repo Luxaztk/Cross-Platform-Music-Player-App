@@ -1,4 +1,4 @@
-import type { Song, Playlist, PlayerState } from '@music/types';
+import type { Song, Playlist, PlayerState, RecentSearch } from '@music/types';
 
 export interface IStorageAdapter {
   getSongs(): Promise<Record<string, Song>>;
@@ -9,4 +9,6 @@ export interface IStorageAdapter {
   savePlaylists(playlists: Record<string, Playlist>): Promise<void>;
   getPlayerState(): Promise<PlayerState | null>;
   savePlayerState(state: PlayerState): Promise<void>;
+  getRecentSearches(): Promise<RecentSearch[]>;
+  saveRecentSearches(searches: RecentSearch[]): Promise<void>;
 }

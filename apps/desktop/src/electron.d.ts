@@ -1,4 +1,4 @@
-import type { Song, Playlist, PlaylistDetail, ImportResult, PlayerState } from '@music/types';
+import type { Song, Playlist, PlaylistDetail, ImportResult, PlayerState, RecentSearch } from '@music/types';
 
 declare global {
   interface Window {
@@ -28,6 +28,8 @@ declare global {
       savePlaylistsData: (playlists: Record<string, Playlist>) => Promise<void>;
       getPlayerState: () => Promise<PlayerState | null>;
       savePlayerState: (state: PlayerState) => Promise<void>;
+      getRecentSearches: () => Promise<RecentSearch[]>;
+      saveRecentSearches: (searches: RecentSearch[]) => Promise<void>;
     }
   }
 }

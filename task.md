@@ -59,16 +59,22 @@ Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 - [x] **Debug Playback Mapping**: Đồng bộ index của PlayListDetailPage với PlayerProvider. (Đã sửa lỗi chọn sai bài hát khi dùng danh sách đã sắp xếp).
 - [x] **Hydration Synchronization**: Khắc phục lỗi không phát được nhạc khi khôi phục bài hát từ app khởi động thông qua cơ chế Just-in-Time Loading.
 - [x] **Volume Control**: Khắc phục lỗi mất giá trị âm lượng khi Tắt/Mở tiếng (Mute/Unmute).
+- [x] **Metadata Cover Fix**: Khắc phục lỗi không hiển thị ảnh bìa song trong PlayerBar khi đọc từ Metadata phức tạp.
 
 ### 🟢 GIAI ĐOẠN 3: Làm đẹp & Trải nghiệm Nâng cao (Mức độ ưu tiên THẤP)
 Mục tiêu: "Wow" người dùng bằng các tính năng cao cấp.
 - [x] **Chủ đề (Themes)**: Hệ thống 6 chủ đề cao cấp (Dark/Light/Nature) với cơ chế Semantic Variable hoàn chỉnh.
-- [ ] **Lời bài hát (Lyrics)**: Tự động tìm kiếm và hiển thị lời bài hát (Local hoặc Online).
-- [ ] **Trang Hồ sơ Nghệ sĩ (Artist Profile)**: Hiển thị các bài hát, album và thông tin chi tiết của từng nghệ sĩ.
-- [ ] **Lịch sử tìm kiếm (Recent Searches)**: Lưu và hiển thị các tìm kiếm gần đây.
-- [ ] **Hiệu ứng âm thanh (Audio FX)**: Bộ chỉnh âm (Equalizer), Visualizer (Sóng nhạc).
+- [x] **Chủ đề (Themes)**: Hệ thống 6 chủ đề cao cấp (Dark/Light/Nature) với cơ chế Semantic Variable hoàn chỉnh.
+- [x] **Lịch sử tìm kiếm (Recent Searches)**: Lưu và hiển thị các tìm kiếm gần đây (Query & Entities).
 
-### 🔵 GIAI ĐOẠN 4: Triển khai Mobile (Transform)
+### 🟣 GIAI ĐOẠN 4: Chuyên sâu & Cá nhân hóa (Quản lý File)
+Mục tiêu: Cung cấp các công cụ mạnh mẽ để quản lý và thưởng thức nhạc.
+- [ ] **Lời bài hát (Lyrics)**: Tự động tìm kiếm và hiển thị lời bài hát (Local hoặc Online).
+- [ ] **Hiệu ứng âm thanh (Audio FX)**: Bộ chỉnh âm (Equalizer), Visualizer (Sóng nhạc).
+- [ ] **Biên tập Metadata (Ghi vào file nhạc)**: Hỗ trợ ghi đè trực tiếp ID3 tags vào file vật lý (.mp3, .flac...).
+- [ ] **Tải xuống trực tuyến (Online Download)**: Hỗ trợ tải nhạc từ các nguồn online để sử dụng offline.
+
+### 🔵 GIAI ĐOẠN 5: Triển khai Mobile (Transform)
 Mục tiêu: Đưa trải nghiệm lên các nền tảng di động.
 - [/] **React Native Mobile App**: Xây dựng ứng dụng mobile dựa trên các UseCases/Hooks đã có (Đã xong Core Integration & Layout).
 - [ ] **Đồng bộ hóa (Sync)**: (Tùy chọn) Đồng bộ playlist và sở thích giữa Desktop & Mobile.
@@ -76,7 +82,7 @@ Mục tiêu: Đưa trải nghiệm lên các nền tảng di động.
 ---
 
 ### ⚪ HẠNG MỤC MỞ RỘNG (Optional - Thấp nhất)
-- [ ] **Biên tập Metadata (Ghi vào file nhạc)**: Hỗ trợ ghi đè trực tiếp ID3 tags vào file vật lý (.mp3, .flac...) để thay đổi thông tin vĩnh viễn (Chỉ thực hiện khi có nhu cầu chuyên sâu).
+- [ ] **Trang Hồ sơ Nghệ sĩ (Artist Profile)**: Hiển thị các bài hát, album và thông tin chi tiết của từng nghệ sĩ.
 
 ----
 

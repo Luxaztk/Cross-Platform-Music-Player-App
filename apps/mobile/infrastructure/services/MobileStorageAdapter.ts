@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Song, Playlist, PlayerState } from '@music/types';
+import type { Song, Playlist, PlayerState, RecentSearch } from '@music/types';
 import type { IStorageAdapter } from '@music/core';
 
 const STORAGE_KEYS = {
   SONGS: 'melovista_songs',
   LIBRARY: 'melovista_library',
   PLAYLISTS: 'melovista_playlists',
-  PLAYER_STATE: 'melovista_player_state'
+  PLAYER_STATE: 'melovista_player_state',
+  RECENT_SEARCHES: 'melovista_recent_searches'
 };
 
 export class MobileStorageAdapter implements IStorageAdapter {
@@ -51,5 +52,14 @@ export class MobileStorageAdapter implements IStorageAdapter {
 
   async savePlayerState(state: PlayerState): Promise<void> {
     await AsyncStorage.setItem(STORAGE_KEYS.PLAYER_STATE, JSON.stringify(state));
+  }
+
+  async getRecentSearches(): Promise<RecentSearch[]> {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.RECENT_SEARCHES);
+    return data ? JSON.parse(data) : [];
+  }
+
+  async saveRecentSearches(searches: RecentSearch[]): Promise<void> {
+    await AsyncStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(searches));
   }
 }

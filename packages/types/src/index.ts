@@ -48,3 +48,11 @@ export interface PlayerState {
   repeatMode: 'OFF' | 'ALL' | 'ONE';
   isShuffle: boolean;
 }
+
+export type RecentSearch = 
+  | { type: 'query'; text: string; timestamp: number }
+  | { type: 'entity'; entityType: 'artist' | 'album'; id: string; name: string; timestamp: number };
+
+export type RecentSearchInput = 
+  | { type: 'query'; text: string }
+  | { type: 'entity'; entityType: 'artist' | 'album'; id: string; name: string };

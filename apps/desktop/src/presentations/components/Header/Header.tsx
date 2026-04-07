@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Home, Search, User, Languages, Settings, LogOut, X, SlidersHorizontal, Headphones, Check, ChevronRight, Palette } from 'lucide-react';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
-import { useSearch, useLibrary } from '../../../application/hooks';
+import { useSearch, useLibrary, useRecentSearches } from '../../../application/hooks';
 import { usePlayer, useAudioDevices } from '@music/hooks';
 import type { Song } from '@music/types';
 import { SearchOverlay } from './SearchOverlay';
@@ -24,6 +24,7 @@ const Header: React.FC = () => {
   const [showThemeMenu, setShowThemeMenu] = React.useState(false);
   const { theme, setTheme } = useTheme();
   const { devices, currentDeviceId, setAudioDevice } = useAudioDevices();
+  const { recentSearches, addSearch, removeSearch, clearAll } = useRecentSearches();
 
   const searchResults = useSearch(songs, playlists, searchQuery);
   const profileRef = React.useRef<HTMLDivElement>(null);
@@ -92,6 +93,26 @@ const Header: React.FC = () => {
     }
     setIsSearchFocused(false);
     setSearchQuery('');
+
+    // Add to recent searches
+    if (result.type === 'song') {
+      addSearch({ type: 'query', text: result.item.title });
+    } else if (result.type === 'artist' || result.type === 'album') {
+      addSearch({ 
+        type: 'entity', 
+        entityType: result.type, 
+        id: result.item.id, 
+        name: result.item.name
+      });
+    }
+  };
+
+  const handleSelectRecent = (recent: any) => {
+    if (recent.type === 'query') {
+      setSearchQuery(recent.text);
+    } else if (recent.type === 'entity') {
+      handleSelectResult({ type: recent.entityType, item: { id: recent.id, name: recent.name } });
+    }
   };
 
   const handleTestSound = () => {
@@ -163,12 +184,16 @@ const Header: React.FC = () => {
             <SlidersHorizontal size={14} />
           </button>
 
-          {isSearchFocused && searchQuery && (
+          {isSearchFocused && (
             <SearchOverlay
               query={searchQuery}
               results={searchResults}
+              recentSearches={recentSearches}
               selectedIndex={selectedIndex}
               onSelect={handleSelectResult}
+              onSelectRecent={handleSelectRecent}
+              onRemoveRecent={removeSearch}
+              onClearRecent={clearAll}
               onPlayNext={playNext}
               onAddToQueue={addToQueue}
               onClose={() => setIsSearchFocused(false)}

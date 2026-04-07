@@ -314,7 +314,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
     if (currentSongRef.current && engineRef.current) {
       const engineState = engineRef.current.state();
       const currentSrc = engineRef.current.getSource();
-      const expectedUrl = `melovista://${encodeURIComponent(currentSongRef.current.filePath)}`;
+      const expectedUrl = `melovista://app/${encodeURIComponent(currentSongRef.current.filePath)}`;
       
       if (engineState !== 'loaded' || currentSrc !== expectedUrl) {
         engineRef.current.load(currentSongRef.current.filePath, true);
@@ -342,7 +342,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
     if (currentSongRef.current && engineRef.current) {
       const engineState = engineRef.current.state();
       const currentSrc = engineRef.current.getSource();
-      const expectedUrl = `melovista://${encodeURIComponent(currentSongRef.current.filePath)}`;
+      const expectedUrl = `melovista://app/${encodeURIComponent(currentSongRef.current.filePath)}`;
       
       if (engineState !== 'loaded' || currentSrc !== expectedUrl) {
         engineRef.current.load(currentSongRef.current.filePath, false);

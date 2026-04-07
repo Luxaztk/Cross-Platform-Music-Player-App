@@ -1,5 +1,5 @@
 import Store from 'electron-store';
-import type { Song, Playlist, PlayerState } from '@music/types';
+import type { Song, Playlist, PlayerState, RecentSearch } from '@music/types';
 import type { IStorageAdapter } from '@music/core';
 
 interface StoreSchema {
@@ -7,6 +7,7 @@ interface StoreSchema {
   songs: Record<string, Song>;
   playlists: Record<string, Playlist>;
   playerState: PlayerState | null;
+  recentSearches: RecentSearch[];
 }
 
 export class MainStorageAdapter implements IStorageAdapter {
@@ -25,7 +26,8 @@ export class MainStorageAdapter implements IStorageAdapter {
         },
         songs: {},
         playlists: {},
-        playerState: null
+        playerState: null,
+        recentSearches: []
       }
     });
   }
@@ -67,5 +69,13 @@ export class MainStorageAdapter implements IStorageAdapter {
   async getSongList(): Promise<Song[]> {
     const songs = await this.getSongs();
     return Object.values(songs);
+  }
+
+  async getRecentSearches(): Promise<RecentSearch[]> {
+    return this.store.get('recentSearches') || [];
+  }
+
+  async saveRecentSearches(searches: RecentSearch[]): Promise<void> {
+    this.store.set('recentSearches', searches);
   }
 }

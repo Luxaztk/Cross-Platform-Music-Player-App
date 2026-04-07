@@ -16,6 +16,7 @@ export class AudioEngine {
   private animationFrameId: number | null = null;
   private events: AudioEngineEvents = {};
   private currentSinkId: string = 'default';
+  private pendingSeek: number | null = null;
   
   constructor(events?: AudioEngineEvents) {
     if (events) {
@@ -49,14 +50,15 @@ export class AudioEngine {
 
   public load(filePath: string, autoplay: boolean = false) {
     this.stop(); // Stop anything currently playing
+    this.pendingSeek = null; // Reset pending seek on new load
 
-    // Convert file path to custom protocol
-    const url = `melovista://${encodeURIComponent(filePath)}`;
+    // Convert file path to custom protocol with 'app' host for standard compliance
+    const url = `melovista://app/${encodeURIComponent(filePath)}`;
     this.lastUrl = url;
 
     this.howl = new Howl({
       src: [url],
-      html5: true, // Use HTML5 Audio for streaming large files
+      html5: true, // Standardized protocol now supports Range requests in HTML5 mode
       autoplay: autoplay,
       format: ['mp3', 'flac', 'wav', 'm4a', 'aac', 'ogg'],
       onplay: () => {
@@ -78,10 +80,21 @@ export class AudioEngine {
       onload: () => {
         const duration = this.howl?.duration() || 0;
         if (this.events.onLoad) this.events.onLoad(duration);
+        
+        // Apply pending seek if any
+        if (this.pendingSeek !== null) {
+          const seekTo = this.pendingSeek;
+          this.pendingSeek = null;
+          this.howl?.seek(seekTo);
+        }
+
         // Apply the sink ID as soon as it loads and nodes are created
         if (this.currentSinkId !== 'default') {
           this.setSinkId(this.currentSinkId);
         }
+      },
+      onseek: () => {
+        this.startTrackingProgress();
       },
       onloaderror: (_id: number, err: unknown) => {
         console.error('Howler load error:', err);
@@ -135,7 +148,11 @@ export class AudioEngine {
 
   public seek(seconds: number) {
     if (this.howl) {
-      this.howl.seek(seconds);
+      if (this.howl.state() === 'loaded') {
+        this.howl.seek(seconds);
+      } else {
+        this.pendingSeek = seconds;
+      }
       // Trigger an immediate progress update when seeking
       if (this.events.onProgress) {
         this.events.onProgress(seconds, this.howl.duration());
@@ -161,6 +178,7 @@ export class AudioEngine {
 
   private startTrackingProgress() {
     if (this.animationFrameId !== null) return; // Already tracking
+    if (!this.howl) return;
 
     const track = () => {
       if (this.howl && this.howl.playing()) {
@@ -169,6 +187,11 @@ export class AudioEngine {
         if (this.events.onProgress) {
           this.events.onProgress(progress, duration);
         }
+      }
+      
+      // Keep the loop running if we have a sound and it's not explicitly stopped.
+      // The onpause/onstop/onend handlers will call stopTrackingProgress to kill this.
+      if (this.howl) {
         this.animationFrameId = requestAnimationFrame(track);
       } else {
         this.animationFrameId = null;

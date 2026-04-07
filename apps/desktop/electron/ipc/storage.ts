@@ -37,4 +37,11 @@ export function setupStorageIPC() {
     return await storageAdapter.savePlayerState(state);
   });
 
+  ipcMain.handle('storage:getRecentSearches', async () => {
+    return await storageAdapter.getRecentSearches();
+  });
+
+  ipcMain.handle('storage:saveRecentSearches', async (_event, searches) => {
+    return await storageAdapter.saveRecentSearches(searches);
+  });
 }

@@ -97,7 +97,9 @@ const PlayerBar: React.FC = () => {
       <div className="player-left">
         <div className="now-playing">
           {currentSong?.coverArt ? (
-            <div className="cover-art" style={{ backgroundImage: `url(${currentSong.coverArt})` }}></div>
+            <div className="cover-art">
+              <img src={currentSong.coverArt} alt={currentSong.title} />
+            </div>
           ) : (
             <div className="cover-art-mock">
                <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />

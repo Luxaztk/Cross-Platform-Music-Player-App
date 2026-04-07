@@ -102,6 +102,8 @@ export const translations = {
       noResults: 'Không tìm thấy kết quả cho',
       moveHint: 'Di chuyển',
       playHint: 'Phát ngay',
+      recent: 'Tìm kiếm gần đây',
+      clearAll: 'Xóa tất cả',
       filteringBy: 'Đang lọc:',
     },
     settings: {
@@ -212,6 +214,8 @@ export const translations = {
       noResults: 'No results found for',
       moveHint: 'Move',
       playHint: 'Play now',
+      recent: 'Recent searches',
+      clearAll: 'Clear all',
       filteringBy: 'Filtering by:',
     },
     settings: {

@@ -1,10 +1,8 @@
-perf(queue): implement smooth drag-and-drop with context memoization and optimistic UI
+fix(player): resolve seeking issues and stabilize playback progress UI
 
-- Refactor queue state to use unique UIDs for stable React keys.
-- Implement React Portal for dragged items to prevent overflow clipping.
-- Optimize PlayerProvider performance using useMemo for context and useCallback for actions.
-- Add local optimistic state in QueuePanel for zero-latency drop feedback.
-- Remove expensive backdrop-filter from queue items to reduce GPU load.
-- Fix SCSS syntax errors and improve Emerald Glow aesthetics.
-- Ensure correct i18n translation keys in QueuePanel.
-- Add click-out behavior to auto-close QueuePanel in PlayerBar.
+- Implement manual HTTP Range request handling (206 Partial Content) in the melovista protocol handler to support seeking.
+- Standardize protocol URL format to 'melovista://app/{filePath}' for Chromium media compatibility.
+- Fix URL comparison logic in PlayerProvider that caused infinite load loops when seeking.
+- Update AudioEngine's progress tracking loop to be resilient during buffering/seeking states.
+- Add MIME type detection for common audio formats in the custom protocol handler for accurate duration reporting.
+- Ensure progress tracking restarts correctly via onseek event in Howler.

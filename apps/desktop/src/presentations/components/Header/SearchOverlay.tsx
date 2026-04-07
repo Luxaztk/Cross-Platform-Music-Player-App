@@ -1,16 +1,20 @@
 import React, { useEffect, useRef } from 'react';
-import { CornerDownLeft, ArrowUp, ArrowDown, Play, PlaySquare, ListPlus, MoreVertical } from 'lucide-react';
-import type { Song } from '@music/types';
-import type { SearchResults } from '../../../application/hooks';
+import { CornerDownLeft, ArrowUp, ArrowDown, Play, PlaySquare, ListPlus, MoreVertical, X, Clock, Trash2 } from 'lucide-react';
+import type { Song, RecentSearch } from '@music/types';
 import { useLanguage } from '../Language';
 import { useTheme } from '../Theme';
+import type { SearchResults } from '../../../application/hooks';
 import './SearchOverlay.scss';
 
 interface SearchOverlayProps {
   query: string;
   results: SearchResults;
+  recentSearches: RecentSearch[];
   selectedIndex: number;
   onSelect: (item: any) => void;
+  onSelectRecent: (recent: RecentSearch) => void;
+  onRemoveRecent: (timestamp: number) => void;
+  onClearRecent: () => void;
   onPlayNext: (song: Song) => void;
   onAddToQueue: (song: Song) => void;
   onClose: () => void;
@@ -24,8 +28,12 @@ const ICON_SIZES = {
 export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   query,
   results,
+  recentSearches,
   selectedIndex,
   onSelect,
+  onSelectRecent,
+  onRemoveRecent,
+  onClearRecent,
   onPlayNext,
   onAddToQueue,
 }) => {
@@ -63,7 +71,59 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
     return () => window.removeEventListener('mousedown', handleClickOut);
   }, [activeMenuId]);
 
-  if (!query) return null;
+  if (!query) {
+    if (recentSearches.length === 0) return null;
+
+    return (
+      <div className="search-overlay recent-view">
+        <div className="search-overlay-header">
+          <div className="section-header-row">
+            <span className="section-label">{t('search.recent') || 'Tìm kiếm gần đây'}</span>
+            <button className="clear-all-btn" onClick={onClearRecent}>
+              <Trash2 size={14} />
+              <span>{t('search.clearAll') || 'Xóa tất cả'}</span>
+            </button>
+          </div>
+        </div>
+        <div className="search-overlay-content">
+          <div className="recent-list">
+            {recentSearches.map((item) => (
+              <div 
+                key={item.timestamp} 
+                className="recent-item"
+                onClick={() => onSelectRecent(item)}
+              >
+                <div className="recent-item-left">
+                  {item.type === 'query' ? (
+                    <Clock size={16} className="item-icon" />
+                  ) : (
+                    <div className="entity-thumb">
+                      <div className="thumb-placeholder">{item.name.charAt(0)}</div>
+                    </div>
+                  )}
+                  <div className="item-info">
+                    <span className="item-name">{item.type === 'query' ? item.text : item.name}</span>
+                    {item.type === 'entity' && (
+                      <span className="item-type">{item.entityType === 'artist' ? t('search.artists') : t('search.albums')}</span>
+                    )}
+                  </div>
+                </div>
+                <button 
+                  className="remove-btn" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveRecent(item.timestamp);
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Flatten results for unified indexing (Must match Header.tsx logic)
   const flattenedSongs = results.songs.map(s => ({ type: 'song', item: s }));
@@ -238,7 +298,6 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                               <Play size={16} />
                               {t('playlist.playNow')}
                             </button>
-                            {/* Add other artist-specific actions here if needed */}
                           </div>
                         )}
                       </div>

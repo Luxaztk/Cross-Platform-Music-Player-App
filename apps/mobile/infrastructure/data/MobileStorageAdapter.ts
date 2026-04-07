@@ -1,5 +1,5 @@
 import type { IStorageAdapter } from '../../../../packages/core/src/index';
-import type { Song, Playlist, PlayerState } from '../../../../packages/types/index';
+import type { Song, Playlist, PlayerState, RecentSearch } from '../../../../packages/types/index';
 
 import sampleSongs from './song.json';
 import samplePlaylists from './playlist.json';
@@ -12,6 +12,7 @@ sampleSongs.forEach((s: any) => {
     filePath: s.audioUrl || '',
     title: s.title || 'Unknown',
     artist: s.artist || 'Unknown',
+    artists: s.artist ? [s.artist] : ['Unknown'],
     album: 'Unknown Album',
     duration: s.duration || 0,
     genre: 'Unknown Genre',
@@ -33,6 +34,7 @@ let currentSongs = songMap;
 
 let currentPlaylists: Record<string, Playlist> = {};
 let currentPlayerState: PlayerState | null = null;
+let currentRecentSearches: RecentSearch[] = [];
 
 export class MobileStorageAdapter implements IStorageAdapter {
   async getLibrary(): Promise<Playlist> {
@@ -65,6 +67,14 @@ export class MobileStorageAdapter implements IStorageAdapter {
 
   async savePlayerState(state: PlayerState): Promise<void> {
     currentPlayerState = state;
+  }
+
+  async getRecentSearches(): Promise<RecentSearch[]> {
+    return currentRecentSearches;
+  }
+
+  async saveRecentSearches(searches: RecentSearch[]): Promise<void> {
+    currentRecentSearches = searches;
   }
 }
 
