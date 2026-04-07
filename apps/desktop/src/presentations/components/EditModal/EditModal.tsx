@@ -4,6 +4,7 @@ import type { Song, Playlist } from '@music/types';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { useTheme } from '../Theme';
+import { splitArtists } from '@music/utils';
 import './EditModal.scss';
 
 interface EditModalProps {
@@ -94,6 +95,7 @@ export const EditModal: React.FC<EditModalProps> = ({
         ...data,
         title: title.trim(),
         artist: artist.trim(),
+        artists: splitArtists(artist.trim()),
         album: album.trim(),
         coverArt,
       });

@@ -17,6 +17,9 @@ declare global {
       importFiles: () => Promise<ImportResult>;
       importFolder: () => Promise<ImportResult>;
       addSongs: (songs: Song[]) => Promise<{ success: boolean; count: number }>;
+      importFromPath: (filePath: string, sourceUrl?: string, originId?: string) => Promise<{ success: boolean; count: number; duplicates?: string[]; reason?: string }>;
+      checkDuplicate: (title: string, artist: string, url?: string, id?: string) => Promise<{ isDuplicate: boolean; reason?: 'URL' | 'METADATA'; existingSong: { id: string; title: string; artist: string } | null }>;
+      scanMissingFiles: () => Promise<string[]>;
       pickImage: () => Promise<string | null>;
 
       // Storage operations
@@ -30,6 +33,14 @@ declare global {
       savePlayerState: (state: PlayerState) => Promise<void>;
       getRecentSearches: () => Promise<RecentSearch[]>;
       saveRecentSearches: (searches: RecentSearch[]) => Promise<void>;
+
+      // Downloader operations
+      fetchYtInfo: (url: string) => Promise<{ success: boolean; info?: any; error?: string }>;
+      downloadYtAudio: (url: string, title: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      writeAudioMetadata: (filePath: string, metadata: any) => Promise<{ success: boolean; error?: string }>;
+      onDownloadProgress: (callback: (data: { url: string; percent: number }) => void) => () => void;
+      openItemPath: (filePath: string) => Promise<void>;
+      deleteFile: (filePath: string) => Promise<{ success: boolean }>;
     }
   }
 }

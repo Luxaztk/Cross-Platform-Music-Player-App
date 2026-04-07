@@ -1,39 +1,80 @@
 import * as mm from 'music-metadata';
 import path from 'node:path';
-import { randomUUID, createHash } from 'node:crypto';
+import NodeID3 from 'node-id3';
+import { randomUUID } from 'node:crypto';
+import { spawn } from 'node:child_process';
+import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import fs from 'node:fs/promises';
 import type { Song } from '@music/types';
 import { splitArtists } from '@music/utils';
 
 export class MainMetadataService {
-  private static async calculateQuickHash(filePath: string): Promise<string> {
-    let fileHandle: any = null;
-    try {
-      const hash = createHash('md5');
-      const stats = await fs.stat(filePath);
-      const bufferSize = Math.min(stats.size, 1024 * 1024); // Max 1MB
-      
-      fileHandle = await fs.open(filePath, 'r');
-      const buffer = Buffer.alloc(bufferSize);
-      await fileHandle.read(buffer, 0, bufferSize, 0);
-      
-      hash.update(buffer);
-      return hash.digest('hex');
-    } catch (err) {
-      console.error(`[MainMetadataService] Hash calculation failed for ${filePath}:`, err);
-      // Use file size as a fallback fingerprint component
-      try {
-        const stats = await fs.stat(filePath);
-        return `error-fallback-${stats.size}`;
-      } catch {
-        return `error-fallback-unknown`;
-      }
-    } finally {
-      if (fileHandle) await fileHandle.close();
+  /**
+   * Calculates a "Perceptual" audio fingerprint (v2) by computing the Energy Envelope.
+   * This is extremely stable across different qualities (bitrates) and encoders.
+   */
+  public static async calculateAudioHash(filePath: string): Promise<string> {
+    const runFfmpeg = (offset: number): Promise<Buffer> => {
+      return new Promise((resolve) => {
+        const ffmpeg = spawn(ffmpegPath.path, [
+          '-ss', offset.toString(),
+          '-t', '30',
+          '-i', filePath,
+          '-f', 's16le',
+          '-ac', '1',
+          '-ar', '8000',
+          '-loglevel', 'error',
+          '-'
+        ]);
+
+        let pcmData = Buffer.alloc(0);
+        ffmpeg.stdout.on('data', (chunk) => { pcmData = Buffer.concat([pcmData, chunk]); });
+        ffmpeg.on('close', (code) => {
+          if (code === 0) resolve(pcmData);
+          else resolve(Buffer.alloc(0));
+        });
+        ffmpeg.on('error', () => resolve(Buffer.alloc(0)));
+      });
+    };
+
+    // Try at 30s offset first (to avoid silence at start)
+    let pcm = await runFfmpeg(30);
+    
+    // If it failed or the song is shorter than 30s (no data), fallback to 0s
+    if (pcm.length === 0) {
+      pcm = await runFfmpeg(0);
     }
+
+    if (pcm.length === 0) {
+      return `error-fallback-v2-${Date.now()}`;
+    }
+
+    // Perceptual Fingerprinting logic:
+    // Divide the recorded audio into 64 temporal windows
+    const numWindows = 64;
+    const bytesPerSample = 2;
+    const windowSize = Math.floor(pcm.length / bytesPerSample / numWindows);
+    const envelope: string[] = [];
+    
+    for (let i = 0; i < numWindows; i++) {
+      let sumSquare = 0;
+      let actualSamples = 0;
+      for (let j = 0; j < windowSize; j++) {
+        const idx = (i * windowSize + j) * bytesPerSample;
+        if (idx + 1 >= pcm.length) break;
+        const sample = pcm.readInt16LE(idx);
+        sumSquare += (sample / 32768) ** 2;
+        actualSamples++;
+      }
+      const rms = actualSamples > 0 ? Math.sqrt(sumSquare / actualSamples) : 0;
+      const charCode = Math.min(35, Math.floor(rms * 100)); 
+      envelope.push(charCode.toString(36));
+    }
+    
+    return `p2:${envelope.join('')}`;
   }
 
-  static async extractMetadata(filePath: string): Promise<Song | null> {
+  static async extractMetadata(filePath: string, sourceUrl?: string, originId?: string): Promise<Song | null> {
     try {
       const stats = await fs.stat(filePath);
       const metadata = await mm.parseFile(filePath);
@@ -45,14 +86,31 @@ export class MainMetadataService {
         coverArt = `data:${picture.format};base64,${Buffer.from(picture.data).toString('base64')}`;
       }
 
-      const quickHash = await this.calculateQuickHash(filePath);
+      const audioHash = await this.calculateAudioHash(filePath);
 
       const rawArtist = common.artist || 'Unknown Artist';
       // Always flatMap and split every element, even if already an array, 
-      // as some metadata sources provide combined strings inside an array.
       const artists = (common.artists && common.artists.length > 0) 
         ? common.artists.flatMap(a => splitArtists(a))
         : splitArtists(rawArtist);
+
+      // Attempt to recover originId and sourceUrl from embedded TXXX ID3 tags if not provided
+      let finalOriginId = originId;
+      let finalSourceUrl = sourceUrl;
+      
+      if (!finalOriginId || !finalSourceUrl) {
+        try {
+          const tags = NodeID3.read(filePath);
+          if (tags && tags.userDefinedText) {
+            for (const t of tags.userDefinedText) {
+              if (t.description === 'melovista_origin_id' && !finalOriginId) finalOriginId = t.value;
+              if (t.description === 'melovista_source_url' && !finalSourceUrl) finalSourceUrl = t.value;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to read ID3 tags with node-id3:", e);
+        }
+      }
 
       return {
         id: randomUUID(),
@@ -68,12 +126,52 @@ export class MainMetadataService {
         genre: common.genre ? common.genre.join(', ') : 'Unknown Genre',
         year: common.year || null,
         coverArt,
-        hash: `${quickHash}-${stats.size}`, // Combined hash for higher accuracy
+        hash: audioHash,
         fileSize: stats.size,
+        sourceUrl: finalSourceUrl,
+        originId: finalOriginId,
       };
     } catch (error) {
       console.error(`Error extracting metadata for ${filePath}:`, error);
       return null;
+    }
+  }
+
+  /**
+   * Updates the physical file's metadata (ID3 tags) based on the Song object.
+   */
+  static async updatePhysicalMetadata(song: Song): Promise<boolean> {
+    try {
+      const { MetadataManager } = require('../modules/metadata/MetadataManager');
+      const manager = new MetadataManager();
+
+      // Convert coverArt (Base64 Data URI) to coverPath or similar if needed
+      let coverPath: string | undefined;
+      let coverUrl: string | undefined;
+
+      if (song.coverArt && song.coverArt.startsWith('data:')) {
+        // Handled inside MetadataManager via DataURI checking
+      } else if (song.coverArt && song.coverArt.startsWith('http')) {
+        coverUrl = song.coverArt;
+      } else if (song.coverArt) {
+        coverPath = song.coverArt;
+      }
+
+      await manager.writeMetadata(song.filePath, {
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        coverPath,
+        coverUrl,
+        coverData: song.coverArt?.startsWith('data:') ? song.coverArt : undefined,
+        originId: song.originId,
+        sourceUrl: song.sourceUrl
+      });
+
+      return true;
+    } catch (err) {
+      console.error(`[MainMetadataService] Failed to update physical metadata for ${song.filePath}:`, err);
+      return false;
     }
   }
 }

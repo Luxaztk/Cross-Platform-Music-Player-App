@@ -35,7 +35,7 @@ export class LibraryService {
    * Priority 2: File Content Hash match
    * Priority 3: File Name + Artist match
    */
-  public async processAndAddSongs(newSongs: Song[]): Promise<{ addedCount: number; duplicatePaths: string[]; duplicateSongs: Song[] }> {
+  public async processAndAddSongs(newSongs: Song[]): Promise<{ addedCount: number; duplicatePaths: string[]; duplicateSongs: (Song & { duplicateReason?: 'URL' | 'HASH' | 'PATH' | 'METADATA' })[] }> {
     const currentSongs = await this.storageAdapter.getSongs();
     const currentLibrary = await this.storageAdapter.getLibrary();
 
@@ -50,7 +50,8 @@ export class LibraryService {
 
     // Priority 1: File Path
     const existingPaths = new Set(existingSongs.map(s => s.filePath));
-    const existingHashes = new Set(existingSongs.map(s => s.hash).filter(Boolean));
+    const existingHashes = new Set(existingSongs.map(s => s.hash?.split('-')[0]).filter(Boolean));
+    const existingSourceUrls = new Set(existingSongs.map(s => s.sourceUrl).filter(Boolean));
     const existingNameArtistKeys = new Set(
       existingSongs.map(s => `${this.getBaseName(s.filePath).toLowerCase()}|${s.artist.toLowerCase()}`)
     );
@@ -64,12 +65,49 @@ export class LibraryService {
       const artist = song.artist.toLowerCase();
       const nameArtistKey = `${fileName}|${artist}`;
 
-      // Check Prioritized levels
-      const isDuplicateHash = song.hash && existingHashes.has(song.hash);
+      // Check Prioritized mức độ (Priority levels)
+      const isDuplicateUrl = song.sourceUrl && existingSourceUrls.has(song.sourceUrl);
+      // Priority 2: File Content Hash (Perceptual)
+      let isDuplicateHash = false;
+      const normalizedHash = song.hash?.split('-')[0];
+      
+      if (normalizedHash && normalizedHash.startsWith('p2:')) {
+        const hashContent = normalizedHash.slice(3);
+        
+        for (const existing of existingSongs) {
+          const existingHash = existing.hash?.split('-')[0];
+          if (!existingHash || !existingHash.startsWith('p2:')) continue;
+          
+          const existingHashContent = existingHash.slice(3);
+          const similarity = this.calculateSimilarity(hashContent, existingHashContent);
+          
+          // Tiered Logic:
+          // 1. Strict Match (95% similarity regardless of duration)
+          // 2. Smart Match (75% similarity + duration matching < 0.5s)
+          const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
+          
+          if (similarity >= 0.95 || (similarity >= 0.75 && durationDiff < 0.5)) {
+            isDuplicateHash = true;
+            break;
+          }
+        }
+      } else if (normalizedHash) {
+        // Fallback or binary hash (p1:)
+        if (existingHashes.has(normalizedHash)) {
+          isDuplicateHash = true;
+        }
+      }
+
       const isDuplicatePath = existingPaths.has(song.filePath);
       const isDuplicateMetadata = existingNameArtistKeys.has(nameArtistKey);
 
-      if (isDuplicatePath || isDuplicateHash || isDuplicateMetadata) {
+      let duplicateReason: 'URL' | 'HASH' | 'PATH' | 'METADATA' | undefined;
+      if (isDuplicateUrl) duplicateReason = 'URL';
+      else if (isDuplicatePath) duplicateReason = 'PATH';
+      else if (isDuplicateHash) duplicateReason = 'HASH';
+      else if (isDuplicateMetadata) duplicateReason = 'METADATA';
+
+      if (duplicateReason) {
         duplicatePaths.push(song.filePath);
         // Return only essential info to avoid IPC overhead (exclude heavy fields like coverArt)
         duplicateSongs.push({
@@ -77,13 +115,15 @@ export class LibraryService {
           title: song.title,
           artist: song.artist,
           filePath: song.filePath,
-        } as Song);
+          duplicateReason
+        } as any);
         continue;
       }
 
       // Update our temporary sets to catch duplicates within the SAME batch
       existingPaths.add(song.filePath);
       if (song.hash) existingHashes.add(song.hash);
+      if (song.sourceUrl) existingSourceUrls.add(song.sourceUrl);
       existingNameArtistKeys.add(nameArtistKey);
 
       songs[song.id] = song;
@@ -100,6 +140,18 @@ export class LibraryService {
     }
 
     return { addedCount, duplicatePaths, duplicateSongs };
+  }
+
+  /**
+   * Simple similarity check for fingerprints (0 to 1)
+   */
+  private calculateSimilarity(h1: string, h2: string): number {
+    if (h1.length !== h2.length) return 0;
+    let matches = 0;
+    for (let i = 0; i < h1.length; i++) {
+      if (h1[i] === h2[i]) matches++;
+    }
+    return matches / h1.length;
   }
 
   /**

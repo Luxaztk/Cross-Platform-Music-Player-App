@@ -60,7 +60,8 @@ export const PlaylistDetailPage: React.FC = () => {
     songs: allSongs,
     playlists,
     libraryFilter,
-    setLibraryFilter
+    setLibraryFilter,
+    libraryVersion,
   } = useLibraryContext();
 
   const { showNotification } = useNotification();
@@ -92,7 +93,7 @@ export const PlaylistDetailPage: React.FC = () => {
     return () => {
       setLibraryFilter({ type: 'none', values: [] });
     };
-  }, [id, handleGetPlaylistDetail, setLibraryFilter]);
+  }, [id, libraryVersion, handleGetPlaylistDetail, setLibraryFilter]);
 
   // Click out to close menu
   React.useEffect(() => {

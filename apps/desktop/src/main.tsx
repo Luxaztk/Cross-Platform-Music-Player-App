@@ -6,13 +6,24 @@ import { LanguageProvider } from './presentations/components/Language'
 import { LibraryProvider, useLibraryContext } from './presentations/components/Library'
 import { PlayerProvider } from '@music/hooks'
 import { ElectronStorageAdapter } from './infrastructure/services/ElectronStorageAdapter'
+import { useNotification } from './application/hooks'
+import { useLanguage } from './presentations/components/Language'
 
 const storage = new ElectronStorageAdapter();
 
 const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) => {
   const { songs } = useLibraryContext();
+  const { showNotification } = useNotification();
+  const { t } = useLanguage();
+
   return (
-    <PlayerProvider storage={storage} allSongs={songs}>
+    <PlayerProvider 
+      storage={storage} 
+      allSongs={songs}
+      onFileError={(song) => {
+        showNotification('error', t('player.fileNotFound').replace('{title}', song.title));
+      }}
+    >
       {children}
     </PlayerProvider>
   );

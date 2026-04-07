@@ -56,9 +56,10 @@ interface PlayerProviderProps {
   children: React.ReactNode;
   storage?: IStorageAdapter;
   allSongs?: Song[];
+  onFileError?: (song: Song) => void;
 }
 
-export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storage, allSongs = [] }) => {
+export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storage, allSongs = [], onFileError }) => {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -84,6 +85,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
   const currentSongRef = useRef(currentSong); currentSongRef.current = currentSong;
   const repeatModeRef = useRef(repeatMode); repeatModeRef.current = repeatMode;
   const isShuffleRef = useRef(isShuffle); isShuffleRef.current = isShuffle;
+  const onFileErrorRef = useRef(onFileError); onFileErrorRef.current = onFileError;
 
   const pushToHistory = useCallback((song: Song) => {
     setHistory(prev => {
@@ -173,7 +175,24 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
       },
       onLoad: (d) => {
         setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
-      }
+      },
+      onLoadError: (_err) => {
+        // File not found on disk — notify the consumer and auto-skip
+        const failedSong = currentSongRef.current;
+        if (failedSong && onFileErrorRef.current) {
+          onFileErrorRef.current(failedSong);
+        }
+        // Give the UI a tiny moment to show the toast, then skip
+        setTimeout(() => handleNext(), 800);
+      },
+      onPlayError: (_err) => {
+        // Play errors (e.g. autoplay blocked) — same auto-skip logic
+        const failedSong = currentSongRef.current;
+        if (failedSong && onFileErrorRef.current) {
+          onFileErrorRef.current(failedSong);
+        }
+        setTimeout(() => handleNext(), 800);
+      },
     });
 
     engine.setVolume(1);

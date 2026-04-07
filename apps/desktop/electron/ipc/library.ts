@@ -5,6 +5,7 @@ import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
 import { MainMetadataService } from '../infrastructure/MainMetadataService';
 import type { Song } from '@music/types';
 import { LibraryService } from '@music/core';
+import { extractYoutubeId, getCanonicalYoutubeUrl } from '@music/utils';
 
 const storageAdapter = new MainStorageAdapter();
 const libraryService = new LibraryService(storageAdapter);
@@ -33,7 +34,66 @@ async function scanDirectory(dir: string): Promise<string[]> {
   return files;
 }
 
+/**
+ * One-time migration: Recalculate audio hashes for ALL songs in the library.
+ * This ensures that old hashes (binary-based or p1) are updated to the current 
+ * Perceptual Hashing v2 algorithm (p2: prefix).
+ */
+async function rehashAllSongs(): Promise<void> {
+  try {
+    const songs = await storageAdapter.getSongs();
+    const songList = Object.values(songs);
+    
+    // Filter only songs that NEED migration (missing p2: prefix)
+    const pendingMigration = songList.filter(s => !s.hash?.startsWith('p2:'));
+    
+    if (pendingMigration.length === 0) {
+      console.log(`[Rehash] All ${songList.length} song hashes are up-to-date (p2 format).`);
+      return;
+    }
+
+    console.log(`[Rehash] Starting migration for ${pendingMigration.length} songs...`);
+
+    let processedCount = 0;
+    let successCount = 0;
+    const batchSize = 5;
+
+    // Process in batches to avoid CPU/IO hogging
+    for (let i = 0; i < pendingMigration.length; i += batchSize) {
+      const batch = pendingMigration.slice(i, i + batchSize);
+      
+      await Promise.all(batch.map(async (song) => {
+        try {
+          // Check if file exists
+          await fs.access(song.filePath, fs.constants.F_OK);
+          
+          const newHash = await MainMetadataService.calculateAudioHash(song.filePath);
+          
+          if (newHash.startsWith('p2:')) {
+            songs[song.id] = { ...song, hash: newHash };
+            successCount++;
+          }
+        } catch (err) {
+          // Song might have been deleted or moved, skip
+        }
+      }));
+
+      processedCount += batch.length;
+      console.log(`[Rehash] Progress: ${processedCount}/${pendingMigration.length} matched...`);
+      
+      // Save incrementally after each batch
+      await storageAdapter.saveSongs(songs);
+    }
+
+    console.log(`[Rehash] Migration finished. Updated ${successCount}/${pendingMigration.length} songs.`);
+  } catch (err) {
+    console.error('[Rehash] Migration error:', err);
+  }
+}
+
 export function setupLibraryIPC() {
+  // Run rehash migration in the background on startup
+  rehashAllSongs();
   ipcMain.handle('library:get', async () => {
     return {
       songs: await storageAdapter.getSongList(),
@@ -55,7 +115,15 @@ export function setupLibraryIPC() {
   });
 
   ipcMain.handle('library:updateSong', async (_event, song: any) => {
-    return await libraryService.updateSong(song);
+    const updated = await libraryService.updateSong(song);
+    
+    // Background task: Persistence to physical file
+    // We don't 'await' it to keep the UI snappy, but we trigger it
+    MainMetadataService.updatePhysicalMetadata(updated).catch(err => {
+      console.error('[IPC] Failed to update physical metadata for song:', updated.id, err);
+    });
+
+    return updated;
   });
 
   ipcMain.handle('library:deleteSong', async (_event, songId: string) => {
@@ -202,6 +270,131 @@ export function setupLibraryIPC() {
     } catch (err) {
       console.error('IPC addSongs error:', err);
       return { success: false, count: 0, message: String(err) };
+    }
+  });
+
+  ipcMain.handle('library:importFromPath', async (_event, filePath: string, sourceUrl?: string, originId?: string) => {
+    try {
+      const canonicalUrl = sourceUrl ? getCanonicalYoutubeUrl(sourceUrl) || sourceUrl : sourceUrl;
+      const songData = await MainMetadataService.extractMetadata(filePath, canonicalUrl, originId);
+      if (!songData) {
+        return { success: false, reason: 'METADATA_ERROR' };
+      }
+
+      const { addedCount, duplicatePaths, duplicateSongs } = await libraryService.processAndAddSongs([songData]);
+      
+      const isDuplicate = addedCount === 0;
+      let duplicateReason: string | undefined;
+
+      if (isDuplicate && duplicateSongs.length > 0) {
+        duplicateReason = (duplicateSongs[0] as any).duplicateReason;
+        
+        // Automated Cleanup: Delete the redundant downloaded file if it's a duplicate
+        // We only do this for online downloads (where sourceUrl is provided) to avoid accidental deletion of manual imports
+        if (sourceUrl && (duplicateReason === 'HASH' || duplicateReason === 'URL' || duplicateReason === 'METADATA')) {
+          try {
+            await fs.unlink(filePath);
+            console.log(`[library:importFromPath] Deleted duplicate file: ${filePath} (Reason: ${duplicateReason})`);
+          } catch (unlinkErr) {
+            console.error(`[library:importFromPath] Failed to delete duplicate file: ${filePath}`, unlinkErr);
+          }
+        }
+      }
+
+      return {
+        success: true,
+        count: addedCount,
+        duplicates: duplicatePaths,
+        duplicateSongs: duplicateSongs,
+        reason: duplicateReason
+      };
+    } catch (err) {
+      console.error('IPC library:importFromPath error:', err);
+      return { success: false, reason: 'ERROR', message: String(err) };
+    }
+  });
+
+  ipcMain.handle('library:checkDuplicate', async (_event, title: string, artist: string, url?: string, id?: string) => {
+    try {
+      const songs = await storageAdapter.getSongs();
+      const existingSongs = Object.values(songs);
+
+      // 1. Check by Source ID or URL (Highest priority for online downloads)
+      const inputUrl = url?.trim();
+      const inputId = id || (inputUrl ? extractYoutubeId(inputUrl) : null);
+      
+      if (inputId || inputUrl) {
+        const urlMatch = existingSongs.find(s => {
+          // Priority 1: Direct originId match (Fastest and most accurate)
+          if (inputId && s.originId === inputId) return true;
+          
+          // Priority 2: Standard URL / ID extraction match (Fallback for legacy/other sources)
+          if (!s.sourceUrl) return false;
+          
+          const storedUrl = s.sourceUrl.trim();
+          const storedId = extractYoutubeId(storedUrl);
+          
+          const idMatch = inputId && storedId && inputId === storedId;
+          const urlMatchRaw = inputUrl && storedUrl === inputUrl;
+          
+          return idMatch || urlMatchRaw;
+        });
+
+        if (urlMatch) {
+          return {
+            isDuplicate: true,
+            reason: 'URL',
+            existingSong: { id: urlMatch.id, title: urlMatch.title, artist: urlMatch.artist }
+          };
+        }
+      }
+
+      // 2. Check by Title + Artist (Standard for all)
+      // Apply same normalization as MainMetadataService.extractMetadata
+      const normalizeTitle = (t: string) => t.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+      const normalizedTitle = normalizeTitle(title.trim());
+      const normalizedArtist = artist.trim().toLowerCase();
+
+      const match = existingSongs.find(s => {
+        const titleMatch = normalizeTitle(s.title) === normalizedTitle;
+        // Artist matching is more lenient - check if one contains the other
+        const storedArtist = s.artist.trim().toLowerCase();
+        const artistMatch =
+          storedArtist === normalizedArtist ||
+          storedArtist.includes(normalizedArtist) ||
+          normalizedArtist.includes(storedArtist);
+        return titleMatch && artistMatch;
+      });
+
+      return {
+        isDuplicate: !!match,
+        reason: match ? 'METADATA' : null,
+        existingSong: match ? { id: match.id, title: match.title, artist: match.artist } : null
+      };
+    } catch (err) {
+      console.error('IPC library:checkDuplicate error:', err);
+      return { isDuplicate: false, existingSong: null };
+    }
+  });
+
+  ipcMain.handle('library:scanMissingFiles', async () => {
+    try {
+      const songsMap = await storageAdapter.getSongs();
+      const songs = Object.values(songsMap);
+      const missingIds: string[] = [];
+
+      for (const song of songs) {
+        try {
+          await fs.access(song.filePath, fs.constants.F_OK);
+        } catch {
+          missingIds.push(song.id);
+        }
+      }
+
+      return missingIds;
+    } catch (err) {
+      console.error('IPC library:scanMissingFiles error:', err);
+      return [];
     }
   });
 }

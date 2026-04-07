@@ -12,6 +12,8 @@ export interface Song {
   lyrics?: string; // embedded USLT tag from ID3
   hash?: string; // Content hash for de-duplication
   fileSize?: number; // Size in bytes
+  sourceUrl?: string; // YouTube URL or similar
+  originId?: string; // YouTube Video ID or similar
 }
 
 export interface Playlist {

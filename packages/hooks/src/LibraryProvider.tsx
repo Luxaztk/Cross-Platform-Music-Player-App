@@ -36,6 +36,8 @@ interface LibraryContextType {
   handleDeletePlaylist: (playlistId: string) => Promise<boolean>;
   refreshPlaylists: () => Promise<void>;
   refreshLibrary: () => Promise<void>;
+  libraryVersion: number;
+  handleScanMissingFiles: () => Promise<string[]>;
 }
 
 const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
@@ -50,6 +52,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   const [library, setLibrary] = useState<Playlist | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [duplicateSongs, setDuplicateSongs] = useState<Song[]>([]);
+  const [libraryVersion, setLibraryVersion] = useState(0);
   const [libraryFilter, setLibraryFilter] = useState<{ type: 'artist' | 'album' | 'none'; values: string[] }>({ 
     type: 'none', 
     values: [] 
@@ -69,11 +72,13 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
     const data = await getLibraryUc.execute();
     setSongs(data.songs);
     setLibrary(data.library);
+    setLibraryVersion(v => v + 1);
   };
 
   const fetchPlaylists = async () => {
     const data = await getPlaylistsUc.execute();
     setPlaylists(data);
+    setLibraryVersion(v => v + 1);
   };
 
   useEffect(() => {
@@ -181,11 +186,15 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   };
 
   const handleDeletePlaylist = async (playlistId: string) => {
-    const res = await deletePlaylistUc.execute(playlistId);
-    if (res) {
+    const success = await deletePlaylistUc.execute(playlistId);
+    if (success) {
       await fetchPlaylists();
     }
-    return res;
+    return success;
+  };
+
+  const handleScanMissingFiles = async () => {
+    return await window.electronAPI.scanMissingFiles();
   };
 
   return (
@@ -210,7 +219,9 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
       handleAddSongsToPlaylist,
       handleDeletePlaylist,
       refreshPlaylists: fetchPlaylists,
-      refreshLibrary: fetchLibrary
+      refreshLibrary: fetchLibrary,
+      libraryVersion,
+      handleScanMissingFiles,
     }}>
       {children}
     </LibraryContext.Provider>

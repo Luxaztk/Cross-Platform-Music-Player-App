@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deletePlaylist: (playlistId: string) => ipcRenderer.invoke('library:deletePlaylist', playlistId),
   pickImage: () => ipcRenderer.invoke('library:pickImage'),
   addSongs: (songs: any[]) => ipcRenderer.invoke('library:addSongs', songs),
+  importFromPath: (filePath: string, sourceUrl?: string, originId?: string) => ipcRenderer.invoke('library:importFromPath', filePath, sourceUrl, originId),
+  checkDuplicate: (title: string, artist: string, url?: string, id?: string) => ipcRenderer.invoke('library:checkDuplicate', title, artist, url, id),
+  scanMissingFiles: () => ipcRenderer.invoke('library:scanMissingFiles'),
   
   // Storage operations
   getLibraryData: () => ipcRenderer.invoke('storage:getLibrary'),
@@ -28,4 +31,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   savePlayerState: (state: any) => ipcRenderer.invoke('storage:savePlayerState', state),
   getRecentSearches: () => ipcRenderer.invoke('storage:getRecentSearches'),
   saveRecentSearches: (searches: any) => ipcRenderer.invoke('storage:saveRecentSearches', searches),
+
+  // Downloader operations
+  fetchYtInfo: (url: string) => ipcRenderer.invoke('fetch-yt-info', url),
+  downloadYtAudio: (url: string, title: string) => ipcRenderer.invoke('download-yt-audio', url, title),
+  writeAudioMetadata: (filePath: string, metadata: any) => ipcRenderer.invoke('write-audio-metadata', filePath, metadata),
+  onDownloadProgress: (callback: (data: { url: string; percent: number }) => void) => {
+    const listener = (_event: any, data: { url: string; percent: number }) => callback(data);
+    ipcRenderer.on('download-progress', listener);
+    return () => ipcRenderer.off('download-progress', listener);
+  },
+  openItemPath: (filePath: string) => ipcRenderer.invoke('open-item-path', filePath),
+  deleteFile: (filePath: string) => ipcRenderer.invoke('delete-file', filePath),
 });

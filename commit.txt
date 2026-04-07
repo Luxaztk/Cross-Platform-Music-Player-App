@@ -1,8 +1,15 @@
-fix(player): resolve seeking issues and stabilize playback progress UI
+feat(downloader): improve download reliability and add library integrity tooling
 
-- Implement manual HTTP Range request handling (206 Partial Content) in the melovista protocol handler to support seeking.
-- Standardize protocol URL format to 'melovista://app/{filePath}' for Chromium media compatibility.
-- Fix URL comparison logic in PlayerProvider that caused infinite load loops when seeking.
-- Update AudioEngine's progress tracking loop to be resilient during buffering/seeking states.
-- Add MIME type detection for common audio formats in the custom protocol handler for accurate duration reporting.
-- Ensure progress tracking restarts correctly via onseek event in Howler.
+- Fixed `yt-dlp` hanging issues by introducing non-blocking `stderr` stream handling
+  and explicit process `close` event synchronization.
+- Added automatic post-download library synchronization and ID3 metadata injection.
+- Implemented just-in-time file existence validation in `PlayerProvider` to
+  automatically skip missing tracks during playback.
+- Added a "Clean Up Library" utility to remove orphaned database records for
+  media files no longer present on disk.
+- Refined `DownloaderModal` styling to align with the Semantic Theme system.
+- Added a smart paste action with instant YouTube URL validation and visual
+  state feedback (clipboard -> success).
+- Standardized modal transition animations for a smoother and more consistent UX.
+
+Improves media acquisition reliability and maintains long-term library consistency.

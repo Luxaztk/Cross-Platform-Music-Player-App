@@ -25,6 +25,11 @@ export default defineConfig({
             rollupOptions: {
               external: [
                 'electron',
+                'music-metadata',
+                '@ffmpeg-installer/ffmpeg',
+                'youtube-dl-exec',
+                'node-id3',
+                'electron-store',
                 ...builtinModules,
                 ...builtinModules.map(m => `node:${m}`),
               ],

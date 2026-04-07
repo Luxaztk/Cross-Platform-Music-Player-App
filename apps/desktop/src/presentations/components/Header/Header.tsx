@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Search, User, Languages, Settings, LogOut, X, SlidersHorizontal, Headphones, Check, ChevronRight, Palette } from 'lucide-react';
+import { Home, Search, User, Languages, Settings, LogOut, X, SlidersHorizontal, Headphones, Check, ChevronRight, Palette, Download, ShieldCheck, Loader2 } from 'lucide-react';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
-import { useSearch, useLibrary, useRecentSearches } from '../../../application/hooks';
+import { DownloaderModal } from '../DownloaderModal/DownloaderModal';
+import { DeleteConfirmationModal } from '../DeleteConfirmationModal/DeleteConfirmationModal';
+import { useSearch, useLibrary, useRecentSearches, useNotification } from '../../../application/hooks';
 import { usePlayer, useAudioDevices } from '@music/hooks';
 import type { Song } from '@music/types';
 import { SearchOverlay } from './SearchOverlay';
@@ -14,8 +16,9 @@ import './Header.scss';
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
-  const { songs, playlists, setLibraryFilter } = useLibrary();
+  const { songs, playlists, setLibraryFilter, handleScanMissingFiles, handleDeleteSongs } = useLibrary();
   const { playList, playNext, addToQueue } = usePlayer();
+  const { showNotification } = useNotification();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
@@ -25,6 +28,9 @@ const Header: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const { devices, currentDeviceId, setAudioDevice } = useAudioDevices();
   const { recentSearches, addSearch, removeSearch, clearAll } = useRecentSearches();
+  const [showDownloader, setShowDownloader] = React.useState(false);
+  const [isScanning, setIsScanning] = React.useState(false);
+  const [missingFileIds, setMissingFileIds] = React.useState<string[] | null>(null);
 
   const searchResults = useSearch(songs, playlists, searchQuery);
   const profileRef = React.useRef<HTMLDivElement>(null);
@@ -145,7 +151,35 @@ const Header: React.FC = () => {
     osc.stop(ctx.currentTime + 0.5);
   };
 
+  const onScanMissing = async () => {
+    setIsScanning(true);
+    setShowProfileMenu(false);
+    try {
+      const missing = await handleScanMissingFiles();
+      if (missing.length === 0) {
+        showNotification('info', t('libraryCleanup.noMissing'));
+      } else {
+        setMissingFileIds(missing);
+      }
+    } catch (err) {
+      console.error('Scan missing files error:', err);
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const confirmCleanup = async () => {
+    if (!missingFileIds) return;
+    const count = missingFileIds.length;
+    const success = await handleDeleteSongs(missingFileIds);
+    if (success) {
+      showNotification('success', t('libraryCleanup.success').replace('{count}', count.toString()));
+    }
+    setMissingFileIds(null);
+  };
+
   return (
+    <>
     <header className="app-header">
       <div className="header-left">
         <div className="app-logo" onClick={() => navigate('/playlist/0')} title={t('header.home')}>
@@ -350,6 +384,24 @@ const Header: React.FC = () => {
               </div>
               <div className="dropdown-divider" />
 
+              <button 
+                className="dropdown-item" 
+                onClick={onScanMissing}
+                disabled={isScanning}
+              >
+                {isScanning ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <ShieldCheck size={16} />
+                )}
+                <span>{t('libraryCleanup.title')}</span>
+              </button>
+
+              <button className="dropdown-item" onClick={() => { setShowDownloader(true); setShowProfileMenu(false); }}>
+                <Download size={16} />
+                <span>{t('downloader.title')}</span>
+              </button>
+
               <button className="dropdown-item">
                 <Settings size={16} />
                 <span>{t('header.settings')}</span>
@@ -363,6 +415,22 @@ const Header: React.FC = () => {
         </div>
       </div>
     </header>
+
+    <DownloaderModal 
+      isOpen={showDownloader} 
+      onClose={() => setShowDownloader(false)} 
+    />
+
+    <DeleteConfirmationModal
+      isOpen={!!missingFileIds}
+      onClose={() => setMissingFileIds(null)}
+      onConfirm={confirmCleanup}
+      title={t('libraryCleanup.title')}
+      confirmText={t('common.delete')}
+      message={t('libraryCleanup.foundMissing').replace('{count}', missingFileIds?.length.toString() || '0')}
+      messageSuffix={t('libraryCleanup.confirmMessage')}
+    />
+  </>
   );
 };
 

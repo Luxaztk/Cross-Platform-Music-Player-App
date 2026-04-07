@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { setupLibraryIPC } from './ipc/library';
 import { setupStorageIPC } from './ipc/storage';
+import { setupDownloaderIPC } from './ipc/downloader';
 
 // Register custom scheme BEFORE app is ready
 protocol.registerSchemesAsPrivileged([
@@ -125,8 +126,8 @@ app.whenReady().then(() => {
     
     // In Dev, we need 'unsafe-eval' for Vite HMR. In Prod, we strip it out.
     const csp = isDev 
-      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self' http://localhost:5173 ws://localhost:5173;" 
-      : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self';";
+      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self' http://localhost:5173 ws://localhost:5173;" 
+      : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self';";
 
     callback({
       responseHeaders: {
@@ -138,5 +139,6 @@ app.whenReady().then(() => {
 
   setupLibraryIPC();
   setupStorageIPC();
+  setupDownloaderIPC();
   createWindow();
 });

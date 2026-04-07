@@ -11,15 +11,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@music/utils": "*",
+    "@types/ffmpeg-installer__ffmpeg": "^1.0.2",
     "electron-store": "^10.1.0",
     "fuse.js": "^7.1.0",
     "lucide-react": "^1.6.0",
     "music-metadata": "^11.12.3",
+    "node-id3": "^0.2.9",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.2.0"
+    "react-router-dom": "^7.2.0",
+    "youtube-dl-exec": "^3.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -44,5 +48,12 @@
     "vite": "^8.0.1",
     "vite-plugin-electron": "^0.29.1",
     "vite-plugin-electron-renderer": "^0.14.6"
+  },
+  "build": {
+    "appId": "com.melovista.app",
+    "asarUnpack": [
+      "**/node_modules/@ffmpeg-installer/**",
+      "**/node_modules/youtube-dl-exec/**"
+    ]
   }
 }
