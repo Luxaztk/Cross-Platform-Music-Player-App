@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Music } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { Song, Playlist } from '@music/types';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
+import { useTheme } from '../Theme';
 import './EditModal.scss';
 
 interface EditModalProps {
@@ -21,6 +22,7 @@ export const EditModal: React.FC<EditModalProps> = ({
   onSave,
 }) => {
   const { t } = useLanguage();
+  const { appIcon } = useTheme();
 
   // Playlist states
   const [name, setName] = useState('');
@@ -118,7 +120,7 @@ export const EditModal: React.FC<EditModalProps> = ({
               {currentImage ? (
                 <img src={currentImage} alt="Cover" />
               ) : (
-                <Music size={64} className="placeholder-icon" />
+                <img src={appIcon} alt="Default Cover" className="placeholder-brand-icon" />
               )}
               <div className="image-overlay">
                 <span>{t('modal.choosePhoto')}</span>

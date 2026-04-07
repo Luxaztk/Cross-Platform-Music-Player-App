@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Music, FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare, X, CheckSquare, Square, Trash, ChevronRight, Filter } from 'lucide-react';
+import { FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare, X, CheckSquare, Square, Trash, ChevronRight, Filter } from 'lucide-react';
 import { useNotification } from '../../../application/hooks';
 import { useLibraryContext } from '../../components/Library';
 import { usePlayer } from '@music/hooks';
@@ -11,6 +11,7 @@ import { EditModal } from '../../components/EditModal';
 import { DeleteConfirmationModal } from '../../components/DeleteConfirmationModal/DeleteConfirmationModal';
 import { SongPickerModal } from '../../components/SongPickerModal/SongPickerModal';
 import { useLanguage } from '../../components/Language';
+import { useTheme } from '../../components/Theme';
 import './PlaylistDetailPage.scss';
 
 const formatTotalDuration = (seconds: number, t: (key: string) => string) => {
@@ -64,6 +65,7 @@ export const PlaylistDetailPage: React.FC = () => {
 
   const { showNotification } = useNotification();
   const { t } = useLanguage();
+  const { appIcon } = useTheme();
   const { playList, playNext, addToQueue, currentSong } = usePlayer();
 
   const isLibrary = id === '0';
@@ -322,7 +324,7 @@ export const PlaylistDetailPage: React.FC = () => {
           ) : playlist?.thumbnail ? (
             <img src={playlist.thumbnail} alt={playlist.name} />
           ) : (
-            <Music size={80} className="placeholder-icon" />
+            <img src={appIcon} alt="" className="placeholder-brand-icon" />
           )}
         </div>
 
@@ -466,7 +468,7 @@ export const PlaylistDetailPage: React.FC = () => {
                     <img src={song.coverArt} className="song-mini-img" alt={song.title} />
                   ) : (
                     <div className="song-mini-placeholder">
-                      <Music size={16} />
+                      <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
                     </div>
                   )}
                   <div className="song-details">
@@ -548,7 +550,7 @@ export const PlaylistDetailPage: React.FC = () => {
                       {t('playlist.addToQueue') || 'Thêm vào hàng đợi'}
                     </button>
                     
-                    <div className="menu-divider" style={{height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0'}}></div>
+                    <div className="menu-divider"></div>
 
                     <div 
                       className={`menu-item nested-trigger ${activeSubMenuId === song.id ? 'active' : ''}`}
@@ -590,7 +592,7 @@ export const PlaylistDetailPage: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="menu-divider" style={{height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0'}}></div>
+                    <div className="menu-divider"></div>
                     <button className="menu-item" onClick={() => {
                       setEditingSong(song);
                       setIsEditModalOpen(true);

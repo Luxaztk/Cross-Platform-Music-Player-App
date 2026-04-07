@@ -7,3 +7,4 @@ perf(queue): implement smooth drag-and-drop with context memoization and optimis
 - Remove expensive backdrop-filter from queue items to reduce GPU load.
 - Fix SCSS syntax errors and improve Emerald Glow aesthetics.
 - Ensure correct i18n translation keys in QueuePanel.
+- Add click-out behavior to auto-close QueuePanel in PlayerBar.

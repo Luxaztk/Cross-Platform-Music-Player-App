@@ -5,6 +5,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { usePlayer } from '@music/hooks';
 import { useLanguage } from '../Language';
+import { useTheme } from '../Theme';
 
 import type { Song } from '@music/types';
 
@@ -70,6 +71,7 @@ const QueueItemRow = memo(({ item, index, isDraggingActive, onRemove, t }: Queue
 const QueuePanel: React.FC = () => {
   const { queue: globalQueue, reorderQueue, removeFromQueue: originalRemoveFromQueue } = usePlayer();
   const { t } = useLanguage();
+  const { appIcon } = useTheme();
   const [isDraggingActive, setIsDraggingActive] = useState(false);
   const [localQueue, setLocalQueue] = useState(globalQueue);
 
@@ -121,7 +123,7 @@ const QueuePanel: React.FC = () => {
       <div className="queue-list-container">
         {localQueue.length === 0 ? (
           <div className="queue-empty">
-            <ListMusic size={48} className="empty-icon" />
+             <img src={appIcon} alt="" className="empty-brand-icon" />
             <p>{t('playlist.queueEmpty')}</p>
           </div>
         ) : (

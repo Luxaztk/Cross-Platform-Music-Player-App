@@ -35,6 +35,7 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [x] Chuyển đổi toàn bộ sang SCSS với hệ thống Design Tokens.
 - [x] **Bộ lọc nghệ sĩ cao cấp**: Hỗ trợ lọc đa lựa chọn (AND logic), bóc tách chính xác nghệ sĩ kết hợp (ft, feat...) và nhấn để lọc (Click-to-filter).
 - [x] **Giao diện Filter Tag**: Thiết kế Glassmorphism hiện đại với hệ thống thẻ tag thông minh.
+- [x] **Hệ thống màu Semantic (Semantic Color System)**: Loại bỏ hoàn toàn màu hard-code, chuyển sang hệ thống biến trung tâm giúp hỗ trợ 6 chủ đề (Midnight, Amoled, Nord, Rose, Ocean, Tame Snow) một cách đồng bộ.
 
 ---
 
@@ -61,7 +62,7 @@ Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 
 ### 🟢 GIAI ĐOẠN 3: Làm đẹp & Trải nghiệm Nâng cao (Mức độ ưu tiên THẤP)
 Mục tiêu: "Wow" người dùng bằng các tính năng cao cấp.
-- [ ] **Chủ đề (Themes)**: Chế độ Dark/Light và System auto-switch.
+- [x] **Chủ đề (Themes)**: Hệ thống 6 chủ đề cao cấp (Dark/Light/Nature) với cơ chế Semantic Variable hoàn chỉnh.
 - [ ] **Lời bài hát (Lyrics)**: Tự động tìm kiếm và hiển thị lời bài hát (Local hoặc Online).
 - [ ] **Trang Hồ sơ Nghệ sĩ (Artist Profile)**: Hiển thị các bài hát, album và thông tin chi tiết của từng nghệ sĩ.
 - [ ] **Lịch sử tìm kiếm (Recent Searches)**: Lưu và hiển thị các tìm kiếm gần đây.

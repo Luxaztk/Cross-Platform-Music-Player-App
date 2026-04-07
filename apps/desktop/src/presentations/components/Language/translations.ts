@@ -22,6 +22,7 @@ export const translations = {
       profile: 'Hồ sơ',
       language: 'Ngôn ngữ',
       settings: 'Cài đặt',
+      theme: 'Chủ đề',
       logout: 'Đăng xuất',
     },
     sidebar: {
@@ -131,6 +132,7 @@ export const translations = {
       profile: 'Profile',
       language: 'Language',
       settings: 'Settings',
+      theme: 'Appearance',
       logout: 'Log out',
     },
     sidebar: {

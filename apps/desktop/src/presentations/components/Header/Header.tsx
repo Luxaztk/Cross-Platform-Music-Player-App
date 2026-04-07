@@ -1,12 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Search, User, Languages, Settings, LogOut, X, SlidersHorizontal, Headphones, Check, ChevronRight } from 'lucide-react';
+import { Home, Search, User, Languages, Settings, LogOut, X, SlidersHorizontal, Headphones, Check, ChevronRight, Palette } from 'lucide-react';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { useSearch, useLibrary } from '../../../application/hooks';
 import { usePlayer, useAudioDevices } from '@music/hooks';
 import type { Song } from '@music/types';
 import { SearchOverlay } from './SearchOverlay';
+import logo from '@music/brand/logos/icon_only_gradient.png';
+import { useTheme, type ThemeType } from '../Theme';
 import './Header.scss';
 
 const Header: React.FC = () => {
@@ -19,8 +21,10 @@ const Header: React.FC = () => {
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [showDeviceMenu, setShowDeviceMenu] = React.useState(false);
+  const [showThemeMenu, setShowThemeMenu] = React.useState(false);
+  const { theme, setTheme } = useTheme();
   const { devices, currentDeviceId, setAudioDevice } = useAudioDevices();
-  
+
   const searchResults = useSearch(songs, playlists, searchQuery);
   const profileRef = React.useRef<HTMLDivElement>(null);
   const searchRef = React.useRef<HTMLDivElement>(null);
@@ -36,6 +40,7 @@ const Header: React.FC = () => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
         setShowDeviceMenu(false);
+        setShowThemeMenu(false);
       }
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setIsSearchFocused(false);
@@ -79,11 +84,11 @@ const Header: React.FC = () => {
 
       if (songIdx !== -1) playList(songs, songIdx);
     } else if (result.type === 'artist') {
-        setLibraryFilter({ type: 'artist', value: result.item.name });
-        navigate('/playlist/0');
+      setLibraryFilter({ type: 'artist', values: [result.item.name] });
+      navigate('/playlist/0');
     } else if (result.type === 'album') {
-        setLibraryFilter({ type: 'album', value: result.item.name });
-        navigate('/playlist/0');
+      setLibraryFilter({ type: 'album', values: [result.item.name] });
+      navigate('/playlist/0');
     }
     setIsSearchFocused(false);
     setSearchQuery('');
@@ -109,11 +114,11 @@ const Header: React.FC = () => {
     const gainNode = ctx.createGain();
     osc.connect(gainNode);
     gainNode.connect(ctx.destination);
-    
+
     osc.type = 'sine';
     osc.frequency.setValueAtTime(440, ctx.currentTime);
     gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-    
+
     osc.start();
     gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
     osc.stop(ctx.currentTime + 0.5);
@@ -122,8 +127,8 @@ const Header: React.FC = () => {
   return (
     <header className="app-header">
       <div className="header-left">
-        <div className="app-logo">
-          <span className="app-name">Melovista</span>
+        <div className="app-logo" onClick={() => navigate('/playlist/0')} title={t('header.home')}>
+          <img src={logo} alt="logo" />
         </div>
       </div>
 
@@ -137,8 +142,8 @@ const Header: React.FC = () => {
         </button>
         <div className="search-bar" ref={searchRef}>
           <Search className="search-icon" size={ICON_SIZES.SMALL} />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder={t('header.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => {
@@ -159,15 +164,15 @@ const Header: React.FC = () => {
           </button>
 
           {isSearchFocused && searchQuery && (
-             <SearchOverlay 
-                query={searchQuery}
-                results={searchResults}
-                selectedIndex={selectedIndex}
-                onSelect={handleSelectResult}
-                onPlayNext={playNext}
-                onAddToQueue={addToQueue}
-                onClose={() => setIsSearchFocused(false)}
-             />
+            <SearchOverlay
+              query={searchQuery}
+              results={searchResults}
+              selectedIndex={selectedIndex}
+              onSelect={handleSelectResult}
+              onPlayNext={playNext}
+              onAddToQueue={addToQueue}
+              onClose={() => setIsSearchFocused(false)}
+            />
           )}
         </div>
       </div>
@@ -181,6 +186,7 @@ const Header: React.FC = () => {
               if (showProfileMenu) {
                 setShowProfileMenu(false);
                 setShowDeviceMenu(false);
+                setShowThemeMenu(false);
               } else {
                 setShowProfileMenu(true);
               }
@@ -210,13 +216,67 @@ const Header: React.FC = () => {
                 </div>
               </div>
               <div className="dropdown-divider" />
-              
+
+              {/* Theme Selection */}
+              <div
+                className="dropdown-item nested-dropdown-trigger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowThemeMenu(!showThemeMenu);
+                  setShowDeviceMenu(false);
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Palette size={16} />
+                  <span>{t('header.theme') || 'Chủ đề'}</span>
+                </div>
+                <ChevronRight size={14} className={`chevron ${showThemeMenu ? 'open' : ''}`} />
+
+                {showThemeMenu && (
+                  <div className="nested-dropdown-menu">
+                    {[
+                      { id: 'midnight', name: 'Midnight', color: '#10b981' },
+                      { id: 'amoled', name: 'Amoled', color: '#ffffff' },
+                      { id: 'nord', name: 'Nord', color: '#88c0d0' },
+                      { id: 'rose', name: 'Rose', color: '#f43f5e' },
+                      { id: 'ocean', name: 'Ocean', color: '#06b6d4' },
+                      { id: 'snow', name: 'Snow', color: '#fcfaf7', border: '1px solid rgba(0,0,0,0.06)' }
+                    ].map((themeItem) => (
+                      <button
+                        key={themeItem.id}
+                        className={`device-btn ${theme === themeItem.id ? 'selected' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTheme(themeItem.id as ThemeType);
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ 
+                            width: '10px', 
+                            height: '10px', 
+                            borderRadius: '50%', 
+                            backgroundColor: themeItem.color,
+                            border: (themeItem as any).border || 'none',
+                            boxShadow: themeItem.id === 'snow' ? 'none' : `0 0 8px ${themeItem.color}44`
+                          }} />
+                          <span>{themeItem.name}</span>
+                        </div>
+                        {theme === themeItem.id && <Check size={14} className="check-icon" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="dropdown-divider" />
+
               {/* Output Device Selection */}
-              <div 
+              <div
                 className="dropdown-item nested-dropdown-trigger"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowDeviceMenu(!showDeviceMenu);
+                  setShowThemeMenu(false);
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -227,7 +287,7 @@ const Header: React.FC = () => {
 
                 {showDeviceMenu && (
                   <div className="nested-dropdown-menu">
-                    <button 
+                    <button
                       className={`device-btn ${currentDeviceId === 'default' ? 'selected' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -238,7 +298,7 @@ const Header: React.FC = () => {
                       {currentDeviceId === 'default' && <Check size={14} className="check-icon" />}
                     </button>
                     {devices.filter(d => d.deviceId !== 'default' && d.deviceId !== 'communications').map(d => (
-                      <button 
+                      <button
                         key={d.deviceId}
                         className={`device-btn ${currentDeviceId === d.deviceId ? 'selected' : ''}`}
                         onClick={(e) => {
@@ -251,8 +311,8 @@ const Header: React.FC = () => {
                       </button>
                     ))}
                     <div className="dropdown-divider" style={{ margin: '4px 0' }} />
-                    <button 
-                      className="device-btn test-btn" 
+                    <button
+                      className="device-btn test-btn"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleTestSound();

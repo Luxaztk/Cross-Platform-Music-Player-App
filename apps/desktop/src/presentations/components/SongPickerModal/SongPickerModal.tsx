@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { X, Search, Check, Music } from 'lucide-react';
+import { X, Search, Check } from 'lucide-react';
 import type { Song } from '@music/types';
 import { useLanguage } from '../Language';
+import { useTheme } from '../Theme';
 import './SongPickerModal.scss';
 
 interface SongPickerModalProps {
@@ -20,6 +21,7 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
   onAdd,
 }) => {
   const { t } = useLanguage();
+  const { appIcon } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -96,7 +98,7 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
                       {song.coverArt ? (
                         <img src={song.coverArt} alt={song.title} />
                       ) : (
-                        <Music size={16} />
+                        <img src={appIcon} alt="Default" className="placeholder-brand-icon-mini" />
                       )}
                     </div>
                     <div className="song-details">

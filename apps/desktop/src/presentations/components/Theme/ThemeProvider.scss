@@ -1,7 +1,37 @@
-// Cache buster for font path fix
 @use "@music/brand/typography/typography.scss" as *;
 
 :root {
+  /* Typography Scale */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.9375rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2.25rem;
+
+  /* Spacing & Sizing */
+  --spacing-xs: 5px;
+  --spacing-sm: 10px;
+  --spacing-md: 20px;
+  --spacing-lg: 30px;
+  --spacing-xl: 40px;
+  --panel-gap: 8px;
+
+  /* Corners (Standard) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Animation */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Midnight Theme (Default - Dark Charcoal & Emerald) */
+body[data-theme='midnight'],
+body:not([data-theme]) {
   --bg-primary: #0a0a0a;
   --bg-surface: rgba(255, 255, 255, 0.05);
   --bg-surface-hover: rgba(255, 255, 255, 0.08);
@@ -11,72 +41,258 @@
   --color-primary-hover: #059669;
 
   --color-text-main: #ffffff;
-  --color-text-muted: #888888;
-  --color-text-dim: #666666;
+  --color-text-muted: #9ca3af;
+  --color-text-dim: #6b7280;
 
   --border-color: rgba(255, 255, 255, 0.1);
   --border-color-focus: rgba(16, 185, 129, 0.5);
 
-  /* Component specific backgrounds (Dark Mode) */
   --bg-sidebar: #121212;
   --bg-player-bar: #181818;
   --bg-header: #0a0a0a;
-
-  /* Utility Colors */
-  --color-inverse: #000000;
   --bg-inverse: #ffffff;
+  --color-inverse: #000000;
 
-  --spacing-xs: 5px;
-  --spacing-sm: 10px;
-  --spacing-md: 20px;
-  --spacing-lg: 30px;
-  --spacing-xl: 40px;
+  --bg-playlist-header: rgba(0, 0, 0, 0.4);
+  /* Top gradient nhạt/sáng hơn bg-primary (#0a0a0a) */
+  --layout-gradient-top: #1f1f1f;
 
-  --panel-gap: 8px;
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-full: 9999px;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.12);
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
 
-  --transition-fast: 0.2s ease;
-
-  /* Typography */
-  --font-size-xs: 0.75rem;
-  /* 12px */
-  --font-size-sm: 0.8125rem;
-  /* 13px */
-  --font-size-base: 0.9375rem;
-  /* 15px */
-  --font-size-md: 1rem;
-  /* 16px */
-  --font-size-lg: 1.25rem;
-  /* 20px */
-  --font-size-xl: 1.5rem;
-  /* 24px */
-  --font-size-2xl: 2.25rem;
-  /* 36px */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --bg-overlay: rgba(255, 255, 255, 0.06);
+  --bg-surface-dim: rgba(255, 255, 255, 0.03);
 }
 
-/* Light Mode Overrides */
-body.light-mode {
-  --bg-primary: #f8f9fa;
-  --bg-surface: rgba(0, 0, 0, 0.03);
-  --bg-surface-hover: rgba(0, 0, 0, 0.06);
+/* Amoled Theme (True Black) */
+body[data-theme='amoled'] {
+  --bg-primary: #000000;
+  --bg-surface: rgba(255, 255, 255, 0.06);
+  --bg-surface-hover: rgba(255, 255, 255, 0.12);
+  --bg-surface-solid: #111111;
+  --color-primary: #10b981;
+  --color-primary-hover: #059669;
 
-  --color-text-main: #1a1a1a;
-  --color-text-muted: #555555;
-  --color-text-dim: #888888;
+  --color-text-main: #ffffff;
+  --color-text-muted: #a1a1aa;
+  --color-text-dim: #71717a;
 
-  --border-color: rgba(0, 0, 0, 0.1);
-  --border-color-focus: rgba(16, 185, 129, 0.4);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --bg-sidebar: #000000;
+  --bg-player-bar: #000000;
+  --bg-header: #000000;
+  --bg-inverse: #ffffff;
+  --color-inverse: #000000;
 
-  --bg-sidebar: #f1f3f5;
-  --bg-player-bar: #ffffff;
-  --bg-header: #ffffff;
+  --bg-playlist-header: rgba(0, 0, 0, 0.4);
+  /* Top gradient nhạt/sáng hơn bg-primary (#000000) */
+  --layout-gradient-top: #171717;
 
-  --color-inverse: #ffffff;
-  --bg-inverse: #1a1a1a;
+  --shadow-sm: 0 4px 6px rgba(255, 255, 255, 0.02);
+  --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.1);
+
+  --color-success: #34d399;
+  --color-error: #ff5252;
+  --color-error-bg: rgba(255, 82, 82, 0.15);
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
+
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --bg-overlay: rgba(255, 255, 255, 0.08);
+  --bg-surface-dim: rgba(255, 255, 255, 0.04);
+}
+
+/* Nord Theme (Snowy Blue-Grey & Frost) */
+body[data-theme='nord'] {
+  --bg-primary: #2e3440;
+  --bg-surface: #434c5e;
+  --bg-surface-hover: #4c566a;
+  --bg-surface-solid: #5e6b7d;
+  --color-primary: #88c0d0;
+  --color-primary-hover: #eceff4;
+
+  --color-text-main: #eceff4;
+  --color-text-muted: #d8dee9;
+  --color-text-dim: #a3be8c;
+
+  --border-color: rgba(236, 239, 244, 0.1);
+  --bg-sidebar: #242933;
+  --bg-player-bar: #242933;
+  --bg-header: #2e3440;
+  --bg-inverse: #eceff4;
+  --color-inverse: #2e3440;
+
+  --bg-playlist-header: rgba(46, 52, 64, 0.45);
+  /* Top gradient nhạt/sáng hơn bg-primary (#2e3440) */
+  --layout-gradient-top: #3b4252;
+
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+
+  --color-success: #a3be8c;
+  --color-error: #bf616a;
+  --color-error-bg: rgba(191, 97, 106, 0.15);
+  --color-warning: #ebcb8b;
+  --color-info: #81a1c1;
+
+  --border-subtle: rgba(236, 239, 244, 0.12);
+  --bg-overlay: rgba(236, 239, 244, 0.08);
+  --bg-surface-dim: rgba(236, 239, 244, 0.04);
+}
+
+/* Rose Theme (Deep Stone & Dusty Rose) */
+body[data-theme='rose'] {
+  --bg-primary: #1c1917;
+  --bg-surface: #292524;
+  --bg-surface-hover: #44403c;
+  --bg-surface-solid: #57534e;
+  --color-primary: #f43f5e;
+  --color-primary-hover: #e11d48;
+
+  --color-text-main: #fafaf9;
+  --color-text-muted: #d6d3d1;
+  --color-text-dim: #a8a29e;
+
+  --border-color: rgba(250, 250, 249, 0.1);
+  --bg-sidebar: #0c0a09;
+  --bg-player-bar: #1c1917;
+  --bg-header: #1c1917;
+  --bg-inverse: #fafaf9;
+  --color-inverse: #1c1917;
+
+  --bg-playlist-header: rgba(41, 37, 36, 0.4);
+  /* Top gradient nhạt/sáng hơn bg-primary (#1c1917) */
+  --layout-gradient-top: #2e2926;
+
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.35);
+
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.12);
+  --color-warning: #fbbf24;
+  --color-info: #3b82f6;
+
+  --border-subtle: rgba(250, 250, 249, 0.08);
+  --bg-overlay: rgba(250, 250, 249, 0.06);
+  --bg-surface-dim: rgba(250, 250, 249, 0.03);
+}
+
+/* Ocean Theme (Deep Navy & Cyan) */
+body[data-theme='ocean'] {
+  --bg-primary: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-surface-hover: #334155;
+  --bg-surface-solid: #475569;
+  --color-primary: #06b6d4;
+  --color-primary-hover: #22d3ee;
+
+  --color-text-main: #f8fafc;
+  --color-text-muted: #cbd5e1;
+  --color-text-dim: #94a3b8;
+
+  --border-color: rgba(248, 250, 252, 0.1);
+  --bg-sidebar: #020617;
+  --bg-player-bar: #0f172a;
+  --bg-header: #0f172a;
+  --bg-inverse: #f8fafc;
+  --color-inverse: #0f172a;
+
+  --bg-playlist-header: rgba(30, 41, 59, 0.4);
+  /* Top gradient nhạt/sáng hơn bg-primary (#0f172a) */
+  --layout-gradient-top: #1e293b;
+
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.12);
+  --color-warning: #f59e0b;
+  --color-info: #0ea5e9;
+
+  --border-subtle: rgba(248, 250, 252, 0.1);
+  --bg-overlay: rgba(248, 250, 252, 0.06);
+  --bg-surface-dim: rgba(248, 250, 252, 0.03);
+}
+
+/* Tame Snow Theme (Warm Soft UI / Neumorphism) */
+body[data-theme='snow'] {
+  /* 1. Bảng màu chủ đạo */
+  --bg-primary: #f7f4ed;
+  /* Kem sáng, nền Library/Playlist */
+  --bg-surface: #fdfbf7;
+  /* Hơi sáng hơn nền một xíu để Card nổi lên */
+  --bg-surface-hover: #d1dee5;
+  /* Accent nhạt cho Muted Slate Blue (Active Tab/Hover) */
+  --bg-surface-solid: #f0ebe1;
+  /* Kem tối hơn một chút */
+
+  --color-primary: #1c2a3a;
+  /* Accent đậm: Navy cho nút Play/Pause */
+  --color-primary-hover: #253445;
+
+  /* Typography Colors */
+  --font-family-main: 'Nunito', 'Quicksand', 'Inter', sans-serif;
+  --color-text-main: #2d3748;
+  /* Xám than chì - Dễ đọc, không gắt */
+  --color-text-muted: #718096;
+  /* Xám ấm cho tên ca sĩ, tgian */
+  --color-text-dim: #a0aec0;
+
+  /* 2. Định dạng hình khối & Giao diện */
+  --border-color: transparent;
+  /* Loại bỏ viền cứng hoàn toàn */
+  --border-color-focus: rgba(28, 42, 58, 0.3);
+  /* Navy mờ khi focus */
+
+  --bg-sidebar: #f0ebe1;
+  /* Nền kem tối phân cấp không gian */
+  /* Sử dụng hiệu ứng kính mờ (backdrop-filter: blur) trong CSS của class .player-bar */
+  --bg-player-bar: rgba(240, 235, 225, 0.85);
+  --bg-header: rgba(247, 244, 237, 0.9);
+
+  --bg-inverse: #2d3748;
+  --color-inverse: #f7f4ed;
+
+  --bg-playlist-header: rgba(240, 235, 225, 0.5);
+
+  /* Top gradient nhạt/sáng hơn (gần màu trắng kem) bg-primary (#f7f4ed) */
+  --layout-gradient-top: #fdfbf7;
+
+  /* Hiệu ứng nổi khối Soft UI / Đổ bóng màu nâu kem */
+  --shadow-sm: 4px 4px 10px rgba(206, 196, 176, 0.3), -4px -4px 10px rgba(255, 255, 255, 0.6);
+  --shadow-md: 8px 8px 24px rgba(206, 196, 176, 0.4), -8px -8px 24px rgba(255, 255, 255, 0.7);
+
+  /* Status Colors: Tinh chỉnh lại theo tông ấm */
+  --color-success: #38a169;
+  --color-error: #e53e3e;
+  --color-error-bg: rgba(229, 62, 62, 0.08);
+  --color-warning: #dd6b20;
+  --color-info: #3182ce;
+
+  /* Structural Overlays: Viền mờ và lớp nền cực dịu */
+  --border-subtle: rgba(206, 196, 176, 0.15);
+  /* Cực kỳ mờ nếu bắt buộc phải có divider */
+  --bg-overlay: rgba(206, 196, 176, 0.1);
+  --bg-surface-dim: rgba(206, 196, 176, 0.05);
+
+  /* Corner Radii - Góc bo mềm mại */
+  --radius-sm: 10px;
+  /* Search bar, small active tabs */
+  --radius-md: 16px;
+  /* Cover art */
+  --radius-lg: 24px;
+  /* Cards */
+  --radius-pill: 99px;
+  /* Tròn hoàn toàn cho Search bar nếu cần */
 }
 
 * {
@@ -101,4 +317,5 @@ body {
   height: 100vh;
   min-height: 100vh;
   overflow: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }

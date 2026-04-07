@@ -19,7 +19,7 @@
     justify-content: center;
     align-items: center;
     gap: var(--spacing-md);
-    width: 15%;
+    width: 280px;
     height: 100%;
 
     .app-logo {
@@ -27,6 +27,18 @@
       align-items: center;
       gap: var(--spacing-sm);
       height: 100%;
+      cursor: pointer;
+      transition: opacity var(--transition-fast);
+
+      &:hover {
+        opacity: 0.8;
+      }
+
+      img {
+        height: 100%;
+        width: auto;
+        object-fit: contain;
+      }
     }
 
     .sidebar-toggle {
@@ -179,10 +191,10 @@
         position: absolute;
         top: calc(100% + 12px);
         right: 0;
-        background-color: #282828;
+        background-color: var(--bg-surface-solid);
         min-width: 200px;
         border-radius: var(--radius-sm);
-        box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--shadow-md);
         padding: 4px;
         z-index: 1000;
         display: flex;
@@ -233,11 +245,11 @@
               top: -8px;
               right: calc(100% + 8px);
               /* Mở sang bên trái container */
-              background-color: #282828;
+              background-color: var(--bg-surface-solid);
               min-width: 230px;
               max-width: 350px;
               border-radius: var(--radius-sm);
-              box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
+              box-shadow: var(--shadow-md);
               padding: 4px;
               display: flex;
               flex-direction: column;

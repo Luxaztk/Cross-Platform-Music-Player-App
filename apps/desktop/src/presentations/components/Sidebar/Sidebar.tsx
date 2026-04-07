@@ -1,11 +1,12 @@
 import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { Music, ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ArrowUpDown } from 'lucide-react';
+import { ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ArrowUpDown } from 'lucide-react';
 
 import type { Playlist } from '@music/types';
 import { useLibraryContext } from '../Library/LibraryProvider';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
+import { useTheme } from '../Theme';
 import { EditModal } from '../EditModal';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal/DeleteConfirmationModal';
 import './Sidebar.scss';
@@ -26,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
   } = useLibraryContext();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { appIcon } = useTheme();
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
   const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
   const [editingPlaylist, setEditingPlaylist] = React.useState<any | null>(null);
@@ -174,7 +176,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                   to="/playlist/0"
                   className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isActive || activeMenuId === '0' ? 'menu-open' : ''}`}
                 >
-                  <Music className="icon" size={ICON_SIZES.SMALL} />
+                  <img src={appIcon} alt="" className="icon brand-icon-small" />
                   <span className="text">{t('sidebar.allSongs')}</span>
                   <div className="col-more">
                     <button
@@ -188,7 +190,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                     {activeMenuId === '0' && (
                       <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} ref={menuRef}>
                         <button className="menu-item" onClick={onImportFiles}>
-                          <Music size={14} />
+                          <img src={appIcon} alt="" className="brand-icon-tiny" />
                           <span>{t('playlist.importFiles')}</span>
                         </button>
                         <button className="menu-item" onClick={onImportFolder}>
@@ -292,7 +294,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                       to={`/playlist/${playlist.id}`}
                       className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                     >
-                      <ListMusic className="icon" size={ICON_SIZES.SMALL} />
+                      <img src={appIcon} alt="" className="icon brand-icon-small" />
                       <span className="text">{playlist.name}</span>
                       <div className="col-more">
                         <button
@@ -332,7 +334,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
               <ChevronRight size={ICON_SIZES.MEDIUM} />
             </button>
             <NavLink to="/playlist/0" className="nav-item mini" title={t('sidebar.allSongs')}>
-              <Music size={ICON_SIZES.MEDIUM} />
+              <img src={appIcon} alt="" className="brand-icon-mini-sidebar" />
             </NavLink>
           </div>
           
@@ -346,7 +348,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                 className={({ isActive }) => `nav-item mini ${isActive ? 'active' : ''}`}
                 title={playlist.name}
               >
-                <ListMusic size={ICON_SIZES.MEDIUM} />
+                <img src={appIcon} alt="" className="brand-icon-mini-sidebar" />
               </NavLink>
             ))}
           </div>

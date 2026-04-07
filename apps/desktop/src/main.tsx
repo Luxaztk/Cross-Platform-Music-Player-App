@@ -20,7 +20,7 @@ const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) => {
 
 createRoot(document.getElementById('root')!).render(
   <LanguageProvider>
-    <ThemeProvider>
+    <ThemeProvider storage={storage}>
       <NotificationProvider>
         <LibraryProvider>
           <PlayerWithLibrary>

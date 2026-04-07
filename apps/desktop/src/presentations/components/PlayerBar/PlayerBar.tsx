@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, VolumeX, Music, ListMusic, Shuffle, Repeat, Repeat1 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, VolumeX, ListMusic, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayer } from '@music/hooks';
 import { formatTime } from '@music/utils';
 import { ICON_SIZES } from '../../constants/IconSizes';
+import { useTheme } from '../Theme';
 import QueuePanel from './QueuePanel';
 import './PlayerBar.scss';
 
@@ -14,7 +15,31 @@ const PlayerBar: React.FC = () => {
     isShuffle, toggleShuffle, repeatMode, setRepeatMode 
   } = usePlayer();
   
+  const { appIcon } = useTheme();
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const queueContainerRef = useRef<HTMLDivElement>(null);
+  const toggleBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Close queue popover when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isQueueOpen &&
+        queueContainerRef.current &&
+        !queueContainerRef.current.contains(event.target as Node) &&
+        toggleBtnRef.current &&
+        !toggleBtnRef.current.contains(event.target as Node)
+      ) {
+        setIsQueueOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isQueueOpen]);
+
   const isSeeking = useRef(false);
   const [localProgress, setLocalProgress] = useState(0);
   const [lastVolume, setLastVolume] = useState(1);
@@ -75,7 +100,7 @@ const PlayerBar: React.FC = () => {
             <div className="cover-art" style={{ backgroundImage: `url(${currentSong.coverArt})` }}></div>
           ) : (
             <div className="cover-art-mock">
-              <Music size={ICON_SIZES.LARGE} />
+               <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
             </div>
           )}
           <div className="song-meta">
@@ -128,13 +153,22 @@ const PlayerBar: React.FC = () => {
       </div>
 
       <div className="player-right">
-        <button className={`queue-info ${isQueueOpen ? 'active' : ''}`} title="Queue Items" onClick={() => setIsQueueOpen(!isQueueOpen)}>
+        <button 
+          ref={toggleBtnRef}
+          className={`queue-info ${isQueueOpen ? 'active' : ''}`} 
+          title="Queue Items" 
+          onClick={() => setIsQueueOpen(!isQueueOpen)}
+        >
           <ListMusic size={ICON_SIZES.SMALL} />
           <span className="queue-count">{queue.length}</span>
         </button>
         
         {/* Advanced Queue Popover with Drag & Drop */}
-        {isQueueOpen && <QueuePanel />}
+        {isQueueOpen && (
+          <div ref={queueContainerRef}>
+            <QueuePanel />
+          </div>
+        )}
 
         <div className="volume-control">
           <button className="control-btn volume-btn" onClick={toggleMute} title={volume === 0 ? "Unmute" : "Mute"}>

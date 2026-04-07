@@ -20,7 +20,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-md);
     cursor: default !important;
     animation: slideIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     transition: transform var(--transition-fast), opacity var(--transition-fast);
@@ -35,12 +35,12 @@
       .notification-icon { color: var(--color-primary); }
     }
     &.error { 
-      border-left: 4px solid #ef4444; 
-      .notification-icon { color: #ef4444; }
+      border-left: 4px solid var(--color-error); 
+      .notification-icon { color: var(--color-error); }
     }
     &.info { 
-      border-left: 4px solid #3b82f6; 
-      .notification-icon { color: #3b82f6; }
+      border-left: 4px solid var(--color-info); 
+      .notification-icon { color: var(--color-info); }
     }
 
     .notification-icon {

@@ -379,7 +379,7 @@
           position: absolute;
           right: 0;
           top: calc(100% + 8px);
-          background-color: #282828;
+          background-color: var(--bg-surface-solid);
           min-width: 160px;
           border-radius: var(--radius-sm);
           box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
@@ -474,7 +474,7 @@
       position: absolute;
       right: 0; // Aligned to the right edge of col-more
       left: auto;
-      background-color: #282828;
+      background-color: var(--bg-surface-solid);
       min-width: 140px;
       border-radius: var(--radius-sm);
       box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
@@ -551,4 +551,24 @@
     color: var(--color-text-main);
     opacity: 1;
   }
+}
+
+.brand-icon-small {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  margin-right: 12px;
+}
+
+.brand-icon-tiny {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  margin-right: 8px;
+}
+
+.brand-icon-mini-sidebar {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }

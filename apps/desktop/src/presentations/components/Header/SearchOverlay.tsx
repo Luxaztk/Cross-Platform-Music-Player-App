@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { Music, CornerDownLeft, ArrowUp, ArrowDown, Disc, Play, PlaySquare, ListPlus, MoreVertical } from 'lucide-react';
+import { CornerDownLeft, ArrowUp, ArrowDown, Play, PlaySquare, ListPlus, MoreVertical } from 'lucide-react';
 import type { Song } from '@music/types';
 import type { SearchResults } from '../../../application/hooks';
 import { useLanguage } from '../Language';
+import { useTheme } from '../Theme';
 import './SearchOverlay.scss';
 
 interface SearchOverlayProps {
@@ -29,6 +30,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   onAddToQueue,
 }) => {
   const { t } = useLanguage();
+  const { appIcon } = useTheme();
   const contentRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -113,9 +115,11 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                     >
                       <div className="song-info">
                         {song.coverArt ? (
-                          <img src={song.coverArt} alt="" className="song-thumb" />
+                           <img src={song.coverArt} alt="" className="song-thumb" />
                         ) : (
-                          <div className="song-thumb-placeholder"><Music size={14} /></div>
+                          <div className="song-thumb-placeholder">
+                            <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
+                          </div>
                         )}
                         <div className="song-meta">
                           <span className="song-title">{song.title}</span>
@@ -260,7 +264,9 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         {album.coverArt ? (
                            <img src={album.coverArt} alt="" className="song-thumb" />
                         ) : (
-                          <div className="song-thumb-placeholder"><Disc size={14} /></div>
+                          <div className="song-thumb-placeholder">
+                            <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
+                          </div>
                         )}
                         <div className="song-meta">
                           <span className="song-title">{album.name}</span>
