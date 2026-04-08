@@ -98,18 +98,38 @@ export class MainMetadataService {
       let finalOriginId = originId;
       let finalSourceUrl = sourceUrl;
       
-      if (!finalOriginId || !finalSourceUrl) {
-        try {
-          const tags = NodeID3.read(filePath);
-          if (tags && tags.userDefinedText) {
+      // Attempt to recover originId, sourceUrl, and lyrics from embedded ID3 tags
+      let syncedLyrics: string | undefined;
+      let plainLyrics: string | undefined;
+      let lyricId: string | undefined;
+      
+      try {
+        const tags = NodeID3.read(filePath);
+        if (tags) {
+          if (tags.userDefinedText) {
             for (const t of tags.userDefinedText) {
               if (t.description === 'melovista_origin_id' && !finalOriginId) finalOriginId = t.value;
               if (t.description === 'melovista_source_url' && !finalSourceUrl) finalSourceUrl = t.value;
+              if (t.description === 'melovista_lyric_id') lyricId = t.value;
+              if (t.description === 'melovista_lrc' && !syncedLyrics) syncedLyrics = t.value;
             }
           }
-        } catch (e) {
-          console.error("Failed to read ID3 tags with node-id3:", e);
+          
+          if (tags.synchronisedLyrics && tags.synchronisedLyrics.length > 0) {
+            // SYLT binary data is present, but we prioritize USLT or melovista_lrc string for now
+          }
+
+          if (tags.unsynchronisedLyrics) {
+            // NodeID3 might return an array or single object
+            if (Array.isArray(tags.unsynchronisedLyrics)) {
+              plainLyrics = tags.unsynchronisedLyrics[0]?.text;
+            } else {
+              plainLyrics = (tags.unsynchronisedLyrics as any).text;
+            }
+          }
         }
+      } catch (e) {
+        console.error("Failed to read ID3 tags with node-id3:", e);
       }
 
       return {
@@ -130,6 +150,9 @@ export class MainMetadataService {
         fileSize: stats.size,
         sourceUrl: finalSourceUrl,
         originId: finalOriginId,
+        lyricId: lyricId ? parseInt(lyricId) : undefined,
+        lyrics: plainLyrics,
+        syncedLyrics: syncedLyrics
       };
     } catch (error) {
       console.error(`Error extracting metadata for ${filePath}:`, error);
@@ -165,7 +188,10 @@ export class MainMetadataService {
         coverUrl,
         coverData: song.coverArt?.startsWith('data:') ? song.coverArt : undefined,
         originId: song.originId,
-        sourceUrl: song.sourceUrl
+        sourceUrl: song.sourceUrl,
+        syncedLyrics: song.syncedLyrics,
+        lyrics: song.lyrics,
+        lyricId: song.lyricId?.toString()
       });
 
       return true;

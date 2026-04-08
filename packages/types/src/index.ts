@@ -9,11 +9,23 @@ export interface Song {
   genre: string;
   year: number | null;
   coverArt: string | null; // base64 data URL
-  lyrics?: string; // embedded USLT tag from ID3
+  lyrics?: string; // embedded USLT tag from ID3 (legacy/unsynced)
+  syncedLyrics?: string; // embedded SYLT tag from ID3 (LRC format)
   hash?: string; // Content hash for de-duplication
   fileSize?: number; // Size in bytes
   sourceUrl?: string; // YouTube URL or similar
   originId?: string; // YouTube Video ID or similar
+  lyricId?: number; // LRCLIB lyric ID
+}
+
+export interface LyricSearchResult {
+  id: number;
+  trackName: string;
+  artistName: string;
+  albumName: string;
+  duration: number;
+  syncedLyrics: string;
+  plainLyrics: string;
 }
 
 export interface Playlist {

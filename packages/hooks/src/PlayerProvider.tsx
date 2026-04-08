@@ -38,6 +38,7 @@ export interface PlayerContextProps {
   setVolume: (vol: number) => void;
   setRepeatMode: (mode: RepeatMode) => void;
   toggleShuffle: () => void;
+  updateCurrentSongMetadata: (partial: Partial<Song>) => void;
 }
 
 export const PlayerContext = createContext<PlayerContextProps | undefined>(undefined);
@@ -269,8 +270,28 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
       isShuffle
     };
 
-    storage.savePlayerState(state).catch(err => console.error('Failed to save player state:', err));
-  }, [storage, isHydrated, currentSong, queue, history, originalContext, volume, repeatMode, isShuffle]);
+  storage.savePlayerState(state).catch(err => console.error('Failed to save player state:', err));
+}, [storage, isHydrated, currentSong, queue, history, originalContext, volume, repeatMode, isShuffle]);
+
+const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
+  setCurrentSong(prev => prev ? { ...prev, ...partial } : null);
+  
+  // Also update in queue
+  setQueue(prevQueue => prevQueue.map(item => {
+    if (currentSongRef.current && item.song.id === currentSongRef.current.id) {
+      return { ...item, song: { ...item.song, ...partial } };
+    }
+    return item;
+  }));
+
+  // Update in history
+  setHistory(prevHistory => prevHistory.map(song => {
+    if (currentSongRef.current && song.id === currentSongRef.current.id) {
+      return { ...song, ...partial };
+    }
+    return song;
+  }));
+}, []);
 
   const playList = useCallback((songs: Song[], startIndex: number) => {
     setOriginalContext(songs);
@@ -389,6 +410,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
     history,
     repeatMode,
     isShuffle,
+    updateCurrentSongMetadata,
     playNow,
     playNext,
     addToQueue,
@@ -405,7 +427,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
     toggleShuffle
   }), [
     currentSong, isPlaying, progress, duration, volume, queue, history,
-    repeatMode, isShuffle, playNow, playNext, addToQueue, playList,
+    repeatMode, isShuffle, updateCurrentSongMetadata, playNow, playNext, addToQueue, playList,
     removeFromQueue, reorderQueue, play, pause, next, prev, seek,
     setVolume, toggleShuffle
   ]);

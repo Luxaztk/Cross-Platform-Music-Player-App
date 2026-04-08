@@ -1,6 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, VolumeX, ListMusic, Shuffle, Repeat, Repeat1 } from 'lucide-react';
-import { usePlayer } from '@music/hooks';
+import { 
+  Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, 
+  VolumeX, ListMusic, Shuffle, Repeat, Repeat1, Mic 
+} from 'lucide-react';
+import { usePlayer, useUI } from '@music/hooks';
 import { formatTime } from '@music/utils';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useTheme } from '../Theme';
@@ -17,6 +20,7 @@ const PlayerBar: React.FC = () => {
   
   const { appIcon } = useTheme();
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const { isLyricsOpen, toggleLyrics } = useUI();
   const queueContainerRef = useRef<HTMLDivElement>(null);
   const toggleBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -195,6 +199,14 @@ const PlayerBar: React.FC = () => {
             style={{ '--range-progress': `${volumePercent}%` } as React.CSSProperties}
           />
         </div>
+
+        <button 
+          className={`control-btn lyrics-toggle ${isLyricsOpen ? 'active' : ''}`}
+          onClick={toggleLyrics}
+          title="Lyrics"
+        >
+          <Mic size={ICON_SIZES.SMALL} />
+        </button>
       </div>
     </div>
   );

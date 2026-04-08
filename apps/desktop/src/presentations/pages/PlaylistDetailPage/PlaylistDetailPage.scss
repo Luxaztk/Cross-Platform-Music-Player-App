@@ -1,16 +1,17 @@
 .playlist-detail-page {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  // height: 100%; // Remove fixed height
 
   .playlist-header-container {
     display: flex;
-    padding: 24px;
+    padding: 0; // Edge-to-edge
     gap: 24px;
-    background: linear-gradient(to bottom, var(--bg-playlist-header) 0%, transparent 100%);
-    min-height: 280px;
+    background: linear-gradient(to bottom, var(--layout-gradient-top) 0%, rgba(var(--color-primary-rgb), 0.1) 50%, transparent 100%);
+    min-height: 320px;
     align-items: flex-end;
     position: relative;
+    padding: 30px var(--spacing-lg) 20px;
 
     .playlist-cover-large {
       width: 232px;
@@ -115,12 +116,12 @@
   }
 
   .songs-list-container {
-    padding: 0 24px 120px; // Add bottom padding for bulk-bar
+    padding: 0 0 120px; // Remove side padding here, move it to children for true sticky
     background: var(--bg-surface);
-    flex-grow: 1;
+    // flex-grow: 1; // Allow natural height
 
     .filter-chip-container {
-      padding: 12px 0;
+      padding: 12px var(--spacing-lg);
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
@@ -213,15 +214,23 @@
 
     .list-header {
       display: grid;
-      grid-template-columns: 50px 1.5fr 1fr 120px 50px;
-      padding: 8px 0;
+      grid-template-columns: 80px 1.5fr 1fr 120px 80px;
+      padding: 12px var(--spacing-lg);
       align-items: center;
       border-bottom: 1px solid var(--border-subtle);
       margin-bottom: 8px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.1em;
       color: var(--color-text-dim);
+      background: var(--bg-primary);
+      transition: all 0.3s ease;
+      
+      &.is-sticky {
+        background: var(--bg-primary);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        border-bottom-color: var(--color-primary);
+      }
 
       .checkbox-header-btn {
         background: none;
@@ -263,9 +272,8 @@
 
     .song-row {
       display: grid;
-      grid-template-columns: 50px 1.5fr 1fr 120px 50px;
-      align-items: center;
-      padding: 8px 0;
+      grid-template-columns: 80px 1.5fr 1fr 120px 80px;
+      padding: 8px var(--spacing-lg);
       border-radius: 4px;
       font-size: 0.9rem;
       color: var(--color-text-dim);

@@ -9,7 +9,8 @@
   "scripts": {
     "desktop": "npm run dev --workspace=apps/desktop",
     "mobile": "npm run android --workspace=apps/mobile",
-    "test": "echo \"No test configured\"",
+    "test": "npm run test --workspaces",
+    "test:coverage": "npm run test:coverage --workspaces",
     "format": "prettier --write .",
     "lint": "eslint ."
   },
@@ -26,7 +27,9 @@
   },
   "homepage": "https://github.com/Luxaztk/Cross-Platform-Music-Player-App#readme",
   "dependencies": {
+    "@types/react-window": "^1.8.8",
     "prettier": "^3.8.1",
+    "react-window": "^2.2.7",
     "typescript": "^5.9.3"
   },
   "devDependencies": {

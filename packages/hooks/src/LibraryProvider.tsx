@@ -9,21 +9,30 @@ import {
   UpdatePlaylistUseCase, 
   UpdateSongUseCase, 
   DeletePlaylistUseCase,
+  DeleteSongUseCase,
+  DeleteSongsUseCase,
+  AddSongsToPlaylistUseCase,
+  RemoveSongsFromPlaylistUseCase,
+  ScanMissingFilesUseCase,
   type ILibraryRepository
 } from '@music/core';
 
 import type { Song, Playlist, ImportResult } from '@music/types';
 
-interface LibraryContextType {
+interface LibraryDataContextType {
   songs: Song[];
   library: Playlist | null;
   playlists: Playlist[];
+  duplicateSongs: Song[];
+  libraryVersion: number;
   libraryFilter: { type: 'artist' | 'album' | 'none'; values: string[] };
+}
+
+interface LibraryActionsContextType {
   setLibraryFilter: (filter: { type: 'artist' | 'album' | 'none'; values: string[] }) => void;
   handleImportFiles: () => Promise<ImportResult>;
   handleImportFolder: () => Promise<ImportResult>;
   handleAddSongs: (songs: Song[]) => Promise<{ success: boolean; count: number }>;
-  duplicateSongs: Song[];
   clearDuplicates: () => void;
   handleCreatePlaylist: (name?: string) => Promise<Playlist | null>;
   handleGetPlaylistDetail: (id: string) => Promise<any>;
@@ -36,11 +45,12 @@ interface LibraryContextType {
   handleDeletePlaylist: (playlistId: string) => Promise<boolean>;
   refreshPlaylists: () => Promise<void>;
   refreshLibrary: () => Promise<void>;
-  libraryVersion: number;
   handleScanMissingFiles: () => Promise<string[]>;
+  repository: ILibraryRepository;
 }
 
-const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
+const LibraryDataContext = createContext<LibraryDataContextType | undefined>(undefined);
+const LibraryActionsContext = createContext<LibraryActionsContextType | undefined>(undefined);
 
 interface LibraryProviderProps {
   children: ReactNode;
@@ -58,36 +68,44 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
     values: [] 
   });
 
-  const getLibraryUc = new GetLibraryUseCase(repository);
-  const getPlaylistsUc = new GetPlaylistsUseCase(repository);
-  const importFilesUc = new ImportFilesUseCase(repository);
-  const importFolderUc = new ImportFolderUseCase(repository);
-  const createPlaylistUc = new CreatePlaylistUseCase(repository);
-  const getPlaylistByIdUc = new GetPlaylistByIdUseCase(repository);
-  const updatePlaylistUc = new UpdatePlaylistUseCase(repository);
-  const updateSongUc = new UpdateSongUseCase(repository);
-  const deletePlaylistUc = new DeletePlaylistUseCase(repository);
+  // Memoize UseCases to keep them stable
+  const useCases = React.useMemo(() => ({
+    getLibrary: new GetLibraryUseCase(repository),
+    getPlaylists: new GetPlaylistsUseCase(repository),
+    importFiles: new ImportFilesUseCase(repository),
+    importFolder: new ImportFolderUseCase(repository),
+    createPlaylist: new CreatePlaylistUseCase(repository),
+    getPlaylistById: new GetPlaylistByIdUseCase(repository),
+    updatePlaylist: new UpdatePlaylistUseCase(repository),
+    updateSong: new UpdateSongUseCase(repository),
+    deletePlaylist: new DeletePlaylistUseCase(repository),
+    deleteSong: new DeleteSongUseCase(repository),
+    deleteSongs: new DeleteSongsUseCase(repository),
+    addSongsToPlaylist: new AddSongsToPlaylistUseCase(repository),
+    removeSongsFromPlaylist: new RemoveSongsFromPlaylistUseCase(repository),
+    scanMissingFiles: new ScanMissingFilesUseCase(repository),
+  }), [repository]);
 
-  const fetchLibrary = async () => {
-    const data = await getLibraryUc.execute();
+  const fetchLibrary = React.useCallback(async () => {
+    const data = await useCases.getLibrary.execute();
     setSongs(data.songs);
     setLibrary(data.library);
     setLibraryVersion(v => v + 1);
-  };
+  }, [useCases]);
 
-  const fetchPlaylists = async () => {
-    const data = await getPlaylistsUc.execute();
+  const fetchPlaylists = React.useCallback(async () => {
+    const data = await useCases.getPlaylists.execute();
     setPlaylists(data);
     setLibraryVersion(v => v + 1);
-  };
+  }, [useCases]);
 
   useEffect(() => {
     fetchLibrary();
     fetchPlaylists();
-  }, [repository]);
+  }, [fetchLibrary, fetchPlaylists]);
 
-  const handleImportFiles = async () => {
-    const res = await importFilesUc.execute();
+  const handleImportFiles = React.useCallback(async () => {
+    const res = await useCases.importFiles.execute();
     if (res.success) {
       if (res.count > 0) {
         await fetchLibrary();
@@ -98,10 +116,10 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
       }
     }
     return res;
-  };
+  }, [useCases, fetchLibrary, fetchPlaylists]);
 
-  const handleImportFolder = async () => {
-    const res = await importFolderUc.execute();
+  const handleImportFolder = React.useCallback(async () => {
+    const res = await useCases.importFolder.execute();
     if (res.success) {
       if (res.count > 0) {
         await fetchLibrary();
@@ -112,9 +130,9 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
       }
     }
     return res;
-  };
+  }, [useCases, fetchLibrary, fetchPlaylists]);
 
-  const handleAddSongs = async (songsToAdd: Song[]) => {
+  const handleAddSongs = React.useCallback(async (songsToAdd: Song[]) => {
     const res = await repository.addSongs(songsToAdd);
     if (res.success) {
       await fetchLibrary();
@@ -122,116 +140,148 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
     }
     setDuplicateSongs([]); // Clear after resolution
     return res;
-  };
+  }, [repository, fetchLibrary, fetchPlaylists]);
 
-  const clearDuplicates = () => setDuplicateSongs([]);
+  const clearDuplicates = React.useCallback(() => setDuplicateSongs([]), []);
 
-  const handleCreatePlaylist = async (name: string = 'New Playlist') => {
-    const newPlaylist = await createPlaylistUc.execute(name);
+  const handleCreatePlaylist = React.useCallback(async (name: string = 'New Playlist') => {
+    const newPlaylist = await useCases.createPlaylist.execute(name);
     await fetchPlaylists();
     return newPlaylist;
-  };
+  }, [useCases, fetchPlaylists]);
 
-  const handleGetPlaylistDetail = async (id: string) => {
-    return await getPlaylistByIdUc.execute(id);
-  };
+  const handleGetPlaylistDetail = React.useCallback(async (id: string) => {
+    return await useCases.getPlaylistById.execute(id);
+  }, [useCases]);
 
-  const handleUpdatePlaylist = async (playlist: Playlist) => {
-    const updated = await updatePlaylistUc.execute(playlist);
+  const handleUpdatePlaylist = React.useCallback(async (p: Playlist) => {
+    const updated = await useCases.updatePlaylist.execute(p);
     await fetchPlaylists();
     return updated;
-  };
+  }, [useCases, fetchPlaylists]);
 
-  const handleUpdateSong = async (song: Song) => {
-    const updated = await updateSongUc.execute(song);
-    await fetchLibrary();
-    await fetchPlaylists();
+  const handleUpdateSong = React.useCallback(async (song: Song) => {
+    // 1. Optimistic Update in Local State
+    setSongs(prev => prev.map(s => s.id === song.id ? song : s));
+    
+    // 2. DB Update in Background
+    const updated = await useCases.updateSong.execute(song);
+    
+    // 3. Update related data quietly
+    fetchPlaylists(); // Small set, usually fast
+    
     return updated;
-  };
+  }, [useCases, fetchPlaylists]);
 
-  const handleDeleteSong = async (songId: string) => {
-    const res = await repository.deleteSong(songId);
+  const handleDeleteSong = React.useCallback(async (songId: string) => {
+    const res = await useCases.deleteSong.execute(songId);
     if (res) {
       await fetchLibrary();
       await fetchPlaylists();
     }
     return res;
-  };
+  }, [useCases, fetchLibrary, fetchPlaylists]);
 
-  const handleDeleteSongs = async (songIds: string[]) => {
-    const res = await repository.deleteSongs(songIds);
+  const handleDeleteSongs = React.useCallback(async (songIds: string[]) => {
+    const res = await useCases.deleteSongs.execute(songIds);
     if (res) {
       await fetchLibrary();
       await fetchPlaylists();
     }
     return res;
-  };
+  }, [useCases, fetchLibrary, fetchPlaylists]);
 
-  const handleRemoveSongsFromPlaylist = async (playlistId: string, songIds: string[]) => {
-    const res = await repository.removeSongsFromPlaylist(playlistId, songIds);
+  const handleRemoveSongsFromPlaylist = React.useCallback(async (playlistId: string, songIds: string[]) => {
+    const res = await useCases.removeSongsFromPlaylist.execute(playlistId, songIds);
     if (res) {
       await fetchLibrary();
       await fetchPlaylists();
     }
     return res;
-  };
+  }, [useCases, fetchLibrary, fetchPlaylists]);
 
-  const handleAddSongsToPlaylist = async (playlistId: string, songIds: string[]) => {
-    const res = await repository.addSongsToPlaylist(playlistId, songIds);
+  const handleAddSongsToPlaylist = React.useCallback(async (playlistId: string, songIds: string[]) => {
+    const res = await useCases.addSongsToPlaylist.execute(playlistId, songIds);
     if (res) {
       await fetchLibrary();
       await fetchPlaylists();
     }
     return res;
-  };
+  }, [useCases, fetchLibrary, fetchPlaylists]);
 
-  const handleDeletePlaylist = async (playlistId: string) => {
-    const success = await deletePlaylistUc.execute(playlistId);
+  const handleDeletePlaylist = React.useCallback(async (playlistId: string) => {
+    const success = await useCases.deletePlaylist.execute(playlistId);
     if (success) {
       await fetchPlaylists();
     }
     return success;
-  };
+  }, [useCases, fetchPlaylists]);
 
-  const handleScanMissingFiles = async () => {
-    return await window.electronAPI.scanMissingFiles();
-  };
+  const handleScanMissingFiles = React.useCallback(async () => {
+    return await useCases.scanMissingFiles.execute();
+  }, [useCases]);
+
+  const dataValue = React.useMemo(() => ({
+    songs,
+    library,
+    playlists,
+    libraryVersion,
+    libraryFilter,
+    duplicateSongs,
+  }), [songs, library, playlists, libraryVersion, libraryFilter, duplicateSongs]);
+
+  const actionsValue = React.useMemo(() => ({
+    setLibraryFilter: (f: any) => setLibraryFilter(f),
+    handleImportFiles,
+    handleImportFolder,
+    handleAddSongs,
+    clearDuplicates,
+    handleCreatePlaylist,
+    handleGetPlaylistDetail,
+    handleUpdatePlaylist,
+    handleUpdateSong,
+    handleDeleteSong,
+    handleDeleteSongs,
+    handleRemoveSongsFromPlaylist,
+    handleAddSongsToPlaylist,
+    handleDeletePlaylist,
+    refreshPlaylists: fetchPlaylists,
+    refreshLibrary: fetchLibrary,
+    handleScanMissingFiles,
+    repository,
+  }), [
+    handleImportFiles, handleImportFolder, handleAddSongs, clearDuplicates,
+    handleCreatePlaylist, handleGetPlaylistDetail, handleUpdatePlaylist,
+    handleUpdateSong, handleDeleteSong, handleDeleteSongs,
+    handleRemoveSongsFromPlaylist, handleAddSongsToPlaylist,
+    handleDeletePlaylist, fetchPlaylists, fetchLibrary,
+    handleScanMissingFiles, repository
+  ]);
 
   return (
-    <LibraryContext.Provider value={{ 
-      songs, 
-      library, 
-      playlists, 
-      libraryFilter,
-      setLibraryFilter,
-      handleImportFiles, 
-      handleImportFolder, 
-      handleAddSongs,
-      duplicateSongs,
-      clearDuplicates,
-      handleCreatePlaylist, 
-      handleGetPlaylistDetail, 
-      handleUpdatePlaylist,
-      handleUpdateSong,
-      handleDeleteSong,
-      handleDeleteSongs,
-      handleRemoveSongsFromPlaylist,
-      handleAddSongsToPlaylist,
-      handleDeletePlaylist,
-      refreshPlaylists: fetchPlaylists,
-      refreshLibrary: fetchLibrary,
-      libraryVersion,
-      handleScanMissingFiles,
-    }}>
-      {children}
-    </LibraryContext.Provider>
+    <LibraryDataContext.Provider value={dataValue}>
+      <LibraryActionsContext.Provider value={actionsValue}>
+        {children}
+      </LibraryActionsContext.Provider>
+    </LibraryDataContext.Provider>
   );
 };
 
-export const useLibraryContext = () => {
-  const context = useContext(LibraryContext);
-  if (context === undefined) {
-    throw new Error('useLibraryContext must be used within a LibraryProvider');
+export const useLibrary = () => {
+  const context = useContext(LibraryDataContext);
+  const actions = useContext(LibraryActionsContext);
+  if (context === undefined || actions === undefined) {
+    throw new Error('useLibrary must be used within a LibraryProvider');
   }
-  return context;
+  return { ...context, ...actions };
+};
+
+export const useLibraryContext = useLibrary;
+
+export const useLibraryActions = () => {
+  const actions = useContext(LibraryActionsContext);
+  if (actions === undefined) {
+    throw new Error('useLibraryActions must be used within a LibraryProvider');
+  }
+  return actions;
 };

@@ -46,6 +46,10 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [x] **Tải xuống trực tuyến (Online Download)**: Tích hợp yt-dlp & FFmpeg, hỗ trợ tự động import, kiểm tra trùng lặp và dọn dẹp file rác.
 - [x] **Xử lý tệp mồ côi (Orphaned Files Handling)**: Tự động bỏ qua bài hát mất file (Auto-skip) và công cụ quét/dọn dẹp thư viện (Library Cleanup Tool).
 - [x] **Biên tập Metadata (ID3 Tags)**: Hỗ trợ ghi đè thông tin bài hát (Tags) trực tiếp vào file vật lý (.mp3...).
+- [x] **Kiến trúc Context Splitting (Surgical Re-renders)**: Tái cấu trúc `LibraryProvider` thành mô hình Đa ngữ cảnh, triệt tiêu re-render dư thừa, tối ưu CPU/RAM khi xử lý thư viện lớn.
+- [x] **Optimistic Metadata Sync (Zero Latency)**: Cơ chế cập nhật lạc quan kèm Auto-Rollback giúp UI phản hồi tức thì (<16ms) khi chỉnh sửa lyricId/metadata.
+- [x] **Window Virtualization Engine**: Nâng cấp ảo hóa danh sách dựa trên Window scroll, hỗ trợ cuộn mượt mà 60fps với Playlist 5000+ bài hát.
+- [x] **Premium UI/UX Polish**: Thiết kế trà viền (Edge-to-edge), Sticky Header với hiệu ứng Elevation (Shadow/Border) và Opacity solid chuyên nghiệp.
 
 ---
 
@@ -80,7 +84,7 @@ Mục tiêu: "Wow" người dùng bằng các tính năng cao cấp.
 ### 🟣 GIAI ĐOẠN 4: Chuyên sâu & Cá nhân hóa (Quản lý File)
 Mục tiêu: Cung cấp các công cụ mạnh mẽ để quản lý và thưởng thức nhạc.
 - [x] **Tải xuống trực tuyến (Online Download)**: Hỗ trợ tải nhạc từ các nguồn online để sử dụng offline.
-- [ ] **Lời bài hát (Lyrics)**: Tự động tìm kiếm và hiển thị lời bài hát (Local hoặc Online).
+- [x] **Lời bài hát (Lyrics)**: Tự động tìm kiếm và hiển thị lời bài hát (Local hoặc Online).
 - [x] **Biên tập Metadata (Ghi vào file nhạc)**: Hỗ trợ ghi đè trực tiếp ID3 tags vào file vật lý (.mp3, .flac...).
 
 ### 🔵 GIAI ĐOẠN 5: Triển khai Mobile (Transform)
@@ -94,7 +98,33 @@ Mục tiêu: Đưa trải nghiệm lên các nền tảng di động.
 ### ⚪ HẠNG MỤC MỞ RỘNG (Optional - Thấp nhất)
 - [ ] **Trang Hồ sơ Nghệ sĩ (Artist Profile)**: Hiển thị các bài hát, album và thông tin chi tiết của từng nghệ sĩ.
 
-----
+
+---
+
+## 🧪 Hệ Thống Kiểm Thử (Testing - NEW)
+
+Mục tiêu: Bảo vệ logic dự án bằng Unit Test toàn diện (Full Coverage).
+
+### 1. @music/core (Logic Lõi)
+- [x] **Mutex**: Quản lý hàng đợi và an toàn ghi dữ liệu (100% Coverage)
+- [x] **LibraryService**: 
+    - [x] Phát hiện trùng lặp (Path, Hash, Metadata, URL)
+    - [x] Quản lý bài hát (Thêm, Xóa, Cập nhật)
+    - [x] Quản lý Playlist (Tạo, Xóa, Thêm/Bớt bài hát)
+- [x] **UseCases**: Các lớp nghiệp vụ bọc ngoài LibraryService (100% Coverage)
+
+### 2. @music/utils (Tiện ích dùng chung)
+- [x] **formatTime**: Định dạng mm:ss (100% Coverage)
+- [x] **splitArtists**: Tách danh sách nghệ sĩ (100% Coverage)
+- [x] **youtube**: Trích xuất ID & URL YouTube (100% Coverage)
+
+### 3. @music/player (Trình phát nhạc)
+- [x] **AudioEngine**: Logic điều khiển âm thanh & Queue management (100% Coverage)
+
+### 4. @music/hooks (React Hooks & State)
+- [x] **LibraryProvider** & **PlayerProvider**: Đồng bộ trạng thái UI (100% Coverage)
+
+---
 
 > [!TIP]
 > File này sẽ được cập nhật thường xuyên để theo dõi tiến độ dự án. Hãy tham khảo `README.md` để biết thêm chi tiết kỹ thuật.

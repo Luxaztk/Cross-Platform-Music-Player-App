@@ -4,7 +4,7 @@ import { NotificationProvider } from './presentations/components/Notification'
 import { ThemeProvider } from './presentations/components/Theme'
 import { LanguageProvider } from './presentations/components/Language'
 import { LibraryProvider, useLibraryContext } from './presentations/components/Library'
-import { PlayerProvider } from '@music/hooks'
+import { PlayerProvider, UIProvider } from '@music/hooks'
 import { ElectronStorageAdapter } from './infrastructure/services/ElectronStorageAdapter'
 import { useNotification } from './application/hooks'
 import { useLanguage } from './presentations/components/Language'
@@ -30,15 +30,17 @@ const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) => {
 };
 
 createRoot(document.getElementById('root')!).render(
-  <LanguageProvider>
-    <ThemeProvider storage={storage}>
-      <NotificationProvider>
-        <LibraryProvider>
-          <PlayerWithLibrary>
-            <App />
-          </PlayerWithLibrary>
-        </LibraryProvider>
-      </NotificationProvider>
-    </ThemeProvider>
-  </LanguageProvider>,
+  <UIProvider>
+    <LanguageProvider>
+      <ThemeProvider storage={storage}>
+        <NotificationProvider>
+          <LibraryProvider>
+            <PlayerWithLibrary>
+              <App />
+            </PlayerWithLibrary>
+          </LibraryProvider>
+        </NotificationProvider>
+      </ThemeProvider>
+    </LanguageProvider>
+  </UIProvider>,
 )

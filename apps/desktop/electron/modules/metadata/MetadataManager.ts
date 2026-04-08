@@ -6,11 +6,13 @@ export interface ID3Metadata {
   artist?: string;
   album?: string;
   lyrics?: string;
-  coverPath?: string; // Local path to image
-  coverUrl?: string; // Remote URL to image
-  coverData?: string; // Base64 Data URI
+  syncedLyrics?: string; // LRC string or parsed SYLT format
+  coverPath?: string; 
+  coverUrl?: string; 
+  coverData?: string; 
   originId?: string;
   sourceUrl?: string;
+  lyricId?: string;
 }
 
 export class MetadataManager {
@@ -35,9 +37,29 @@ export class MetadataManager {
       
       if (metadata.lyrics) {
         tags.unsynchronisedLyrics = {
-          language: 'vie',
+          language: 'eng',
           text: metadata.lyrics
         };
+      } else if (metadata.syncedLyrics && !metadata.lyrics) {
+        // Fallback: Create plain text lyrics from synced lyrics by stripping timestamps
+        const plainText = metadata.syncedLyrics.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, '').trim();
+        tags.unsynchronisedLyrics = {
+          language: 'eng',
+          text: plainText
+        };
+      }
+      
+      if (metadata.syncedLyrics) {
+        const lines = this.parseLRC(metadata.syncedLyrics);
+        if (lines.length > 0) {
+          tags.synchronisedLyrics = [{
+            language: 'eng',
+            timeStampFormat: 2, // milliseconds
+            contentType: 1, // lyrics
+            shortText: 'Lyrics',
+            synchronisedText: lines
+          }];
+        }
       }
 
       // Handle Image (Priority: URL > Path > Data)
@@ -96,19 +118,58 @@ export class MetadataManager {
       if (metadata.sourceUrl) {
         tags.userDefinedText.push({ description: 'melovista_source_url', value: metadata.sourceUrl });
       }
+      if (metadata.lyricId) {
+        tags.userDefinedText.push({ description: 'melovista_lyric_id', value: metadata.lyricId });
+      }
+      if (metadata.syncedLyrics) {
+        tags.userDefinedText.push({ description: 'melovista_lrc', value: metadata.syncedLyrics });
+      }
       if (tags.userDefinedText.length === 0) {
         delete tags.userDefinedText;
       }
 
+      console.log(`[MetadataManager] Writing tags to: ${filePath}`);
+      console.log(`[MetadataManager] Tags keys: ${Object.keys(tags).join(', ')}`);
+      if (tags.unsynchronisedLyrics) console.log(`[MetadataManager] Writing USLT (plain lyrics)...`);
+      if (tags.synchronisedLyrics) console.log(`[MetadataManager] Writing SYLT (synced lyrics)...`);
+
       // Merge tags (update existing, don't just overwrite all)
       const success = NodeID3.update(tags, filePath);
+      
       if (success instanceof Error) {
-         throw new Error(`Failed to update ID3 tags: ${success.message}`);
+        console.error(`[MetadataManager] NodeID3 Error:`, success);
+        throw new Error(`Failed to update ID3 tags: ${success.message}`);
       }
+      
+      if (success === true) {
+        console.log(`[MetadataManager] Successfully updated metadata for: ${filePath}`);
+      } else {
+        console.warn(`[MetadataManager] NodeID3.update returned non-true value:`, success);
+      }
+
       return true;
     } catch (error) {
-      console.error('MetadataManager error:', error);
+      console.error('[MetadataManager] writeMetadata fatal error:', error);
       throw error;
     }
+  }
+
+  private parseLRC(lrc: string): Array<{ text: string, timeStamp: number }> {
+    const lines: Array<{ text: string, timeStamp: number }> = [];
+    const regex = /\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)/;
+    
+    for (const line of lrc.split('\n')) {
+      const match = line.match(regex);
+      if (match) {
+        const minutes = parseInt(match[1]);
+        const seconds = parseInt(match[2]);
+        const msStr = match[3];
+        const ms = parseInt(msStr.length === 2 ? msStr + '0' : msStr);
+        const timeStamp = (minutes * 60 + seconds) * 1000 + ms;
+        const text = match[4].trim();
+        lines.push({ text, timeStamp });
+      }
+    }
+    return lines;
   }
 }

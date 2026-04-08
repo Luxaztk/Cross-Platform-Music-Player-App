@@ -69,4 +69,20 @@ export class ElectronLibraryRepository implements ILibraryRepository {
   async addSongs(songs: Song[]): Promise<{ success: boolean; count: number }> {
     return window.electronAPI.addSongs(songs);
   }
+
+  async scanMissingFiles(): Promise<string[]> {
+    return window.electronAPI.scanMissingFiles();
+  }
+
+  async getLyrics(songId: string): Promise<string | null> {
+    return window.electronAPI.getLyrics(songId);
+  }
+
+  async saveLyrics(songId: string, lyrics: string, lyricId?: number): Promise<boolean> {
+    return window.electronAPI.saveLyrics(songId, lyrics, lyricId);
+  }
+
+  async searchLyrics(query: string): Promise<any[]> {
+    return window.electronAPI.searchLyrics(query);
+  }
 }

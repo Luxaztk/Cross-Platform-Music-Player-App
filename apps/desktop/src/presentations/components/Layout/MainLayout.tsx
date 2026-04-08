@@ -6,13 +6,16 @@ import { PlayerBar } from '../PlayerBar';
 import { useLibraryContext } from '../Library';
 import { useNotification } from '../../../application/hooks';
 import { DuplicateResolutionModal } from '../DuplicateResolutionModal/DuplicateResolutionModal';
+import { useUI } from '@music/hooks';
 import { useLanguage } from '../Language';
+import { LyricsPanel } from '../LyricsView';
 import './MainLayout.scss';
 
 const MainLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { duplicateSongs, handleAddSongs, clearDuplicates } = useLibraryContext();
   const { showNotification } = useNotification();
+  const { isLyricsOpen } = useUI();
   const { t } = useLanguage();
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -32,6 +35,12 @@ const MainLayout: React.FC = () => {
         <main className="main-area">
           <Outlet />
         </main>
+        
+        {isLyricsOpen && (
+          <aside className="lyrics-sidebar">
+            <LyricsPanel />
+          </aside>
+        )}
       </div>
       <PlayerBar />
 

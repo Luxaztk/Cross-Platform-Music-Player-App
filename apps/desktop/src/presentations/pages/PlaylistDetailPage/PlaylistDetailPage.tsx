@@ -1,10 +1,10 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { FileMusic, FolderPlus, MoreVertical, Loader2, Edit2, Trash2, Play, ListPlus, PlaySquare, X, CheckSquare, Square, Trash, ChevronRight, Filter } from 'lucide-react';
-import { useNotification } from '../../../application/hooks';
+import { FileMusic, FolderPlus, Loader2, X, CheckSquare, Square, Trash, Filter } from 'lucide-react';
+import { useNotification } from '../../../application/hooks/useNotification';
 import { useLibraryContext } from '../../components/Library';
 import { usePlayer } from '@music/hooks';
-import { formatTime, splitArtists } from '@music/utils';
+import { splitArtists } from '@music/utils';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { EditModal } from '../../components/EditModal';
@@ -12,7 +12,11 @@ import { DeleteConfirmationModal } from '../../components/DeleteConfirmationModa
 import { SongPickerModal } from '../../components/SongPickerModal/SongPickerModal';
 import { useLanguage } from '../../components/Language';
 import { useTheme } from '../../components/Theme';
+import { SongRow } from './SongRow';
 import './PlaylistDetailPage.scss';
+
+const ROW_HEIGHT = 56;
+const BUFFER_SIZE = 5;
 
 const formatTotalDuration = (seconds: number, t: (key: string) => string) => {
   const totalSeconds = Math.round(seconds);
@@ -34,6 +38,11 @@ export const PlaylistDetailPage: React.FC = () => {
   const [isImporting, setIsImporting] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSongPickerOpen, setIsSongPickerOpen] = React.useState(false);
+
+  // Virtualization state: driven by window scroll
+  const [scrollTop, setScrollTop] = React.useState(0);
+  const [isHeaderSticky, setIsHeaderSticky] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Selection state
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
@@ -57,11 +66,11 @@ export const PlaylistDetailPage: React.FC = () => {
     handleDeleteSongs,
     handleRemoveSongsFromPlaylist,
     handleAddSongsToPlaylist,
-    songs: allSongs,
     playlists,
     libraryFilter,
     setLibraryFilter,
     libraryVersion,
+    songs: allSongs
   } = useLibraryContext();
 
   const { showNotification } = useNotification();
@@ -89,11 +98,34 @@ export const PlaylistDetailPage: React.FC = () => {
       });
     }
 
-    // Task: Clear filter when navigating between lists (e.g. from Library to a specific Playlist)
     return () => {
       setLibraryFilter({ type: 'none', values: [] });
     };
   }, [id, libraryVersion, handleGetPlaylistDetail, setLibraryFilter]);
+
+  // Handle scroll for manual virtualization: driven by .main-area scroll
+  React.useEffect(() => {
+    const mainArea = document.querySelector('.main-area');
+    if (!mainArea) return;
+
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      
+      const rect = containerRef.current.getBoundingClientRect();
+      const mainRect = mainArea.getBoundingClientRect();
+      
+      // Calculate how far the list has scrolled up past the top of the main area
+      const relativeTop = mainRect.top - rect.top;
+      
+      setScrollTop(Math.max(0, relativeTop));
+      setIsHeaderSticky(relativeTop > 0);
+    };
+
+    mainArea.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    
+    return () => mainArea.removeEventListener('scroll', handleScroll);
+  }, [id, libraryVersion]);
 
   // Click out to close menu
   React.useEffect(() => {
@@ -113,9 +145,7 @@ export const PlaylistDetailPage: React.FC = () => {
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' && selectedIds.size > 0) {
-        // Prevent if typing in an input
         if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
-        
         onBulkDelete(isLibrary ? 'library' : 'playlist');
       }
     };
@@ -123,7 +153,7 @@ export const PlaylistDetailPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedIds, isLibrary]);
 
-  const onSaveMetadata = async (updated: any) => {
+  const onSaveMetadata = async (updated: Song | Playlist) => {
     if (editingSong) {
       const result = await handleUpdateSong(updated as Song);
       if (result) {
@@ -162,10 +192,6 @@ export const PlaylistDetailPage: React.FC = () => {
     }
   };
 
-  const onBulkDelete = (mode: 'library' | 'playlist') => {
-    setBulkDeleteMode(mode);
-  };
-
   const confirmBulkDelete = async () => {
     if (!bulkDeleteMode || selectedIds.size === 0) return;
 
@@ -184,6 +210,10 @@ export const PlaylistDetailPage: React.FC = () => {
       setSelectedIds(new Set());
     }
     setBulkDeleteMode(null);
+  };
+
+  const onBulkDelete = (mode: 'library' | 'playlist') => {
+    setBulkDeleteMode(mode);
   };
 
   const toggleSelectAll = () => {
@@ -208,10 +238,9 @@ export const PlaylistDetailPage: React.FC = () => {
       return next;
     });
   };
-  
+
   const toggleFilter = (type: 'artist' | 'album', value: string) => {
     if (libraryFilter.type !== type && libraryFilter.type !== 'none') {
-      // If switching type (e.g. from artist to album), we reset to the new type
       setLibraryFilter({ type, values: [value] });
       return;
     }
@@ -220,14 +249,12 @@ export const PlaylistDetailPage: React.FC = () => {
     const index = currentValues.indexOf(value);
     
     if (index > -1) {
-      // Remove if exists
       const next = currentValues.filter(v => v !== value);
       setLibraryFilter({
         type: next.length === 0 ? 'none' : type,
         values: next
       });
     } else {
-      // Add if new
       setLibraryFilter({
         type,
         values: [...currentValues, value]
@@ -239,7 +266,7 @@ export const PlaylistDetailPage: React.FC = () => {
     const sorted = [...(libraryFilter.type !== 'none' && libraryFilter.values.length > 0 ? localSongs.filter(song => {
       if (libraryFilter.type === 'artist') {
         const queries = libraryFilter.values
-          .flatMap(v => splitArtists(v)) // Split queries too!
+          .flatMap(v => splitArtists(v))
           .map(v => v.toLowerCase().trim());
         
         const allArtists = (song.artists || [song.artist])
@@ -256,7 +283,7 @@ export const PlaylistDetailPage: React.FC = () => {
     }) : localSongs)];
 
     return sorted.sort((a, b) => a.title.localeCompare(b.title));
-  }, [localSongs, libraryFilter, isLibrary]);
+  }, [localSongs, libraryFilter]);
 
   const totalDuration = filteredSongs.reduce((acc, song) => acc + (song.duration || 0), 0);
 
@@ -304,7 +331,6 @@ export const PlaylistDetailPage: React.FC = () => {
     if (success) {
       showNotification('success', t('playlist.addSongsSuccess', { count: songIds.length, name: targetPlaylist.name }));
       if (id === playlistId) {
-        // Refresh local playlist if we added to the CURRENT one
         const updated = await handleGetPlaylistDetail(id);
         if (updated) {
           setPlaylist(updated);
@@ -315,6 +341,15 @@ export const PlaylistDetailPage: React.FC = () => {
     setActiveMenuId(null);
     setActiveSubMenuId(null);
   };
+
+  // Virtualization calculations
+  const viewportHeight = window.innerHeight; 
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER_SIZE);
+  const endIndex = Math.min(filteredSongs.length, Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + BUFFER_SIZE);
+  
+  const visibleSongs = filteredSongs.slice(startIndex, endIndex);
+  const totalHeight = filteredSongs.length * ROW_HEIGHT;
+  const paddingOffset = startIndex * ROW_HEIGHT;
 
   return (
     <div className="playlist-detail-page">
@@ -397,7 +432,7 @@ export const PlaylistDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="songs-list-container">
+      <div className="songs-list-container" ref={containerRef}>
         {libraryFilter.type !== 'none' && libraryFilter.values.length > 0 && (
           <div className="filter-chip-container">
             <div className="active-filter-label">
@@ -428,7 +463,7 @@ export const PlaylistDetailPage: React.FC = () => {
           </div>
         )}
 
-        <div className="list-header">
+        <div className={`list-header ${isHeaderSticky ? 'is-sticky' : ''}`} style={{ position: 'sticky', top: 0, zIndex: 101 }}>
           <div className="col-idx">
             <button className="checkbox-header-btn" onClick={toggleSelectAll}>
               {selectedIds.size === filteredSongs.length && filteredSongs.length > 0 ? (
@@ -443,178 +478,62 @@ export const PlaylistDetailPage: React.FC = () => {
           <div className="col-duration">{t('playlist.duration')}</div>
           <div className="col-more"></div>
         </div>
-        {filteredSongs.length === 0 ? (
-          <p className="no-songs">{t('playlist.noSongs')}</p>
-        ) : (
-          filteredSongs.map((song, index) => (
-            <div 
-              key={song.id} 
-              className={`song-row ${selectedIds.has(song.id) ? 'selected' : ''} ${activeMenuId === song.id ? 'menu-open' : ''} ${currentSong?.id === song.id ? 'playing' : ''}`}
-              onClick={() => toggleSelect(song.id)}
-            >
-              <div className="col-idx">
-                <div className="checkbox-cell" onClick={(e) => toggleSelect(song.id, e)}>
-                  {selectedIds.has(song.id) ? (
-                    <CheckSquare size={16} className="text-primary" />
-                  ) : currentSong?.id === song.id ? (
-                    <Play size={14} className="playing-icon" />
-                  ) : (
-                    index + 1
-                  )}
-                </div>
-              </div>
-              <div className="col-title">
-                <div className="song-cell">
-                  {song.coverArt ? (
-                    <img src={song.coverArt} className="song-mini-img" alt={song.title} />
-                  ) : (
-                    <div className="song-mini-placeholder">
-                      <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
-                    </div>
-                  )}
-                  <div className="song-details">
-                    <span 
-                      className="title-text" 
-                      style={{ color: currentSong?.id === song.id ? 'var(--color-primary)' : undefined }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        playList(filteredSongs, index);
-                      }}
-                    >
-                      {song.title}
-                    </span>
-                    <div className="artist-text">
-                      {(song.artists || [song.artist]).flatMap(a => splitArtists(a)).map((artist, i, arr) => (
-                        <React.Fragment key={artist + i}>
-                          <span 
-                            className="clickable-artist" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFilter('artist', artist);
-                            }}
-                          >
-                            {artist}
-                          </span>
-                          {i < arr.length - 1 && <span className="artist-separator"> ft.&nbsp;</span>}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="col-album">{song.album || '-'}</div>
-              <div className="col-duration">{formatTime(song.duration || 0)}</div>
-              <div className="col-more">
-                <button
-                  className={`row-more-btn ${activeMenuId === song.id ? 'active' : ''}`}
-                  onClick={(e) => {
+
+        <div className="virtual-list-viewport" style={{ height: totalHeight, position: 'relative' }}>
+          <div className="virtual-list-content" style={{ transform: `translateY(${paddingOffset}px)` }}>
+            {filteredSongs.length === 0 ? (
+              <p className="no-songs">{t('playlist.noSongs')}</p>
+            ) : (
+              visibleSongs.map((song, i) => (
+                <SongRow
+                  key={song.id}
+                  song={song}
+                  index={startIndex + i}
+                  isSelected={selectedIds.has(song.id)}
+                  isPlaying={currentSong?.id === song.id}
+                  isActiveMenu={activeMenuId === song.id}
+                  activeSubMenuId={activeSubMenuId}
+                  menuPlacement={menuPlacement}
+                  playlists={playlists}
+                  currentPlaylistId={id}
+                  t={t}
+                  appIcon={appIcon}
+                  menuRef={menuRef}
+                  onToggleSelect={toggleSelect}
+                  onPlay={() => playList(filteredSongs, startIndex + i)}
+                  onPlayNext={() => {
+                    playNext(song);
+                    setActiveMenuId(null);
+                  }}
+                  onAddToQueue={() => {
+                    addToQueue(song);
+                    setActiveMenuId(null);
+                  }}
+                  onAddToPlaylist={(pid) => onAddSongsToPlaylist(pid, [song.id])}
+                  onEdit={() => {
+                    setEditingSong(song);
+                    setIsEditModalOpen(true);
+                    setActiveMenuId(null);
+                  }}
+                  onDelete={() => onDeleteSong(song)}
+                  onToggleFilter={toggleFilter}
+                  onToggleMenu={(sid, e) => {
                     e.stopPropagation();
-                    if (activeMenuId === song.id) {
+                    if (activeMenuId === sid) {
                       setActiveMenuId(null);
                     } else {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const playerHeight = 90; 
-                      const visibleBottom = window.innerHeight - playerHeight;
-                      const spaceBelow = visibleBottom - rect.bottom;
-                      const menuHeight = 200;
-                      
-                      setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
-                      setActiveMenuId(song.id);
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      const spaceBelow = window.innerHeight - rect.bottom;
+                      setMenuPlacement(spaceBelow < 250 ? 'top' : 'bottom');
+                      setActiveMenuId(sid);
                     }
                   }}
-                >
-                  <MoreVertical size={ICON_SIZES.SMALL} />
-                </button>
-                {activeMenuId === song.id && (
-                  <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} 
-                    ref={menuRef}
-                    onClick={(e) => e.stopPropagation()}>
-                    <button className="menu-item" onClick={() => {
-                      playList(filteredSongs, index);
-                      setActiveMenuId(null);
-                    }}>
-                      <Play size={16} />
-                      {t('playlist.playNow') || 'Phát ngay'}
-                    </button>
-                    <button className="menu-item" onClick={() => {
-                      playNext(song);
-                      setActiveMenuId(null);
-                    }}>
-                      <PlaySquare size={16} />
-                      {t('playlist.playNext') || 'Phát tiếp theo'}
-                    </button>
-                    <button className="menu-item" onClick={() => {
-                      addToQueue(song);
-                      setActiveMenuId(null);
-                    }}>
-                      <ListPlus size={16} />
-                      {t('playlist.addToQueue') || 'Thêm vào hàng đợi'}
-                    </button>
-                    
-                    <div className="menu-divider"></div>
-
-                    <div 
-                      className={`menu-item nested-trigger ${activeSubMenuId === song.id ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveSubMenuId(activeSubMenuId === song.id ? null : song.id);
-                      }}
-                      onMouseEnter={() => setActiveSubMenuId(song.id)}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <FolderPlus size={16} />
-                        {t('playlist.addToPlaylist') || 'Thêm vào danh sách phát'}
-                      </div>
-                      <ChevronRight size={14} />
-
-                      {activeSubMenuId === song.id && (
-                        <div className="nested-menu">
-                          {playlists.filter(p => p.id !== '0' && p.id !== id).length === 0 ? (
-                            <div className="menu-item disabled">
-                              {t('sidebar.noPlaylists')}
-                            </div>
-                          ) : (
-                            playlists
-                              .filter(p => p.id !== '0' && p.id !== id)
-                              .map(p => (
-                                <button 
-                                  key={p.id} 
-                                  className="menu-item"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onAddSongsToPlaylist(p.id, [song.id]);
-                                  }}
-                                >
-                                  {p.name}
-                                </button>
-                              ))
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="menu-divider"></div>
-                    <button className="menu-item" onClick={() => {
-                      setEditingSong(song);
-                      setIsEditModalOpen(true);
-                      setActiveMenuId(null);
-                    }}>
-                      <Edit2 size={16} />
-                      {t('common.edit')}
-                    </button>
-                    <button className="menu-item delete" onClick={() => {
-                      onDeleteSong(song);
-                      setActiveMenuId(null);
-                    }}>
-                      <Trash2 size={16} />
-                      {t('common.delete')}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+                  onToggleSubMenu={(sid) => setActiveSubMenuId(activeSubMenuId === sid ? null : sid)}
+                />
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {selectedIds.size > 0 && (

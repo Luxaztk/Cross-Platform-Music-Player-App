@@ -1,4 +1,4 @@
-import type { Song, Playlist, PlaylistDetail, ImportResult } from '@music/types';
+import type { Song, Playlist, PlaylistDetail, ImportResult, LyricSearchResult } from '@music/types';
 
 export interface ILibraryRepository {
   getLibrary(): Promise<{ songs: Song[]; library: Playlist }>;
@@ -15,4 +15,8 @@ export interface ILibraryRepository {
   importFiles(): Promise<ImportResult>;
   importFolder(): Promise<ImportResult>;
   addSongs(songs: Song[]): Promise<{ success: boolean; count: number }>;
+  scanMissingFiles(): Promise<string[]>;
+  getLyrics(songId: string): Promise<string | null>;
+  saveLyrics(songId: string, lyrics: string, lyricId?: number): Promise<boolean>;
+  searchLyrics(query: string): Promise<LyricSearchResult[]>;
 }

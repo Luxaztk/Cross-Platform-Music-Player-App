@@ -30,6 +30,7 @@ export default defineConfig({
                 'youtube-dl-exec',
                 'node-id3',
                 'electron-store',
+                'axios',
                 ...builtinModules,
                 ...builtinModules.map(m => `node:${m}`),
               ],

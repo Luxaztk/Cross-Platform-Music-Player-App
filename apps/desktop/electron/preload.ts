@@ -19,6 +19,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   importFromPath: (filePath: string, sourceUrl?: string, originId?: string) => ipcRenderer.invoke('library:importFromPath', filePath, sourceUrl, originId),
   checkDuplicate: (title: string, artist: string, url?: string, id?: string) => ipcRenderer.invoke('library:checkDuplicate', title, artist, url, id),
   scanMissingFiles: () => ipcRenderer.invoke('library:scanMissingFiles'),
+  getLyrics: (songId: string) => ipcRenderer.invoke('library:getLyrics', songId),
+  saveLyrics: (songId: string, lyrics: string, lyricId?: number) => ipcRenderer.invoke('library:saveLyrics', songId, lyrics, lyricId),
+  searchLyrics: (query: string) => ipcRenderer.invoke('library:searchLyrics', query),
   
   // Storage operations
   getLibraryData: () => ipcRenderer.invoke('storage:getLibrary'),

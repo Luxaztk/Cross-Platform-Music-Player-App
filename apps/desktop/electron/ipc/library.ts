@@ -6,9 +6,11 @@ import { MainMetadataService } from '../infrastructure/MainMetadataService';
 import type { Song } from '@music/types';
 import { LibraryService } from '@music/core';
 import { extractYoutubeId, getCanonicalYoutubeUrl } from '@music/utils';
+import { LyricsManager } from '../modules/lyrics/LyricsManager';
 
 const storageAdapter = new MainStorageAdapter();
 const libraryService = new LibraryService(storageAdapter);
+const lyricsManager = new LyricsManager();
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.aac', '.wav', '.m4a', '.ogg'];
 
@@ -394,6 +396,79 @@ export function setupLibraryIPC() {
       return missingIds;
     } catch (err) {
       console.error('IPC library:scanMissingFiles error:', err);
+      return [];
+    }
+  });
+
+  ipcMain.handle('library:getLyrics', async (_event, songId: string) => {
+    try {
+      const song = await storageAdapter.getSongById(songId);
+      if (!song) return null;
+      
+      // Priority 1: Use Database (Fastest and most persistent for Melovista-selected lyrics)
+      if (song.syncedLyrics || song.lyrics) {
+        return song.syncedLyrics || song.lyrics;
+      }
+      
+      // Priority 2: Fallback to physical file scan
+      const metadata = await MainMetadataService.extractMetadata(song.filePath);
+      return metadata?.syncedLyrics || metadata?.lyrics || null;
+    } catch (err) {
+      console.error('IPC library:getLyrics error:', err);
+      return null;
+    }
+  });
+
+  ipcMain.handle('library:saveLyrics', async (_event, songId: string, lyrics: string, lyricId?: number) => {
+    try {
+      console.log(`[IPC] library:saveLyrics for songId: ${songId}, lyricId: ${lyricId}`);
+      const song = await storageAdapter.getSongById(songId);
+      if (!song) return false;
+
+      // 1. Physical metadata update (for MP3)
+      const success = await lyricsManager.saveLyrics(song.filePath, lyrics, lyricId);
+      
+      // 2. Database update (important for consistency and all formats)
+      const songsMap = await storageAdapter.getSongs();
+      if (songsMap[songId]) {
+        songsMap[songId] = {
+          ...songsMap[songId],
+          syncedLyrics: lyrics,
+          lyricId: lyricId
+        };
+        await storageAdapter.saveSongs(songsMap);
+      }
+
+      // 3. Usage tracking
+      if (lyricId) {
+        await storageAdapter.incrementLyricUsage(lyricId);
+      }
+
+      return success;
+    } catch (err) {
+      console.error('IPC library:saveLyrics error:', err);
+      return false;
+    }
+  });
+
+  ipcMain.handle('library:searchLyrics', async (_event, query: string) => {
+    try {
+      const results = await lyricsManager.search(query);
+      const usage = await storageAdapter.getLyricUsage();
+
+      // Sort results: 
+      // 1. Usage count (descending)
+      // 2. Presence of synced lyrics
+      return results.sort((a, b) => {
+        const usageA = usage[a.id.toString()] || 0;
+        const usageB = usage[b.id.toString()] || 0;
+        
+        if (usageB !== usageA) return usageB - usageA;
+        if (!!b.syncedLyrics !== !!a.syncedLyrics) return b.syncedLyrics ? 1 : -1;
+        return 0;
+      });
+    } catch (err) {
+      console.error('IPC library:searchLyrics error:', err);
       return [];
     }
   });

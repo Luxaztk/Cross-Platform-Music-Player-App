@@ -120,7 +120,7 @@
       .cover-art-mock {
         width: 56px;
         height: 56px;
-        background-color: var(--bg-surface);
+        background-color: transparent;
         border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
@@ -406,6 +406,29 @@
       .volume-range {
         flex: 1;
         margin-right: 8px;
+      }
+    }
+
+    .lyrics-toggle {
+      background: none;
+      border: none;
+      color: var(--color-text-dim);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background-color: var(--bg-surface-hover);
+        color: var(--color-text-main);
+      }
+
+      &.active {
+        color: var(--color-primary);
+        background-color: var(--bg-surface-hover);
       }
     }
   }

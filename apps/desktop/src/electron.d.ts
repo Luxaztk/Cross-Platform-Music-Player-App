@@ -1,4 +1,4 @@
-import type { Song, Playlist, PlaylistDetail, ImportResult, PlayerState, RecentSearch } from '@music/types';
+import type { Song, Playlist, PlaylistDetail, ImportResult, PlayerState, RecentSearch, LyricSearchResult } from '@music/types';
 
 declare global {
   interface Window {
@@ -20,6 +20,9 @@ declare global {
       importFromPath: (filePath: string, sourceUrl?: string, originId?: string) => Promise<{ success: boolean; count: number; duplicates?: string[]; reason?: string }>;
       checkDuplicate: (title: string, artist: string, url?: string, id?: string) => Promise<{ isDuplicate: boolean; reason?: 'URL' | 'METADATA'; existingSong: { id: string; title: string; artist: string } | null }>;
       scanMissingFiles: () => Promise<string[]>;
+      getLyrics: (songId: string) => Promise<string | null>;
+      saveLyrics: (songId: string, lyrics: string, lyricId?: number) => Promise<boolean>;
+      searchLyrics: (query: string) => Promise<LyricSearchResult[]>;
       pickImage: () => Promise<string | null>;
 
       // Storage operations

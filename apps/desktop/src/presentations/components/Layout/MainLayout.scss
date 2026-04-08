@@ -11,15 +11,35 @@
     display: flex;
     flex-grow: 1;
     overflow: hidden;
-    min-height: 0; // Ensure it can shrink within the flex container
+    min-height: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .main-area {
-    flex-grow: 1;
+    flex: 1;
     overflow-y: auto;
-    padding: var(--spacing-md) var(--spacing-lg);
+    // Removed global padding to support Edge-to-edge designs (e.g. PlaylistDetailPage)
+    // Padding should now be handled within individual page components.
     background: linear-gradient(to bottom, var(--layout-gradient-top) 0%, var(--bg-primary) 100%);
-    min-height: 0; // Allow content to be contained with scrollbar
+    min-height: 0;
     scrollbar-gutter: stable;
+    transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
+  .lyrics-sidebar {
+    width: 25%;
+    min-width: 320px;
+    max-width: 450px;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }

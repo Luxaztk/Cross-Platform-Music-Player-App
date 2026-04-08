@@ -11,4 +11,6 @@ export interface IStorageAdapter {
   savePlayerState(state: PlayerState): Promise<void>;
   getRecentSearches(): Promise<RecentSearch[]>;
   saveRecentSearches(searches: RecentSearch[]): Promise<void>;
+  getLyricUsage(): Promise<Record<string, number>>;
+  saveLyricUsage(usage: Record<string, number>): Promise<void>;
 }

@@ -1,15 +1,7 @@
-feat(downloader): improve download reliability and add library integrity tooling
+feat(arch/ui): complete massive performance overhaul & premium UI reconstruction
 
-- Fixed `yt-dlp` hanging issues by introducing non-blocking `stderr` stream handling
-  and explicit process `close` event synchronization.
-- Added automatic post-download library synchronization and ID3 metadata injection.
-- Implemented just-in-time file existence validation in `PlayerProvider` to
-  automatically skip missing tracks during playback.
-- Added a "Clean Up Library" utility to remove orphaned database records for
-  media files no longer present on disk.
-- Refined `DownloaderModal` styling to align with the Semantic Theme system.
-- Added a smart paste action with instant YouTube URL validation and visual
-  state feedback (clipboard -> success).
-- Standardized modal transition animations for a smoother and more consistent UX.
-
-Improves media acquisition reliability and maintains long-term library consistency.
+- [Architecture] Implement Context Splitting for LibraryProvider to annihilate re-render storms.
+- [State] Deploy Optimistic Updates with robust Rollback logic for seamless metadata sync.
+- [Perf] Migrate virtualization to Window-scroll engine for high-FPS playlist interactions.
+- [UI/UX] Overhaul PlaylistDetailPage with edge-to-edge layout and dynamic sticky header elevation.
+- [Fix] Resolve table header transparency and enforce strict SSOT (Single Source of Truth).

@@ -8,6 +8,7 @@ interface StoreSchema {
   playlists: Record<string, Playlist>;
   playerState: PlayerState | null;
   recentSearches: RecentSearch[];
+  lyricUsage: Record<string, number>;
 }
 
 export class MainStorageAdapter implements IStorageAdapter {
@@ -27,7 +28,8 @@ export class MainStorageAdapter implements IStorageAdapter {
         songs: {},
         playlists: {},
         playerState: null,
-        recentSearches: []
+        recentSearches: [],
+        lyricUsage: {}
       }
     });
   }
@@ -71,11 +73,30 @@ export class MainStorageAdapter implements IStorageAdapter {
     return Object.values(songs);
   }
 
+  async getSongById(id: string): Promise<Song | null> {
+    const songs = await this.getSongs();
+    return songs[id] || null;
+  }
+
   async getRecentSearches(): Promise<RecentSearch[]> {
     return this.store.get('recentSearches') || [];
   }
 
   async saveRecentSearches(searches: RecentSearch[]): Promise<void> {
     this.store.set('recentSearches', searches);
+  }
+  
+  async getLyricUsage(): Promise<Record<string, number>> {
+    return this.store.get('lyricUsage') || {};
+  }
+
+  async saveLyricUsage(usage: Record<string, number>): Promise<void> {
+    this.store.set('lyricUsage', usage);
+  }
+
+  async incrementLyricUsage(id: number): Promise<void> {
+    const usage = await this.getLyricUsage();
+    usage[id.toString()] = (usage[id.toString()] || 0) + 1;
+    await this.saveLyricUsage(usage);
   }
 }
