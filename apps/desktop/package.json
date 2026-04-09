@@ -11,7 +11,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "postinstall": "node node_modules/youtube-dl-exec/scripts/postinstall.js || echo 'Warning: yt-dlp binary download failed!'",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "npm run build && electron-builder --mac"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
@@ -57,9 +60,22 @@
   },
   "build": {
     "appId": "com.melovista.app",
+    "productName": "Melovista",
+    "directories": {
+      "output": "release"
+    },
     "asarUnpack": [
-      "**/node_modules/@ffmpeg-installer/**",
-      "**/node_modules/youtube-dl-exec/**"
+      "**/node_modules/@ffmpeg-installer/win32-x64/**",
+      "**/node_modules/youtube-dl-exec/bin/**"
+    ],
+    "extraResources": [
+      {
+        "from": "resources",
+        "to": ".",
+        "filter": [
+          "**/*"
+        ]
+      }
     ]
   }
 }

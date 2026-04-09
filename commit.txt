@@ -1,5 +1,1 @@
-fix(mobile): resolve setInterval type mismatch and missing useEffect import
-
-- Updates the interval variable type from 'NodeJS.Timeout' to 'ReturnType<typeof setInterval>' to fix the TypeScript error in the mobile music player.
-- Adds missing 'useEffect' import to index.tsx.
-- Removes excessive 'padding: 1500' from the container style which was distorting the UI.
+fix(desktop): resolve yt-dlp path issue

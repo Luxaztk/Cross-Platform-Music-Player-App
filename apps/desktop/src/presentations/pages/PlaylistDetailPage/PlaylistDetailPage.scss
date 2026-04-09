@@ -225,7 +225,7 @@
       color: var(--color-text-dim);
       background: var(--bg-primary);
       transition: all 0.3s ease;
-      
+
       &.is-sticky {
         background: var(--bg-primary);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -273,6 +273,7 @@
     .song-row {
       display: grid;
       grid-template-columns: 80px 1.5fr 1fr 120px 80px;
+      align-items: center;
       padding: 8px var(--spacing-lg);
       border-radius: 4px;
       font-size: 0.9rem;
