@@ -8,7 +8,7 @@ export function normalizeNFC(str: string): string {
   if (!str) return '';
   try {
     return str.normalize('NFC').trim();
-  } catch (e) {
+  } catch {
     return str.trim();
   }
 }
@@ -46,7 +46,7 @@ export function getPrimaryArtist(artist: string | undefined): string {
 export function formatLyricsSearchQuery(title: string, artist: string | undefined): string {
   const primaryArtist = getPrimaryArtist(artist);
   const cleanTitle = cleanLyricsTitle(title);
-  
+
   if (!primaryArtist) return cleanTitle;
   return `${cleanTitle} - ${primaryArtist}`.trim();
 }

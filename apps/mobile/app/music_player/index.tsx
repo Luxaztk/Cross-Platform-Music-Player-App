@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,13 +30,21 @@ const MusicPlayer: React.FC = () => {
     image: 'https://via.placeholder.com/300',
   };
 
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (isPlaying && currentTime < track.duration) {
+      interval = setInterval(() => {
+        setCurrentTime((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlaying, currentTime, track.duration]);
+
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
-  };
-
-  const handleSliderChange = (value: number) => {
-    setCurrentTime(value);
   };
 
   const progress = (currentTime / track.duration) * 100;
@@ -113,7 +121,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121212',
     paddingHorizontal: 20,
-    padding: 1500
   },
   header: {
     flexDirection: 'row',

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Stack } from 'expo-router';
 import { PlayerProvider, LibraryProvider, useLibraryContext } from '@music/hooks';
 import { MobileStorageAdapter } from '../infrastructure/services/MobileStorageAdapter';

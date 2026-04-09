@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { LibraryService } from '../LibraryService';
 import type { IStorageAdapter } from '../../interfaces/IStorageAdapter';
 import type { Song, Playlist, PlayerState, RecentSearch } from '@music/types';
@@ -12,18 +12,26 @@ class MockStorageAdapter implements IStorageAdapter {
   async getSongs() { return { ...this.songs }; }
   async getLibrary() { return { ...this.library }; }
   async getPlaylists() { return { '0': this.library, ...this.playlists }; }
-  
+
   async saveSongs(songs: Record<string, Song>) { this.songs = { ...songs }; }
   async saveLibrary(library: Playlist) { this.library = { ...library }; }
-  async savePlaylists(playlists: Record<string, Playlist>) { 
-    this.playlists = { ...playlists }; 
+  async savePlaylists(playlists: Record<string, Playlist>) {
+    this.playlists = { ...playlists };
     delete this.playlists['0'];
   }
 
   async getPlayerState(): Promise<PlayerState | null> { return null; }
-  async savePlayerState() {}
+  async savePlayerState() { }
   async getRecentSearches(): Promise<RecentSearch[]> { return []; }
-  async saveRecentSearches() {}
+  async saveRecentSearches() { }
+
+  async getLyricUsage(): Promise<Record<string, number>> {
+    return {}; // Trả về object rỗng vì test này không dùng đến lyrics
+  }
+
+  async saveLyricUsage(_usage: Record<string, number>): Promise<void> {
+    // Không làm gì cả
+  }
 }
 
 describe('LibraryService', () => {
@@ -53,7 +61,7 @@ describe('LibraryService', () => {
 
     it('should add a new song if no duplicates exist', async () => {
       const result = await service.processAndAddSongs([mockSong]);
-      
+
       expect(result.addedCount).toBe(1);
       expect(result.duplicatePaths).toHaveLength(0);
       expect(adapter.songs['1']).toEqual(mockSong);
@@ -62,7 +70,7 @@ describe('LibraryService', () => {
 
     it('should detect duplicate by File Path (Priority: PATH)', async () => {
       await service.processAndAddSongs([mockSong]);
-      
+
       const duplicateSong = { ...mockSong, id: '2' };
       const result = await service.processAndAddSongs([duplicateSong]);
 
@@ -73,12 +81,12 @@ describe('LibraryService', () => {
     it('should detect duplicate by Source URL (Priority: URL)', async () => {
       const songWithUrl: Song = { ...mockSong, sourceUrl: 'https://youtube.com/watch?v=123' };
       await service.processAndAddSongs([songWithUrl]);
-      
-      const duplicateSong: Song = { 
-        ...mockSong, 
-        id: '2', 
-        filePath: 'C:/other/path.mp3', 
-        sourceUrl: 'https://youtube.com/watch?v=123' 
+
+      const duplicateSong: Song = {
+        ...mockSong,
+        id: '2',
+        filePath: 'C:/other/path.mp3',
+        sourceUrl: 'https://youtube.com/watch?v=123'
       };
       const result = await service.processAndAddSongs([duplicateSong]);
 
@@ -91,18 +99,18 @@ describe('LibraryService', () => {
       const baseHash = 'p2:' + 'a'.repeat(64);
       const songWithHash: Song = { ...mockSong, hash: baseHash, duration: 200 };
       await service.processAndAddSongs([songWithHash]);
-      
+
       // Case 1: Strict Match (>= 95% similarity, duration ignored)
       // 95% of 64 is 60.8. Let's change 3 chars (95.3%)
       const strictMatchHash = 'p2:' + 'a'.repeat(61) + 'bbb';
-      const duplicate1: Song = { 
-        ...mockSong, 
-        id: 'dup1', 
-        filePath: 'C:/music/dup1.mp3', 
+      const duplicate1: Song = {
+        ...mockSong,
+        id: 'dup1',
+        filePath: 'C:/music/dup1.mp3',
         hash: strictMatchHash,
         duration: 250 // Different duration but should still match
       };
-      
+
       const res1 = await service.processAndAddSongs([duplicate1]);
       expect(res1.addedCount).toBe(0);
       expect(res1.duplicateSongs[0].duplicateReason).toBe('HASH');
@@ -110,10 +118,10 @@ describe('LibraryService', () => {
       // Case 2: Smart Match (>= 75% similarity + duration < 0.5s)
       // 75% of 64 is 48 chars. Let's change 10 chars (84.3%)
       const smartMatchHash = 'p2:' + 'a'.repeat(50) + 'b'.repeat(14);
-      const duplicate2: Song = { 
-        ...mockSong, 
-        id: 'dup2', 
-        filePath: 'C:/music/dup2.mp3', 
+      const duplicate2: Song = {
+        ...mockSong,
+        id: 'dup2',
+        filePath: 'C:/music/dup2.mp3',
         hash: smartMatchHash,
         duration: 200.4 // Diff < 0.5s
       };
@@ -122,11 +130,11 @@ describe('LibraryService', () => {
       expect(res2.addedCount).toBe(0);
 
       // Case 3: Borderline Fail (75% similarity but duration >= 0.5s)
-      const borderlineFail: Song = { 
-        ...mockSong, 
-        id: 'not-dup', 
+      const borderlineFail: Song = {
+        ...mockSong,
+        id: 'not-dup',
         title: 'Not a Dup (Hash)', // Change metadata to avoid METADATA match
-        filePath: 'C:/music/new.mp3', 
+        filePath: 'C:/music/new.mp3',
         hash: smartMatchHash,
         duration: 201.0 // Diff = 1.0s
       };
@@ -146,28 +154,28 @@ describe('LibraryService', () => {
     });
 
     it('should NOT detect as duplicate if hash is present but has different prefix or invalid format', async () => {
-       await service.processAndAddSongs([mockSong]);
-       const diffSong = { 
-         ...mockSong, 
-         id: 'new', 
-         title: 'Not a Dup (Format)', // Change metadata
-         filePath: 'C:/new.mp3', 
-         hash: 'random-hash' 
-       };
-       const res = await service.processAndAddSongs([diffSong]);
-       expect(res.addedCount).toBe(1);
+      await service.processAndAddSongs([mockSong]);
+      const diffSong = {
+        ...mockSong,
+        id: 'new',
+        title: 'Not a Dup (Format)', // Change metadata
+        filePath: 'C:/new.mp3',
+        hash: 'random-hash'
+      };
+      const res = await service.processAndAddSongs([diffSong]);
+      expect(res.addedCount).toBe(1);
     });
 
     it('should detect duplicate by Title + Artist (Priority: METADATA)', async () => {
       await service.processAndAddSongs([mockSong]);
-      
-      const duplicateSong: Song = { 
-        ...mockSong, 
-        id: '2', 
-        filePath: 'C:/other/path.mp3', 
-        hash: 'p2:completely-different-hash-at-the-end-of-the-string-to-be-sure' 
+
+      const duplicateSong: Song = {
+        ...mockSong,
+        id: '2',
+        filePath: 'C:/other/path.mp3',
+        hash: 'p2:completely-different-hash-at-the-end-of-the-string-to-be-sure'
       };
-      
+
       const result = await service.processAndAddSongs([duplicateSong]);
 
       expect(result.addedCount).toBe(0);
@@ -178,7 +186,7 @@ describe('LibraryService', () => {
   describe('Playlist Management', () => {
     it('should create a new playlist', async () => {
       const playlist = await service.createPlaylist('Favorites');
-      
+
       expect(playlist.name).toBe('Favorites');
       expect(adapter.playlists[playlist.id]).toBeDefined();
     });
@@ -191,7 +199,7 @@ describe('LibraryService', () => {
     it('should delete a custom playlist', async () => {
       const playlist = await service.createPlaylist('To Delete');
       const result = await service.deletePlaylist(playlist.id);
-      
+
       expect(result).toBe(true);
       expect(adapter.playlists[playlist.id]).toBeUndefined();
     });
@@ -199,7 +207,7 @@ describe('LibraryService', () => {
     it('should add/remove songs to/from playlist', async () => {
       const playlist = await service.createPlaylist('Playlist 1');
       const songId = 'song-123';
-      
+
       // Add
       await service.addSongsToPlaylist(playlist.id, [songId]);
       let updated = await service.getPlaylistById(playlist.id);
@@ -216,7 +224,7 @@ describe('LibraryService', () => {
     it('should delete a song and remove it from all playlists', async () => {
       const song: Song = { id: 's1', title: 'T', artist: 'A', filePath: 'P', duration: 1, hash: 'H', album: '', genre: '', fileSize: 0, artists: ['A'], year: null, coverArt: null };
       await service.processAndAddSongs([song]);
-      
+
       const playlist = await service.createPlaylist('P1');
       await service.addSongsToPlaylist(playlist.id, ['s1']);
 
@@ -224,7 +232,7 @@ describe('LibraryService', () => {
 
       expect(adapter.songs['s1']).toBeUndefined();
       expect(adapter.library.songIds).not.toContain('s1');
-      
+
       const updatedPlaylist = await service.getPlaylistById(playlist.id);
       expect(updatedPlaylist?.songIds).not.toContain('s1');
     });

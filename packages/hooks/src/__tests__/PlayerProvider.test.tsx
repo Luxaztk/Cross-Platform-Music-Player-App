@@ -1,12 +1,12 @@
 import React from 'react';
-import { render, act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { PlayerProvider, usePlayer } from '../PlayerProvider';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Song, PlayerState } from '@music/types';
 import type { IStorageAdapter } from '@music/core';
 import { AudioEngine } from '@music/player';
 
-let lastEngineOptions: any;
+let lastEngineOptions: ConstructorParameters<typeof AudioEngine>[0];
 
 // Mock AudioEngine
 vi.mock('@music/player', () => {
@@ -68,7 +68,7 @@ describe('PlayerProvider', () => {
       repeatMode: 'ALL',
       isShuffle: false,
     };
-    (mockStorage.getPlayerState as any).mockResolvedValue(savedState);
+    vi.mocked(mockStorage.getPlayerState).mockResolvedValue(savedState);
 
     const { result } = renderHook(() => usePlayer(), { wrapper });
 
@@ -189,7 +189,7 @@ describe('PlayerProvider', () => {
 
     await act(async () => {
       // Simulate end of song
-      if (lastEngineOptions.onEnd) lastEngineOptions.onEnd();
+      if (lastEngineOptions!.onEnd) lastEngineOptions!.onEnd();
     });
 
     expect(result.current.currentSong?.id).toBe('2');
@@ -205,7 +205,7 @@ describe('PlayerProvider', () => {
     });
 
     await act(async () => {
-      if (lastEngineOptions.onEnd) lastEngineOptions.onEnd();
+      if (lastEngineOptions!.onEnd) lastEngineOptions!.onEnd();
     });
 
     // Should stay on song 1
@@ -225,7 +225,7 @@ describe('PlayerProvider', () => {
       repeatMode: 'OFF',
       isShuffle: false,
     };
-    (mockStorage.getPlayerState as any).mockResolvedValue(savedState);
+    vi.mocked(mockStorage.getPlayerState).mockResolvedValue(savedState);
 
     const { result } = renderHook(() => usePlayer(), { wrapper });
     
@@ -240,7 +240,7 @@ describe('PlayerProvider', () => {
     vi.useFakeTimers();
     
     await act(async () => {
-      if (lastEngineOptions.onLoadError) lastEngineOptions.onLoadError('File not found');
+      if (lastEngineOptions!.onLoadError) lastEngineOptions!.onLoadError('File not found');
     });
 
     expect(result.current.currentSong?.id).toBe('1');
@@ -260,7 +260,7 @@ describe('PlayerProvider', () => {
     await waitFor(() => expect(result.current).not.toBeNull());
 
     await act(async () => {
-      if (lastEngineOptions.onProgress) lastEngineOptions.onProgress(10, 100);
+      if (lastEngineOptions!.onProgress) lastEngineOptions!.onProgress(10, 100);
     });
 
     expect(result.current.progress).toBe(10);
@@ -277,14 +277,14 @@ describe('PlayerProvider', () => {
       repeatMode: 'OFF',
       isShuffle: false,
     };
-    (mockStorage.getPlayerState as any).mockResolvedValue(savedState);
+    vi.mocked(mockStorage.getPlayerState).mockResolvedValue(savedState);
 
     const { result } = renderHook(() => usePlayer(), { wrapper });
     await waitFor(() => expect(result.current.currentSong?.id).toBe('1'), { timeout: 2000 });
 
     vi.useFakeTimers();
     await act(async () => {
-      if (lastEngineOptions.onPlayError) lastEngineOptions.onPlayError('Autoplay blocked');
+      if (lastEngineOptions!.onPlayError) lastEngineOptions!.onPlayError('Autoplay blocked');
     });
 
     await act(async () => {
@@ -305,7 +305,7 @@ describe('PlayerProvider', () => {
       repeatMode: 'ALL',
       isShuffle: false,
     };
-    (mockStorage.getPlayerState as any).mockResolvedValue(savedState);
+    vi.mocked(mockStorage.getPlayerState).mockResolvedValue(savedState);
 
     const { result } = renderHook(() => usePlayer(), { wrapper });
     await waitFor(() => expect(result.current.currentSong?.id).toBe('2'), { timeout: 2000 });
@@ -313,7 +313,7 @@ describe('PlayerProvider', () => {
     expect(result.current.currentSong?.id).toBe('2');
 
     await act(async () => {
-      if (lastEngineOptions.onEnd) lastEngineOptions.onEnd();
+      if (lastEngineOptions!.onEnd) lastEngineOptions!.onEnd();
     });
 
     // Should restart from song 1
@@ -330,7 +330,7 @@ describe('PlayerProvider', () => {
       repeatMode: 'OFF',
       isShuffle: false,
     };
-    (mockStorage.getPlayerState as any).mockResolvedValue(savedState);
+    vi.mocked(mockStorage.getPlayerState).mockResolvedValue(savedState);
 
     const { result } = renderHook(() => usePlayer(), { wrapper });
     await waitFor(() => expect(result.current.currentSong?.id).toBe('1'), { timeout: 2000 });
@@ -345,7 +345,7 @@ describe('PlayerProvider', () => {
 
     // Case 1: Seek to 0 if > 3s
     await act(async () => {
-      if (lastEngineOptions.onProgress) lastEngineOptions.onProgress(5, 100);
+      if (lastEngineOptions!.onProgress) lastEngineOptions!.onProgress(5, 100);
     });
 
     await act(async () => {
@@ -357,7 +357,7 @@ describe('PlayerProvider', () => {
 
     // Case 2: Go to history if < 3s
     await act(async () => {
-      if (lastEngineOptions.onProgress) lastEngineOptions.onProgress(1, 100);
+      if (lastEngineOptions!.onProgress) lastEngineOptions!.onProgress(1, 100);
     });
 
     await act(async () => {
@@ -409,7 +409,7 @@ describe('PlayerProvider', () => {
       repeatMode: 'OFF',
       isShuffle: false,
     };
-    (mockStorage.getPlayerState as any).mockResolvedValue(savedState);
+    vi.mocked(mockStorage.getPlayerState).mockResolvedValue(savedState);
 
     const onFileError = vi.fn();
     const { result } = renderHook(() => usePlayer(), { 
@@ -418,12 +418,12 @@ describe('PlayerProvider', () => {
     await waitFor(() => expect(result.current.currentSong?.id).toBe('1'), { timeout: 2000 });
 
     await act(async () => {
-      if (lastEngineOptions.onLoadError) lastEngineOptions.onLoadError('Error');
+      if (lastEngineOptions!.onLoadError) lastEngineOptions!.onLoadError('Error');
     });
     expect(onFileError).toHaveBeenCalledWith(mockSongs[0]);
 
     await act(async () => {
-      if (lastEngineOptions.onPlayError) lastEngineOptions.onPlayError('Error');
+      if (lastEngineOptions!.onPlayError) lastEngineOptions!.onPlayError('Error');
     });
     expect(onFileError).toHaveBeenCalledTimes(2);
   });
@@ -433,7 +433,7 @@ describe('PlayerProvider', () => {
     await waitFor(() => expect(result.current).not.toBeNull());
 
     await act(async () => {
-      if (lastEngineOptions.onLoad) lastEngineOptions.onLoad(150);
+      if (lastEngineOptions!.onLoad) lastEngineOptions!.onLoad(150);
     });
 
     expect(result.current.duration).toBe(150);
@@ -449,7 +449,7 @@ describe('PlayerProvider', () => {
       repeatMode: 'OFF',
       isShuffle: false,
     };
-    (mockStorage.getPlayerState as any).mockResolvedValue(savedState);
+    vi.mocked(mockStorage.getPlayerState).mockResolvedValue(savedState);
 
     const { result } = renderHook(() => usePlayer(), { wrapper });
     await waitFor(() => expect(result.current.currentSong?.id).toBe('1'), { timeout: 2000 });
@@ -483,7 +483,7 @@ describe('PlayerProvider', () => {
 
   it('should handle hydration errors gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (mockStorage.getPlayerState as any).mockRejectedValue(new Error('DB Error'));
+    vi.mocked(mockStorage.getPlayerState).mockRejectedValue(new Error('DB Error'));
     
     const { result } = renderHook(() => usePlayer(), { wrapper });
     await waitFor(() => expect(result.current).not.toBeNull());

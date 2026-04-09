@@ -49,9 +49,10 @@ export const useAudioDevices = () => {
   }, [fetchDevices]);
 
   useEffect(() => {
-    const handleExternalChange = (e: any) => {
-      if (e.detail) {
-        setCurrentDeviceId(e.detail);
+    const handleExternalChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail) {
+        setCurrentDeviceId(customEvent.detail);
       }
     };
     window.addEventListener('audiodevicechange', handleExternalChange);

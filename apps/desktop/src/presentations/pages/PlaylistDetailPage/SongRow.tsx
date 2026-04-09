@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { CheckSquare, Play, MoreVertical, PlaySquare, ListPlus, FolderPlus, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import type { Song, Playlist } from '@music/types';
 import { ICON_SIZES } from '../../constants/IconSizes';
@@ -53,6 +53,19 @@ export const SongRow: React.FC<SongRowProps> = React.memo(({
   onToggleSubMenu,
   menuRef,
 }) => {
+
+  // 1. Tách logic xử lý Artists để tránh tính toán lại trong render
+  const artistsList = useMemo(() => {
+    const rawArtists = song.artists && song.artists.length > 0 ? song.artists : [song.artist];
+    return rawArtists.flatMap(a => splitArtists(a));
+  }, [song.artists, song.artist]);
+
+  // 2. Handler click tiêu đề (Ngăn chặn nổi bọt sự kiện một cách sạch sẽ)
+  const handleTitleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onPlay();
+  }, [onPlay]);
+
   return (
     <div
       className={`song-row ${isSelected ? 'selected' : ''} ${isActiveMenu ? 'menu-open' : ''} ${isPlaying ? 'playing' : ''}`}
@@ -69,29 +82,30 @@ export const SongRow: React.FC<SongRowProps> = React.memo(({
           )}
         </div>
       </div>
+
       <div className="col-title">
         <div className="song-cell">
-          {song.coverArt ? (
-            <img src={song.coverArt} className="song-mini-img" alt={song.title} />
-          ) : (
-            <div className="song-mini-placeholder">
-              <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
-            </div>
-          )}
+          <div className="song-img-container">
+            {song.coverArt ? (
+              <img src={song.coverArt} className="song-mini-img" alt={song.title} loading="lazy" />
+            ) : (
+              <div className="song-mini-placeholder">
+                <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
+              </div>
+            )}
+          </div>
+
           <div className="song-details">
             <span
               className="title-text"
               style={{ color: isPlaying ? 'var(--color-primary)' : undefined }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onPlay();
-              }}
+              onClick={handleTitleClick}
             >
               {song.title}
             </span>
             <div className="artist-text">
-              {(song.artists || [song.artist]).flatMap(a => splitArtists(a)).map((artist, i, arr) => (
-                <React.Fragment key={artist + i}>
+              {artistsList.map((artist, i) => (
+                <React.Fragment key={`${artist}-${i}`}>
                   <span
                     className="clickable-artist"
                     onClick={(e) => {
@@ -101,15 +115,17 @@ export const SongRow: React.FC<SongRowProps> = React.memo(({
                   >
                     {artist}
                   </span>
-                  {i < arr.length - 1 && <span className="artist-separator"> ft.&nbsp;</span>}
+                  {i < artistsList.length - 1 && <span className="artist-separator"> ft.&nbsp;</span>}
                 </React.Fragment>
               ))}
             </div>
           </div>
         </div>
       </div>
+
       <div className="col-album">{song.album || '-'}</div>
       <div className="col-duration">{formatTime(song.duration || 0)}</div>
+
       <div className="col-more">
         <button
           className={`row-more-btn ${isActiveMenu ? 'active' : ''}`}
@@ -117,42 +133,27 @@ export const SongRow: React.FC<SongRowProps> = React.memo(({
         >
           <MoreVertical size={ICON_SIZES.SMALL} />
         </button>
+
         {isActiveMenu && (
           <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`}
             ref={menuRef}
             onClick={(e) => e.stopPropagation()}>
-            <button className="menu-item" onClick={() => {
-              onPlay();
-            }}>
-              <Play size={16} />
-              {t('playlist.playNow') || 'Phát ngay'}
-            </button>
-            <button className="menu-item" onClick={() => {
-              onPlayNext();
-            }}>
-              <PlaySquare size={16} />
-              {t('playlist.playNext') || 'Phát tiếp theo'}
-            </button>
-            <button className="menu-item" onClick={() => {
-              onAddToQueue();
-            }}>
-              <ListPlus size={16} />
-              {t('playlist.addToQueue') || 'Thêm vào hàng đợi'}
-            </button>
+
+            {/* Menu Items - Có thể tách thành một Sub-component nếu menu phức tạp hơn */}
+            <MenuAction icon={<Play size={16} />} label={t('playlist.playNow', 'Phát ngay')} onClick={onPlay} />
+            <MenuAction icon={<PlaySquare size={16} />} label={t('playlist.playNext', 'Phát tiếp theo')} onClick={onPlayNext} />
+            <MenuAction icon={<ListPlus size={16} />} label={t('playlist.addToQueue', 'Thêm vào hàng đợi')} onClick={onAddToQueue} />
 
             <div className="menu-divider"></div>
 
+            {/* Nested Playlist Menu */}
             <div
               className={`menu-item nested-trigger ${activeSubMenuId === song.id ? 'active' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSubMenu(song.id);
-              }}
               onMouseEnter={() => onToggleSubMenu(song.id)}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="item-content">
                 <FolderPlus size={16} />
-                {t('playlist.addToPlaylist') || 'Thêm vào danh sách phát'}
+                <span>{t('playlist.addToPlaylist', 'Thêm vào danh sách phát')}</span>
               </div>
               <ChevronRight size={14} />
 
@@ -183,25 +184,15 @@ export const SongRow: React.FC<SongRowProps> = React.memo(({
             </div>
 
             <div className="menu-divider"></div>
-            <button className="menu-item" onClick={() => {
-              onEdit();
-            }}>
-              <Edit2 size={16} />
-              {t('common.edit')}
-            </button>
-            <button className="menu-item delete" onClick={() => {
-              onDelete();
-            }}>
-              <Trash2 size={16} />
-              {t('common.delete')}
-            </button>
+            <MenuAction icon={<Edit2 size={16} />} label={t('common.edit', 'Sửa')} onClick={onEdit} />
+            <MenuAction icon={<Trash2 size={16} />} label={t('common.delete', 'Xóa')} onClick={onDelete} className="delete" />
           </div>
         )}
       </div>
     </div>
   );
 }, (prev, next) => {
-  // Only re-render if essential props changed
+  // 3. FIX so sánh Playlists: So sánh độ dài hoặc ID cuối thay vì tham chiếu mảng
   return (
     prev.song.id === next.song.id &&
     prev.song.lyricId === next.song.lyricId &&
@@ -210,7 +201,15 @@ export const SongRow: React.FC<SongRowProps> = React.memo(({
     prev.isActiveMenu === next.isActiveMenu &&
     prev.activeSubMenuId === next.activeSubMenuId &&
     prev.menuPlacement === next.menuPlacement &&
-    prev.playlists === next.playlists &&
-    prev.index === next.index
+    prev.index === next.index &&
+    prev.playlists.length === next.playlists.length // So sánh nông (Shallow) một cách thông minh
   );
 });
+
+// Helper component để code sạch hơn
+const MenuAction = ({ icon, label, onClick, className = '' }: any) => (
+  <button className={`menu-item ${className}`} onClick={onClick}>
+    {icon}
+    <span>{label}</span>
+  </button>
+);

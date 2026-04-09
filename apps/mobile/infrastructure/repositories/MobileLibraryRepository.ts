@@ -44,6 +44,18 @@ export class MobileLibraryRepository implements ILibraryRepository {
     return await this.service.deletePlaylist(playlistId);
   }
 
+  async deleteSongs(songIds: string[]): Promise<boolean> {
+    return await this.service.deleteSongs(songIds);
+  }
+
+  async removeSongsFromPlaylist(playlistId: string, songIds: string[]): Promise<boolean> {
+    return await this.service.removeSongsFromPlaylist(playlistId, songIds);
+  }
+
+  async addSongsToPlaylist(playlistId: string, songIds: string[]): Promise<boolean> {
+    return await this.service.addSongsToPlaylist(playlistId, songIds);
+  }
+
   async importFiles(): Promise<ImportResult> {
     // Note: This would involve react-native-document-picker or similar
     // For now we keep the interface as is
@@ -52,5 +64,27 @@ export class MobileLibraryRepository implements ILibraryRepository {
 
   async importFolder(): Promise<ImportResult> {
     return { success: false, count: 0, reason: 'ERROR', message: 'Not implemented on mobile yet' };
+  }
+
+  async addSongs(songs: Song[]): Promise<{ success: boolean; count: number }> {
+    return await this.service.addSongs(songs);
+  }
+
+  async scanMissingFiles(): Promise<string[]> {
+    // Not applicable on mobile in this simple version
+    return [];
+  }
+
+  async getLyrics(songId: string): Promise<string | null> {
+    const song = (await this.getLibrary()).songs.find(s => s.id === songId);
+    return song?.syncedLyrics || song?.lyrics || null;
+  }
+
+  async saveLyrics(_songId: string, _lyrics: string, _lyricId?: number): Promise<boolean> {
+    return false; // Not implemented on mobile yet
+  }
+
+  async searchLyrics(_query: string): Promise<any[]> {
+    return []; // Not implemented on mobile yet
   }
 }

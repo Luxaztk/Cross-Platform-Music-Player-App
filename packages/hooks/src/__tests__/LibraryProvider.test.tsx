@@ -1,9 +1,9 @@
 import React from 'react';
-import { render, act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { LibraryProvider, useLibraryContext } from '../LibraryProvider';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ILibraryRepository } from '@music/core';
-import type { Song, Playlist } from '@music/types';
+import type { Song, Playlist, DuplicateSongInfo } from '@music/types';
 
 describe('LibraryProvider', () => {
   let mockRepository: ILibraryRepository;
@@ -37,6 +37,7 @@ describe('LibraryProvider', () => {
 
     // Mock electronAPI
     vi.stubGlobal('window', {
+      ...window,
       electronAPI: {
         scanMissingFiles: vi.fn().mockResolvedValue([]),
       }
@@ -79,10 +80,10 @@ describe('LibraryProvider', () => {
   it('should handle importing files', async () => {
     const { result } = renderHook(() => useLibraryContext(), { wrapper });
     
-    (mockRepository.importFiles as any).mockResolvedValue({ 
+    vi.mocked(mockRepository.importFiles).mockResolvedValue({ 
       success: true, 
       count: 2, 
-      duplicateSongs: [{ id: 'dup1', title: 'Duplicate' }] 
+      duplicateSongs: [{ id: 'dup1', title: 'Duplicate' } as DuplicateSongInfo] 
     });
 
     await act(async () => {
@@ -121,7 +122,7 @@ describe('LibraryProvider', () => {
       await result.current.handleScanMissingFiles();
     });
 
-    expect((window as any).electronAPI.scanMissingFiles).toHaveBeenCalled();
+    expect(window.electronAPI.scanMissingFiles).toHaveBeenCalled();
   });
 
   it('should handle deleting a song', async () => {
@@ -196,10 +197,10 @@ describe('LibraryProvider', () => {
   it('should handle importing a folder with content and duplicates', async () => {
     const { result } = renderHook(() => useLibraryContext(), { wrapper });
 
-    (mockRepository.importFolder as any).mockResolvedValue({ 
+    vi.mocked(mockRepository.importFolder).mockResolvedValue({ 
       success: true, 
       count: 5,
-      duplicateSongs: [{ id: 'dup1', title: 'Duplicate' }]
+      duplicateSongs: [{ id: 'dup1', title: 'Duplicate' } as DuplicateSongInfo]
     });
 
     await act(async () => {
@@ -216,7 +217,8 @@ describe('LibraryProvider', () => {
 
     await act(async () => {
       const detail = await result.current.handleGetPlaylistDetail('p1');
-      expect(detail.id).toBe('1');
+      expect(detail).not.toBeNull();
+      expect(detail?.id).toBe('1');
     });
 
     expect(mockRepository.getPlaylistById).toHaveBeenCalledWith('p1');

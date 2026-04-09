@@ -1,12 +1,15 @@
-import type { Song, Playlist, PlaylistDetail } from '@music/types';
+import type { Song, Playlist, PlaylistDetail, DuplicateSongInfo, DuplicateReason } from '@music/types';
 
 import type { IStorageAdapter } from '../interfaces/IStorageAdapter';
 import { Mutex } from '../utils/Mutex';
 
 // We'll use a simple fallback if crypto.randomUUID is not available (e.g. in some mobile environments)
-const generateId = () => {
+const generateId = (): string => {
   try {
-    return (globalThis as any).crypto.randomUUID();
+    if (typeof globalThis !== 'undefined' && globalThis.crypto?.randomUUID) {
+      return globalThis.crypto.randomUUID();
+    }
+    return Math.random().toString(36).substring(2, 15);
   } catch {
     return Math.random().toString(36).substring(2, 15);
   }
@@ -21,15 +24,6 @@ export class LibraryService {
   }
 
   /**
-   * Helper utility to get the base name of a file path without using Node's path module
-   */
-  private getBaseName(filePath: string): string {
-    const normalized = filePath.replace(/\\/g, '/');
-    const parts = normalized.split('/');
-    return parts[parts.length - 1] || '';
-  }
-
-  /**
    * Orchestrates the addition of new songs by reading current state from the adapter,
    * checking for duplicates, and saving the updated state back via the adapter.
    * 
@@ -37,7 +31,7 @@ export class LibraryService {
    * Priority 2: File Content Hash match
    * Priority 3: Title + Artist match
    */
-  public async processAndAddSongs(newSongs: Song[]): Promise<{ addedCount: number; duplicatePaths: string[]; duplicateSongs: (Song & { duplicateReason?: 'URL' | 'HASH' | 'PATH' | 'METADATA' })[] }> {
+  public async processAndAddSongs(newSongs: Song[]): Promise<{ addedCount: number; duplicatePaths: string[]; duplicateSongs: DuplicateSongInfo[] }> {
     return await this.mutex.runExclusive(async () => {
       const currentSongs = await this.storageAdapter.getSongs();
       const currentLibrary = await this.storageAdapter.getLibrary();
@@ -61,7 +55,7 @@ export class LibraryService {
       );
 
       const duplicatePaths: string[] = [];
-      const duplicateSongs: Song[] = [];
+      const duplicateSongs: DuplicateSongInfo[] = [];
       let addedCount = 0;
 
       for (const song of newSongs) {
@@ -105,7 +99,7 @@ export class LibraryService {
         const isDuplicatePath = existingPaths.has(song.filePath);
         const isDuplicateMetadata = existingNameArtistKeys.has(nameArtistKey);
 
-        let duplicateReason: 'URL' | 'HASH' | 'PATH' | 'METADATA' | undefined;
+        let duplicateReason: DuplicateReason | undefined;
         if (isDuplicateUrl) duplicateReason = 'URL';
         else if (isDuplicatePath) duplicateReason = 'PATH';
         else if (isDuplicateHash) duplicateReason = 'HASH';
@@ -115,12 +109,9 @@ export class LibraryService {
           duplicatePaths.push(song.filePath);
           // Return only essential info to avoid IPC overhead (exclude heavy fields like coverArt)
           duplicateSongs.push({
-            id: song.id,
-            title: song.title,
-            artist: song.artist,
-            filePath: song.filePath,
+            ...song,
             duplicateReason
-          } as any);
+          });
           continue;
         }
 
@@ -301,6 +292,33 @@ export class LibraryService {
       }
 
       return anyDeleted;
+    });
+  }
+
+  /**
+   * Adds multiple songs directly to the library.
+   * Useful for manual additions or cases where de-duplication has already been handled.
+   */
+  public async addSongs(songsToAdd: Song[]): Promise<{ success: boolean; count: number }> {
+    return await this.mutex.runExclusive(async () => {
+      const currentSongs = await this.storageAdapter.getSongs();
+      const library = await this.storageAdapter.getLibrary();
+      
+      let addedCount = 0;
+      for (const song of songsToAdd) {
+        currentSongs[song.id] = song;
+        if (!library.songIds.includes(song.id)) {
+          library.songIds.push(song.id);
+          addedCount++;
+        }
+      }
+      
+      if (addedCount > 0) {
+        await this.storageAdapter.saveSongs(currentSongs);
+        await this.storageAdapter.saveLibrary(library);
+      }
+      
+      return { success: true, count: addedCount };
     });
   }
 

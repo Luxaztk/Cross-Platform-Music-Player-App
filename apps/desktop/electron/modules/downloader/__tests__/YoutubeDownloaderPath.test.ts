@@ -1,20 +1,26 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import path from 'node:path';
+import { create as createYoutubeDl } from 'youtube-dl-exec';
 
-// Top-level mock for youtube-dl-exec remains as it captures the path across tests
+type MockableProcess = Omit<NodeJS.Process, 'resourcesPath'> & {
+    resourcesPath?: string;
+};
+
+const mockProcess = process as unknown as MockableProcess;
+
+const mockedCreate = vi.mocked(createYoutubeDl);
+
 vi.mock('youtube-dl-exec', () => ({
-    create: vi.fn().mockImplementation((binaryPath: string) => {
-        return {
-            _binaryPath: binaryPath,
-            exec: vi.fn(),
-        };
-    }),
+    create: vi.fn().mockImplementation((binaryPath: string) => ({
+        _binaryPath: binaryPath,
+        exec: vi.fn(),
+    })),
     default: vi.fn(),
 }));
 
 describe('YoutubeDownloader Path Resolution', () => {
     const originalPlatform = process.platform;
-    const originalResourcesPath = (process as any).resourcesPath;
+    const originalResourcesPath = mockProcess.resourcesPath;
 
     beforeEach(() => {
         vi.resetModules();
@@ -22,20 +28,19 @@ describe('YoutubeDownloader Path Resolution', () => {
     });
 
     afterEach(() => {
-        // Restore process properties
-        Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
-        if (originalResourcesPath) {
-            (process as any).resourcesPath = originalResourcesPath;
-        } else {
-            delete (process as any).resourcesPath;
-        }
+        // Khôi phục môi trường bằng cách dùng Object.defineProperty (cách an toàn nhất cho platform)
+        Object.defineProperty(process, 'platform', {
+            value: originalPlatform,
+            configurable: true
+        });
+        mockProcess.resourcesPath = originalResourcesPath;
     });
 
     /**
-     * Helper to set up the mock environment and return the capture-able create function
+     * Helper: Thiết lập môi trường Mock
      */
-    const setupMockEnvironment = (isPackaged: boolean, platform: string, resourcesPath?: string) => {
-        // 1. Dynamically mock electron for this specific test case
+    const setupMockEnvironment = (isPackaged: boolean, platform: NodeJS.Platform, resourcesPath?: string) => {
+        // Mock electron động cho từng case
         vi.doMock('electron', () => ({
             app: {
                 isPackaged: isPackaged,
@@ -43,37 +48,41 @@ describe('YoutubeDownloader Path Resolution', () => {
             }
         }));
 
-        // 2. Mock process.platform
+        // Mock platform an toàn
         Object.defineProperty(process, 'platform', {
             value: platform,
             configurable: true
         });
 
-        // 3. Mock resourcesPath
+        // Mock resourcesPath thông qua interface đã mở rộng
         if (resourcesPath) {
-            (process as any).resourcesPath = resourcesPath;
+            mockProcess.resourcesPath = resourcesPath;
+        } else {
+            delete mockProcess.resourcesPath;
         }
     };
 
     it('should resolve to local node_modules in development (Windows)', async () => {
         setupMockEnvironment(false, 'win32');
 
-        // Import module AFTER the mock is set
+        // Load lại module để nó đọc giá trị mock mới từ vi.doMock
         await import('../YoutubeDownloader');
-        const { create } = await import('youtube-dl-exec');
 
-        const expectedPath = path.join(process.cwd(), 'node_modules/youtube-dl-exec/bin', 'yt-dlp.exe');
-        expect(create).toHaveBeenCalledWith(expectedPath);
+        const binName = 'yt-dlp.exe';
+        const expectedPath = path.join(process.cwd(), 'node_modules/youtube-dl-exec/bin', binName);
+
+        expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
     });
 
     it('should resolve to local node_modules in development (POSIX)', async () => {
         setupMockEnvironment(false, 'linux');
 
         await import('../YoutubeDownloader');
-        const { create } = await import('youtube-dl-exec');
 
-        const expectedPath = path.join(process.cwd(), 'node_modules/youtube-dl-exec/bin', 'yt-dlp');
-        expect(create).toHaveBeenCalledWith(expectedPath);
+        const binName = 'yt-dlp';
+        const expectedPath = path.join(process.cwd(), 'node_modules/youtube-dl-exec/bin', binName);
+
+        expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
     });
 
     it('should resolve to app.asar.unpacked in production (Windows)', async () => {
@@ -81,10 +90,11 @@ describe('YoutubeDownloader Path Resolution', () => {
         setupMockEnvironment(true, 'win32', mockResources);
 
         await import('../YoutubeDownloader');
-        const { create } = await import('youtube-dl-exec');
 
-        const expectedPath = path.join(mockResources, 'app.asar.unpacked/node_modules/youtube-dl-exec/bin', 'yt-dlp.exe');
-        expect(create).toHaveBeenCalledWith(expectedPath);
+        const binName = 'yt-dlp.exe';
+        const expectedPath = path.join(mockResources, 'app.asar.unpacked/node_modules/youtube-dl-exec/bin', binName);
+
+        expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
     });
 
     it('should resolve to app.asar.unpacked in production (POSIX)', async () => {
@@ -92,9 +102,10 @@ describe('YoutubeDownloader Path Resolution', () => {
         setupMockEnvironment(true, 'linux', mockResources);
 
         await import('../YoutubeDownloader');
-        const { create } = await import('youtube-dl-exec');
 
-        const expectedPath = path.join(mockResources, 'app.asar.unpacked/node_modules/youtube-dl-exec/bin', 'yt-dlp');
-        expect(create).toHaveBeenCalledWith(expectedPath);
+        const binName = 'yt-dlp';
+        const expectedPath = path.join(mockResources, 'app.asar.unpacked/node_modules/youtube-dl-exec/bin', binName);
+
+        expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
     });
 });

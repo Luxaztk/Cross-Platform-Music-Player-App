@@ -11,13 +11,34 @@ export interface AudioEngineEvents {
   onPlayError?: (error: unknown) => void;
 }
 
+interface SoundInternal {
+  _node?: {
+    setSinkId?: (deviceId: string) => Promise<void>;
+  };
+}
+
+interface HowlInternal extends Howl {
+  _sounds?: SoundInternal[];
+}
+
+export interface AudioEvents {
+  onPlay?: () => void;
+  onPause?: () => void;
+  onStop?: () => void;
+  onProgress?: (progress: number, duration: number) => void;
+  onLoad?: (duration: number) => void;
+  onEnd?: () => void;
+  onLoadError?: (error: unknown) => void;
+  onPlayError?: (error: unknown) => void;
+}
+
 export class AudioEngine {
   private howl: Howl | null = null;
   private animationFrameId: number | null = null;
   private events: AudioEngineEvents = {};
   private currentSinkId: string = 'default';
   private pendingSeek: number | null = null;
-  
+
   constructor(events?: AudioEngineEvents) {
     if (events) {
       this.events = events;
@@ -32,7 +53,7 @@ export class AudioEngine {
     this.currentSinkId = deviceId;
     if (!this.howl) return;
 
-    const sounds = (this.howl as any)._sounds;
+    const sounds = (this.howl as HowlInternal)._sounds;
     if (sounds) {
       for (const sound of sounds) {
         if (sound._node && typeof sound._node.setSinkId === 'function') {
@@ -80,7 +101,7 @@ export class AudioEngine {
       onload: () => {
         const duration = this.howl?.duration() || 0;
         if (this.events.onLoad) this.events.onLoad(duration);
-        
+
         // Apply pending seek if any
         if (this.pendingSeek !== null) {
           const seekTo = this.pendingSeek;
@@ -110,7 +131,7 @@ export class AudioEngine {
     });
 
     if (autoplay) {
-       this.howl.play();
+      this.howl.play();
     }
   }
 
@@ -188,7 +209,7 @@ export class AudioEngine {
           this.events.onProgress(progress, duration);
         }
       }
-      
+
       // Keep the loop running if we have a sound and it's not explicitly stopped.
       // The onpause/onstop/onend handlers will call stopTrackingProgress to kill this.
       if (this.howl) {

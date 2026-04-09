@@ -5,10 +5,11 @@ import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { DownloaderModal } from '../DownloaderModal/DownloaderModal';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal/DeleteConfirmationModal';
-import { useSearch, useLibrary, useRecentSearches, useNotification } from '../../../application/hooks';
+import { useSearch, useLibrary, useRecentSearches, useNotification, type SearchResults } from '../../../application/hooks';
 import { usePlayer, useAudioDevices } from '@music/hooks';
-import type { Song } from '@music/types';
-import { SearchOverlay } from './SearchOverlay';
+import type { Song, RecentSearch } from '@music/types';
+
+import { SearchOverlay, type SearchResultItem } from './SearchOverlay';
 import logo from '@music/brand/logos/icon_only_gradient.png';
 import { useTheme, type ThemeType } from '../Theme';
 import './Header.scss';
@@ -36,10 +37,10 @@ const Header: React.FC = () => {
   const profileRef = React.useRef<HTMLDivElement>(null);
   const searchRef = React.useRef<HTMLDivElement>(null);
 
-  const flatResults = [
-    ...searchResults.songs.map((s: Song) => ({ type: 'song', item: s })),
-    ...searchResults.artists.map((a: any) => ({ type: 'artist', item: a })),
-    ...searchResults.albums.map((al: any) => ({ type: 'album', item: al })),
+  const flatResults: SearchResultItem[] = [
+    ...searchResults.songs.map((s: Song) => ({ type: 'song' as const, item: s })),
+    ...searchResults.artists.map((a: SearchResults['artists'][number]) => ({ type: 'artist' as const, item: a })),
+    ...searchResults.albums.map((al: SearchResults['albums'][number]) => ({ type: 'album' as const, item: al })),
   ];
 
   React.useEffect(() => {
@@ -85,7 +86,7 @@ const Header: React.FC = () => {
     };
   }, [showProfileMenu, isSearchFocused, selectedIndex, flatResults, searchQuery]);
 
-  const handleSelectResult = (result: any) => {
+  const handleSelectResult = (result: SearchResultItem) => {
     if (result.type === 'song') {
       const songIdx = songs.findIndex((s: Song) => s.id === result.item.id);
 
@@ -113,21 +114,35 @@ const Header: React.FC = () => {
     }
   };
 
-  const handleSelectRecent = (recent: any) => {
+  const handleSelectRecent = (recent: RecentSearch) => {
     if (recent.type === 'query') {
       setSearchQuery(recent.text);
     } else if (recent.type === 'entity') {
-      handleSelectResult({ type: recent.entityType, item: { id: recent.id, name: recent.name } });
+      if (recent.entityType === 'artist') {
+        handleSelectResult({ 
+          type: 'artist', 
+          item: { id: recent.id!, name: recent.name! }
+        });
+      } else if (recent.entityType === 'album') {
+        // Find the album in results or just pass a reconstructed object
+        // Since handleSelectResult only uses id and name for navigation, this is safe
+        handleSelectResult({ 
+          type: 'album', 
+          item: { id: recent.id!, name: recent.name!, artist: '' } // artist is required by type
+        });
+      }
     }
   };
 
   const handleTestSound = () => {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     const ctx = new AudioContextClass();
-    if (typeof (ctx as any).setSinkId === 'function') {
+    
+    // Check if setSinkId is supported (Experimental)
+    if ('setSinkId' in ctx && typeof (ctx as any).setSinkId === 'function') {
       (ctx as any).setSinkId(currentDeviceId).then(() => {
         playBeep(ctx);
-      }).catch((e: any) => {
+      }).catch((e: Error) => {
         console.error('Failed to set sinkId on audio context', e);
         playBeep(ctx);
       });
@@ -315,7 +330,7 @@ const Header: React.FC = () => {
                             height: '10px', 
                             borderRadius: '50%', 
                             backgroundColor: themeItem.color,
-                            border: (themeItem as any).border || 'none',
+                            border: (themeItem as { border?: string }).border || 'none',
                             boxShadow: themeItem.id === 'snow' ? 'none' : `0 0 8px ${themeItem.color}44`
                           }} />
                           <span>{themeItem.name}</span>

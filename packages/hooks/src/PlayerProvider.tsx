@@ -177,7 +177,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
       onLoad: (d) => {
         setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
       },
-      onLoadError: (_err) => {
+      onLoadError: () => {
         // File not found on disk — notify the consumer and auto-skip
         const failedSong = currentSongRef.current;
         if (failedSong && onFileErrorRef.current) {
@@ -186,7 +186,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
         // Give the UI a tiny moment to show the toast, then skip
         setTimeout(() => handleNext(), 800);
       },
-      onPlayError: (_err) => {
+      onPlayError: () => {
         // Play errors (e.g. autoplay blocked) — same auto-skip logic
         const failedSong = currentSongRef.current;
         if (failedSong && onFileErrorRef.current) {

@@ -1,9 +1,17 @@
-import type { Song, Playlist, PlaylistDetail, ImportResult, PlayerState, RecentSearch, LyricSearchResult } from '@music/types';
+import type {
+  Song,
+  Playlist,
+  ImportResult,
+  PlayerState,
+  RecentSearch,
+  LyricSearchResult,
+  YoutubeInfo // Đảm bảo đã export từ Downloader hoặc types
+} from '@music/types';
 
 declare global {
   interface Window {
     electronAPI: {
-      // Library operations
+      // --- Library Operations ---
       getLibrary: () => Promise<{ songs: Song[], library: Playlist }>;
       getPlaylists: () => Promise<Playlist[]>;
       createPlaylist: (name: string) => Promise<Playlist>;
@@ -17,15 +25,19 @@ declare global {
       importFiles: () => Promise<ImportResult>;
       importFolder: () => Promise<ImportResult>;
       addSongs: (songs: Song[]) => Promise<{ success: boolean; count: number }>;
-      importFromPath: (filePath: string, sourceUrl?: string, originId?: string) => Promise<{ success: boolean; count: number; duplicates?: string[]; reason?: string }>;
-      checkDuplicate: (title: string, artist: string, url?: string, id?: string) => Promise<{ isDuplicate: boolean; reason?: 'URL' | 'METADATA'; existingSong: { id: string; title: string; artist: string } | null }>;
+      importFromPath: (filePath: string, sourceUrl?: string, originId?: string) => Promise<ImportResult>;
+      checkDuplicate: (title: string, artist: string, url?: string, id?: string) => Promise<{
+        isDuplicate: boolean;
+        reason?: 'URL' | 'METADATA' | 'HASH'; // Thêm HASH cho đồng bộ Main
+        existingSong: { id: string; title: string; artist: string } | null
+      }>;
       scanMissingFiles: () => Promise<string[]>;
       getLyrics: (songId: string) => Promise<string | null>;
       saveLyrics: (songId: string, lyrics: string, lyricId?: number) => Promise<boolean>;
       searchLyrics: (query: string) => Promise<LyricSearchResult[]>;
       pickImage: () => Promise<string | null>;
 
-      // Storage operations
+      // --- Storage Operations ---
       getLibraryData: () => Promise<Playlist>;
       getSongsData: () => Promise<Record<string, Song>>;
       getPlaylistsData: () => Promise<Record<string, Playlist>>;
@@ -37,10 +49,9 @@ declare global {
       getRecentSearches: () => Promise<RecentSearch[]>;
       saveRecentSearches: (searches: RecentSearch[]) => Promise<void>;
 
-      // Downloader operations
-      fetchYtInfo: (url: string) => Promise<{ success: boolean; info?: any; error?: string }>;
+      fetchYtInfo: (url: string) => Promise<{ success: boolean; info?: YoutubeInfo; error?: string }>;
       downloadYtAudio: (url: string, title: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
-      writeAudioMetadata: (filePath: string, metadata: any) => Promise<{ success: boolean; error?: string }>;
+      writeAudioMetadata: (filePath: string, metadata: Partial<Song>) => Promise<{ success: boolean; error?: string }>;
       onDownloadProgress: (callback: (data: { url: string; percent: number }) => void) => () => void;
       openItemPath: (filePath: string) => Promise<void>;
       deleteFile: (filePath: string) => Promise<{ success: boolean }>;
@@ -48,4 +59,4 @@ declare global {
   }
 }
 
-export {};
+export { };

@@ -9,10 +9,10 @@ import './EditModal.scss';
 
 interface EditModalProps {
   type: 'playlist' | 'song';
-  data: any;
+  data: Song | Playlist;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedData: any) => void;
+  onSave: (updatedData: Song | Playlist) => void;
 }
 
 export const EditModal: React.FC<EditModalProps> = ({
@@ -76,7 +76,7 @@ export const EditModal: React.FC<EditModalProps> = ({
         }
       }
     } catch (err) {
-      console.error('Failed to pick image:', err);
+      console.error('Failed to pick image:', err as Error);
     }
   };
 

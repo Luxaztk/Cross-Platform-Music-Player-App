@@ -6,7 +6,7 @@ import samplePlaylists from './playlist.json';
 
 // Seed the in-memory maps
 const songMap: Record<string, Song> = {};
-sampleSongs.forEach((s: any) => {
+(sampleSongs as RawSong[]).forEach((s) => {
   songMap[s.id] = {
     id: String(s.id),
     filePath: s.audioUrl || '',
@@ -35,6 +35,15 @@ let currentSongs = songMap;
 let currentPlaylists: Record<string, Playlist> = {};
 let currentPlayerState: PlayerState | null = null;
 let currentRecentSearches: RecentSearch[] = [];
+let currentLyricUsage: Record<string, number> = {};
+
+interface RawSong {
+  id: string;
+  title: string;
+  artist: string;
+  duration: number;
+  audioUrl: string;
+}
 
 export class MobileStorageAdapter implements IStorageAdapter {
   async getLibrary(): Promise<Playlist> {
@@ -75,6 +84,14 @@ export class MobileStorageAdapter implements IStorageAdapter {
 
   async saveRecentSearches(searches: RecentSearch[]): Promise<void> {
     currentRecentSearches = searches;
+  }
+
+  async getLyricUsage(): Promise<Record<string, number>> {
+    return currentLyricUsage;
+  }
+
+  async saveLyricUsage(usage: Record<string, number>): Promise<void> {
+    currentLyricUsage = usage;
   }
 }
 

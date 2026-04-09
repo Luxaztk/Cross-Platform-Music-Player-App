@@ -19,7 +19,7 @@ export function extractYoutubeId(url: string): string | null {
   }
   
   // Case 2: Standard URLs - Enhanced regex to catch all variants including shorts, embed, v, and parameters
-  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/v\/|youtube\.com\/v=)([a-zA-Z0-9_-]{11})(?:\S+)?/;
+  const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/v\/|youtube\.com\/v=)([a-zA-Z0-9_-]{11})(?:\S+)?/;
   const match = trimmedUrl.match(regex);
   
   return match ? match[1] : null;

@@ -18,6 +18,12 @@ export interface Song {
   lyricId?: number; // LRCLIB lyric ID
 }
 
+export type DuplicateReason = 'URL' | 'HASH' | 'PATH' | 'METADATA';
+
+export interface DuplicateSongInfo extends Song {
+  duplicateReason: DuplicateReason;
+}
+
 export interface LyricSearchResult {
   id: number;
   trackName: string;
@@ -42,7 +48,7 @@ export interface ImportResult {
   count: number;
   songs?: Song[];
   duplicates?: string[];
-  duplicateSongs?: Song[]; // Full song objects for resolution
+  duplicateSongs?: DuplicateSongInfo[]; // Objects for resolution
   reason?: 'CANCELED' | 'ERROR';
   message?: string;
   totalAttempted?: number;
@@ -63,10 +69,22 @@ export interface PlayerState {
   isShuffle: boolean;
 }
 
-export type RecentSearch = 
+export type RecentSearch =
   | { type: 'query'; text: string; timestamp: number }
   | { type: 'entity'; entityType: 'artist' | 'album'; id: string; name: string; timestamp: number };
 
-export type RecentSearchInput = 
+export type RecentSearchInput =
   | { type: 'query'; text: string }
   | { type: 'entity'; entityType: 'artist' | 'album'; id: string; name: string };
+
+// Thêm vào file types của bạn
+export interface ImportResult {
+  success: boolean;
+  count: number;
+  songs?: Song[];
+  duplicates?: string[];
+  duplicateSongs?: DuplicateSongInfo[];
+  reason?: 'CANCELED' | 'ERROR' | undefined;
+  message?: string;
+  totalAttempted?: number;
+}

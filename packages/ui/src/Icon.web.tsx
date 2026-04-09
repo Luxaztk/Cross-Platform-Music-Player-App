@@ -1,10 +1,10 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
 
-export type IconName = 
-  | 'Play' | 'Pause' | 'SkipBack' | 'SkipForward' 
-  | 'Volume' | 'VolumeMute' | 'Music' | 'Library' 
-  | 'Shuffle' | 'Repeat' | 'RepeatOne' | 'Search' 
+export type IconName =
+  | 'Play' | 'Pause' | 'SkipBack' | 'SkipForward'
+  | 'Volume' | 'VolumeMute' | 'Music' | 'Library'
+  | 'Shuffle' | 'Repeat' | 'RepeatOne' | 'Search'
   | 'More' | 'Edit' | 'Trash' | 'Plus' | 'List';
 
 interface IconProps {
@@ -36,7 +36,7 @@ const map: Record<IconName, keyof typeof LucideIcons> = {
 };
 
 export const Icon: React.FC<IconProps> = ({ name, size = 24, color = 'currentColor', fill = 'none', className }) => {
-  const LucideIcon = LucideIcons[map[name]] as React.FC<any>;
+  const LucideIcon = LucideIcons[map[name]] as React.FC<unknown>;
   if (!LucideIcon) return null;
   return <LucideIcon size={size} color={color} fill={fill} className={className} />;
 };

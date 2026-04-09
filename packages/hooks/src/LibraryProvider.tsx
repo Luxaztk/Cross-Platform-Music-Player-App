@@ -17,13 +17,13 @@ import {
   type ILibraryRepository
 } from '@music/core';
 
-import type { Song, Playlist, ImportResult } from '@music/types';
+import type { Song, Playlist, ImportResult, PlaylistDetail, DuplicateSongInfo } from '@music/types';
 
 interface LibraryDataContextType {
   songs: Song[];
   library: Playlist | null;
   playlists: Playlist[];
-  duplicateSongs: Song[];
+  duplicateSongs: DuplicateSongInfo[];
   libraryVersion: number;
   libraryFilter: { type: 'artist' | 'album' | 'none'; values: string[] };
 }
@@ -35,7 +35,7 @@ interface LibraryActionsContextType {
   handleAddSongs: (songs: Song[]) => Promise<{ success: boolean; count: number }>;
   clearDuplicates: () => void;
   handleCreatePlaylist: (name?: string) => Promise<Playlist | null>;
-  handleGetPlaylistDetail: (id: string) => Promise<any>;
+  handleGetPlaylistDetail: (id: string) => Promise<PlaylistDetail | null>;
   handleUpdatePlaylist: (playlist: Playlist) => Promise<Playlist | null>;
   handleUpdateSong: (song: Song) => Promise<Song | null>;
   handleDeleteSong: (songId: string) => Promise<boolean>;
@@ -61,7 +61,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   const [songs, setSongs] = useState<Song[]>([]);
   const [library, setLibrary] = useState<Playlist | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [duplicateSongs, setDuplicateSongs] = useState<Song[]>([]);
+  const [duplicateSongs, setDuplicateSongs] = useState<DuplicateSongInfo[]>([]);
   const [libraryVersion, setLibraryVersion] = useState(0);
   const [libraryFilter, setLibraryFilter] = useState<{ type: 'artist' | 'album' | 'none'; values: string[] }>({ 
     type: 'none', 
@@ -231,7 +231,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   }), [songs, library, playlists, libraryVersion, libraryFilter, duplicateSongs]);
 
   const actionsValue = React.useMemo(() => ({
-    setLibraryFilter: (f: any) => setLibraryFilter(f),
+    setLibraryFilter: (f: { type: 'artist' | 'album' | 'none'; values: string[] }) => setLibraryFilter(f),
     handleImportFiles,
     handleImportFolder,
     handleAddSongs,

@@ -7,6 +7,23 @@ import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import fs from 'node:fs/promises';
 import type { Song } from '@music/types';
 import { splitArtists } from '@music/utils';
+import { MetadataManager } from '../modules/metadata/MetadataManager';
+
+// Định nghĩa cấu trúc chuẩn của một Lyrics Object từ node-id3
+interface NodeID3Lyric {
+  language?: string;
+  text: string;
+}
+
+// "Trạm kiểm soát": Đảm bảo unknown data thực sự là NodeID3Lyric
+function isNodeID3Lyric(obj: unknown): obj is NodeID3Lyric {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'text' in obj &&
+    typeof (obj as Record<string, unknown>).text === 'string'
+  );
+}
 
 export class MainMetadataService {
   /**
@@ -39,7 +56,7 @@ export class MainMetadataService {
 
     // Try at 30s offset first (to avoid silence at start)
     let pcm = await runFfmpeg(30);
-    
+
     // If it failed or the song is shorter than 30s (no data), fallback to 0s
     if (pcm.length === 0) {
       pcm = await runFfmpeg(0);
@@ -55,7 +72,7 @@ export class MainMetadataService {
     const bytesPerSample = 2;
     const windowSize = Math.floor(pcm.length / bytesPerSample / numWindows);
     const envelope: string[] = [];
-    
+
     for (let i = 0; i < numWindows; i++) {
       let sumSquare = 0;
       let actualSamples = 0;
@@ -67,10 +84,10 @@ export class MainMetadataService {
         actualSamples++;
       }
       const rms = actualSamples > 0 ? Math.sqrt(sumSquare / actualSamples) : 0;
-      const charCode = Math.min(35, Math.floor(rms * 100)); 
+      const charCode = Math.min(35, Math.floor(rms * 100));
       envelope.push(charCode.toString(36));
     }
-    
+
     return `p2:${envelope.join('')}`;
   }
 
@@ -90,19 +107,19 @@ export class MainMetadataService {
 
       const rawArtist = common.artist || 'Unknown Artist';
       // Always flatMap and split every element, even if already an array, 
-      const artists = (common.artists && common.artists.length > 0) 
+      const artists = (common.artists && common.artists.length > 0)
         ? common.artists.flatMap(a => splitArtists(a))
         : splitArtists(rawArtist);
 
       // Attempt to recover originId and sourceUrl from embedded TXXX ID3 tags if not provided
       let finalOriginId = originId;
       let finalSourceUrl = sourceUrl;
-      
+
       // Attempt to recover originId, sourceUrl, and lyrics from embedded ID3 tags
       let syncedLyrics: string | undefined;
       let plainLyrics: string | undefined;
       let lyricId: string | undefined;
-      
+
       try {
         const tags = NodeID3.read(filePath);
         if (tags) {
@@ -114,7 +131,7 @@ export class MainMetadataService {
               if (t.description === 'melovista_lrc' && !syncedLyrics) syncedLyrics = t.value;
             }
           }
-          
+
           if (tags.synchronisedLyrics && tags.synchronisedLyrics.length > 0) {
             // SYLT binary data is present, but we prioritize USLT or melovista_lrc string for now
           }
@@ -122,9 +139,12 @@ export class MainMetadataService {
           if (tags.unsynchronisedLyrics) {
             // NodeID3 might return an array or single object
             if (Array.isArray(tags.unsynchronisedLyrics)) {
-              plainLyrics = tags.unsynchronisedLyrics[0]?.text;
-            } else {
-              plainLyrics = (tags.unsynchronisedLyrics as any).text;
+              const firstItem = tags.unsynchronisedLyrics[0];
+              if (isNodeID3Lyric(firstItem)) {
+                plainLyrics = firstItem.text;
+              }
+            } else if (isNodeID3Lyric(tags.unsynchronisedLyrics)) {
+              plainLyrics = tags.unsynchronisedLyrics.text;
             }
           }
         }
@@ -165,7 +185,6 @@ export class MainMetadataService {
    */
   static async updatePhysicalMetadata(song: Song): Promise<boolean> {
     try {
-      const { MetadataManager } = require('../modules/metadata/MetadataManager');
       const manager = new MetadataManager();
 
       // Convert coverArt (Base64 Data URI) to coverPath or similar if needed

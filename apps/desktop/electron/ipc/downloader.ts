@@ -21,9 +21,13 @@ export const setupDownloaderIPC = () => {
         try {
             const info = await downloader.getInfo(url);
             return { success: true, info };
-        } catch (error: any) {
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error('IPC fetch-yt-info error:', error);
+                return { success: false, error: error.message };
+            }
             console.error('IPC fetch-yt-info error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Unknown error' };
         }
     });
 
@@ -45,9 +49,13 @@ export const setupDownloaderIPC = () => {
             downloader.off('progress', progressHandler);
 
             return { success: true, filePath: savedPath };
-        } catch (error: any) {
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error('IPC download-yt-audio error:', error);
+                return { success: false, error: error.message };
+            }
             console.error('IPC download-yt-audio error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Unknown error' };
         }
     });
 
@@ -55,9 +63,13 @@ export const setupDownloaderIPC = () => {
         try {
             const success = await metadataManager.writeMetadata(filePath, metadata);
             return { success };
-        } catch (error: any) {
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error('IPC write-audio-metadata error:', error);
+                return { success: false, error: error.message };
+            }
             console.error('IPC write-audio-metadata error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Unknown error' };
         }
     });
 
@@ -70,7 +82,7 @@ export const setupDownloaderIPC = () => {
             await fs.unlink(filePath);
             console.log('[IPC] Deleted orphaned file:', filePath);
             return { success: true };
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('[IPC] Failed to delete file:', err);
             return { success: false };
         }

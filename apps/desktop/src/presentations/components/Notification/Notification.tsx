@@ -17,7 +17,7 @@ const DISMISS_DELAY = 500; // 0.5s nếu đã quá thời hạn
 export const NotificationItem: React.FC<NotificationProps> = ({ id, type, message, onClose }) => {
   const [isHovered, setIsHovered] = useState(false);
   const startTimeRef = useRef<number>(Date.now());
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<unknown>(null);
 
   useEffect(() => {
     if (timerRef.current) {

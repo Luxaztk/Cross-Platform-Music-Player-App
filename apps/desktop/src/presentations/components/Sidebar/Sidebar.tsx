@@ -30,8 +30,9 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
   const { appIcon } = useTheme();
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
   const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
-  const [editingPlaylist, setEditingPlaylist] = React.useState<any | null>(null);
-  const [deletingPlaylist, setDeletingPlaylist] = React.useState<any | null>(null);
+  const [editingPlaylist, setEditingPlaylist] = React.useState<Playlist | null>(null);
+  const [deletingPlaylist, setDeletingPlaylist] = React.useState<Playlist | null>(null);
+
   const [playlistQuery, setPlaylistQuery] = React.useState('');
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
   const [sortMode, setSortMode] = React.useState<'az' | 'za' | 'default'>('default');
@@ -67,19 +68,20 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
     }
   };
 
-  const onEditPlaylist = (e: React.MouseEvent, playlist: any) => {
+  const onEditPlaylist = (e: React.MouseEvent, playlist: Playlist) => {
     e.preventDefault();
     e.stopPropagation();
     setEditingPlaylist(playlist);
     setActiveMenuId(null);
   };
 
-  const onDeletePlaylist = (e: React.MouseEvent, playlist: any) => {
+  const onDeletePlaylist = (e: React.MouseEvent, playlist: Playlist) => {
     e.preventDefault();
     e.stopPropagation();
     setDeletingPlaylist(playlist);
     setActiveMenuId(null);
   };
+
 
   const confirmDeletePlaylist = async () => {
     if (!deletingPlaylist) return;

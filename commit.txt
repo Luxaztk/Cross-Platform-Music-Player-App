@@ -1,10 +1,5 @@
-feat(desktop): implement standalone yt-dlp binary resolution
+fix(mobile): resolve setInterval type mismatch and missing useEffect import
 
-- Bypass system Python requirement via YOUTUBE_DL_SKIP_PYTHON_CHECK=1.
-- Dynamically resolve yt-dlp path for both dev and prod (asarUnpacked).
-- Add robust unit tests for path resolution logic using Vitest doMock.
-- Fix existing test failures in MetadataManager and YoutubeDownloader.
-- Add CI workflow for automated desktop unit testing.
-
-This change ensures that end-users do not need to install Python to use the
-online download feature, improving the standalone portability of the app.
+- Updates the interval variable type from 'NodeJS.Timeout' to 'ReturnType<typeof setInterval>' to fix the TypeScript error in the mobile music player.
+- Adds missing 'useEffect' import to index.tsx.
+- Removes excessive 'padding: 1500' from the container style which was distorting the UI.

@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLyrics, usePlayer } from '@music/hooks';
 import { MessageSquareOff, Search, Loader2, RotateCcw } from 'lucide-react';
 import { formatLyricsSearchQuery } from '@music/utils';
+import type { LyricSearchResult } from '@music/types';
 import './LyricsPanel.scss';
 
-interface LyricsPanelProps {}
 
-export const LyricsPanel: React.FC<LyricsPanelProps> = () => {
+
+export const LyricsPanel: React.FC = () => {
   const { currentSong, seek } = usePlayer();
   const {
     lyricLines,
@@ -17,7 +18,7 @@ export const LyricsPanel: React.FC<LyricsPanelProps> = () => {
   } = useLyrics();
 
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<LyricSearchResult[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -53,16 +54,13 @@ export const LyricsPanel: React.FC<LyricsPanelProps> = () => {
     if (!searchQuery) setSearchQuery(query);
 
     try {
-      console.log(`[LyricsView] Step 1: Searching for "${query}"`);
       let results = await searchLyrics(query);
 
       // Step 2: Fallback to Title only if combined search returned no results
       if (results.length === 0 && query.includes(' - ')) {
-        console.log(`[LyricsView] Step 2: Falling back to Title only: "${currentSong.title}"`);
         results = await searchLyrics(currentSong.title);
       }
 
-      console.log(`[LyricsView] Final search results: ${results.length}`);
       setSearchResults(results);
     } catch (err) {
       console.error('[LyricsView] handleSearch failed:', err);

@@ -6,61 +6,74 @@ import { splitArtists } from '@music/utils';
 export interface SearchResults {
   songs: Song[];
   playlists: Playlist[];
-  albums: { id: string; name: string; artist: string; coverArt?: string }[];
+  albums: { id: string; name: string; artist: string; coverArt?: string | null }[];
   artists: { id: string; name: string; avatar?: string }[];
 }
 
-export const useSearch = (songs: Song[], playlists: Playlist[], query: string) => {
+export const useSearch = (songs: Song[], playlists: Playlist[], query: string): SearchResults => {
+  // 1. Khởi tạo Fuse cho Songs (Giữ nguyên)
   const songFuse = useMemo(() => new Fuse(songs, {
     keys: ['title', 'artist', 'album'],
     threshold: 0.3,
-    includeMatches: true,
   }), [songs]);
 
+  // 2. Khởi tạo Fuse cho Playlists
   const playlistFuse = useMemo(() => new Fuse(playlists, {
     keys: ['name'],
     threshold: 0.4,
-    includeMatches: true,
   }), [playlists]);
 
-  const results = useMemo((): SearchResults => {
-    if (!query) return { songs: [], playlists: [], albums: [], artists: [] };
+  return useMemo(() => {
+    // Trả về dữ liệu trống ngay lập tức nếu không có query
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return { songs: [], playlists: [], albums: [], artists: [] };
 
-    const songResults = songFuse.search(query).map((res: { item: Song }) => res.item);
-    const playlistResults = playlistFuse.search(query).map((res: { item: Playlist }) => res.item);
+    // Thực hiện tìm kiếm chính
+    const matchedSongs = songFuse.search(trimmedQuery);
+    const matchedPlaylists = playlistFuse.search(trimmedQuery);
 
-    // Derive unique albums from matching songs
-    const albumMap = new Map<string, any>();
-    songs.forEach(song => {
-      if (song.album && song.album.toLowerCase().includes(query.toLowerCase())) {
-        albumMap.set(song.album, { id: `album-${song.album}`, name: song.album, artist: song.artist, coverArt: song.coverArt });
+    // 3. Dùng mảng kết quả của Fuse để suy ra Album và Artist
+    // Cách này đảm bảo tính Fuzzy (gõ gần đúng vẫn ra Album/Artist)
+    const albumMap = new Map<string, SearchResults['albums'][number]>();
+    const artistMap = new Map<string, SearchResults['artists'][number]>();
+
+    matchedSongs.forEach(({ item }) => {
+      // Xử lý Album
+      if (item.album && !albumMap.has(item.album)) {
+        albumMap.set(item.album, {
+          id: `album-${item.album}`,
+          name: item.album,
+          artist: item.artist,
+          coverArt: item.coverArt
+        });
       }
-    });
 
-    // Derive unique artists from matching songs
-    const artistMap = new Map<string, any>();
-    songs.forEach(song => {
-      // Robust runtime split: handle both cases (already array vs joined string)
-      // to ensure even legacy data is correctly separated.
-      const individualArtists = (song.artists && song.artists.length > 0)
-        ? song.artists.flatMap(a => splitArtists(a))
-        : splitArtists(song.artist);
-      
-      individualArtists.forEach(artistName => {
-        if (artistName && artistName.toLowerCase().includes(query.toLowerCase())) {
-          // Option B: Don't use song cover, allow UI to handle placeholder
-          artistMap.set(artistName, { id: `artist-${artistName}`, name: artistName });
+      // Xử lý Artist
+      const individualArtists = (item.artists && item.artists.length > 0)
+        ? item.artists.flatMap(a => splitArtists(a))
+        : splitArtists(item.artist);
+
+      individualArtists.forEach(name => {
+        const lowerName = name.toLowerCase();
+        const lowerQuery = trimmedQuery.toLowerCase();
+
+        // Kiểm tra xem artist này có khớp với query không 
+        // (Hoặc đơn giản là lấy artist từ các bài hát đã match)
+        if (lowerName.includes(lowerQuery) && !artistMap.has(lowerName)) {
+          artistMap.set(lowerName, {
+            id: `artist-${name}`,
+            name: name
+          });
         }
       });
     });
 
     return {
-      songs: songResults.slice(0, 10), // Limit to top 10 songs
-      playlists: playlistResults,
+      songs: matchedSongs.map(res => res.item).slice(0, 10),
+      playlists: matchedPlaylists.map(res => res.item).slice(0, 10),
       albums: Array.from(albumMap.values()).slice(0, 5),
       artists: Array.from(artistMap.values()).slice(0, 5),
     };
-  }, [songFuse, playlistFuse, query, songs]);
-
-  return results;
+  }, [songFuse, playlistFuse, query]);
+  // Loại bỏ 'songs' khỏi dependency vì songFuse đã bao hàm nó
 };

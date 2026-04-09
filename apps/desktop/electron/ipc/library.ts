@@ -3,9 +3,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
 import { MainMetadataService } from '../infrastructure/MainMetadataService';
-import type { Song } from '@music/types';
+import type { DuplicateSongInfo, Song, Playlist } from '@music/types';
 import { LibraryService } from '@music/core';
-import { extractYoutubeId, getCanonicalYoutubeUrl } from '@music/utils';
+import { extractYoutubeId, getCanonicalYoutubeUrl, getErrorMessage } from '@music/utils';
 import { LyricsManager } from '../modules/lyrics/LyricsManager';
 
 const storageAdapter = new MainStorageAdapter();
@@ -45,10 +45,10 @@ async function rehashAllSongs(): Promise<void> {
   try {
     const songs = await storageAdapter.getSongs();
     const songList = Object.values(songs);
-    
+
     // Filter only songs that NEED migration (missing p2: prefix)
     const pendingMigration = songList.filter(s => !s.hash?.startsWith('p2:'));
-    
+
     if (pendingMigration.length === 0) {
       console.log(`[Rehash] All ${songList.length} song hashes are up-to-date (p2 format).`);
       return;
@@ -63,26 +63,34 @@ async function rehashAllSongs(): Promise<void> {
     // Process in batches to avoid CPU/IO hogging
     for (let i = 0; i < pendingMigration.length; i += batchSize) {
       const batch = pendingMigration.slice(i, i + batchSize);
-      
+
       await Promise.all(batch.map(async (song) => {
         try {
           // Check if file exists
           await fs.access(song.filePath, fs.constants.F_OK);
-          
+
           const newHash = await MainMetadataService.calculateAudioHash(song.filePath);
-          
+
           if (newHash.startsWith('p2:')) {
             songs[song.id] = { ...song, hash: newHash };
             successCount++;
           }
         } catch (err) {
-          // Song might have been deleted or moved, skip
+          const error = err as NodeJS.ErrnoException;
+
+          if (error.code === 'ENOENT') {
+            // Chỉ log ở mức debug vì đây là case dự kiến (file bị xóa/di chuyển)
+            console.warn(`[Rehash] File missing, skipping: ${song.filePath}`);
+          } else {
+            // Các lỗi khác (EPERM, EBUSY) cần log rõ để debug
+            console.error(`[Rehash] Failed to process ${song.id}:`, error.message);
+          }
         }
       }));
 
       processedCount += batch.length;
       console.log(`[Rehash] Progress: ${processedCount}/${pendingMigration.length} matched...`);
-      
+
       // Save incrementally after each batch
       await storageAdapter.saveSongs(songs);
     }
@@ -112,13 +120,13 @@ export function setupLibraryIPC() {
     return await libraryService.createPlaylist(name);
   });
 
-  ipcMain.handle('library:updatePlaylist', async (_event, playlist: any) => {
+  ipcMain.handle('library:updatePlaylist', async (_event, playlist: Playlist) => {
     return await libraryService.updatePlaylist(playlist);
   });
 
-  ipcMain.handle('library:updateSong', async (_event, song: any) => {
+  ipcMain.handle('library:updateSong', async (_event, song: Song) => {
     const updated = await libraryService.updateSong(song);
-    
+
     // Background task: Persistence to physical file
     // We don't 'await' it to keep the UI snappy, but we trigger it
     MainMetadataService.updatePhysicalMetadata(updated).catch(err => {
@@ -162,9 +170,9 @@ export function setupLibraryIPC() {
     const filePath = result.filePaths[0];
     const extension = path.extname(filePath).toLowerCase().replace('.', '');
     const mimeType = extension === 'jpg' ? 'jpeg' : extension;
-    
+
     try {
-      const data = require('node:fs').readFileSync(filePath);
+      const data = await fs.readFile(filePath);
       return `data:image/${mimeType};base64,${data.toString('base64')}`;
     } catch (error) {
       console.error('Error reading image file:', error);
@@ -203,7 +211,7 @@ export function setupLibraryIPC() {
       };
     } catch (err) {
       console.error('IPC importFiles error:', err);
-      return { success: false, count: 0, reason: 'ERROR', message: String(err) };
+      return { success: false, count: 0, reason: 'ERROR', message: getErrorMessage(err) };
     }
   });
 
@@ -240,7 +248,7 @@ export function setupLibraryIPC() {
       };
     } catch (err) {
       console.error('IPC importFolder error:', err);
-      return { success: false, count: 0, reason: 'ERROR', message: String(err) };
+      return { success: false, count: 0, reason: 'ERROR', message: getErrorMessage(err) };
     }
   });
 
@@ -251,10 +259,10 @@ export function setupLibraryIPC() {
       // For now, we'll just use a simple manual addition since they are already processed
       const currentSongs = await storageAdapter.getSongs();
       const currentLibrary = await storageAdapter.getLibrary();
-      
+
       const updatedSongs = { ...currentSongs };
       const updatedLibrary = { ...currentLibrary, songIds: [...currentLibrary.songIds] };
-      
+
       let addedCount = 0;
       for (const song of songsToAdd) {
         // Even in force add, we avoid adding the EXACT same object if it somehow already exists by ID
@@ -264,14 +272,14 @@ export function setupLibraryIPC() {
           addedCount++;
         }
       }
-      
+
       await storageAdapter.saveSongs(updatedSongs);
       await storageAdapter.saveLibrary(updatedLibrary);
-      
+
       return { success: true, count: addedCount };
     } catch (err) {
       console.error('IPC addSongs error:', err);
-      return { success: false, count: 0, message: String(err) };
+      return { success: false, count: 0, message: getErrorMessage(err) };
     }
   });
 
@@ -284,13 +292,13 @@ export function setupLibraryIPC() {
       }
 
       const { addedCount, duplicatePaths, duplicateSongs } = await libraryService.processAndAddSongs([songData]);
-      
+
       const isDuplicate = addedCount === 0;
       let duplicateReason: string | undefined;
 
       if (isDuplicate && duplicateSongs.length > 0) {
-        duplicateReason = (duplicateSongs[0] as any).duplicateReason;
-        
+        duplicateReason = (duplicateSongs[0] as DuplicateSongInfo).duplicateReason;
+
         // Automated Cleanup: Delete the redundant downloaded file if it's a duplicate
         // We only do this for online downloads (where sourceUrl is provided) to avoid accidental deletion of manual imports
         if (sourceUrl && (duplicateReason === 'HASH' || duplicateReason === 'URL' || duplicateReason === 'METADATA')) {
@@ -312,7 +320,7 @@ export function setupLibraryIPC() {
       };
     } catch (err) {
       console.error('IPC library:importFromPath error:', err);
-      return { success: false, reason: 'ERROR', message: String(err) };
+      return { success: false, reason: 'ERROR', message: getErrorMessage(err) };
     }
   });
 
@@ -324,21 +332,21 @@ export function setupLibraryIPC() {
       // 1. Check by Source ID or URL (Highest priority for online downloads)
       const inputUrl = url?.trim();
       const inputId = id || (inputUrl ? extractYoutubeId(inputUrl) : null);
-      
+
       if (inputId || inputUrl) {
         const urlMatch = existingSongs.find(s => {
           // Priority 1: Direct originId match (Fastest and most accurate)
           if (inputId && s.originId === inputId) return true;
-          
+
           // Priority 2: Standard URL / ID extraction match (Fallback for legacy/other sources)
           if (!s.sourceUrl) return false;
-          
+
           const storedUrl = s.sourceUrl.trim();
           const storedId = extractYoutubeId(storedUrl);
-          
+
           const idMatch = inputId && storedId && inputId === storedId;
           const urlMatchRaw = inputUrl && storedUrl === inputUrl;
-          
+
           return idMatch || urlMatchRaw;
         });
 
@@ -404,12 +412,12 @@ export function setupLibraryIPC() {
     try {
       const song = await storageAdapter.getSongById(songId);
       if (!song) return null;
-      
+
       // Priority 1: Use Database (Fastest and most persistent for Melovista-selected lyrics)
       if (song.syncedLyrics || song.lyrics) {
         return song.syncedLyrics || song.lyrics;
       }
-      
+
       // Priority 2: Fallback to physical file scan
       const metadata = await MainMetadataService.extractMetadata(song.filePath);
       return metadata?.syncedLyrics || metadata?.lyrics || null;
@@ -427,7 +435,7 @@ export function setupLibraryIPC() {
 
       // 1. Physical metadata update (for MP3)
       const success = await lyricsManager.saveLyrics(song.filePath, lyrics, lyricId);
-      
+
       // 2. Database update (important for consistency and all formats)
       const songsMap = await storageAdapter.getSongs();
       if (songsMap[songId]) {
@@ -462,7 +470,7 @@ export function setupLibraryIPC() {
       return results.sort((a, b) => {
         const usageA = usage[a.id.toString()] || 0;
         const usageB = usage[b.id.toString()] || 0;
-        
+
         if (usageB !== usageA) return usageB - usageA;
         if (!!b.syncedLyrics !== !!a.syncedLyrics) return b.syncedLyrics ? 1 : -1;
         return 0;

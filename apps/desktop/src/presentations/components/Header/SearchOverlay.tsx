@@ -6,12 +6,17 @@ import { useTheme } from '../Theme';
 import type { SearchResults } from '../../../application/hooks';
 import './SearchOverlay.scss';
 
+export type SearchResultItem = 
+  | { type: 'song'; item: Song }
+  | { type: 'artist'; item: SearchResults['artists'][number] }
+  | { type: 'album'; item: SearchResults['albums'][number] };
+
 interface SearchOverlayProps {
   query: string;
   results: SearchResults;
   recentSearches: RecentSearch[];
   selectedIndex: number;
-  onSelect: (item: any) => void;
+  onSelect: (item: SearchResultItem) => void;
   onSelectRecent: (recent: RecentSearch) => void;
   onRemoveRecent: (timestamp: number) => void;
   onClearRecent: () => void;
@@ -110,7 +115,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                 </div>
                 <button 
                   className="remove-btn" 
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     onRemoveRecent(item.timestamp);
                   }}
@@ -191,7 +196,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                       <div className="item-actions">
                         <button 
                           className={`more-btn ${activeMenuId === song.id ? 'active' : ''}`}
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             if (activeMenuId === song.id) {
                               setActiveMenuId(null);
@@ -270,7 +275,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                       <div className="item-actions">
                         <button 
                           className={`more-btn ${activeMenuId === artist.id ? 'active' : ''}`}
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             if (activeMenuId === artist.id) {
                               setActiveMenuId(null);
@@ -335,7 +340,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                       <div className="item-actions">
                         <button 
                           className={`more-btn ${activeMenuId === album.id ? 'active' : ''}`}
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             if (activeMenuId === album.id) {
                               setActiveMenuId(null);

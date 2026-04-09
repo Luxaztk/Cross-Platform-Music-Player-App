@@ -3,6 +3,17 @@ import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { EventEmitter } from 'events';
 import { app } from 'electron';
 import path from 'node:path';
+import { getErrorMessage } from '@music/utils';
+
+interface YtDlpRawInfo {
+  id: string;
+  title?: string;
+  fulltitle?: string;
+  thumbnail?: string;
+  channel?: string;
+  uploader?: string;
+  duration?: number;
+}
 
 const isDev = !app.isPackaged;
 const binName = process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp';
@@ -31,7 +42,7 @@ export class YoutubeDownloader extends EventEmitter {
 
   public async getInfo(url: string): Promise<YoutubeInfo> {
     try {
-      const info: any = await youtubedl(url, {
+      const info = (await youtubedl(url, {
         dumpSingleJson: true,
         noCheckCertificates: true,
         noWarnings: true,
@@ -44,7 +55,11 @@ export class YoutubeDownloader extends EventEmitter {
           'referer:youtube.com',
           'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
         ]
-      });
+      })) as unknown as YtDlpRawInfo;
+
+      if (!info || !info.id) {
+        throw new Error('Could not parse YouTube video information.');
+      }
 
       return {
         id: info.id,
@@ -55,7 +70,7 @@ export class YoutubeDownloader extends EventEmitter {
         duration: info.duration || 0,
       };
     } catch (error) {
-      console.error('Failed to get YouTube info:', error);
+      console.error('Failed to get YouTube info:', getErrorMessage(error));
       throw error;
     }
   }
@@ -81,7 +96,7 @@ export class YoutubeDownloader extends EventEmitter {
       });
 
       // MUST consume stdout for progress
-      subprocess.stdout?.on('data', (data) => {
+      subprocess.stdout?.on('data', (data: Buffer | string) => {
         const text = data.toString();
         const progressMatch = text.match(/\[download\]\s+(\d+\.?\d*)%/);
         if (progressMatch) {

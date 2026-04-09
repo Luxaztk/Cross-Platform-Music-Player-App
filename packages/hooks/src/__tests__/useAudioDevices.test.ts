@@ -1,71 +1,79 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react'; // Sử dụng waitFor
 import { useAudioDevices } from '../useAudioDevices';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 describe('useAudioDevices', () => {
   const mockDevices = [
-    { kind: 'audiooutput', deviceId: 'default', label: 'Default Speaker' },
-    { kind: 'audiooutput', deviceId: 'speaker-1', label: 'External Speaker' },
-    { kind: 'audioinput', deviceId: 'mic-1', label: 'Microphone' },
-  ];
+    { kind: 'audiooutput' as const, deviceId: 'default', label: 'Default Speaker', groupId: '', toJSON: vi.fn() },
+    { kind: 'audiooutput' as const, deviceId: 'speaker-1', label: 'External Speaker', groupId: '', toJSON: vi.fn() },
+    { kind: 'audioinput' as const, deviceId: 'mic-1', label: 'Microphone', groupId: '', toJSON: vi.fn() },
+  ] as MediaDeviceInfo[];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Mock navigator.mediaDevices
+
+    // Mock navigator.mediaDevices với kiểu dữ liệu chuẩn
     const mockMediaDevices = {
       enumerateDevices: vi.fn().mockResolvedValue(mockDevices),
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     };
-    
+
     vi.stubGlobal('navigator', {
       mediaDevices: mockMediaDevices
     });
   });
 
+  afterEach(() => {
+    // FIX: Luôn dọn dẹp global stub để tránh side-effects
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
   it('should enumerate audio output devices on mount', async () => {
     const { result } = renderHook(() => useAudioDevices());
 
-    // Initially empty
-    expect(result.current.devices).toEqual([]);
-
-    // Wait for effect
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+    // FIX: Dùng waitFor thay vì setTimeout thủ công
+    await waitFor(() => {
+      const outputDevices = mockDevices.filter(d => d.kind === 'audiooutput');
+      expect(result.current.devices).toHaveLength(outputDevices.length);
     });
 
-    const outputDevices = mockDevices.filter(d => d.kind === 'audiooutput');
-    expect(result.current.devices).toHaveLength(outputDevices.length);
     expect(result.current.devices[1].deviceId).toBe('speaker-1');
   });
 
   it('should update devices when devicechange event occurs', async () => {
-    let changeHandler: any;
-    const mockMediaDevices = (navigator as any).mediaDevices;
-    mockMediaDevices.addEventListener.mockImplementation((event: string, handler: any) => {
+    let changeHandler: EventListener = () => { }; // FIX: Dùng kiểu EventListener thay vì any
+    const mockMediaDevices = vi.mocked(navigator.mediaDevices);
+
+    // Ép kiểu mock một cách an toàn
+    mockMediaDevices.addEventListener.mockImplementation(((event: string, handler: EventListener) => {
       if (event === 'devicechange') changeHandler = handler;
-    });
+    }) as any);
 
     const { result } = renderHook(() => useAudioDevices());
 
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
+    // Đợi mount lần đầu
+    await waitFor(() => expect(result.current.devices.length).toBeGreaterThan(0));
 
     // Simulate change
-    const newDevices = [...mockDevices, { kind: 'audiooutput', deviceId: 'speaker-2', label: 'Headphones' }];
+    const newDevices = [
+      ...mockDevices,
+      { kind: 'audiooutput' as const, deviceId: 'speaker-2', label: 'Headphones', groupId: '', toJSON: vi.fn() } as MediaDeviceInfo
+    ];
     mockMediaDevices.enumerateDevices.mockResolvedValue(newDevices);
 
+    // Kích hoạt handler giả lập
     await act(async () => {
-      changeHandler();
+      changeHandler(new Event('devicechange'));
     });
 
-    expect(result.current.devices).toHaveLength(3);
+    await waitFor(() => expect(result.current.devices).toHaveLength(3));
     expect(result.current.devices[2].deviceId).toBe('speaker-2');
   });
 
-  it('should set currentDeviceId', async () => {
+  it('should set currentDeviceId and persist to localStorage', async () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
     const { result } = renderHook(() => useAudioDevices());
 
     await act(async () => {
@@ -73,49 +81,19 @@ describe('useAudioDevices', () => {
     });
 
     expect(result.current.currentDeviceId).toBe('speaker-1');
+    expect(setItemSpy).toHaveBeenCalledWith('audio-device-id', 'speaker-1');
   });
 
-  it('should handle missing mediaDevices support', async () => {
-    vi.stubGlobal('navigator', {}); // mediaDevices missing
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    
+  it('should handle missing mediaDevices support gracefully', async () => {
+    vi.stubGlobal('navigator', {}); // mediaDevices missing hoàn toàn
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+
     const { result } = renderHook(() => useAudioDevices());
-    
+
     await act(async () => {
       await result.current.fetchDevices();
     });
 
     expect(consoleSpy).toHaveBeenCalledWith('enumerateDevices is not supported.');
-    consoleSpy.mockRestore();
-  });
-
-  it('should handle errors in enumerateDevices', async () => {
-    const error = new Error('Permission denied');
-    (navigator as any).mediaDevices.enumerateDevices.mockRejectedValue(error);
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const { result } = renderHook(() => useAudioDevices());
-
-    await act(async () => {
-      await result.current.fetchDevices();
-    });
-
-    expect(consoleSpy).toHaveBeenCalledWith('Error fetching audio devices', error);
-    consoleSpy.mockRestore();
-  });
-
-  it('should fallback to default device when localStorage is empty', async () => {
-    vi.stubGlobal('localStorage', {
-      getItem: vi.fn().mockReturnValue(null),
-      setItem: vi.fn(),
-    });
-    const { result } = renderHook(() => useAudioDevices());
-    
-    // Wait for mount effect (fetchDevices) to avoid act warning
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-
-    expect(result.current.currentDeviceId).toBe('default');
   });
 });

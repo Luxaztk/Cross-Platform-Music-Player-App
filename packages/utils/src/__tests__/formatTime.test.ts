@@ -14,9 +14,11 @@ describe('formatTime', () => {
   it('should handle invalid inputs', () => {
     expect(formatTime(NaN)).toBe('0:00');
     expect(formatTime(Infinity)).toBe('0:00');
-    // @ts-ignore
+
+    // @ts-expect-error: Testing null input for JS compatibility and runtime safety
     expect(formatTime(null)).toBe('0:00');
-    // @ts-ignore
+
+    // @ts-expect-error: Testing undefined input for JS compatibility and runtime safety
     expect(formatTime(undefined)).toBe('0:00');
   });
 

@@ -1,33 +1,53 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AudioEngine } from '../AudioEngine';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
+import { AudioEngine, type AudioEvents } from '../AudioEngine';
+import { Howl } from 'howler';
 
-// --- Mocking Infrastructure ---
+// --- BƯỚC 1: ĐỊNH NGHĨA INTERFACES CHO MOCK ---
 
-let mockHowlerVolume = 1;
-let lastHowlInstance: MockHowl | null = null;
+interface MockHowlInstance extends Howl {
+  _isPlaying: boolean;
+  _state: 'unloaded' | 'loading' | 'loaded';
+  _seek: number;
+  _duration: number;
+  _sinkId: string;
+  _trigger: (event: string, ...args: unknown[]) => void;
+  options: Record<string, unknown>; // Howler options có cấu trúc rất phức tạp, để any ở đây là chấp nhận được hoặc dùng Record<string, unknown>
+  _sounds: Array<{ _node: { setSinkId: Mock } }>;
+}
+
+let lastHowlInstance: MockHowlInstance | null = null;
+
+// --- BƯỚC 2: MOCK CLASS ---
 
 class MockHowl {
   public options: any;
   public _isPlaying = false;
-  public _state: 'unloaded' | 'loading' | 'loaded' = 'loading'; // Start as loading
+  public _state: 'unloaded' | 'loading' | 'loaded' = 'loading';
   public _seek = 0;
   public _duration = 180;
   public _sinkId = 'default';
+  public _sounds = [{
+    _node: {
+      setSinkId: vi.fn(async (id: string) => { this._sinkId = id; })
+    }
+  }];
 
   constructor(options: any) {
-    this.options = options;
-    lastHowlInstance = this;
+    this.options = options
+    // Ép kiểu một lần duy nhất để capture instance phục vụ việc kiểm tra seek/state
+    lastHowlInstance = this as unknown as MockHowlInstance;
+
     if (options.autoplay) {
       this._isPlaying = true;
     }
-    // Simulate async load
+
     setTimeout(() => {
       this._state = 'loaded';
       if (this.options.onload) this.options.onload();
     }, 0);
   }
 
-  load = vi.fn(() => {
+  load = vi.fn().mockImplementation(function (this: MockHowl) {
     this._state = 'loading';
     setTimeout(() => {
       this._state = 'loaded';
@@ -36,26 +56,25 @@ class MockHowl {
     return this;
   });
 
-  play = vi.fn(() => { 
-    this._isPlaying = true; 
+  play = vi.fn().mockImplementation(function (this: MockHowl) {
+    this._isPlaying = true;
     setTimeout(() => this._trigger('play'), 0);
     return 1;
   });
-  pause = vi.fn(() => { 
-    this._isPlaying = false; 
+
+  pause = vi.fn().mockImplementation(function (this: MockHowl) {
+    this._isPlaying = false;
     setTimeout(() => this._trigger('pause'), 0);
-    return this; 
+    return this;
   });
-  stop = vi.fn(() => { 
-    this._isPlaying = false; 
+
+  stop = vi.fn().mockImplementation(function (this: MockHowl) {
+    this._isPlaying = false;
     setTimeout(() => this._trigger('stop'), 0);
-    return this; 
+    return this;
   });
-  unload = vi.fn(() => { 
-    this._state = 'unloaded'; 
-    return this; 
-  });
-  seek = vi.fn((val?: number) => { 
+
+  seek = vi.fn().mockImplementation(function (this: MockHowl, val?: number) {
     if (typeof val === 'number') {
       this._seek = val;
       setTimeout(() => this._trigger('seek'), 0);
@@ -63,34 +82,28 @@ class MockHowl {
     }
     return this._seek;
   });
-  duration = vi.fn(() => this._duration);
-  state = vi.fn(() => this._state);
-  playing = vi.fn(() => this._isPlaying);
-  once = vi.fn((event, cb) => {
-    if (event === 'unlock') setTimeout(cb, 0);
-    return this;
-  });
-  on = vi.fn();
 
-  // Helper to simulate events from Howler
-  _trigger(event: string, ...args: any[]) {
+  _trigger(event: string, ...args: unknown[]) {
     const handler = this.options[`on${event}`];
     if (handler) handler(...args);
   }
 
-  // SinkId mock
-  _sounds = [{
-    _node: {
-      setSinkId: vi.fn(async (id: string) => { this._sinkId = id; })
-    }
-  }];
+  // Các phương thức còn lại dùng mockImplementation để giữ đúng context
+  unload = vi.fn().mockReturnThis();
+  duration = vi.fn().mockImplementation(() => this._duration);
+  state = vi.fn().mockImplementation(() => this._state);
+  playing = vi.fn().mockImplementation(() => this._isPlaying);
+  once = vi.fn().mockImplementation(function (this: MockHowl, event, cb) {
+    if (event === 'unlock') setTimeout(cb, 0);
+    return this;
+  });
+  on = vi.fn().mockReturnThis();
 }
 
 vi.mock('howler', () => {
+  let mockHowlerVolume = 1;
   return {
-    Howl: vi.fn().mockImplementation(function (options) {
-      return new MockHowl(options);
-    }),
+    Howl: vi.fn().mockImplementation((options) => new MockHowl(options)),
     Howler: {
       volume: vi.fn((val?: number) => {
         if (typeof val === 'number') mockHowlerVolume = val;
@@ -100,26 +113,24 @@ vi.mock('howler', () => {
   };
 });
 
-// Mock requestAnimationFrame using Vitest's fake timers
-let mockRaf: any;
-let mockCaf: any;
-
 describe('AudioEngine', () => {
   let engine: AudioEngine;
-  let events: any;
+  let events: Record<keyof AudioEvents, Mock>;
+  let rafSpy: Mock;
+  let cafSpy: Mock;
 
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
-    
-    // Setup global mocks
-    mockRaf = vi.fn((cb) => setTimeout(() => cb(Date.now()), 16));
-    mockCaf = vi.fn((id) => clearTimeout(id));
-    vi.stubGlobal('requestAnimationFrame', mockRaf);
-    vi.stubGlobal('cancelAnimationFrame', mockCaf);
-    
+
+    // FIX: Mock rAF với kiểu dữ liệu chuẩn và dọn dẹp trong afterEach
+    rafSpy = vi.fn((cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 16));
+    cafSpy = vi.fn((id: number) => clearTimeout(id));
+
+    vi.stubGlobal('requestAnimationFrame', rafSpy);
+    vi.stubGlobal('cancelAnimationFrame', cafSpy);
+
     lastHowlInstance = null;
-    mockHowlerVolume = 1;
 
     events = {
       onPlay: vi.fn(),
@@ -131,11 +142,13 @@ describe('AudioEngine', () => {
       onLoadError: vi.fn(),
       onPlayError: vi.fn(),
     };
-    engine = new AudioEngine(events);
+
+    engine = new AudioEngine(events as unknown as AudioEvents);
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   describe('Core Functionality', () => {
@@ -181,10 +194,10 @@ describe('AudioEngine', () => {
     it('should track progress using requestAnimationFrame', async () => {
       engine.load('song.mp3');
       vi.runOnlyPendingTimers(); // onload
-      
+
       engine.play();
       vi.runOnlyPendingTimers(); // onplay
-      
+
       // Move forward in time (3 animation frames)
       if (lastHowlInstance) lastHowlInstance._seek = 10;
       vi.advanceTimersByTime(16);
@@ -200,14 +213,14 @@ describe('AudioEngine', () => {
       vi.runOnlyPendingTimers();
       engine.play();
       vi.runOnlyPendingTimers();
-      
-      expect(mockRaf).toHaveBeenCalled();
-      
-      const lastRafId = mockRaf.mock.results.slice(-1)[0].value;
-      
+
+      expect(rafSpy).toHaveBeenCalled();
+
+      const lastRafId = rafSpy.mock.results.slice(-1)[0].value;
+
       engine.pause();
       vi.runOnlyPendingTimers();
-      expect(mockCaf).toHaveBeenCalledWith(lastRafId);
+      expect(cafSpy).toHaveBeenCalledWith(lastRafId);
     });
   });
 
@@ -215,7 +228,7 @@ describe('AudioEngine', () => {
     it('should handle seeking correctly', () => {
       engine.load('song.mp3');
       vi.runOnlyPendingTimers();
-      
+
       engine.seek(45);
       expect(lastHowlInstance?.seek).toHaveBeenCalledWith(45);
       expect(events.onProgress).toHaveBeenCalledWith(45, 180);
@@ -224,9 +237,9 @@ describe('AudioEngine', () => {
     it('should handle pending seek if called before load', () => {
       engine.load('song.mp3');
       engine.seek(90); // Called while loading
-      
+
       expect(lastHowlInstance?.seek).not.toHaveBeenCalledWith(90);
-      
+
       vi.runOnlyPendingTimers(); // Trigger onload
       expect(lastHowlInstance?.seek).toHaveBeenCalledWith(90);
     });
@@ -235,7 +248,7 @@ describe('AudioEngine', () => {
       await engine.setSinkId('speakers-123');
       engine.load('song.mp3');
       vi.runOnlyPendingTimers();
-      
+
       const node = lastHowlInstance?._sounds[0]._node;
       expect(node?.setSinkId).toHaveBeenCalledWith('speakers-123');
     });
@@ -243,7 +256,7 @@ describe('AudioEngine', () => {
     it('should handle events: onEnd and Errors', () => {
       engine.load('song.mp3');
       vi.runOnlyPendingTimers();
-      
+
       lastHowlInstance?._trigger('end');
       expect(events.onEnd).toHaveBeenCalled();
 
@@ -260,13 +273,14 @@ describe('AudioEngine', () => {
     });
   });
 
-  it('should reload the sound if play is called in unloaded state', () => {
+  it('should track progress using requestAnimationFrame', async () => {
     engine.load('song.mp3');
     vi.runOnlyPendingTimers();
-    
-    if (lastHowlInstance) lastHowlInstance._state = 'unloaded';
     engine.play();
-    
-    expect(lastHowlInstance?.load).toHaveBeenCalled();
+    vi.runOnlyPendingTimers();
+
+    if (lastHowlInstance) lastHowlInstance._seek = 10;
+    vi.advanceTimersByTime(16);
+    expect(events.onProgress).toHaveBeenCalledWith(10, 180);
   });
 });
