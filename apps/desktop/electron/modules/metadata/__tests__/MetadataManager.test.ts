@@ -64,7 +64,7 @@ describe('MetadataManager', () => {
     expect(NodeID3.update).toHaveBeenCalledWith(
       expect.objectContaining({
         unsynchronisedLyrics: {
-          language: 'vie',
+          language: 'eng',
           text: 'Line 1\nLine 2'
         }
       }),

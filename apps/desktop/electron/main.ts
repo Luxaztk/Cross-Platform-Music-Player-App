@@ -1,3 +1,5 @@
+process.env.YOUTUBE_DL_SKIP_PYTHON_CHECK = '1';
+
 import { app, BrowserWindow, protocol, session } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';

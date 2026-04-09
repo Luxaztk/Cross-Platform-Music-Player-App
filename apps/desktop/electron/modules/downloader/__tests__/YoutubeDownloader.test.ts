@@ -3,6 +3,13 @@ import { YoutubeDownloader } from '../YoutubeDownloader';
 import youtubedl from 'youtube-dl-exec';
 import { EventEmitter } from 'events';
 
+vi.mock('electron', () => ({
+  app: {
+    isPackaged: false,
+    getAppPath: vi.fn(),
+  },
+}));
+
 vi.mock('youtube-dl-exec', () => {
     const mockFunc: any = vi.fn().mockResolvedValue({
         id: '123',
@@ -11,7 +18,10 @@ vi.mock('youtube-dl-exec', () => {
         channel: 'Test Channel'
     });
     mockFunc.exec = vi.fn();
-    return { default: mockFunc };
+    return { 
+        create: vi.fn().mockReturnValue(mockFunc),
+        default: mockFunc 
+    };
 });
 
 describe('YoutubeDownloader', () => {

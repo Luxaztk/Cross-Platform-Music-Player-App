@@ -1,6 +1,19 @@
-import youtubedl from 'youtube-dl-exec';
+import { create as createYoutubeDl } from 'youtube-dl-exec';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { EventEmitter } from 'events';
+import { app } from 'electron';
+import path from 'node:path';
+
+const isDev = !app.isPackaged;
+const binName = process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp';
+
+// In Production, binaries are unpacked from ASAR into app.asar.unpacked
+const binaryPath = isDev
+  ? path.join(process.cwd(), 'node_modules/youtube-dl-exec/bin', binName)
+  : path.join(process.resourcesPath, 'app.asar.unpacked/node_modules/youtube-dl-exec/bin', binName);
+
+console.log('[YoutubeDownloader] yt-dlp path:', binaryPath);
+const youtubedl = createYoutubeDl(binaryPath);
 
 export interface YoutubeInfo {
   id: string;

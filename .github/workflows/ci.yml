@@ -1,0 +1,32 @@
+name: Desktop App CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    # (Tùy chọn) Bắt lỗi cú pháp bằng ESLint trước khi test
+    - name: Check Linting
+      run: npm run lint --if-present
+
+    # Chạy tất cả test bằng 1 lệnh duy nhất dựa trên cấu hình Workspaces
+    - name: Run All Unit Tests
+      run: npm run test --if-present

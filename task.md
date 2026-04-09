@@ -44,6 +44,7 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [x] **Giao diện Filter Tag**: Thiết kế Glassmorphism hiện đại với hệ thống thẻ tag thông minh.
 - [x] **Hệ thống màu Semantic (Semantic Color System)**: Loại bỏ hoàn toàn màu hard-code, chuyển sang hệ thống biến trung tâm giúp hỗ trợ 6 chủ đề (Midnight, Amoled, Nord, Rose, Ocean, Tame Snow) một cách đồng bộ.
 - [x] **Tải xuống trực tuyến (Online Download)**: Tích hợp yt-dlp & FFmpeg, hỗ trợ tự động import, kiểm tra trùng lặp và dọn dẹp file rác.
+- [x] **Standalone yt-dlp Integration**: Loại bỏ hoàn toàn phụ thuộc vào Python bằng binary độc lập và cơ chế tự động tìm đường dẫn trong môi trường asar/unpacked.
 - [x] **Xử lý tệp mồ côi (Orphaned Files Handling)**: Tự động bỏ qua bài hát mất file (Auto-skip) và công cụ quét/dọn dẹp thư viện (Library Cleanup Tool).
 - [x] **Biên tập Metadata (ID3 Tags)**: Hỗ trợ ghi đè thông tin bài hát (Tags) trực tiếp vào file vật lý (.mp3...).
 - [x] **Kiến trúc Context Splitting (Surgical Re-renders)**: Tái cấu trúc `LibraryProvider` thành mô hình Đa ngữ cảnh, triệt tiêu re-render dư thừa, tối ưu CPU/RAM khi xử lý thư viện lớn.
@@ -122,6 +123,7 @@ Mục tiêu: Bảo vệ logic dự án bằng Unit Test toàn diện (Full Cover
 - [x] **AudioEngine**: Logic điều khiển âm thanh & Queue management (100% Coverage)
 
 ### 4. @music/hooks (React Hooks & State)
+- [x] **YoutubeDownloader**: Logic trích xuất thông tin, tải audio và phân giải đường dẫn binary (100% Coverage)
 - [x] **LibraryProvider** & **PlayerProvider**: Đồng bộ trạng thái UI (100% Coverage)
 
 ---
