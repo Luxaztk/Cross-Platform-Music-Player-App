@@ -8,6 +8,8 @@ import { PlayerProvider, UIProvider } from '@music/hooks'
 import { ElectronStorageAdapter } from './infrastructure/services/ElectronStorageAdapter'
 import { useNotification } from './application/hooks'
 import { useLanguage } from './presentations/components/Language'
+import { ErrorBoundary } from './presentations/components/ErrorBoundary/ErrorBoundary'
+import { SettingsProvider } from './application/hooks'
 
 const storage = new ElectronStorageAdapter();
 
@@ -30,17 +32,21 @@ const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) => {
 };
 
 createRoot(document.getElementById('root')!).render(
-  <UIProvider>
-    <LanguageProvider>
-      <ThemeProvider storage={storage}>
-        <NotificationProvider>
-          <LibraryProvider>
-            <PlayerWithLibrary>
-              <App />
-            </PlayerWithLibrary>
-          </LibraryProvider>
-        </NotificationProvider>
-      </ThemeProvider>
-    </LanguageProvider>
-  </UIProvider>,
+  <SettingsProvider>
+    <UIProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <NotificationProvider>
+            <LibraryProvider>
+              <PlayerWithLibrary>
+                <ErrorBoundary componentName="Main Application">
+                  <App />
+                </ErrorBoundary>
+              </PlayerWithLibrary>
+            </LibraryProvider>
+          </NotificationProvider>
+        </ThemeProvider>
+      </LanguageProvider>
+    </UIProvider>
+  </SettingsProvider>,
 )

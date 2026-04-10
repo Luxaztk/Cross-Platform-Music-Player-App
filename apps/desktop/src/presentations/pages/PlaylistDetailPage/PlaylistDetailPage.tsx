@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { Virtuoso } from 'react-virtuoso';
 import { FileMusic, FolderPlus, Loader2, X, CheckSquare, Square, Trash, Filter } from 'lucide-react';
 import { useNotification } from '../../../application/hooks/useNotification';
 import { useLibraryContext } from '../../components/Library';
@@ -15,8 +16,7 @@ import { useTheme } from '../../components/Theme';
 import { SongRow } from './SongRow';
 import './PlaylistDetailPage.scss';
 
-const ROW_HEIGHT = 56;
-const BUFFER_SIZE = 5;
+
 
 const formatTotalDuration = (seconds: number, t: (key: string) => string) => {
   const totalSeconds = Math.round(seconds);
@@ -31,30 +31,30 @@ const formatTotalDuration = (seconds: number, t: (key: string) => string) => {
 };
 
 export const PlaylistDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [playlist, setPlaylist] = React.useState<PlaylistDetail | null>(null);
-  const [localSongs, setLocalSongs] = React.useState<Song[]>([]);
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [isImporting, setIsImporting] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [isSongPickerOpen, setIsSongPickerOpen] = React.useState(false);
+  const [id] = useState(useParams<{ id: string }>().id); // Stabilize ID
+  const [playlist, setPlaylist] = useState<PlaylistDetail | null>(null);
+  const [localSongs, setLocalSongs] = useState<Song[]>([]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSongPickerOpen, setIsSongPickerOpen] = useState(false);
 
-  // Virtualization state: driven by window scroll
-  const [scrollTop, setScrollTop] = React.useState(0);
-  const [isHeaderSticky, setIsHeaderSticky] = React.useState(false);
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  // Virtualization state
+  const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
+  const virtuosoRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Selection state
-  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Existing Menus/Modals state
-  const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
-  const [activeSubMenuId, setActiveSubMenuId] = React.useState<string | null>(null);
-  const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
-  const [editingSong, setEditingSong] = React.useState<Song | null>(null);
-  const [deletingSong, setDeletingSong] = React.useState<Song | null>(null);
-  const [bulkDeleteMode, setBulkDeleteMode] = React.useState<'library' | 'playlist' | null>(null);
-  const menuRef = React.useRef<HTMLDivElement>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [activeSubMenuId, setActiveSubMenuId] = useState<string | null>(null);
+  const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
+  const [editingSong, setEditingSong] = useState<Song | null>(null);
+  const [deletingSong, setDeletingSong] = useState<Song | null>(null);
+  const [bulkDeleteMode, setBulkDeleteMode] = useState<'library' | 'playlist' | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const {
     handleImportFiles,
@@ -80,7 +80,7 @@ export const PlaylistDetailPage: React.FC = () => {
 
   const isLibrary = id === '0';
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (id) {
       setIsLoading(true);
       setPlaylist(null);
@@ -103,32 +103,16 @@ export const PlaylistDetailPage: React.FC = () => {
     };
   }, [id, libraryVersion, handleGetPlaylistDetail, setLibraryFilter]);
 
-  // Handle scroll for manual virtualization: driven by .main-area scroll
-  React.useEffect(() => {
-    const mainArea = document.querySelector('.main-area');
-    if (!mainArea) return;
-
-    const handleScroll = () => {
-      if (!containerRef.current) return;
-      
-      const rect = containerRef.current.getBoundingClientRect();
-      const mainRect = mainArea.getBoundingClientRect();
-      
-      // Calculate how far the list has scrolled up past the top of the main area
-      const relativeTop = mainRect.top - rect.top;
-      
-      setScrollTop(Math.max(0, relativeTop));
-      setIsHeaderSticky(relativeTop > 0);
-    };
-
-    mainArea.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    
-    return () => mainArea.removeEventListener('scroll', handleScroll);
-  }, [id, libraryVersion]);
+  // Handle scroll parent detection
+  useEffect(() => {
+    const mainAreaNode = document.querySelector('.main-area') as HTMLElement;
+    if (mainAreaNode) {
+      setScrollParent(mainAreaNode);
+    }
+  }, []);
 
   // Click out to close menu
-  React.useEffect(() => {
+  useEffect(() => {
     const handleClickOut = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setActiveMenuId(null);
@@ -142,7 +126,7 @@ export const PlaylistDetailPage: React.FC = () => {
   }, [activeMenuId]);
 
   // Keyboard shortcut for Delete
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' && selectedIds.size > 0) {
         if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
@@ -224,7 +208,7 @@ export const PlaylistDetailPage: React.FC = () => {
     }
   };
 
-  const toggleSelect = (songId: string, e?: React.MouseEvent) => {
+  const toggleSelect = useCallback((songId: string, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
     }
@@ -237,7 +221,7 @@ export const PlaylistDetailPage: React.FC = () => {
       }
       return next;
     });
-  };
+  }, []);
 
   const toggleFilter = (type: 'artist' | 'album', value: string) => {
     if (libraryFilter.type !== type && libraryFilter.type !== 'none') {
@@ -247,7 +231,7 @@ export const PlaylistDetailPage: React.FC = () => {
 
     const currentValues = libraryFilter.values;
     const index = currentValues.indexOf(value);
-    
+
     if (index > -1) {
       const next = currentValues.filter(v => v !== value);
       setLibraryFilter({
@@ -262,13 +246,13 @@ export const PlaylistDetailPage: React.FC = () => {
     }
   };
 
-  const filteredSongs = React.useMemo(() => {
+  const filteredSongs = useMemo(() => {
     const sorted = [...(libraryFilter.type !== 'none' && libraryFilter.values.length > 0 ? localSongs.filter(song => {
       if (libraryFilter.type === 'artist') {
         const queries = libraryFilter.values
           .flatMap(v => splitArtists(v))
           .map(v => v.toLowerCase().trim());
-        
+
         const allArtists = (song.artists || [song.artist])
           .flatMap(a => splitArtists(a))
           .map(a => a.toLowerCase().trim());
@@ -342,17 +326,63 @@ export const PlaylistDetailPage: React.FC = () => {
     setActiveSubMenuId(null);
   };
 
-  // Virtualization calculations
-  const viewportHeight = window.innerHeight; 
-  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER_SIZE);
-  const endIndex = Math.min(filteredSongs.length, Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + BUFFER_SIZE);
-  
-  const visibleSongs = filteredSongs.slice(startIndex, endIndex);
-  const totalHeight = filteredSongs.length * ROW_HEIGHT;
-  const paddingOffset = startIndex * ROW_HEIGHT;
+  // Row component for Virtuoso - simplified since style is managed by Virtuoso
+  // renderRow now receives both index and the song data from Virtuoso
+  const renderRow = useCallback((index: number, song: Song) => {
+    if (!song) return null;
+
+    return (
+      <SongRow
+        key={song.id}
+        song={song}
+        index={index}
+        isSelected={selectedIds.has(song.id)}
+        style={{ height: 56 }} // Pass style as expected by component
+        isPlaying={currentSong?.id === song.id}
+        isActiveMenu={activeMenuId === song.id}
+        activeSubMenuId={activeSubMenuId}
+        menuPlacement={menuPlacement}
+        playlists={playlists}
+        currentPlaylistId={id}
+        t={t}
+        appIcon={appIcon}
+        menuRef={menuRef}
+        onToggleSelect={toggleSelect}
+        onPlay={() => playList(filteredSongs, index)}
+        onPlayNext={() => {
+          playNext(song);
+          setActiveMenuId(null);
+        }}
+        onAddToQueue={() => {
+          addToQueue(song);
+          setActiveMenuId(null);
+        }}
+        onAddToPlaylist={(pid) => onAddSongsToPlaylist(pid, [song.id])}
+        onEdit={() => {
+          setEditingSong(song);
+          setIsEditModalOpen(true);
+          setActiveMenuId(null);
+        }}
+        onDelete={() => onDeleteSong(song)}
+        onToggleFilter={toggleFilter}
+        onToggleMenu={(sid, e) => {
+          e.stopPropagation();
+          if (activeMenuId === sid) {
+            setActiveMenuId(null);
+          } else {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            setMenuPlacement(spaceBelow < 250 ? 'top' : 'bottom');
+            setActiveMenuId(sid);
+          }
+        }}
+        onToggleSubMenu={(sid) => setActiveSubMenuId(activeSubMenuId === sid ? null : sid)}
+      />
+    );
+  }, [filteredSongs, selectedIds, currentSong, activeMenuId, activeSubMenuId, menuPlacement, playlists, id, t, appIcon, toggleSelect, playList, playNext, addToQueue, handleAddSongsToPlaylist]);
 
   return (
-    <div className="playlist-detail-page">
+    <div className="playlist-detail-page" ref={containerRef}>
       <div className="playlist-header-container">
         <div className="playlist-cover-large">
           {isLoading ? (
@@ -432,108 +462,67 @@ export const PlaylistDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="songs-list-container" ref={containerRef}>
-        {libraryFilter.type !== 'none' && libraryFilter.values.length > 0 && (
-          <div className="filter-chip-container">
-            <div className="active-filter-label">
-              <Filter size={12} className="filter-icon" />
-              <span className="filter-text">{t('playlist.filteringBy')}</span>
-            </div>
-            
-            <div className="filter-tags-list">
-              {libraryFilter.values.map((val) => (
-                <div key={val} className="active-filter-tag">
-                  <span className="tag-value">{val}</span>
-                  <button
-                    className="remove-tag-btn"
-                    onClick={() => {
-                      const next = libraryFilter.values.filter(v => v !== val);
-                      setLibraryFilter({
-                        type: next.length === 0 ? 'none' : libraryFilter.type,
-                        values: next
-                      });
-                    }}
-                    title={t('common.clear')}
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
+      {libraryFilter.type !== 'none' && libraryFilter.values.length > 0 && (
+        <div className="filter-chip-container" style={{ background: 'var(--bg-surface)' }}>
+          <div className="active-filter-label">
+            <Filter size={12} className="filter-icon" />
+            <span className="filter-text">{t('playlist.filteringBy')}</span>
+          </div>
+
+          <div className="filter-tags-list">
+            {libraryFilter.values.map((val) => (
+              <div key={val} className="active-filter-tag">
+                <span className="tag-value">{val}</span>
+                <button
+                  className="remove-tag-btn"
+                  onClick={() => {
+                    const next = libraryFilter.values.filter(v => v !== val);
+                    setLibraryFilter({
+                      type: next.length === 0 ? 'none' : libraryFilter.type,
+                      values: next
+                    });
+                  }}
+                  title={t('common.clear')}
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="list-header sticky-table-header">
+        <div className="col-idx">
+          <button className="checkbox-header-btn" onClick={toggleSelectAll}>
+            {selectedIds.size === filteredSongs.length && filteredSongs.length > 0 ? (
+              <CheckSquare size={16} className="text-primary" />
+            ) : (
+              <Square size={16} />
+            )}
+          </button>
+        </div>
+        <div className="col-title">{t('playlist.title')}</div>
+        <div className="col-album">{t('playlist.album')}</div>
+        <div className="col-duration">{t('playlist.duration')}</div>
+        <div className="col-more"></div>
+      </div>
+
+      <div className="songs-list-container">
+        {scrollParent ? (
+          <Virtuoso
+            ref={virtuosoRef}
+            customScrollParent={scrollParent}
+            data={filteredSongs}
+            itemContent={(index, song) => renderRow(index, song)}
+            fixedItemHeight={56}
+            increaseViewportBy={300}
+          />
+        ) : (
+          <div className="loading-skeleton-container" style={{ padding: '20px' }}>
+            <div className="skeleton-text large skeleton" style={{ width: '300px', height: '40px' }} />
           </div>
         )}
-
-        <div className={`list-header ${isHeaderSticky ? 'is-sticky' : ''}`} style={{ position: 'sticky', top: 0, zIndex: 101 }}>
-          <div className="col-idx">
-            <button className="checkbox-header-btn" onClick={toggleSelectAll}>
-              {selectedIds.size === filteredSongs.length && filteredSongs.length > 0 ? (
-                <CheckSquare size={16} className="text-primary" />
-              ) : (
-                <Square size={16} />
-              )}
-            </button>
-          </div>
-          <div className="col-title">{t('playlist.title')}</div>
-          <div className="col-album">{t('playlist.album')}</div>
-          <div className="col-duration">{t('playlist.duration')}</div>
-          <div className="col-more"></div>
-        </div>
-
-        <div className="virtual-list-viewport" style={{ height: totalHeight, position: 'relative' }}>
-          <div className="virtual-list-content" style={{ transform: `translateY(${paddingOffset}px)` }}>
-            {filteredSongs.length === 0 ? (
-              <p className="no-songs">{t('playlist.noSongs')}</p>
-            ) : (
-              visibleSongs.map((song, i) => (
-                <SongRow
-                  key={song.id}
-                  song={song}
-                  index={startIndex + i}
-                  isSelected={selectedIds.has(song.id)}
-                  isPlaying={currentSong?.id === song.id}
-                  isActiveMenu={activeMenuId === song.id}
-                  activeSubMenuId={activeSubMenuId}
-                  menuPlacement={menuPlacement}
-                  playlists={playlists}
-                  currentPlaylistId={id}
-                  t={t}
-                  appIcon={appIcon}
-                  menuRef={menuRef}
-                  onToggleSelect={toggleSelect}
-                  onPlay={() => playList(filteredSongs, startIndex + i)}
-                  onPlayNext={() => {
-                    playNext(song);
-                    setActiveMenuId(null);
-                  }}
-                  onAddToQueue={() => {
-                    addToQueue(song);
-                    setActiveMenuId(null);
-                  }}
-                  onAddToPlaylist={(pid) => onAddSongsToPlaylist(pid, [song.id])}
-                  onEdit={() => {
-                    setEditingSong(song);
-                    setIsEditModalOpen(true);
-                    setActiveMenuId(null);
-                  }}
-                  onDelete={() => onDeleteSong(song)}
-                  onToggleFilter={toggleFilter}
-                  onToggleMenu={(sid, e) => {
-                    e.stopPropagation();
-                    if (activeMenuId === sid) {
-                      setActiveMenuId(null);
-                    } else {
-                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      const spaceBelow = window.innerHeight - rect.bottom;
-                      setMenuPlacement(spaceBelow < 250 ? 'top' : 'bottom');
-                      setActiveMenuId(sid);
-                    }
-                  }}
-                  onToggleSubMenu={(sid) => setActiveSubMenuId(activeSubMenuId === sid ? null : sid)}
-                />
-              ))
-            )}
-          </div>
-        </div>
       </div>
 
       {selectedIds.size > 0 && (
@@ -563,7 +552,7 @@ export const PlaylistDetailPage: React.FC = () => {
 
       <EditModal
         type={editingSong ? 'song' : 'playlist'}
-        data={editingSong || playlist}
+        data={(editingSong || playlist) as any}
         isOpen={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
@@ -580,11 +569,11 @@ export const PlaylistDetailPage: React.FC = () => {
         onConfirm={deletingSong ? confirmDeleteSong : confirmBulkDelete}
         title={bulkDeleteMode ? (t('modal.bulkDeleteTitle') || 'Xóa hàng loạt') : t('modal.deleteSongTitle')}
         message={
-          bulkDeleteMode === 'library' 
+          bulkDeleteMode === 'library'
             ? (t('modal.bulkDeleteLibraryMessage', { count: selectedIds.size }) || `Bạn có chắc muốn xóa vĩnh viễn ${selectedIds.size} bài hát đã chọn khỏi thư viện?`)
             : bulkDeleteMode === 'playlist'
-            ? (t('modal.bulkRemovePlaylistMessage', { count: selectedIds.size }) || `Bạn có chắc muốn gỡ ${selectedIds.size} bài hát khỏi playlist này?`)
-            : t('modal.deleteSongQuestion')
+              ? (t('modal.bulkRemovePlaylistMessage', { count: selectedIds.size }) || `Bạn có chắc muốn gỡ ${selectedIds.size} bài hát khỏi playlist này?`)
+              : t('modal.deleteSongQuestion')
         }
         itemName={deletingSong?.title}
         messageSuffix={deletingSong ? t('modal.deleteSongFromPlaylist') : undefined}

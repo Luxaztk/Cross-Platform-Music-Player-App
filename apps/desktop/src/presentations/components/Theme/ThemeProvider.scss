@@ -11,11 +11,11 @@
   --font-size-2xl: 2.25rem;
 
   /* Spacing & Sizing */
-  --spacing-xs: 5px;
-  --spacing-sm: 10px;
-  --spacing-md: 20px;
-  --spacing-lg: 30px;
-  --spacing-xl: 40px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
   --panel-gap: 8px;
 
   /* Corners (Standard) */
@@ -27,13 +27,18 @@
   /* Animation */
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Range */
+  --range-progress: 0%;
 }
 
 /* Midnight Theme (Default - Dark Charcoal & Emerald) */
 body[data-theme='midnight'],
 body:not([data-theme]) {
   --bg-primary: #0a0a0a;
+  --bg-primary-rgb: 10, 10, 10;
   --bg-surface: rgba(255, 255, 255, 0.05);
+  --bg-surface-rgb: 255, 255, 255;
   --bg-surface-hover: rgba(255, 255, 255, 0.08);
   --bg-surface-solid: #1c1c1c;
   --color-primary: #10b981;
@@ -74,10 +79,13 @@ body:not([data-theme]) {
 /* Amoled Theme (True Black) */
 body[data-theme='amoled'] {
   --bg-primary: #000000;
+  --bg-primary-rgb: 0, 0, 0;
   --bg-surface: rgba(255, 255, 255, 0.06);
+  --bg-surface-rgb: 255, 255, 255;
   --bg-surface-hover: rgba(255, 255, 255, 0.12);
   --bg-surface-solid: #111111;
   --color-primary: #10b981;
+  --color-primary-rgb: 16, 185, 129;
   --color-primary-hover: #059669;
 
   --color-text-main: #ffffff;
@@ -112,10 +120,13 @@ body[data-theme='amoled'] {
 /* Nord Theme (Snowy Blue-Grey & Frost) */
 body[data-theme='nord'] {
   --bg-primary: #2e3440;
+  --bg-primary-rgb: 46, 52, 64;
   --bg-surface: #434c5e;
+  --bg-surface-rgb: 67, 76, 94;
   --bg-surface-hover: #4c566a;
   --bg-surface-solid: #5e6b7d;
   --color-primary: #88c0d0;
+  --color-primary-rgb: 136, 192, 208;
   --color-primary-hover: #eceff4;
 
   --color-text-main: #eceff4;
@@ -150,10 +161,13 @@ body[data-theme='nord'] {
 /* Rose Theme (Deep Stone & Dusty Rose) */
 body[data-theme='rose'] {
   --bg-primary: #1c1917;
+  --bg-primary-rgb: 28, 25, 23;
   --bg-surface: #292524;
+  --bg-surface-rgb: 41, 37, 36;
   --bg-surface-hover: #44403c;
   --bg-surface-solid: #57534e;
   --color-primary: #f43f5e;
+  --color-primary-rgb: 244, 63, 94;
   --color-primary-hover: #e11d48;
 
   --color-text-main: #fafaf9;
@@ -188,10 +202,13 @@ body[data-theme='rose'] {
 /* Ocean Theme (Deep Navy & Cyan) */
 body[data-theme='ocean'] {
   --bg-primary: #0f172a;
+  --bg-primary-rgb: 15, 23, 42;
   --bg-surface: #1e293b;
+  --bg-surface-rgb: 30, 41, 59;
   --bg-surface-hover: #334155;
   --bg-surface-solid: #475569;
   --color-primary: #06b6d4;
+  --color-primary-rgb: 6, 182, 212;
   --color-primary-hover: #22d3ee;
 
   --color-text-main: #f8fafc;
@@ -227,8 +244,10 @@ body[data-theme='ocean'] {
 body[data-theme='snow'] {
   /* 1. Bảng màu chủ đạo */
   --bg-primary: #f7f4ed;
+  --bg-primary-rgb: 247, 244, 237;
   /* Kem sáng, nền Library/Playlist */
   --bg-surface: #fdfbf7;
+  --bg-surface-rgb: 253, 251, 247;
   /* Hơi sáng hơn nền một xíu để Card nổi lên */
   --bg-surface-hover: #d1dee5;
   /* Accent nhạt cho Muted Slate Blue (Active Tab/Hover) */
@@ -236,6 +255,7 @@ body[data-theme='snow'] {
   /* Kem tối hơn một chút */
 
   --color-primary: #1c2a3a;
+  --color-primary-rgb: 28, 42, 58;
   /* Accent đậm: Navy cho nút Play/Pause */
   --color-primary-hover: #253445;
 

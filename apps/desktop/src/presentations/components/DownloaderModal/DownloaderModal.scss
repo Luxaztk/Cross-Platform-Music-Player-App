@@ -137,7 +137,7 @@
         &.success {
           color: var(--color-success);
           border-color: var(--color-success);
-          background: rgba(var(--color-success-rgb), 0.1);
+          background: rgba(var(--bg-primary-rgb), 0.1);
           transform: scale(1.05);
         }
       }
@@ -241,8 +241,8 @@
     gap: 10px;
     padding: 12px 14px;
     border-radius: var(--radius-md);
-    background: rgba(var(--color-warning-rgb, 234, 179, 8), 0.1);
-    border: 1px solid rgba(var(--color-warning-rgb, 234, 179, 8), 0.4);
+    background: rgba(234, 179, 8, 0.1);
+    border: 1px solid rgba(234, 179, 8, 0.4);
     margin-bottom: 6px;
     color: var(--color-warning);
 
@@ -353,24 +353,33 @@
     margin-bottom: 8px;
   }
 
-  &.success .status-icon { color: var(--color-success); }
-  &.error .status-icon { color: var(--color-error); }
+  &.success .status-icon {
+    color: var(--color-success);
+  }
 
-  h3 { margin: 0; color: var(--color-text-main); font-size: var(--font-size-lg); }
+  &.error .status-icon {
+    color: var(--color-error);
+  }
+
+  h3 {
+    margin: 0;
+    color: var(--color-text-main);
+    font-size: var(--font-size-lg);
+  }
 
   .duplicate-info-banner {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(var(--color-warning-rgb, 234, 179, 8), 0.08);
-    border: 1px solid rgba(var(--color-warning-rgb, 234, 179, 8), 0.3);
+    background: rgba(234, 179, 8, 0.08);
+    border: 1px solid rgba(234, 179, 8, 0.3);
     border-radius: var(--radius-md);
     padding: 10px 14px;
     font-size: var(--font-size-sm);
     color: var(--color-warning);
     width: 100%;
   }
-  
+
   .file-path-info {
     background: var(--bg-surface-hover);
     padding: 12px 16px;
@@ -448,21 +457,40 @@
     cursor: pointer;
     transition: transform var(--transition-fast);
 
-    &:hover { transform: translateY(-2px); }
+    &:hover {
+      transform: translateY(-2px);
+    }
   }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modalScaleUp {
-  from { transform: scale(0.9) translateY(20px); opacity: 0; }
-  to { transform: scale(1) translateY(0); opacity: 1; }
+  from {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }

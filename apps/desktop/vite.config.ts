@@ -25,6 +25,10 @@ export default defineConfig({
         vite: {
           build: {
             rollupOptions: {
+              input: {
+                main: path.join(__dirname, 'electron/main.ts'),
+                'metadata.worker': path.join(__dirname, 'electron/workers/metadata.worker.ts'),
+              },
               external: [
                 'electron',
                 'music-metadata',

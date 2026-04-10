@@ -1,7 +1,8 @@
 .playlist-detail-page {
   display: flex;
   flex-direction: column;
-  // height: 100%; // Remove fixed height
+  min-height: 100%;
+  position: relative;
 
   .playlist-header-container {
     display: flex;
@@ -12,6 +13,7 @@
     align-items: flex-end;
     position: relative;
     padding: 30px var(--spacing-lg) 20px;
+    flex-shrink: 0;
 
     .playlist-cover-large {
       width: 232px;
@@ -115,166 +117,176 @@
     }
   }
 
-  .songs-list-container {
-    padding: 0 0 120px; // Remove side padding here, move it to children for true sticky
-    background: var(--bg-surface);
-    // flex-grow: 1; // Allow natural height
+  .filter-chip-container {
+    padding: 12px var(--spacing-lg);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    position: relative;
+    z-index: 100;
 
-    .filter-chip-container {
-      padding: 12px var(--spacing-lg);
+    .active-filter-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-text-dim);
+      padding-right: 4px;
+
+      .filter-icon {
+        color: var(--color-primary);
+        filter: drop-shadow(0 0 4px rgba(var(--color-primary-rgb), 0.6));
+      }
+
+      .filter-text {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 800;
+      }
+    }
+
+    .filter-tags-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      position: relative;
-      z-index: 100;
+      gap: 8px;
 
-      .active-filter-label {
+      .active-filter-tag {
         display: flex;
         align-items: center;
-        gap: 8px;
-        color: var(--color-text-dim);
-        padding-right: 4px;
-
-        .filter-icon {
-          color: var(--color-primary);
-          filter: drop-shadow(0 0 4px rgba(var(--color-primary-rgb), 0.6));
-        }
-
-        .filter-text {
-          font-size: 0.65rem;
-          text-transform: uppercase;
-          letter-spacing: 1.5px;
-          font-weight: 800;
-        }
-      }
-
-      .filter-tags-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-
-        .active-filter-tag {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 10px;
-          background: rgba(var(--color-primary-rgb), 0.1);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(var(--color-primary-rgb), 0.3);
-          border-radius: 500px;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          animation: fadeInScale 0.3s ease-out;
-
-          &:hover {
-            background: rgba(var(--color-primary-rgb), 0.15);
-            border-color: rgba(var(--color-primary-rgb), 0.5);
-            transform: scale(1.05);
-            box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.2);
-          }
-
-          .tag-value {
-            font-size: 0.85rem;
-            color: white;
-            font-weight: 600;
-          }
-
-          .remove-tag-btn {
-            background: transparent;
-            border: none;
-            color: var(--color-text-dim);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2px;
-            border-radius: 50%;
-            transition: all 0.2s ease;
-
-            &:hover {
-              color: var(--color-error);
-              background: var(--color-error-bg);
-            }
-          }
-        }
-      }
-    }
-
-    @keyframes fadeInScale {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    .list-header {
-      display: grid;
-      grid-template-columns: 80px 1.5fr 1fr 120px 80px;
-      padding: 12px var(--spacing-lg);
-      align-items: center;
-      border-bottom: 1px solid var(--border-subtle);
-      margin-bottom: 8px;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--color-text-dim);
-      background: var(--bg-primary);
-      transition: all 0.3s ease;
-
-      &.is-sticky {
-        background: var(--bg-primary);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        border-bottom-color: var(--color-primary);
-      }
-
-      .checkbox-header-btn {
-        background: none;
-        border: none;
-        color: var(--color-text-dim);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        border-radius: 4px;
-        margin: 0 auto;
-        transition: all 0.2s ease;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(var(--color-primary-rgb), 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+        border-radius: 500px;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: fadeInScale 0.3s ease-out;
 
         &:hover {
-          background: var(--bg-overlay);
-          color: var(--color-text);
+          background: rgba(var(--color-primary-rgb), 0.15);
+          border-color: rgba(var(--color-primary-rgb), 0.5);
+          transform: scale(1.05);
+          box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.2);
         }
 
-        .text-primary {
-          color: var(--color-primary);
+        .tag-value {
+          font-size: 0.85rem;
+          color: white;
+          font-weight: 600;
         }
-      }
 
-      .col-album,
-      .col-duration {
-        padding: 0 8px;
-      }
+        .remove-tag-btn {
+          background: transparent;
+          border: none;
+          color: var(--color-text-dim);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2px;
+          border-radius: 50%;
+          transition: all 0.2s ease;
 
-      .col-album {
-        text-align: left;
-      }
-
-      .col-duration {
-        text-align: center;
+          &:hover {
+            color: var(--color-error);
+            background: var(--color-error-bg);
+          }
+        }
       }
     }
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .list-header,
+  .sticky-table-header {
+    display: grid;
+    grid-template-columns: 80px 1.5fr 1fr 120px 80px;
+    padding: 12px var(--spacing-lg);
+    align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-dim);
+    background: var(--bg-primary);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1001;
+
+    &.sticky-table-header {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    &.is-sticky {
+      background: var(--bg-primary);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .checkbox-header-btn {
+      background: none;
+      border: none;
+      color: var(--color-text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      margin: 0 auto;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--bg-overlay);
+        color: var(--color-text-main);
+      }
+
+      .text-primary {
+        color: var(--color-primary);
+      }
+    }
+
+    .col-album,
+    .col-duration {
+      padding: 0 8px;
+    }
+
+    .col-album {
+      text-align: left;
+    }
+
+    .col-duration {
+      text-align: center;
+    }
+  }
+
+  .songs-list-container {
+    background: var(--bg-surface);
+    flex: 1;
+    min-height: 0;
 
     .song-row {
       display: grid;
       grid-template-columns: 80px 1.5fr 1fr 120px 80px;
+      height: 56px;
+      padding: 0 var(--spacing-lg);
       align-items: center;
-      padding: 8px var(--spacing-lg);
       border-radius: 4px;
       font-size: 0.9rem;
       color: var(--color-text-dim);
@@ -285,7 +297,7 @@
 
       &:hover {
         background: var(--bg-surface-dim);
-        color: var(--color-text);
+        color: var(--color-text-main);
 
         .col-idx {
           .checkbox-cell {
@@ -302,7 +314,7 @@
       &.selected {
         background: rgba(var(--color-primary-rgb), 0.15);
         border-color: rgba(var(--color-primary-rgb), 0.3);
-        color: var(--color-text);
+        color: var(--color-text-main);
 
         .col-idx {
           .checkbox-cell {
@@ -561,6 +573,11 @@
       text-align: center;
       color: var(--color-text-dim);
     }
+
+    .virtual-list-wrapper {
+      width: 100%;
+      position: relative;
+    }
   }
 }
 
@@ -574,7 +591,7 @@
   padding: 12px 24px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   display: flex;
   align-items: center;
   gap: 24px;
@@ -634,7 +651,7 @@
 
       &.secondary {
         background: var(--bg-overlay);
-        color: var(--color-text);
+        color: var(--color-text-main);
 
         &:hover {
           background: var(--bg-overlay);
@@ -655,7 +672,7 @@
         color: var(--color-text-dim);
 
         &:hover {
-          color: var(--color-text);
+          color: var(--color-text-main);
         }
       }
     }

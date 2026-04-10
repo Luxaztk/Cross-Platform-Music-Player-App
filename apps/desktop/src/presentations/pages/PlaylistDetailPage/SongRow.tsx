@@ -7,6 +7,7 @@ import { formatTime, splitArtists } from '@music/utils';
 interface SongRowProps {
   song: Song;
   index: number;
+  style?: React.CSSProperties; // Add for react-window
   isSelected: boolean;
   isPlaying: boolean;
   isActiveMenu: boolean;
@@ -32,6 +33,7 @@ interface SongRowProps {
 export const SongRow: React.FC<SongRowProps> = React.memo(({
   song,
   index,
+  style,
   isSelected,
   isPlaying,
   isActiveMenu,
@@ -70,6 +72,7 @@ export const SongRow: React.FC<SongRowProps> = React.memo(({
     <div
       className={`song-row ${isSelected ? 'selected' : ''} ${isActiveMenu ? 'menu-open' : ''} ${isPlaying ? 'playing' : ''}`}
       onClick={() => onToggleSelect(song.id)}
+      style={style}
     >
       <div className="col-idx">
         <div className="checkbox-cell" onClick={(e) => onToggleSelect(song.id, e)}>

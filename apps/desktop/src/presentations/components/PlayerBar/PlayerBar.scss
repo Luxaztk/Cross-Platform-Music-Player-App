@@ -12,6 +12,7 @@
 
   // Global styled-range input
   input[type="range"].styled-range {
+
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
@@ -443,7 +444,7 @@
 
 .queue-item-wrapper {
   outline: none;
-  font-family: var(--font-family);
+  font-family: var(--font-family-main);
 
   &.is-in-portal {
     width: 316px; // Standardized width - (340 - 12*2)
@@ -492,7 +493,7 @@
   &.is-dragging {
     background: var(--color-primary) !important;
     border-color: var(--color-primary-hover) !important;
-    box-shadow: var(--shadow-lg, var(--shadow-md));
+    box-shadow: var(--shadow-md, var(--shadow-md));
     transform: scale(1.06) rotate(1.5deg);
     z-index: 100000;
     pointer-events: auto;

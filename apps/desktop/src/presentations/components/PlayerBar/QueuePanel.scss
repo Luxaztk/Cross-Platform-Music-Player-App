@@ -2,7 +2,7 @@
   width: 320px;
   background-color: var(--bg-surface-solid);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg, var(--shadow-md));
+  box-shadow: var(--shadow-md, var(--shadow-md));
   border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -47,7 +47,7 @@
   .queue-list-container {
     flex: 1;
     overflow-y: auto;
-    
+
     @include no-scrollbar;
 
     .queue-empty {
@@ -169,6 +169,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

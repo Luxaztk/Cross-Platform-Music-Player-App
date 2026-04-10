@@ -3,13 +3,23 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { YoutubeDownloader } from '../modules/downloader/YoutubeDownloader';
 import { MetadataManager } from '../modules/metadata/MetadataManager';
+import { storageAdapter } from './storage';
 import type { ID3Metadata } from '../modules/metadata/MetadataManager';
+import crypto from 'node:crypto';
+import { normalizePathForHash } from '@music/utils';
 
 const downloader = new YoutubeDownloader();
 const metadataManager = new MetadataManager();
 
 const getDownloadsDir = async () => {
-    // Save to User's Music/Melovista Downloads folder
+    // 1. Get custom path from settings
+    const settings = await storageAdapter.getSettings();
+    if (settings.downloads.downloadPath) {
+        await fs.mkdir(settings.downloads.downloadPath, { recursive: true });
+        return settings.downloads.downloadPath;
+    }
+
+    // 2. Fallback to default Melovista Downloads folder
     const musicDir = app.getPath('music');
     const downloadsDir = path.join(musicDir, 'Melovista Downloads');
     await fs.mkdir(downloadsDir, { recursive: true });
@@ -48,6 +58,31 @@ export const setupDownloaderIPC = () => {
 
             downloader.off('progress', progressHandler);
 
+            try {
+                const info = await downloader.getInfo(url);
+
+                if (info.thumbnail) {
+                    const coversDir = path.join(app.getPath('userData'), 'cache', 'covers');
+                    await fs.mkdir(coversDir, { recursive: true });
+
+                    // Tải ảnh từ Youtube (Node 18+ hỗ trợ sẵn fetch)
+                    const response = await fetch(info.thumbnail);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const buffer = Buffer.from(arrayBuffer);
+
+                    // Băm MD5 chuẩn hóa y như Worker và Main
+                    const hash = crypto.createHash('md5').update(normalizePathForHash(savedPath)).digest('hex');
+                    const safeFileName = `${hash}.jpg`;
+                    const coverPath = path.join(coversDir, safeFileName);
+
+                    // Ghi file ảnh xuống ổ cứng
+                    await fs.writeFile(coverPath, buffer);
+                    console.log(`[Downloader] Đã lưu Thumbnail YouTube: ${safeFileName}`);
+                }
+            } catch (thumbErr) {
+                console.error('[Downloader] Lỗi khi tải thumbnail từ Youtube:', thumbErr);
+            }
+
             return { success: true, filePath: savedPath };
         } catch (error) {
             if (error instanceof Error) {
@@ -79,12 +114,32 @@ export const setupDownloaderIPC = () => {
 
     ipcMain.handle('delete-file', async (_event, filePath: string) => {
         try {
-            await fs.unlink(filePath);
-            console.log('[IPC] Deleted orphaned file:', filePath);
+            if (!filePath) return { success: false, error: 'Path is required' };
+
+            // 1. Normalize and resolve the path
+            const normalizedPath = path.resolve(filePath);
+            const downloadsDir = await getDownloadsDir();
+            const musicDir = app.getPath('music');
+
+            // 2. Security Guardrail: Only allow deletion within controlled directories
+            // We allow Melovista Downloads and the general Music folder (if standard file)
+            const isInsideDownloads = normalizedPath.startsWith(downloadsDir);
+            const isInsideMusic = normalizedPath.startsWith(musicDir);
+
+            if (!isInsideDownloads && !isInsideMusic) {
+                console.warn(`[Security] Unauthorized delete attempt: ${normalizedPath}`);
+                return { success: false, error: 'Unauthorized: Cannot delete files outside of designated directories.' };
+            }
+
+            // 3. Final safety: Ensure it exists before unlinking
+            await fs.access(normalizedPath);
+            await fs.unlink(normalizedPath);
+
+            console.log('[IPC] Securely deleted file:', normalizedPath);
             return { success: true };
         } catch (err: unknown) {
             console.error('[IPC] Failed to delete file:', err);
-            return { success: false };
+            return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
         }
     });
 };

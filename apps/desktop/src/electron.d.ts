@@ -48,6 +48,8 @@ declare global {
       savePlayerState: (state: PlayerState) => Promise<void>;
       getRecentSearches: () => Promise<RecentSearch[]>;
       saveRecentSearches: (searches: RecentSearch[]) => Promise<void>;
+      getLyricUsage: () => Promise<Record<string, number>>;
+      saveLyricUsage: (usage: Record<string, number>) => Promise<void>;
 
       fetchYtInfo: (url: string) => Promise<{ success: boolean; info?: YoutubeInfo; error?: string }>;
       downloadYtAudio: (url: string, title: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
@@ -55,6 +57,9 @@ declare global {
       onDownloadProgress: (callback: (data: { url: string; percent: number }) => void) => () => void;
       openItemPath: (filePath: string) => Promise<void>;
       deleteFile: (filePath: string) => Promise<{ success: boolean }>;
+      getSettings: () => Promise<any>;
+      saveSettings: (settings: any) => Promise<void>;
+      selectDirectory: (title?: string) => Promise<string | null>;
     }
   }
 }

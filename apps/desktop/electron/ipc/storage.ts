@@ -2,9 +2,11 @@ import { ipcMain } from 'electron';
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
 import type { PlayerState } from '@music/types';
 
-const storageAdapter = new MainStorageAdapter();
+export const storageAdapter = new MainStorageAdapter();
 
-export function setupStorageIPC() {
+export async function setupStorageIPC() {
+  await storageAdapter.initialize();
+  
   ipcMain.handle('storage:getLibrary', async () => {
     return await storageAdapter.getLibrary();
   });
@@ -43,5 +45,21 @@ export function setupStorageIPC() {
 
   ipcMain.handle('storage:saveRecentSearches', async (_event, searches) => {
     return await storageAdapter.saveRecentSearches(searches);
+  });
+
+  ipcMain.handle('storage:getLyricUsage', async () => {
+    return await storageAdapter.getLyricUsage();
+  });
+
+  ipcMain.handle('storage:saveLyricUsage', async (_event, usage) => {
+    return await storageAdapter.saveLyricUsage(usage);
+  });
+
+  ipcMain.handle('storage:getSettings', async () => {
+    return await storageAdapter.getSettings();
+  });
+
+  ipcMain.handle('storage:saveSettings', async (_event, settings) => {
+    return await storageAdapter.saveSettings(settings);
   });
 }

@@ -63,59 +63,75 @@ export class LibraryService {
         const artist = song.artist.toLowerCase();
         const nameArtistKey = `${title}|${artist}`;
 
-        // Check Prioritized mức độ (Priority levels)
-        const isDuplicateUrl = song.sourceUrl && existingSourceUrls.has(song.sourceUrl);
-        // Priority 2: File Content Hash (Perceptual)
-        let isDuplicateHash = false;
-        const normalizedHash = song.hash?.split('-')[0];
-        
-        if (normalizedHash && normalizedHash.startsWith('p2:')) {
-          const hashContent = normalizedHash.slice(3);
-          
-          for (const existing of existingSongs) {
-            const existingHash = existing.hash?.split('-')[0];
-            if (!existingHash || !existingHash.startsWith('p2:')) continue;
-            
-            const existingHashContent = existingHash.slice(3);
-            const similarity = this.calculateSimilarity(hashContent, existingHashContent);
-            
-            // Tiered Logic:
-            // 1. Strict Match (95% similarity regardless of duration)
-            // 2. Smart Match (75% similarity + duration matching < 0.5s)
-            const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
-            
-            if (similarity >= 0.95 || (similarity >= 0.75 && durationDiff < 0.5)) {
-              isDuplicateHash = true;
-              break;
+        // Track if duplicate is found and which song it matches
+        let duplicateReason: DuplicateReason | undefined;
+        let existingMatch: Song | undefined;
+
+        // Priority 1: File Path
+        if (existingPaths.has(song.filePath)) {
+          duplicateReason = 'PATH';
+          existingMatch = existingSongs.find(s => s.filePath === song.filePath);
+        }
+
+        // Priority 2: URL
+        if (!duplicateReason && song.sourceUrl && existingSourceUrls.has(song.sourceUrl)) {
+          duplicateReason = 'URL';
+          existingMatch = existingSongs.find(s => s.sourceUrl === song.sourceUrl);
+        }
+
+        // Priority 3: Perceptual Hash
+        if (!duplicateReason) {
+          const normalizedHash = song.hash?.split('-')[0];
+          if (normalizedHash && normalizedHash.startsWith('p2:')) {
+            const hashContent = normalizedHash.slice(3);
+            for (const existing of existingSongs) {
+              const existingHash = existing.hash?.split('-')[0];
+              if (!existingHash || !existingHash.startsWith('p2:')) continue;
+
+              const existingHashContent = existingHash.slice(3);
+              const similarity = this.calculateSimilarity(hashContent, existingHashContent);
+
+              const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
+              const fileSizeDiffRatio = Math.abs((song.fileSize || 0) - (existing.fileSize || 0)) / (existing.fileSize || 1);
+
+              if ((similarity >= 0.95 && durationDiff < 0.2) || (similarity >= 0.85 && fileSizeDiffRatio < 0.05)) {
+                duplicateReason = 'HASH';
+                existingMatch = existing;
+                break;
+              }
             }
-          }
-        } else if (normalizedHash) {
-          // Fallback or binary hash (p1:)
-          if (existingHashes.has(normalizedHash)) {
-            isDuplicateHash = true;
+          } else if (normalizedHash && existingHashes.has(normalizedHash)) {
+            duplicateReason = 'HASH';
+            existingMatch = existingSongs.find(s => s.hash?.startsWith(normalizedHash));
           }
         }
 
-        const isDuplicatePath = existingPaths.has(song.filePath);
-        const isDuplicateMetadata = existingNameArtistKeys.has(nameArtistKey);
+        // Priority 4: Title + Artist
+        if (!duplicateReason && existingNameArtistKeys.has(nameArtistKey)) {
+          duplicateReason = 'METADATA';
+          existingMatch = existingSongs.find(s => s.title.toLowerCase() === title && s.artist.toLowerCase() === artist);
+        }
 
-        let duplicateReason: DuplicateReason | undefined;
-        if (isDuplicateUrl) duplicateReason = 'URL';
-        else if (isDuplicatePath) duplicateReason = 'PATH';
-        else if (isDuplicateHash) duplicateReason = 'HASH';
-        else if (isDuplicateMetadata) duplicateReason = 'METADATA';
-
-        if (duplicateReason) {
+        if (duplicateReason && existingMatch) {
           duplicatePaths.push(song.filePath);
-          // Return only essential info to avoid IPC overhead (exclude heavy fields like coverArt)
+
+          const updatedEntry: Song = {
+            ...existingMatch,
+            ...song,
+            id: existingMatch.id,
+            coverArt: song.coverArt || existingMatch.coverArt
+          };
+
+          songs[existingMatch.id] = updatedEntry;
           duplicateSongs.push({
             ...song,
             duplicateReason
           });
+          addedCount++; // Count as "processed/updated"
           continue;
         }
 
-        // Update our temporary sets to catch duplicates within the SAME batch
+        // Update our temporary sets for batch consistency
         existingPaths.add(song.filePath);
         if (song.hash) existingHashes.add(song.hash);
         if (song.sourceUrl) existingSourceUrls.add(song.sourceUrl);
@@ -303,7 +319,7 @@ export class LibraryService {
     return await this.mutex.runExclusive(async () => {
       const currentSongs = await this.storageAdapter.getSongs();
       const library = await this.storageAdapter.getLibrary();
-      
+
       let addedCount = 0;
       for (const song of songsToAdd) {
         currentSongs[song.id] = song;
@@ -312,12 +328,12 @@ export class LibraryService {
           addedCount++;
         }
       }
-      
+
       if (addedCount > 0) {
         await this.storageAdapter.saveSongs(currentSongs);
         await this.storageAdapter.saveLibrary(library);
       }
-      
+
       return { success: true, count: addedCount };
     });
   }
@@ -334,9 +350,9 @@ export class LibraryService {
 
       const playlist = playlists[playlistId];
       const initialCount = playlist.songIds.length;
-      
+
       playlist.songIds = playlist.songIds.filter(id => !songIds.includes(id));
-      
+
       if (playlist.songIds.length !== initialCount) {
         await this.storageAdapter.savePlaylists(playlists);
         return true;
@@ -357,10 +373,10 @@ export class LibraryService {
       if (!playlists[playlistId]) return false;
 
       const playlist = playlists[playlistId];
-      
+
       // Add only IDs that are not already present
       const newIds = songIds.filter(id => !playlist.songIds.includes(id));
-      
+
       if (newIds.length > 0) {
         playlist.songIds = [...playlist.songIds, ...newIds];
         await this.storageAdapter.savePlaylists(playlists);

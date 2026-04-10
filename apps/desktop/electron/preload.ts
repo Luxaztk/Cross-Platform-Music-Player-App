@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { IpcRendererEvent } from 'electron';
 import type { Song, Playlist, PlayerState, RecentSearch, LyricSearchResult, ImportResult } from '@music/types';
 import type { YoutubeInfo } from './modules/downloader/YoutubeDownloader';
+import type { AppSettings } from './constants/SettingsConstants';
 
 export interface DuplicateCheckResult {
   isDuplicate: boolean;
@@ -40,12 +41,17 @@ export interface ElectronAPI {
   savePlayerState: (state: PlayerState) => Promise<void>;
   getRecentSearches: () => Promise<RecentSearch[]>;
   saveRecentSearches: (searches: RecentSearch[]) => Promise<void>;
+  getLyricUsage: () => Promise<Record<string, number>>;
+  saveLyricUsage: (usage: Record<string, number>) => Promise<void>;
   fetchYtInfo: (url: string) => Promise<{ success: boolean; info?: YoutubeInfo; error?: string }>;
   downloadYtAudio: (url: string, title: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
   writeAudioMetadata: (filePath: string, metadata: Partial<Song>) => Promise<void>;
   onDownloadProgress: (callback: (data: { url: string; percent: number }) => void) => () => void;
   openItemPath: (filePath: string) => Promise<void>;
   deleteFile: (filePath: string) => Promise<void>;
+  getSettings: () => Promise<AppSettings>;
+  saveSettings: (settings: Partial<AppSettings>) => Promise<void>;
+  selectDirectory: (title?: string) => Promise<string | null>;
 }
 
 // Expose safe APIs to the renderer process
@@ -82,6 +88,8 @@ const electronAPI: ElectronAPI = {
   savePlayerState: (state: PlayerState) => ipcRenderer.invoke('storage:savePlayerState', state),
   getRecentSearches: () => ipcRenderer.invoke('storage:getRecentSearches'),
   saveRecentSearches: (searches: RecentSearch[]) => ipcRenderer.invoke('storage:saveRecentSearches', searches),
+  getLyricUsage: () => ipcRenderer.invoke('storage:getLyricUsage'),
+  saveLyricUsage: (usage: Record<string, number>) => ipcRenderer.invoke('storage:saveLyricUsage', usage),
 
   // Downloader operations
   fetchYtInfo: (url: string) => ipcRenderer.invoke('fetch-yt-info', url),
@@ -94,6 +102,9 @@ const electronAPI: ElectronAPI = {
   },
   openItemPath: (filePath: string) => ipcRenderer.invoke('open-item-path', filePath),
   deleteFile: (filePath: string) => ipcRenderer.invoke('delete-file', filePath),
+  getSettings: () => ipcRenderer.invoke('storage:getSettings'),
+  saveSettings: (settings: Partial<AppSettings>) => ipcRenderer.invoke('storage:saveSettings', settings),
+  selectDirectory: (title?: string) => ipcRenderer.invoke('dialog:openDirectory', title),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

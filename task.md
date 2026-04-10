@@ -26,6 +26,8 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
         - [x] Xây dựng bộ sưu tập 13+ script kiểm thử thủ công tại `tests/manual-verification/` phục vụ cho việc báo cáo và bảo trì.
 - [x] Global `PlayerProvider` quản lý trạng thái phát nhạc toàn cục.
 - [x] Logic nâng cao: **Hàng đợi (Queue)**, **Lịch sử (History 16 bài)**, **Trộn bài (Shuffle)**, **Lặp bài (Repeat)**.
+- [x] **Giao thức Melovista Stream**: Tích hợp luồng `melovista://stream/` hỗ trợ CORS và Manual Path Parsing, giúp trình phát nhạc truy cập file hệ thống ổn định tuyệt đối.
+- [x] **Xử lý Unicode & Encoding (Bulletproof Pathing)**: Giải quyết triệt để lỗi "File not found" và MD5 mismatch cho các tệp có dấu tiếng Việt thông qua cơ chế NFC Normalization & Case-insensitive Hashing.
 - [x] Điều khiển Native: Thanh Progress và Volume sử dụng input range mượt mà.
 
 ### 3. Quản Lý Thư Viện & Playlist
@@ -49,8 +51,9 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [x] **Biên tập Metadata (ID3 Tags)**: Hỗ trợ ghi đè thông tin bài hát (Tags) trực tiếp vào file vật lý (.mp3...).
 - [x] **Kiến trúc Context Splitting (Surgical Re-renders)**: Tái cấu trúc `LibraryProvider` thành mô hình Đa ngữ cảnh, triệt tiêu re-render dư thừa, tối ưu CPU/RAM khi xử lý thư viện lớn.
 - [x] **Optimistic Metadata Sync (Zero Latency)**: Cơ chế cập nhật lạc quan kèm Auto-Rollback giúp UI phản hồi tức thì (<16ms) khi chỉnh sửa lyricId/metadata.
-- [x] **Window Virtualization Engine**: Nâng cấp ảo hóa danh sách dựa trên Window scroll, hỗ trợ cuộn mượt mà 60fps với Playlist 5000+ bài hát.
-- [x] **Premium UI/UX Polish**: Thiết kế trà viền (Edge-to-edge), Sticky Header với hiệu ứng Elevation (Shadow/Border) và Opacity solid chuyên nghiệp.
+- [x] **React Virtuoso Migration**: Chuyển đổi công cụ ảo hóa sang `react-virtuoso`, hỗ trợ cuộn global mượt mà, triệt tiêu hoàn toàn lỗi ErrorBoundary và tối ưu hóa độ ổn định.
+- [x] **Modernized Layout Architecture**: Tái cấu trúc trang chi tiết Playlist sang mô hình Flatten JSX, giúp Sticky Header hoạt động độc lập và vững chãi dựa trên luồng DOM nguyên bản.
+- [x] **Premium UI/UX Polish**: thiết kế tràn viền (Edge-to-edge), Sticky Header với hiệu ứng Elevation (Shadow/Border) chuyên nghiệp.
 
 ---
 
@@ -75,6 +78,7 @@ Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 - [x] **Hydration Synchronization**: Khắc phục lỗi không phát được nhạc khi khôi phục bài hát từ app khởi động thông qua cơ chế Just-in-Time Loading.
 - [x] **Volume Control**: Khắc phục lỗi mất giá trị âm lượng khi Tắt/Mở tiếng (Mute/Unmute).
 - [x] **Metadata Cover Fix**: Khắc phục lỗi không hiển thị ảnh bìa song trong PlayerBar khi đọc từ Metadata phức tạp.
+- [x] **Path encoding (Vietnamese)**: Sửa lỗi hiển thị ký tự rác (ΓÇô) và lỗi 404 khi đường dẫn chứa ký tự đặc biệt/tiếng Việt.
 
 ### 🟢 GIAI ĐOẠN 3: Làm đẹp & Trải nghiệm Nâng cao (Mức độ ưu tiên THẤP)
 Mục tiêu: "Wow" người dùng bằng các tính năng cao cấp.

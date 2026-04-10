@@ -46,4 +46,12 @@ export class ElectronStorageAdapter implements IStorageAdapter {
   async saveRecentSearches(searches: RecentSearch[]): Promise<void> {
     await window.electronAPI.saveRecentSearches(searches);
   }
+
+  async getLyricUsage(): Promise<Record<string, number>> {
+    return window.electronAPI.getLyricUsage();
+  }
+
+  async saveLyricUsage(usage: Record<string, number>): Promise<void> {
+    await window.electronAPI.saveLyricUsage(usage);
+  }
 }

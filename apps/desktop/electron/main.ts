@@ -4,9 +4,12 @@ import { app, BrowserWindow, protocol, session } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import crypto from 'node:crypto';
+import { normalizePathForHash } from '@music/utils';
 import { setupLibraryIPC } from './ipc/library';
 import { setupStorageIPC } from './ipc/storage';
 import { setupDownloaderIPC } from './ipc/downloader';
+import { setupDialogIPC } from './ipc/dialog';
 
 // Register custom scheme BEFORE app is ready
 protocol.registerSchemesAsPrivileged([
@@ -23,12 +26,7 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist');
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST;
 
-// MIME type lookup for audio files
-const AUDIO_MIME_TYPES: Record<string, string> = {
-  '.mp3': 'audio/mpeg', '.flac': 'audio/flac', '.wav': 'audio/wav',
-  '.m4a': 'audio/mp4', '.aac': 'audio/aac', '.ogg': 'audio/ogg',
-  '.wma': 'audio/x-ms-wma', '.opus': 'audio/opus',
-};
+// [MIME_TYPES removed: net.fetch handles detection naturally]
 
 let win: BrowserWindow | null;
 
@@ -62,74 +60,121 @@ app.on('activate', () => {
   }
 });
 
-app.whenReady().then(() => {
-  // Protocol handler for melovista://app/{encodedFilePath}
-  // Supports HTTP Range requests for audio seeking
+app.whenReady().then(async () => {
+  const COVERS_DIR = path.join(app.getPath('userData'), 'cache', 'covers');
+
   protocol.handle('melovista', async (request) => {
-    const url = new URL(request.url);
-    let filePath = decodeURIComponent(url.pathname);
-    if (process.platform === 'win32' && filePath.startsWith('/')) {
-      filePath = filePath.slice(1);
+    const rawUrl = request.url;
+    let decodedString = '';
+    let requestType = '';
+
+    // 1. NHẬN DIỆN ĐƯỜNG CAO TỐC (Dựa vào Hostname)
+    if (rawUrl.startsWith('melovista://app/')) {
+      requestType = 'image';
+      decodedString = decodeURIComponent(rawUrl.slice('melovista://app/'.length));
+    } else if (rawUrl.startsWith('melovista://stream/')) {
+      requestType = 'audio';
+      decodedString = decodeURIComponent(rawUrl.slice('melovista://stream/'.length));
+    } else if (rawUrl.startsWith('melovista:///')) {
+      // Đề phòng trường hợp UI vẫn dùng ///
+      requestType = 'audio';
+      decodedString = decodeURIComponent(rawUrl.slice('melovista:///'.length));
     }
 
-    try {
-      const fileStat = await fs.stat(filePath);
-      const fileSize = fileStat.size;
-      const ext = path.extname(filePath).toLowerCase();
-      const contentType = AUDIO_MIME_TYPES[ext] || 'application/octet-stream';
+    // 2. CHUẨN HÓA ĐƯỜNG DẪN "SẮT ĐÁ"
+    let rawPath = decodedString.normalize('NFC');
+    if (process.platform === 'win32' && rawPath.match(/^\/[a-zA-Z]:/)) {
+      rawPath = rawPath.slice(1);
+    }
+    rawPath = path.normalize(rawPath);
 
-      const rangeHeader = request.headers.get('range');
+    // ==========================================
+    // NHÁNH 1: XỬ LÝ ẢNH BÌA
+    // ==========================================
+    if (requestType === 'image') {
+      const hash = crypto.createHash('md5').update(normalizePathForHash(rawPath)).digest('hex');
+      const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
 
-      if (rangeHeader) {
-        // Parse "bytes=START-END" (END is optional)
-        const match = rangeHeader.match(/bytes=(\d+)-(\d*)/);
-        if (match) {
-          const start = parseInt(match[1], 10);
-          const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
-          const chunkSize = end - start + 1;
+      try {
+        const buffer = await fs.readFile(coverPath);
+        return new Response(buffer, {
+          headers: {
+            'Content-Type': 'image/jpeg',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      } catch (err) {
+        return new Response(null, { status: 404 }); // Không có ảnh thì trả 404 im lặng, UI sẽ hiện ảnh mặc định
+      }
+    }
 
-          const fileHandle = await fs.open(filePath, 'r');
-          const buffer = Buffer.alloc(chunkSize);
-          await fileHandle.read(buffer, 0, chunkSize, start);
+    // ==========================================
+    // NHÁNH 2: XỬ LÝ TRUYỀN PHÁT ÂM THANH
+    // ==========================================
+    if (requestType === 'audio') {
+      try {
+        await fs.access(rawPath, fs.constants.F_OK); // Đảm bảo file tồn tại
+        const fileStat = await fs.stat(rawPath);
+        const fileSize = fileStat.size;
+        const range = request.headers.get('range');
+
+        const ext = path.extname(rawPath).toLowerCase();
+        const MIME_TYPES: Record<string, string> = {
+          '.mp3': 'audio/mpeg', '.flac': 'audio/flac', '.wav': 'audio/wav',
+          '.aac': 'audio/aac', '.m4a': 'audio/mp4', '.ogg': 'audio/ogg'
+        };
+        const contentType = MIME_TYPES[ext] || 'audio/mpeg';
+
+        if (range) {
+          const parts = range.replace(/bytes=/, "").split("-");
+          const start = parseInt(parts[0], 10);
+          const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+          const chunksize = (end - start) + 1;
+
+          const fileHandle = await fs.open(rawPath, 'r');
+          const buffer = Buffer.alloc(chunksize);
+          await fileHandle.read(buffer, 0, chunksize, start);
           await fileHandle.close();
 
           return new Response(buffer, {
             status: 206,
-            statusText: 'Partial Content',
             headers: {
               'Content-Range': `bytes ${start}-${end}/${fileSize}`,
               'Accept-Ranges': 'bytes',
-              'Content-Length': String(chunkSize),
+              'Content-Length': String(chunksize),
               'Content-Type': contentType,
+              'Access-Control-Allow-Origin': '*' // Chìa khóa để Player không báo lỗi
+            },
+          });
+        } else {
+          const buffer = await fs.readFile(rawPath);
+          return new Response(buffer, {
+            status: 200,
+            headers: {
+              'Accept-Ranges': 'bytes',
+              'Content-Length': String(fileSize),
+              'Content-Type': contentType,
+              'Access-Control-Allow-Origin': '*'
             },
           });
         }
+      } catch (err: any) {
+        console.error('[AUDIO STREAM ERROR]', err.message);
+        return new Response('File not found', { status: 404 });
       }
-
-      // No Range header → return full file with Accept-Ranges to advertise support
-      const buffer = await fs.readFile(filePath);
-      return new Response(buffer, {
-        status: 200,
-        headers: {
-          'Accept-Ranges': 'bytes',
-          'Content-Length': String(fileSize),
-          'Content-Type': contentType,
-        },
-      });
-    } catch (err) {
-      console.error('melovista:// protocol error:', err);
-      return new Response('File not found', { status: 404 });
     }
+
+    return new Response('Bad Request', { status: 400 });
   });
 
   // Inject CSP headers dynamically based on environment
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     const isDev = !!VITE_DEV_SERVER_URL;
-    
-    // In Dev, we need 'unsafe-eval' for Vite HMR. In Prod, we strip it out.
-    const csp = isDev 
-      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self' http://localhost:5173 ws://localhost:5173;" 
-      : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self';";
+
+    // [FIX CSP]: Đổi melovista://* thành melovista: cho cả img-src và media-src
+    const csp = isDev
+      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista:; media-src 'self' melovista:; connect-src 'self' http://localhost:5173 ws://localhost:5173;"
+      : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista:; media-src 'self' melovista:; connect-src 'self';";
 
     callback({
       responseHeaders: {
@@ -140,7 +185,8 @@ app.whenReady().then(() => {
   });
 
   setupLibraryIPC();
-  setupStorageIPC();
+  await setupStorageIPC();
   setupDownloaderIPC();
+  setupDialogIPC();
   createWindow();
 });

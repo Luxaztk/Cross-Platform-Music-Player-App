@@ -1,1 +1,7 @@
-fix(desktop): resolve yt-dlp path issue
+feat(protocol): bulletproof unicode pathing and cors support
+
+- Refactored `melovista://` protocol to use manual string parsing for absolute paths, bypassing Chromium's URL normalization issues.
+- Integrated `melovista://stream/` and `melovista://app/` (image) branching logic for cleaner resource routing.
+- Implemented "Bulletproof" path normalization (NFC + Case-insensitivity + Forward Slashes) to resolve "File not found" and MD5 mismatch errors on Windows with Vietnamese characters.
+- Added `Access-Control-Allow-Origin: '*'` to protocol responses, fixing audio playback and image loading blocks in the renderer.
+- Updated `AudioEngine` to utilize the new `melovista://stream/` endpoint for more reliable media delivery.

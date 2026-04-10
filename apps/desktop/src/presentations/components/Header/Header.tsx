@@ -417,8 +417,8 @@ const Header: React.FC = () => {
                 <span>{t('downloader.title')}</span>
               </button>
 
-              <button className="dropdown-item">
-                <Settings size={16} />
+              <button className="dropdown-item" onClick={() => { navigate('/settings'); setShowProfileMenu(false); }}>
+                <Settings size={ICON_SIZES.SMALL || 16} />
                 <span>{t('header.settings')}</span>
               </button>
               <button className="dropdown-item" style={{ display: 'none' }}>

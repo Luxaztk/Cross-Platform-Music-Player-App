@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ArrowUpDown } from 'lucide-react';
+import { ListMusic, Plus, ChevronLeft, ChevronRight, MoreVertical, Edit2, Trash2, Search, ArrowUpDown, Settings } from 'lucide-react';
 
 import type { Playlist } from '@music/types';
 import { useLibraryContext } from '../Library/LibraryProvider';
@@ -204,6 +204,15 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                   </div>
                 </NavLink>
               </li>
+              <li>
+                <NavLink
+                  to="/settings"
+                  className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                >
+                  <Settings size={ICON_SIZES.SMALL} />
+                  <span className="text">{t('header.settings')}</span>
+                </NavLink>
+              </li>
             </ul>
           </div>
 
@@ -337,6 +346,9 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
             </button>
             <NavLink to="/playlist/0" className="nav-item mini" title={t('sidebar.allSongs')}>
               <img src={appIcon} alt="" className="brand-icon-mini-sidebar" />
+            </NavLink>
+            <NavLink to="/settings" className="nav-item mini" title={t('header.settings')}>
+              <Settings size={ICON_SIZES.MEDIUM} />
             </NavLink>
           </div>
           
