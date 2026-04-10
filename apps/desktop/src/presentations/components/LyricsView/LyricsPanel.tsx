@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLyrics, usePlayer } from '@music/hooks';
+import { useLanguage } from '../Language';
 import { MessageSquareOff, Search, Loader2, RotateCcw } from 'lucide-react';
 import { formatLyricsSearchQuery } from '@music/utils';
 import type { LyricSearchResult } from '@music/types';
@@ -8,6 +9,7 @@ import './LyricsPanel.scss';
 
 
 export const LyricsPanel: React.FC = () => {
+  const { t } = useLanguage();
   const { currentSong, seek } = usePlayer();
   const {
     lyricLines,
@@ -38,8 +40,8 @@ export const LyricsPanel: React.FC = () => {
   useEffect(() => {
     setSearchResults([]);
     setIsSearching(false);
-    setSearchQuery('');
-  }, [currentSong?.id]);
+    setSearchQuery(currentSong ? formatLyricsSearchQuery(currentSong.title, currentSong.artist) : '');
+  }, [currentSong?.id, currentSong?.title, currentSong?.artist]);
 
   const handleLineClick = (time: number) => {
     seek(time);
@@ -49,9 +51,8 @@ export const LyricsPanel: React.FC = () => {
     if (!currentSong) return;
     setIsSearching(true);
 
-    // Default format: "Song Name - Artist" using shared logic
-    const query = searchQuery || formatLyricsSearchQuery(currentSong.title, currentSong.artist);
-    if (!searchQuery) setSearchQuery(query);
+    // Use explicitly provided query or fallback to default format: "Song Name - Artist"
+    const query = searchQuery.trim() || formatLyricsSearchQuery(currentSong.title, currentSong.artist);
 
     try {
       let results = await searchLyrics(query);
@@ -83,7 +84,7 @@ export const LyricsPanel: React.FC = () => {
     <div className="lyrics-sidebar-container">
       <div className="lyrics-header">
         {lyricLines.length > 0 && searchResults.length === 0 && (
-          <button className="change-lyrics-btn" onClick={handleSearch} title="Đổi lời bài hát">
+          <button className="change-lyrics-btn" onClick={handleSearch} title={t('lyrics.changeLyrics')}>
             <RotateCcw size={16} />
           </button>
         )}
@@ -93,13 +94,13 @@ export const LyricsPanel: React.FC = () => {
         {(isSearching || isLoading) && searchResults.length === 0 ? (
           <div className="lyrics-status">
             <Loader2 className="spinner" size={32} />
-            <p>Đang tìm kiếm lời bài hát...</p>
+            <p>{t('lyrics.searching')}</p>
           </div>
         ) : searchResults.length > 0 ? (
           <div className="search-results-sidebar">
             <div className="search-results-header">
-              <h3>Kết quả tìm kiếm</h3>
-              <button className="close-results" onClick={() => { setSearchResults([]); setSearchQuery(''); }}>Hủy</button>
+              <h3>{t('lyrics.searchResults')}</h3>
+              <button className="close-results" onClick={() => { setSearchResults([]); setSearchQuery(''); }}>{t('common.cancel')}</button>
             </div>
 
             <div className="search-input-container">
@@ -108,7 +109,7 @@ export const LyricsPanel: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Tìm nội dung khác..."
+                placeholder={t('lyrics.searchOther')}
                 autoFocus
               />
               <button onClick={handleSearch} disabled={isSearching}>
@@ -127,7 +128,7 @@ export const LyricsPanel: React.FC = () => {
                   >
                     <div className="res-header">
                       <div className="res-title">{res.trackName}</div>
-                      {isActive && <span className="active-tag">Đang dùng</span>}
+                      {isActive && <span className="active-tag">{t('lyrics.currentlyUsing')}</span>}
                     </div>
                     <div className="res-meta">{res.artistName} • {res.albumName}</div>
                   </div>
@@ -151,21 +152,21 @@ export const LyricsPanel: React.FC = () => {
         ) : (
           <div className="lyrics-status empty">
             <MessageSquareOff size={48} />
-            <p>Không có lời bài hát</p>
+            <p>{t('lyrics.noLyrics')}</p>
 
             <div className="search-input-container">
               <input
                 type="text"
-                value={searchQuery || formatLyricsSearchQuery(currentSong.title, currentSong.artist)}
+                value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Nhập tên bài hát - ca sĩ..."
+                placeholder={t('lyrics.searchPlaceholder')}
               />
             </div>
 
             <button className="search-btn" onClick={handleSearch} disabled={isSearching}>
               {isSearching ? <Loader2 className="spinner-small" size={16} /> : <Search size={16} />}
-              <span>Tìm kiếm trực tuyến</span>
+              <span>{t('lyrics.searchOnline')}</span>
             </button>
           </div>
         )}

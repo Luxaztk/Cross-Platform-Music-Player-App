@@ -201,6 +201,17 @@ export const translations = {
       foundMissing: 'Tìm thấy {count} bản ghi không còn tệp gốc trên đĩa.',
       confirmMessage: 'Bạn có muốn gỡ bỏ các bản ghi này khỏi thư viện không',
       success: 'Đã dọn dẹp {count} bản ghi bị thiếu khỏi thư viện.',
+    },
+    lyrics: {
+      changeLyrics: 'Đổi lời bài hát',
+      searching: 'Đang tìm kiếm lời bài hát...',
+      searchResults: 'Kết quả tìm kiếm',
+      cancel: 'Hủy',
+      searchOther: 'Tìm nội dung khác...',
+      currentlyUsing: 'Đang dùng',
+      noLyrics: 'Không có lời bài hát',
+      searchPlaceholder: 'Nhập tên bài hát - ca sĩ...',
+      searchOnline: 'Tìm kiếm trực tuyến',
     }
   },
   en: {
@@ -403,6 +414,17 @@ export const translations = {
       foundMissing: 'Found {count} records with missing source files.',
       confirmMessage: 'Do you want to remove these records from your library',
       success: 'Successfully cleaned up {count} missing records.',
+    },
+    lyrics: {
+      changeLyrics: 'Change lyrics',
+      searching: 'Searching for lyrics...',
+      searchResults: 'Search results',
+      cancel: 'Cancel',
+      searchOther: 'Search other content...',
+      currentlyUsing: 'Currently using',
+      noLyrics: 'No lyrics found',
+      searchPlaceholder: 'Enter song name - artist...',
+      searchOnline: 'Search online',
     }
   }
 };
