@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { 
-  Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, 
-  VolumeX, ListMusic, Shuffle, Repeat, Repeat1, Mic 
+import {
+  Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2,
+  VolumeX, ListMusic, Shuffle, Repeat, Repeat1, MicVocal
 } from 'lucide-react';
 import { usePlayer, useUI } from '@music/hooks';
 import { formatTime } from '@music/utils';
@@ -12,12 +12,12 @@ import './PlayerBar.scss';
 
 
 const PlayerBar: React.FC = () => {
-  const { 
-    currentSong, isPlaying, play, pause, next, prev, progress, duration, 
-    volume, setVolume, seek, queue, 
-    isShuffle, toggleShuffle, repeatMode, setRepeatMode 
+  const {
+    currentSong, isPlaying, play, pause, next, prev, progress, duration,
+    volume, setVolume, seek, queue,
+    isShuffle, toggleShuffle, repeatMode, setRepeatMode
   } = usePlayer();
-  
+
   const { appIcon } = useTheme();
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const { isLyricsOpen, toggleLyrics } = useUI();
@@ -106,7 +106,7 @@ const PlayerBar: React.FC = () => {
             </div>
           ) : (
             <div className="cover-art-mock">
-               <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
+              <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
             </div>
           )}
           <div className="song-meta">
@@ -138,10 +138,10 @@ const PlayerBar: React.FC = () => {
             {repeatMode === 'ONE' ? <Repeat1 size={16} /> : <Repeat size={16} />}
           </button>
         </div>
-        
+
         <div className="playback-bar">
           <span className="time-current">{formatTime(displayProgress)}</span>
-          <input 
+          <input
             type="range"
             min="0"
             max={duration || 100}
@@ -159,16 +159,16 @@ const PlayerBar: React.FC = () => {
       </div>
 
       <div className="player-right">
-        <button 
+        <button
           ref={toggleBtnRef}
-          className={`queue-info ${isQueueOpen ? 'active' : ''}`} 
-          title="Queue Items" 
+          className={`queue-info ${isQueueOpen ? 'active' : ''}`}
+          title="Queue Items"
           onClick={() => setIsQueueOpen(!isQueueOpen)}
         >
           <ListMusic size={ICON_SIZES.SMALL} />
           <span className="queue-count">{queue.length}</span>
         </button>
-        
+
         {/* Advanced Queue Popover with Drag & Drop */}
         {isQueueOpen && (
           <div ref={queueContainerRef}>
@@ -188,7 +188,7 @@ const PlayerBar: React.FC = () => {
               <Volume2 size={ICON_SIZES.SMALL} />
             )}
           </button>
-          <input 
+          <input
             type="range"
             min="0"
             max="1"
@@ -200,12 +200,12 @@ const PlayerBar: React.FC = () => {
           />
         </div>
 
-        <button 
+        <button
           className={`control-btn lyrics-toggle ${isLyricsOpen ? 'active' : ''}`}
           onClick={toggleLyrics}
           title="Lyrics"
         >
-          <Mic size={ICON_SIZES.SMALL} />
+          <MicVocal size={ICON_SIZES.SMALL} />
         </button>
       </div>
     </div>
