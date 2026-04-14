@@ -42,7 +42,16 @@
       "@music/utils/*": ["../../packages/utils/src/*"],
       "@music/ui": ["../../packages/ui/index.ts"],
       "@music/ui/*": ["../../packages/ui/*"],
-      "@music/brand": ["../../packages/brand"]
+      "@music/brand": ["../../packages/brand"],
+      "@components": ["./src/presentations/components/index.ts"],
+      "@components/*": ["./src/presentations/components/*"],
+      "@hooks": ["./src/application/hooks/index.ts"],
+      "@hooks/*": ["./src/application/hooks/*"],
+      "@infrastructure": ["./src/infrastructure/index.ts"],
+      "@infrastructure/*": ["./src/infrastructure/*"],
+      "@utils": ["./src/infrastructure/utils/index.ts"],
+      "@utils/*": ["./src/infrastructure/utils/*"],
+      "@constants": ["./src/presentations/constants"],
     }
   },
   "include": [

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Search, User, Languages, Settings, LogOut, X, SlidersHorizontal, Headphones, Check, ChevronRight, Palette, Download, ShieldCheck, Loader2 } from 'lucide-react';
+import { Home, Search, User, Languages, Settings, X, SlidersHorizontal, Headphones, Check, ChevronRight, ChevronLeft, Palette, Download, ShieldCheck, Loader2 } from 'lucide-react';
 import { ICON_SIZES } from '../../constants/IconSizes';
 import { useLanguage } from '../Language';
 import { DownloaderModal } from '../DownloaderModal/DownloaderModal';
@@ -11,8 +11,20 @@ import type { Song, RecentSearch } from '@music/types';
 
 import { SearchOverlay, type SearchResultItem } from './SearchOverlay';
 import logo from '@music/brand/logos/icon_only_gradient.png';
-import { useTheme, type ThemeType } from '../Theme';
+import { useTheme } from '../Theme';
 import './Header.scss';
+
+export interface MenuItem {
+  id: string;
+  label: string;
+  icon?: React.ReactNode;
+  rightElement?: React.ReactNode;
+  action?: () => void;
+  children?: MenuItem[];
+  isDivider?: boolean;
+  isSelected?: boolean;
+  className?: string;
+}
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -24,8 +36,10 @@ const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
-  const [showDeviceMenu, setShowDeviceMenu] = React.useState(false);
-  const [showThemeMenu, setShowThemeMenu] = React.useState(false);
+  const [activeMenuStack, setActiveMenuStack] = React.useState<string[]>(['root']);
+  const [renderStack, setRenderStack] = React.useState<string[]>(['root']);
+  const [menuHeight, setMenuHeight] = React.useState<number | undefined>(undefined);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
   const { theme, setTheme } = useTheme();
   const { devices, currentDeviceId, setAudioDevice } = useAudioDevices();
   const { recentSearches, addSearch, removeSearch, clearAll } = useRecentSearches();
@@ -47,8 +61,6 @@ const Header: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
-        setShowDeviceMenu(false);
-        setShowThemeMenu(false);
       }
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setIsSearchFocused(false);
@@ -193,6 +205,132 @@ const Header: React.FC = () => {
     setMissingFileIds(null);
   };
 
+  React.useEffect(() => {
+    if (!showProfileMenu) {
+      const timer = setTimeout(() => {
+        setActiveMenuStack(['root']);
+        setRenderStack(['root']);
+        setMenuHeight(undefined);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showProfileMenu]);
+
+  const handlePushMenu = React.useCallback((id: string) => {
+    setActiveMenuStack(prev => [...prev, id]);
+    setRenderStack(prev => [...prev, id]);
+  }, []);
+
+  const handlePopMenu = React.useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveMenuStack(prev => prev.slice(0, -1));
+    setTimeout(() => {
+      setRenderStack(prev => prev.slice(0, -1));
+    }, 300);
+  }, []);
+
+  const getMenuItemById = (id: string, items: MenuItem[]): MenuItem | null => {
+    for (const item of items) {
+      if (item.id === id) return item;
+      if (item.children) {
+        const found = getMenuItemById(id, item.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const rootMenuItems: MenuItem[] = [
+    {
+      id: 'language',
+      label: t('header.language'),
+      icon: <Languages size={16} />,
+      rightElement: (
+        <div className={`lang-toggle ${language}`}>
+          <span className="lang-label vi">VI</span>
+          <div className="toggle-handle"></div>
+          <span className="lang-label en">EN</span>
+        </div>
+      ),
+      action: () => setLanguage(language === 'vi' ? 'en' : 'vi')
+    },
+    { id: 'div1', label: '', isDivider: true },
+    {
+      id: 'themes',
+      label: t('header.theme') || 'Chủ đề',
+      icon: <Palette size={16} />,
+      children: [
+        { id: 'midnight', label: 'Midnight', action: () => setTheme('midnight'), isSelected: theme === 'midnight', rightElement: theme === 'midnight' ? <Check size={14} className="check-icon" /> : undefined },
+        { id: 'amoled', label: 'Amoled', action: () => setTheme('amoled'), isSelected: theme === 'amoled', rightElement: theme === 'amoled' ? <Check size={14} className="check-icon" /> : undefined },
+        { id: 'nord', label: 'Nord', action: () => setTheme('nord'), isSelected: theme === 'nord', rightElement: theme === 'nord' ? <Check size={14} className="check-icon" /> : undefined },
+        { id: 'rose', label: 'Rose', action: () => setTheme('rose'), isSelected: theme === 'rose', rightElement: theme === 'rose' ? <Check size={14} className="check-icon" /> : undefined },
+        { id: 'ocean', label: 'Ocean', action: () => setTheme('ocean'), isSelected: theme === 'ocean', rightElement: theme === 'ocean' ? <Check size={14} className="check-icon" /> : undefined },
+        { id: 'snow', label: 'Snow', action: () => setTheme('snow'), isSelected: theme === 'snow', rightElement: theme === 'snow' ? <Check size={14} className="check-icon" /> : undefined },
+      ]
+    },
+    { id: 'div2', label: '', isDivider: true },
+    {
+      id: 'audioOut',
+      label: t('settings.audioOutput') || 'Đầu ra âm thanh',
+      icon: <Headphones size={16} />,
+      children: [
+        { id: 'default', label: t('settings.defaultDevice') || 'Mặc định', action: () => setAudioDevice('default'), isSelected: currentDeviceId === 'default', rightElement: currentDeviceId === 'default' ? <Check size={14} className="check-icon" /> : undefined },
+        ...devices.filter(d => d.deviceId !== 'default' && d.deviceId !== 'communications').map(d => ({
+          id: d.deviceId,
+          label: d.label,
+          action: () => setAudioDevice(d.deviceId),
+          isSelected: currentDeviceId === d.deviceId,
+          rightElement: currentDeviceId === d.deviceId ? <Check size={14} className="check-icon" /> : undefined
+        })),
+        { id: 'div3', label: '', isDivider: true },
+        { id: 'test', label: t('settings.testSound') || 'Kiểm tra âm thanh', action: handleTestSound, className: 'test-sound-btn' }
+      ]
+    },
+    { id: 'div4', label: '', isDivider: true },
+    {
+      id: 'scan',
+      label: t('libraryCleanup.title'),
+      icon: isScanning ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />,
+      action: onScanMissing
+    },
+    {
+      id: 'downloader',
+      label: t('downloader.title'),
+      icon: <Download size={16} />,
+      action: () => { setShowDownloader(true); setShowProfileMenu(false); }
+    },
+    {
+      id: 'settings',
+      label: t('header.settings'),
+      icon: <Settings size={16} />
+    }
+  ];
+
+  const menusToRender = renderStack.map((id) => {
+    let menu = null;
+    if (id === 'root') {
+      menu = { id: 'root', title: '', items: rootMenuItems };
+    } else {
+      const item = getMenuItemById(id, rootMenuItems);
+      if (item && item.children) {
+        menu = { id: item.id, title: item.label, items: item.children };
+      }
+    }
+    return menu;
+  });
+
+  React.useEffect(() => {
+    if (showProfileMenu && dropdownRef.current) {
+      const activeIndex = activeMenuStack.length - 1;
+      const slider = dropdownRef.current.querySelector('.drilldown-slider');
+      if (slider && slider.children[activeIndex]) {
+        const activePage = slider.children[activeIndex] as HTMLElement;
+        // The container has 1px top/bottom border
+        setMenuHeight(activePage.offsetHeight + 2);
+      }
+    }
+  }, [showProfileMenu, activeMenuStack, menusToRender]);
+
   return (
     <>
     <header className="app-header">
@@ -259,8 +397,6 @@ const Header: React.FC = () => {
             onClick={() => {
               if (showProfileMenu) {
                 setShowProfileMenu(false);
-                setShowDeviceMenu(false);
-                setShowThemeMenu(false);
               } else {
                 setShowProfileMenu(true);
               }
@@ -272,159 +408,64 @@ const Header: React.FC = () => {
           </button>
 
           {showProfileMenu && (
-            <div className="profile-dropdown">
-              <div className="dropdown-section">
-                <div
-                  className="dropdown-item lang-switcher"
-                  onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
-                >
-                  <div className="lang-switcher-left">
-                    <Languages size={16} />
-                    <span>{t('header.language')}</span>
-                  </div>
-                  <div className={`lang-toggle ${language}`}>
-                    <span className="lang-label vi">VI</span>
-                    <div className="toggle-handle"></div>
-                    <span className="lang-label en">EN</span>
-                  </div>
-                </div>
-              </div>
-              <div className="dropdown-divider" />
-
-              {/* Theme Selection */}
-              <div
-                className="dropdown-item nested-dropdown-trigger"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowThemeMenu(!showThemeMenu);
-                  setShowDeviceMenu(false);
+            <div 
+              className="profile-dropdown" 
+              onClick={(e) => e.stopPropagation()}
+              ref={dropdownRef}
+              style={{
+                height: menuHeight ? `${menuHeight}px` : undefined,
+                transition: 'height 0.3s ease'
+              }}
+            >
+              <div 
+                className="drilldown-slider" 
+                style={{ 
+                  transform: `translateX(-${activeMenuStack.length - 1}00%)` 
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Palette size={16} />
-                  <span>{t('header.theme') || 'Chủ đề'}</span>
-                </div>
-                <ChevronRight size={14} className={`chevron ${showThemeMenu ? 'open' : ''}`} />
-
-                {showThemeMenu && (
-                  <div className="nested-dropdown-menu">
-                    {[
-                      { id: 'midnight', name: 'Midnight', color: '#10b981' },
-                      { id: 'amoled', name: 'Amoled', color: '#ffffff' },
-                      { id: 'nord', name: 'Nord', color: '#88c0d0' },
-                      { id: 'rose', name: 'Rose', color: '#f43f5e' },
-                      { id: 'ocean', name: 'Ocean', color: '#06b6d4' },
-                      { id: 'snow', name: 'Snow', color: '#fcfaf7', border: '1px solid rgba(0,0,0,0.06)' }
-                    ].map((themeItem) => (
-                      <button
-                        key={themeItem.id}
-                        className={`device-btn ${theme === themeItem.id ? 'selected' : ''}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setTheme(themeItem.id as ThemeType);
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ 
-                            width: '10px', 
-                            height: '10px', 
-                            borderRadius: '50%', 
-                            backgroundColor: themeItem.color,
-                            border: (themeItem as { border?: string }).border || 'none',
-                            boxShadow: themeItem.id === 'snow' ? 'none' : `0 0 8px ${themeItem.color}44`
-                          }} />
-                          <span>{themeItem.name}</span>
+                {menusToRender.map((menu, index) => {
+                  if (!menu) return null;
+                  return (
+                    <div key={menu.id} className="drilldown-page">
+                      {index > 0 && (
+                        <div className="dropdown-header" onClick={handlePopMenu}>
+                          <ChevronLeft size={16} className="back-icon" />
+                          <span>{menu.title}</span>
                         </div>
-                        {theme === themeItem.id && <Check size={14} className="check-icon" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                      )}
+                      <div className="dropdown-items">
+                        {menu.items.map((item) => (
+                          item.isDivider ? (
+                            <div key={item.id} className="dropdown-divider" />
+                          ) : (
+                            <button
+                              key={item.id}
+                              className={`dropdown-item ${item.isSelected ? 'selected' : ''} ${item.className || ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (item.children) {
+                                  handlePushMenu(item.id);
+                                } else if (item.action) {
+                                  item.action();
+                                }
+                              }}
+                            >
+                              <div className="item-left">
+                                {item.icon && <div className="item-icon">{item.icon}</div>}
+                                <span className="item-label">{item.label}</span>
+                              </div>
+                              <div className="item-right">
+                                {item.rightElement}
+                                {item.children && <ChevronRight size={16} className="item-chevron" />}
+                              </div>
+                            </button>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              <div className="dropdown-divider" />
-
-              {/* Output Device Selection */}
-              <div
-                className="dropdown-item nested-dropdown-trigger"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDeviceMenu(!showDeviceMenu);
-                  setShowThemeMenu(false);
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Headphones size={16} />
-                  <span>{t('settings.audioOutput') || 'Đầu ra âm thanh'}</span>
-                </div>
-                <ChevronRight size={14} className={`chevron ${showDeviceMenu ? 'open' : ''}`} />
-
-                {showDeviceMenu && (
-                  <div className="nested-dropdown-menu">
-                    <button
-                      className={`device-btn ${currentDeviceId === 'default' ? 'selected' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAudioDevice('default');
-                      }}
-                    >
-                      <span>{t('settings.defaultDevice') || 'Mặc định'}</span>
-                      {currentDeviceId === 'default' && <Check size={14} className="check-icon" />}
-                    </button>
-                    {devices.filter(d => d.deviceId !== 'default' && d.deviceId !== 'communications').map(d => (
-                      <button
-                        key={d.deviceId}
-                        className={`device-btn ${currentDeviceId === d.deviceId ? 'selected' : ''}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setAudioDevice(d.deviceId);
-                        }}
-                      >
-                        <span title={d.label}>{d.label}</span>
-                        {currentDeviceId === d.deviceId && <Check size={14} className="check-icon" />}
-                      </button>
-                    ))}
-                    <div className="dropdown-divider" style={{ margin: '4px 0' }} />
-                    <button
-                      className="device-btn test-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTestSound();
-                      }}
-                    >
-                      <span>{t('settings.testSound') || 'Kiểm tra âm thanh'}</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="dropdown-divider" />
-
-              <button 
-                className="dropdown-item" 
-                onClick={onScanMissing}
-                disabled={isScanning}
-              >
-                {isScanning ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <ShieldCheck size={16} />
-                )}
-                <span>{t('libraryCleanup.title')}</span>
-              </button>
-
-              <button className="dropdown-item" onClick={() => { setShowDownloader(true); setShowProfileMenu(false); }}>
-                <Download size={16} />
-                <span>{t('downloader.title')}</span>
-              </button>
-
-              <button className="dropdown-item">
-                <Settings size={16} />
-                <span>{t('header.settings')}</span>
-              </button>
-              <button className="dropdown-item" style={{ display: 'none' }}>
-                <LogOut size={16} />
-                <span>{t('header.logout')}</span>
-              </button>
             </div>
           )}
         </div>

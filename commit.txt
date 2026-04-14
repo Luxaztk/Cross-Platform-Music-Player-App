@@ -1,12 +1,7 @@
-feat: implement mobile app with music library, playback, and playlists
+feat(ui): implement global hotkeys and multi-level profile menu
 
-- Add Expo app navigation with tab-based UI
-- Implement library screen with import, sort, and playback
-- Add search with recent searches and result filtering
-- Implement playlist management (create, rename, delete, add/remove songs)
-- Add audio playback engine using Expo Audio
-- Integrate playback controls (play/pause, skip, seek, shuffle, repeat)
-- Implement dark/light theme toggle with persistence
-- Add English/Vietnamese localization
-- Set up AsyncStorage-based persistence layer
-- Add toast notification system
+- Added useGlobalHotkeys hook for player control and global navigation.
+- Implemented strict guard clauses to prevent hotkey overlap with text inputs.
+- Refactored Profile Menu into a multi-level drill-down component.
+- Resolved styling bugs in menu items (text wrapping, icon shrinking) using semantic SCSS variables.
+- Updated task.md roadmap to reflect new milestones.

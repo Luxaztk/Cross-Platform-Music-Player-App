@@ -76,6 +76,7 @@ Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 
 - [X] **Cài đặt hệ thống (Settings)**: Lựa chọn thiết bị đầu ra âm thanh (Ngôn ngữ đã có trong Profile).
 - [X] **Quản lý Hàng đợi nâng cao**: Kéo thả để thay đổi thứ tự ngay trong Queue Panel.
+- [X] [X] **Global Hotkeys**: Tích hợp hệ thống phím tắt điều hướng toàn cục (Space, Mũi tên, Shift+N/P, /, Esc). Xây dựng cơ chế Guard Clause bảo vệ các ô input/textarea khỏi tình trạng nhận nhầm phím.
 
 ### 3. Debugging & QA
 
@@ -99,6 +100,7 @@ Mục tiêu: Cung cấp các công cụ mạnh mẽ để quản lý và thưở
 - [X] **Tải xuống trực tuyến (Online Download)**: Hỗ trợ tải nhạc từ các nguồn online để sử dụng offline.
 - [X] **Lời bài hát (Lyrics)**: Tự động tìm kiếm và hiển thị lời bài hát (Local hoặc Online).
 - [X] **Biên tập Metadata (Ghi vào file nhạc)**: Hỗ trợ ghi đè trực tiếp ID3 tags vào file vật lý (.mp3, .flac...).
+- [X] **Multi-level Profile Menu**: Nâng cấp Header Profile Menu sang kiến trúc Drill-down (đa cấp). Khắc phục triệt để lỗi tràn layout (text wrap, overflow icon) và tối ưu chiều cao động (dynamic height), tuân thủ 100% hệ thống CSS Variables.
 
 ### 🔵 GIAI ĐOẠN 5: Triển khai Mobile (Transform)
 

@@ -50,6 +50,7 @@ body:not([data-theme]) {
   --bg-sidebar: #121212;
   --bg-player-bar: #181818;
   --bg-header: #0a0a0a;
+  --bg-modal: #1c1c1c;
   --bg-inverse: #ffffff;
   --color-inverse: #000000;
 
@@ -88,6 +89,7 @@ body[data-theme='amoled'] {
   --bg-sidebar: #000000;
   --bg-player-bar: #000000;
   --bg-header: #000000;
+  --bg-modal: #111111;
   --bg-inverse: #ffffff;
   --color-inverse: #000000;
 
@@ -126,6 +128,7 @@ body[data-theme='nord'] {
   --bg-sidebar: #242933;
   --bg-player-bar: #242933;
   --bg-header: #2e3440;
+  --bg-modal: #434c5e;
   --bg-inverse: #eceff4;
   --color-inverse: #2e3440;
 
@@ -164,6 +167,7 @@ body[data-theme='rose'] {
   --bg-sidebar: #0c0a09;
   --bg-player-bar: #1c1917;
   --bg-header: #1c1917;
+  --bg-modal: #292524;
   --bg-inverse: #fafaf9;
   --color-inverse: #1c1917;
 
@@ -202,6 +206,7 @@ body[data-theme='ocean'] {
   --bg-sidebar: #020617;
   --bg-player-bar: #0f172a;
   --bg-header: #0f172a;
+  --bg-modal: #1e293b;
   --bg-inverse: #f8fafc;
   --color-inverse: #0f172a;
 
@@ -223,76 +228,50 @@ body[data-theme='ocean'] {
   --bg-surface-dim: rgba(248, 250, 252, 0.03);
 }
 
-/* Tame Snow Theme (Warm Soft UI / Neumorphism) */
+/* Snow Theme (Soft Porcelain - Optimized for Readability & Harmony) */
 body[data-theme='snow'] {
-  /* 1. Bảng màu chủ đạo */
-  --bg-primary: #f7f4ed;
-  /* Kem sáng, nền Library/Playlist */
-  --bg-surface: #fdfbf7;
-  /* Hơi sáng hơn nền một xíu để Card nổi lên */
-  --bg-surface-hover: #d1dee5;
-  /* Accent nhạt cho Muted Slate Blue (Active Tab/Hover) */
-  --bg-surface-solid: #f0ebe1;
-  /* Kem tối hơn một chút */
+  /* Surfaces: Layered depth using subtle warm tones */
+  --bg-primary: #f9f8f7;         // Very light warm porcelain
+  --bg-surface: #ffffff;         // Pure white for elevation (Card/Modal)
+  --bg-surface-hover: #ece9e7;   // Subtle contrast for hover states
+  --bg-surface-solid: #e5e1de;   // Solid background for active/pressed states
 
-  --color-primary: #1c2a3a;
-  /* Accent đậm: Navy cho nút Play/Pause */
-  --color-primary-hover: #253445;
+  /* Accents: Refined primary color (Muted Earthy tone) */
+  --color-primary: #8b7e74;
+  --color-primary-hover: #756a62; // Slightly darker accent for hover
 
-  /* Typography Colors */
-  --font-family-main: 'Nunito', 'Quicksand', 'Inter', sans-serif;
-  --color-text-main: #2d3748;
-  /* Xám than chì - Dễ đọc, không gắt */
-  --color-text-muted: #718096;
-  /* Xám ấm cho tên ca sĩ, tgian */
-  --color-text-dim: #a0aec0;
+  /* Typography: Increased contrast for better legibility */
+  --color-text-main: #2d2a21;    // Deep warm charcoal
+  --color-text-muted: #5e5955;   // Soft warm grey
+  --color-text-dim: #8a8480;     // Muted taupe
 
-  /* 2. Định dạng hình khối & Giao diện */
-  --border-color: transparent;
-  /* Loại bỏ viền cứng hoàn toàn */
-  --border-color-focus: rgba(28, 42, 58, 0.3);
-  /* Navy mờ khi focus */
+  /* Borders & UI Elements: Clean and non-distracting */
+  --border-color: #e5e1de;       // Soft boundary
+  --bg-sidebar: #ece9e7;         // Subtle contrast for sidebars
+  --bg-player-bar: #ffffff;      // Keep player bar elevated and clean
+  --bg-header: #f9f8f7;          // Matches primary bg
+  --bg-modal: #ffffff;
+  --bg-inverse: #2d2a21;         // Inverse uses the deep text color
+  --color-inverse: #f9f8f7;      // Inverse text uses the light bg color
 
-  --bg-sidebar: #f0ebe1;
-  /* Nền kem tối phân cấp không gian */
-  /* Sử dụng hiệu ứng kính mờ (backdrop-filter: blur) trong CSS của class .player-bar */
-  --bg-player-bar: rgba(240, 235, 225, 0.85);
-  --bg-header: rgba(247, 244, 237, 0.9);
+  --bg-playlist-header: rgba(236, 233, 231, 0.7); // Transparent version of bg-alt
+  --layout-gradient-top: #ffffff;
 
-  --bg-inverse: #2d3748;
-  --color-inverse: #f7f4ed;
+  /* Shadows: Warm-toned shadows instead of harsh black */
+  --shadow-sm: 0 4px 6px rgba(45, 42, 40, 0.04);
+  --shadow-md: 0 10px 15px -3px rgba(45, 42, 40, 0.08), 0 4px 6px -2px rgba(45, 42, 40, 0.04);
 
-  --bg-playlist-header: rgba(240, 235, 225, 0.5);
+  /* Semantic Colors: Maintained but slightly softened for the light theme */
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.08);
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
 
-  /* Top gradient nhạt/sáng hơn (gần màu trắng kem) bg-primary (#f7f4ed) */
-  --layout-gradient-top: #fdfbf7;
-
-  /* Hiệu ứng nổi khối Soft UI / Đổ bóng màu nâu kem */
-  --shadow-sm: 4px 4px 10px rgba(206, 196, 176, 0.3), -4px -4px 10px rgba(255, 255, 255, 0.6);
-  --shadow-md: 8px 8px 24px rgba(206, 196, 176, 0.4), -8px -8px 24px rgba(255, 255, 255, 0.7);
-
-  /* Status Colors: Tinh chỉnh lại theo tông ấm */
-  --color-success: #38a169;
-  --color-error: #e53e3e;
-  --color-error-bg: rgba(229, 62, 62, 0.08);
-  --color-warning: #dd6b20;
-  --color-info: #3182ce;
-
-  /* Structural Overlays: Viền mờ và lớp nền cực dịu */
-  --border-subtle: rgba(206, 196, 176, 0.15);
-  /* Cực kỳ mờ nếu bắt buộc phải có divider */
-  --bg-overlay: rgba(206, 196, 176, 0.1);
-  --bg-surface-dim: rgba(206, 196, 176, 0.05);
-
-  /* Corner Radii - Góc bo mềm mại */
-  --radius-sm: 10px;
-  /* Search bar, small active tabs */
-  --radius-md: 16px;
-  /* Cover art */
-  --radius-lg: 24px;
-  /* Cards */
-  --radius-pill: 99px;
-  /* Tròn hoàn toàn cho Search bar nếu cần */
+  /* Overlays: Using the deep charcoal with low opacity */
+  --border-subtle: rgba(45, 42, 40, 0.08);
+  --bg-overlay: rgba(45, 42, 40, 0.05);
+  --bg-surface-dim: rgba(45, 42, 40, 0.03);
 }
 
 * {
