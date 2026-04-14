@@ -1,6 +1,7 @@
 import NodeID3 from 'node-id3';
 import fs from 'node:fs/promises';
 import { constants } from 'node:fs'; // Import constants chuẩn
+import { logFileTrace } from '../../infrastructure/FileTraceLogger';
 
 export interface ID3Metadata {
   title?: string;
@@ -19,10 +20,15 @@ export interface ID3Metadata {
 export class MetadataManager {
   public async writeMetadata(filePath: string, metadata: ID3Metadata): Promise<boolean> {
     try {
-      if (!filePath.toLowerCase().endsWith('.mp3')) return false;
+      logFileTrace('MetadataManager.writeMetadata', filePath, 'SUCCESS', 'Starting metadata write');
+      if (!filePath.toLowerCase().endsWith('.mp3')) {
+        logFileTrace('MetadataManager.writeMetadata', filePath, 'FAIL', 'Unsupported extension');
+        return false;
+      }
 
       // Dùng constants đã import
       await fs.access(filePath, constants.W_OK);
+      logFileTrace('MetadataManager.writeMetadata.access', filePath, 'SUCCESS', 'File is writable');
 
       const tags: NodeID3.Tags = {};
 
@@ -53,9 +59,11 @@ export class MetadataManager {
         throw new Error(`NodeID3 Error: ${success.message}`);
       }
 
+      logFileTrace('MetadataManager.writeMetadata', filePath, 'SUCCESS', 'Metadata written successfully');
       return true;
     } catch (error) {
-      // Dùng hàm getErrorMessage (giả định bạn đã có ở utils)
+      const message = error instanceof Error ? error.message : String(error);
+      logFileTrace('MetadataManager.writeMetadata', filePath, 'FAIL', message);
       console.error('[MetadataManager] writeMetadata fatal error:', error);
       throw error;
     }
@@ -67,20 +75,33 @@ export class MetadataManager {
   private async resolveImageBuffer(metadata: ID3Metadata): Promise<Buffer | null> {
     try {
       if (metadata.coverUrl) {
+        logFileTrace('MetadataManager.resolveImageBuffer.coverUrl', metadata.coverUrl, 'SUCCESS', 'Fetching remote cover image');
         const response = await fetch(metadata.coverUrl);
-        if (!response.ok) return null;
-        return Buffer.from(await response.arrayBuffer());
+        if (!response.ok) {
+          logFileTrace('MetadataManager.resolveImageBuffer.coverUrl', metadata.coverUrl, 'FAIL', `Fetch status ${response.status}`);
+          return null;
+        }
+        const buffer = Buffer.from(await response.arrayBuffer());
+        logFileTrace('MetadataManager.resolveImageBuffer.coverUrl', metadata.coverUrl, buffer.length === 0 ? 'EMPTY_BUFFER' : 'SUCCESS', `Fetched ${buffer.length} bytes`);
+        return buffer;
       }
 
       if (metadata.coverPath) {
-        return await fs.readFile(metadata.coverPath);
+        logFileTrace('MetadataManager.resolveImageBuffer.coverPath', metadata.coverPath, 'SUCCESS', 'Reading local cover image');
+        const buffer = await fs.readFile(metadata.coverPath);
+        logFileTrace('MetadataManager.resolveImageBuffer.coverPath', metadata.coverPath, buffer.length === 0 ? 'EMPTY_BUFFER' : 'SUCCESS', `Read ${buffer.length} bytes`);
+        return buffer;
       }
 
       if (metadata.coverData?.startsWith('data:image')) {
         const base64Data = metadata.coverData.split(';base64,').pop();
-        return base64Data ? Buffer.from(base64Data, 'base64') : null;
+        const buffer = base64Data ? Buffer.from(base64Data, 'base64') : null;
+        logFileTrace('MetadataManager.resolveImageBuffer.coverData', undefined, buffer && buffer.length > 0 ? 'SUCCESS' : 'EMPTY_BUFFER', 'Decoded base64 image data');
+        return buffer;
       }
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logFileTrace('MetadataManager.resolveImageBuffer', metadata.coverPath || metadata.coverUrl, 'FAIL', message);
       return null; // Fail-safe: Ảnh lỗi không làm chết luồng ghi metadata
     }
     return null;

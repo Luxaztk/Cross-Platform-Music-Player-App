@@ -11,7 +11,9 @@
 
   button,
   input {
-    -webkit-app-region: no-drag;
+    @supports (-webkit-app-region: no-drag) {
+      -webkit-app-region: no-drag;
+    }
   }
 
   .header-left {
@@ -351,6 +353,7 @@
               color: #777;
               z-index: 2;
               transition: color 0.3s ease;
+              -webkit-user-select: none;
               user-select: none;
               width: 28px;
               text-align: center;

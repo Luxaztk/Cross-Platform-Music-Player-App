@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { setupLibraryIPC } from './ipc/library';
 import { setupStorageIPC } from './ipc/storage';
 import { setupDownloaderIPC } from './ipc/downloader';
+import { logFileTrace } from './infrastructure/FileTraceLogger';
 
 // Register custom scheme BEFORE app is ready
 protocol.registerSchemesAsPrivileged([
@@ -73,7 +74,10 @@ app.whenReady().then(() => {
     }
 
     try {
+      logFileTrace('melovistaProtocol.resolvePath', filePath, 'SUCCESS', 'Resolved request URL to absolute path');
       const fileStat = await fs.stat(filePath);
+      logFileTrace('melovistaProtocol.stat', filePath, 'SUCCESS', `File exists and size ${fileStat.size}`);
+
       const fileSize = fileStat.size;
       const ext = path.extname(filePath).toLowerCase();
       const contentType = AUDIO_MIME_TYPES[ext] || 'application/octet-stream';
@@ -81,17 +85,21 @@ app.whenReady().then(() => {
       const rangeHeader = request.headers.get('range');
 
       if (rangeHeader) {
-        // Parse "bytes=START-END" (END is optional)
         const match = rangeHeader.match(/bytes=(\d+)-(\d*)/);
         if (match) {
           const start = parseInt(match[1], 10);
           const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
           const chunkSize = end - start + 1;
-
           const fileHandle = await fs.open(filePath, 'r');
           const buffer = Buffer.alloc(chunkSize);
-          await fileHandle.read(buffer, 0, chunkSize, start);
+          const { bytesRead } = await fileHandle.read(buffer, 0, chunkSize, start);
           await fileHandle.close();
+
+          if (bytesRead === 0) {
+            logFileTrace('melovistaProtocol.readRange', filePath, 'EMPTY_BUFFER', `Requested ${chunkSize} bytes from ${start}-${end}`);
+          } else {
+            logFileTrace('melovistaProtocol.readRange', filePath, 'SUCCESS', `Read ${bytesRead}/${chunkSize} bytes`);
+          }
 
           return new Response(buffer, {
             status: 206,
@@ -106,8 +114,9 @@ app.whenReady().then(() => {
         }
       }
 
-      // No Range header → return full file with Accept-Ranges to advertise support
       const buffer = await fs.readFile(filePath);
+      logFileTrace('melovistaProtocol.readFull', filePath, buffer.length === 0 ? 'EMPTY_BUFFER' : 'SUCCESS', `Loaded full file, ${buffer.length} bytes`);
+
       return new Response(buffer, {
         status: 200,
         headers: {
@@ -117,6 +126,8 @@ app.whenReady().then(() => {
         },
       });
     } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logFileTrace('melovistaProtocol', filePath, 'FAIL', message);
       console.error('melovista:// protocol error:', err);
       return new Response('File not found', { status: 404 });
     }

@@ -8,6 +8,7 @@ import fs from 'node:fs/promises';
 import type { Song } from '@music/types';
 import { splitArtists } from '@music/utils';
 import { MetadataManager } from '../modules/metadata/MetadataManager';
+import { logFileTrace } from './FileTraceLogger';
 
 // Định nghĩa cấu trúc chuẩn của một Lyrics Object từ node-id3
 interface NodeID3Lyric {
@@ -47,10 +48,14 @@ export class MainMetadataService {
         let pcmData = Buffer.alloc(0);
         ffmpeg.stdout.on('data', (chunk) => { pcmData = Buffer.concat([pcmData, chunk]); });
         ffmpeg.on('close', (code) => {
-          if (code === 0) resolve(pcmData);
-          else resolve(Buffer.alloc(0));
+          const status = (code === 0 && pcmData.length > 0) ? 'SUCCESS' : 'EMPTY_BUFFER';
+          logFileTrace('calculateAudioHash.ffmpeg', filePath, status, `offset=${offset} code=${code} bytes=${pcmData.length}`);
+          resolve(pcmData);
         });
-        ffmpeg.on('error', () => resolve(Buffer.alloc(0)));
+        ffmpeg.on('error', (error) => {
+          logFileTrace('calculateAudioHash.ffmpeg', filePath, 'FAIL', error instanceof Error ? error.message : String(error));
+          resolve(Buffer.alloc(0));
+        });
       });
     };
 
@@ -93,14 +98,19 @@ export class MainMetadataService {
 
   static async extractMetadata(filePath: string, sourceUrl?: string, originId?: string): Promise<Song | null> {
     try {
+      logFileTrace('extractMetadata.begin', filePath, 'SUCCESS', 'Starting metadata extraction');
       const stats = await fs.stat(filePath);
+      logFileTrace('extractMetadata.stat', filePath, 'SUCCESS', `File exists, size=${stats.size}`);
+
       const metadata = await mm.parseFile(filePath);
+      logFileTrace('extractMetadata.parseFile', filePath, 'SUCCESS', `Parsed metadata, duration=${metadata.format.duration || 0}`);
       const { common, format } = metadata;
 
       let coverArt: string | null = null;
       if (common.picture && common.picture.length > 0) {
         const picture = common.picture[0];
         coverArt = `data:${picture.format};base64,${Buffer.from(picture.data).toString('base64')}`;
+        logFileTrace('extractMetadata.coverArt', filePath, 'SUCCESS', `Embedded image found, format=${picture.format}`);
       }
 
       const audioHash = await this.calculateAudioHash(filePath);
@@ -122,6 +132,7 @@ export class MainMetadataService {
 
       try {
         const tags = NodeID3.read(filePath);
+        logFileTrace('extractMetadata.readID3', filePath, 'SUCCESS', 'Read ID3 tags from file');
         if (tags) {
           if (tags.userDefinedText) {
             for (const t of tags.userDefinedText) {
@@ -149,6 +160,8 @@ export class MainMetadataService {
           }
         }
       } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        logFileTrace('extractMetadata.readID3', filePath, 'FAIL', message);
         console.error("Failed to read ID3 tags with node-id3:", e);
       }
 
@@ -175,6 +188,8 @@ export class MainMetadataService {
         syncedLyrics: syncedLyrics
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logFileTrace('extractMetadata', filePath, 'FAIL', message);
       console.error(`Error extracting metadata for ${filePath}:`, error);
       return null;
     }
@@ -185,6 +200,7 @@ export class MainMetadataService {
    */
   static async updatePhysicalMetadata(song: Song): Promise<boolean> {
     try {
+      logFileTrace('updatePhysicalMetadata', song.filePath, 'SUCCESS', `Updating physical metadata for song id=${song.id}`);
       const manager = new MetadataManager();
 
       // Convert coverArt (Base64 Data URI) to coverPath or similar if needed

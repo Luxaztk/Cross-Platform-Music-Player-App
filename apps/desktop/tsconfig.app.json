@@ -2,9 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2023",
+    "target": "esnext",
     "useDefineForClassFields": true,
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "types": ["vite/client", "node"],
 
@@ -27,21 +27,22 @@
     "noUncheckedSideEffectImports": true,
 
     /* Monorepo */
-    "baseUrl": "../..",
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
     "paths": {
-      "@music/core": ["packages/core/src/index.ts"],
-      "@music/core/*": ["packages/core/src/*"],
-      "@music/player": ["packages/player/src/index.ts"],
-      "@music/player/*": ["packages/player/src/*"],
-      "@music/types": ["packages/types/index.ts"],
-      "@music/types/*": ["packages/types/*"],
-      "@music/hooks": ["packages/hooks/index.ts"],
-      "@music/hooks/*": ["packages/hooks/*"],
-      "@music/utils": ["packages/utils/src/index.ts"],
-      "@music/utils/*": ["packages/utils/src/*"],
-      "@music/ui": ["packages/ui/index.ts"],
-      "@music/ui/*": ["packages/ui/*"],
-      "@music/brand": ["packages/brand"]
+      "@music/core": ["../../packages/core/src/index.ts"],
+      "@music/core/*": ["../../packages/core/src/*"],
+      "@music/player": ["../../packages/player/src/index.ts"],
+      "@music/player/*": ["../../packages/player/src/*"],
+      "@music/types": ["../../packages/types/index.ts"],
+      "@music/types/*": ["../../packages/types/*"],
+      "@music/hooks": ["../../packages/hooks/index.ts"],
+      "@music/hooks/*": ["../../packages/hooks/*"],
+      "@music/utils": ["../../packages/utils/src/index.ts"],
+      "@music/utils/*": ["../../packages/utils/src/*"],
+      "@music/ui": ["../../packages/ui/index.ts"],
+      "@music/ui/*": ["../../packages/ui/*"],
+      "@music/brand": ["../../packages/brand"]
     }
   },
   "include": [

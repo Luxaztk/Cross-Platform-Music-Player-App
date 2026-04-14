@@ -22,8 +22,11 @@
     // Padding should now be handled within individual page components.
     background: linear-gradient(to bottom, var(--layout-gradient-top) 0%, var(--bg-primary) 100%);
     min-height: 0;
-    scrollbar-gutter: stable;
     transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    @supports (scrollbar-gutter: stable) {
+      scrollbar-gutter: stable;
+    }
   }
 
   .lyrics-sidebar {

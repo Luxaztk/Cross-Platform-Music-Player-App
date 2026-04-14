@@ -389,7 +389,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
               <h2>{t('downloader.title')}</h2>
             </div>
             {!isBusy && (
-              <button className="close-btn" onClick={onClose}>
+              <button className="close-btn" onClick={onClose} title={t('common.close')}>
                 <X size={ICON_SIZES.MEDIUM} />
               </button>
             )}

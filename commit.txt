@@ -1,1 +1,12 @@
-fix(desktop): resolve yt-dlp path issue
+feat: implement mobile app with music library, playback, and playlists
+
+- Add Expo app navigation with tab-based UI
+- Implement library screen with import, sort, and playback
+- Add search with recent searches and result filtering
+- Implement playlist management (create, rename, delete, add/remove songs)
+- Add audio playback engine using Expo Audio
+- Integrate playback controls (play/pause, skip, seek, shuffle, repeat)
+- Implement dark/light theme toggle with persistence
+- Add English/Vietnamese localization
+- Set up AsyncStorage-based persistence layer
+- Add toast notification system

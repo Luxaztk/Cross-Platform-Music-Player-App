@@ -16,12 +16,14 @@ export const LyricsPanel: React.FC = () => {
     currentLineIndex,
     isLoading,
     searchLyrics,
-    saveLyrics
+    saveLyrics,
+    patchLyricSearchParam
   } = useLyrics();
 
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<LyricSearchResult[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [lastQueryUsed, setLastQueryUsed] = useState('');
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeLineRef = useRef<HTMLDivElement>(null);
@@ -40,8 +42,8 @@ export const LyricsPanel: React.FC = () => {
   useEffect(() => {
     setSearchResults([]);
     setIsSearching(false);
-    setSearchQuery(currentSong ? formatLyricsSearchQuery(currentSong.title, currentSong.artist) : '');
-  }, [currentSong?.id, currentSong?.title, currentSong?.artist]);
+    setSearchQuery(currentSong?.lyricSearchParam || (currentSong ? formatLyricsSearchQuery(currentSong.title, currentSong.artist) : ''));
+  }, [currentSong?.id, currentSong?.title, currentSong?.artist, currentSong?.lyricSearchParam]);
 
   const handleLineClick = (time: number) => {
     seek(time);
@@ -51,15 +53,26 @@ export const LyricsPanel: React.FC = () => {
     if (!currentSong) return;
     setIsSearching(true);
 
-    // Use explicitly provided query or fallback to default format: "Song Name - Artist"
-    const query = searchQuery.trim() || formatLyricsSearchQuery(currentSong.title, currentSong.artist);
+    // Priority Logic: Check if lyricSearchParam exists, use it as primary search string.
+    // If empty, fall back to the default (name + artist) and then (name).
+    let query = searchQuery.trim();
+    if (!query) {
+      if (currentSong.lyricSearchParam) {
+        query = currentSong.lyricSearchParam;
+      } else {
+        query = formatLyricsSearchQuery(currentSong.title, currentSong.artist);
+      }
+    }
 
     try {
       let results = await searchLyrics(query);
+      setLastQueryUsed(query);
 
       // Step 2: Fallback to Title only if combined search returned no results
       if (results.length === 0 && query.includes(' - ')) {
-        results = await searchLyrics(currentSong.title);
+        const fallbackQuery = currentSong.title;
+        results = await searchLyrics(fallbackQuery);
+        setLastQueryUsed(fallbackQuery);
       }
 
       setSearchResults(results);
@@ -73,10 +86,15 @@ export const LyricsPanel: React.FC = () => {
   const selectSearchResult = React.useCallback(async (lyrics: string, lyricId: number) => {
     const success = await saveLyrics(lyrics, lyricId);
     if (success) {
+      // Capture Search Term: When a user performs a manual search OR a successful auto-search that results in a lyric selection, capture that search string.
+      if (lastQueryUsed) {
+        await patchLyricSearchParam(lastQueryUsed);
+      }
       setSearchResults([]);
       setSearchQuery('');
+      setLastQueryUsed('');
     }
-  }, [saveLyrics]);
+  }, [saveLyrics, patchLyricSearchParam, lastQueryUsed]);
 
   if (!currentSong) return null;
 
