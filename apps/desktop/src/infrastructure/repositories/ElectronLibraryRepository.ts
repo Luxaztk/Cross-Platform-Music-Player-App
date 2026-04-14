@@ -111,4 +111,8 @@ export class ElectronLibraryRepository implements ILibraryRepository {
   async searchLyrics(query: string): Promise<LyricSearchResult[]> {
     return window.electronAPI.searchLyrics(query);
   }
+
+  async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
+    return window.electronAPI.patchSong(songId, updates);
+  }
 }

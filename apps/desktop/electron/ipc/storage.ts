@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
-import type { PlayerState } from '@music/types';
+import type { PlayerState, Song } from '@music/types';
 
 const storageAdapter = new MainStorageAdapter();
 
@@ -43,5 +43,21 @@ export function setupStorageIPC() {
 
   ipcMain.handle('storage:saveRecentSearches', async (_event, searches) => {
     return await storageAdapter.saveRecentSearches(searches);
+  });
+
+  ipcMain.handle('storage:getLyricUsage', async () => {
+    return await storageAdapter.getLyricUsage();
+  });
+
+  ipcMain.handle('storage:saveLyricUsage', async (_event, usage) => {
+    return await storageAdapter.saveLyricUsage(usage);
+  });
+
+  ipcMain.handle('storage:incrementLyricUsage', async (_event, id) => {
+    return await storageAdapter.incrementLyricUsage(id);
+  });
+
+  ipcMain.handle('storage:patchSong', async (_event, songId: string, updates: Partial<Song>) => {
+    return await storageAdapter.patchSong(songId, updates);
   });
 }

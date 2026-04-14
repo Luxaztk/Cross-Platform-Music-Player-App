@@ -6,6 +6,7 @@ export * from './ImportFolderUseCase';
 export * from './CreatePlaylistUseCase';
 export * from './UpdatePlaylistUseCase';
 export * from './UpdateSongUseCase';
+export * from './PatchSongUseCase';
 export * from './DeleteSongUseCase';
 export * from './DeleteSongsUseCase';
 export * from './DeletePlaylistUseCase';

@@ -99,4 +99,14 @@ export class MainStorageAdapter implements IStorageAdapter {
     usage[id.toString()] = (usage[id.toString()] || 0) + 1;
     await this.saveLyricUsage(usage);
   }
+
+  async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
+    const songs = await this.getSongs();
+    if (!songs[songId]) return null;
+    
+    const updatedSong = { ...songs[songId], ...updates };
+    songs[songId] = updatedSong;
+    await this.saveSongs(songs);
+    return updatedSong;
+  }
 }
