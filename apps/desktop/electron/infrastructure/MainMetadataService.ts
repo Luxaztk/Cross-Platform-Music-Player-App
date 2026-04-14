@@ -1,23 +1,49 @@
-import { Worker } from 'node:worker_threads';
+import * as mm from 'music-metadata';
 import path from 'node:path';
-import { app } from 'electron';
+import NodeID3 from 'node-id3';
+import { randomUUID } from 'node:crypto';
+import { spawn } from 'node:child_process';
+import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import fs from 'node:fs/promises';
 import type { Song } from '@music/types';
 import { splitArtists } from '@music/utils';
 import { MetadataManager } from '../modules/metadata/MetadataManager';
 import { logFileTrace } from './FileTraceLogger';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Định nghĩa cấu trúc chuẩn của một Lyrics Object từ node-id3
+interface NodeID3Lyric {
+  language?: string;
+  text: string;
+}
+
+// "Trạm kiểm soát": Đảm bảo unknown data thực sự là NodeID3Lyric
+function isNodeID3Lyric(obj: unknown): obj is NodeID3Lyric {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'text' in obj &&
+    typeof (obj as Record<string, unknown>).text === 'string'
+  );
+}
 
 export class MainMetadataService {
-  private static getWorkerPath(): string {
-    // In production, the worker will be compiled to .js in the same dir or dist-electron
-    // In development, vite-plugin-electron handles the path
-    const isPackaged = app.isPackaged;
-    if (isPackaged) {
-      return path.join(process.resourcesPath, 'app.asar.unpacked', 'dist-electron', 'metadata.worker.js');
-    }
-    return path.join(__dirname, 'metadata.worker.js');
-  }
+  /**
+   * Calculates a "Perceptual" audio fingerprint (v2) by computing the Energy Envelope.
+   * This is extremely stable across different qualities (bitrates) and encoders.
+   */
+  public static async calculateAudioHash(filePath: string): Promise<string> {
+    const runFfmpeg = (offset: number): Promise<Buffer> => {
+      return new Promise((resolve) => {
+        const ffmpeg = spawn(ffmpegPath.path, [
+          '-ss', offset.toString(),
+          '-t', '30',
+          '-i', filePath,
+          '-f', 's16le',
+          '-ac', '1',
+          '-ar', '8000',
+          '-loglevel', 'error',
+          '-'
+        ]);
 
         let pcmData = Buffer.alloc(0);
         ffmpeg.stdout.on('data', (chunk) => { pcmData = Buffer.concat([pcmData, chunk]); });
@@ -31,26 +57,43 @@ export class MainMetadataService {
           resolve(Buffer.alloc(0));
         });
       });
+    };
 
-      worker.on('error', (err) => {
-        console.error(`[MainMetadataService] Worker Error (${type}):`, err);
-        reject(err);
-        worker.terminate();
-      });
+    // Try at 30s offset first (to avoid silence at start)
+    let pcm = await runFfmpeg(30);
 
-      worker.on('exit', (code) => {
-        if (code !== 0) {
-          reject(new Error(`Worker stopped with exit code ${code}`));
-        }
-      });
-    });
-  }
+    // If it failed or the song is shorter than 30s (no data), fallback to 0s
+    if (pcm.length === 0) {
+      pcm = await runFfmpeg(0);
+    }
 
-  public static async calculateAudioHash(filePath: string): Promise<string> {
-    // We can still keep this in worker via EXTRACT_METADATA or separate task
-    // For now, extractMetadata already calls calculateAudioHash in worker
-    const result = await this.extractMetadata(filePath);
-    return result?.hash || `error-fallback-v2-${Date.now()}`;
+    if (pcm.length === 0) {
+      return `error-fallback-v2-${Date.now()}`;
+    }
+
+    // Perceptual Fingerprinting logic:
+    // Divide the recorded audio into 64 temporal windows
+    const numWindows = 64;
+    const bytesPerSample = 2;
+    const windowSize = Math.floor(pcm.length / bytesPerSample / numWindows);
+    const envelope: string[] = [];
+
+    for (let i = 0; i < numWindows; i++) {
+      let sumSquare = 0;
+      let actualSamples = 0;
+      for (let j = 0; j < windowSize; j++) {
+        const idx = (i * windowSize + j) * bytesPerSample;
+        if (idx + 1 >= pcm.length) break;
+        const sample = pcm.readInt16LE(idx);
+        sumSquare += (sample / 32768) ** 2;
+        actualSamples++;
+      }
+      const rms = actualSamples > 0 ? Math.sqrt(sumSquare / actualSamples) : 0;
+      const charCode = Math.min(35, Math.floor(rms * 100));
+      envelope.push(charCode.toString(36));
+    }
+
+    return `p2:${envelope.join('')}`;
   }
 
   static async extractMetadata(filePath: string, sourceUrl?: string, originId?: string): Promise<Song | null> {
@@ -153,20 +196,40 @@ export class MainMetadataService {
   }
 
   /**
-   * Batch version for bulk imports, optimized for message passing
+   * Updates the physical file's metadata (ID3 tags) based on the Song object.
    */
-  static async extractMetadataBatch(items: Array<{ filePath: string, sourceUrl?: string, originId?: string }>): Promise<Song[]> {
+  static async updatePhysicalMetadata(song: Song): Promise<boolean> {
     try {
       logFileTrace('updatePhysicalMetadata', song.filePath, 'SUCCESS', `Updating physical metadata for song id=${song.id}`);
       const manager = new MetadataManager();
 
-  static async updatePhysicalMetadata(song: Song): Promise<boolean> {
-    // For now, I'll add UPDATE_METADATA to the worker as well
-    // But since writing is also blocking, it's better to move it
-    // I'll keep it simple and just do it in worker too
-    try {
-      // (Implementation note: need to update worker to handle this)
-      return true; // Placeholder for now, will add UPDATE_METADATA to worker if needed
+      // Convert coverArt (Base64 Data URI) to coverPath or similar if needed
+      let coverPath: string | undefined;
+      let coverUrl: string | undefined;
+
+      if (song.coverArt && song.coverArt.startsWith('data:')) {
+        // Handled inside MetadataManager via DataURI checking
+      } else if (song.coverArt && song.coverArt.startsWith('http')) {
+        coverUrl = song.coverArt;
+      } else if (song.coverArt) {
+        coverPath = song.coverArt;
+      }
+
+      await manager.writeMetadata(song.filePath, {
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        coverPath,
+        coverUrl,
+        coverData: song.coverArt?.startsWith('data:') ? song.coverArt : undefined,
+        originId: song.originId,
+        sourceUrl: song.sourceUrl,
+        syncedLyrics: song.syncedLyrics,
+        lyrics: song.lyrics,
+        lyricId: song.lyricId?.toString()
+      });
+
+      return true;
     } catch (err) {
       console.error(`[MainMetadataService] Failed to update physical metadata for ${song.filePath}:`, err);
       return false;

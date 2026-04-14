@@ -1,6 +1,5 @@
-import React, { createContext, useContext, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, type ReactNode } from 'react';
 import { translations, type Language } from './translations';
-import { useSettings } from '../../../application/hooks/useSettings';
 
 interface LanguageContextType {
   language: Language;
@@ -11,11 +10,13 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { settings, updateSettings } = useSettings();
-  const language = (settings.general.language as Language) || 'vi';
+  const [language, setLanguageState] = useState<Language>(() => {
+    return (localStorage.getItem('app_language') as Language) || 'vi';
+  });
 
   const setLanguage = (lang: Language) => {
-    updateSettings({ general: { language: lang, notifications: settings.general.notifications } });
+    setLanguageState(lang);
+    localStorage.setItem('app_language', lang);
   };
 
   const t = (keyPath: string, variables?: Record<string, any>): string => {

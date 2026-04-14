@@ -73,8 +73,8 @@ export class AudioEngine {
     this.stop(); // Stop anything currently playing
     this.pendingSeek = null; // Reset pending seek on new load
 
-    // [FIX]: GỌI VÀO ĐƯỜNG CAO TỐC STREAM NHẠC ĐÃ ĐƯỢC CẤP PHÉP CORS
-    const url = `melovista://stream/${encodeURIComponent(filePath)}`;
+    // Convert file path to custom protocol with 'app' host for standard compliance
+    const url = `melovista://app/${encodeURIComponent(filePath)}`;
     this.lastUrl = url;
 
     this.howl = new Howl({

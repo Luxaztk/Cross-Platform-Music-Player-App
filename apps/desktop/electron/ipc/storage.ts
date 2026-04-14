@@ -2,11 +2,9 @@ import { ipcMain } from 'electron';
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
 import type { PlayerState, Song } from '@music/types';
 
-export const storageAdapter = new MainStorageAdapter();
+const storageAdapter = new MainStorageAdapter();
 
-export async function setupStorageIPC() {
-  await storageAdapter.initialize();
-  
+export function setupStorageIPC() {
   ipcMain.handle('storage:getLibrary', async () => {
     return await storageAdapter.getLibrary();
   });

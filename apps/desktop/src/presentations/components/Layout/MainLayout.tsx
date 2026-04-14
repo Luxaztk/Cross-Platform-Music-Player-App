@@ -9,7 +9,6 @@ import { DuplicateResolutionModal } from '../DuplicateResolutionModal/DuplicateR
 import { useUI } from '@music/hooks';
 import { useLanguage } from '../Language';
 import { LyricsPanel } from '../LyricsView';
-import { ErrorBoundary } from '../ErrorBoundary/ErrorBoundary';
 import './MainLayout.scss';
 
 const MainLayout: React.FC = () => {
@@ -39,9 +38,7 @@ const MainLayout: React.FC = () => {
         
         {isLyricsOpen && (
           <aside className="lyrics-sidebar">
-            <ErrorBoundary componentName="Lyrics Panel">
-              <LyricsPanel />
-            </ErrorBoundary>
+            <LyricsPanel />
           </aside>
         )}
       </div>

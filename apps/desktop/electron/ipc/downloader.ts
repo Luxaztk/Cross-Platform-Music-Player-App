@@ -3,7 +3,6 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { YoutubeDownloader } from '../modules/downloader/YoutubeDownloader';
 import { MetadataManager } from '../modules/metadata/MetadataManager';
-import { storageAdapter } from './storage';
 import type { ID3Metadata } from '../modules/metadata/MetadataManager';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
 
@@ -11,14 +10,7 @@ const downloader = new YoutubeDownloader();
 const metadataManager = new MetadataManager();
 
 const getDownloadsDir = async () => {
-    // 1. Get custom path from settings
-    const settings = await storageAdapter.getSettings();
-    if (settings.downloads.downloadPath) {
-        await fs.mkdir(settings.downloads.downloadPath, { recursive: true });
-        return settings.downloads.downloadPath;
-    }
-
-    // 2. Fallback to default Melovista Downloads folder
+    // Save to User's Music/Melovista Downloads folder
     const musicDir = app.getPath('music');
     const downloadsDir = path.join(musicDir, 'Melovista Downloads');
     await fs.mkdir(downloadsDir, { recursive: true });
@@ -59,31 +51,6 @@ export const setupDownloaderIPC = () => {
             logFileTrace('download-yt-audio.completed', savedPath, 'SUCCESS', 'Downloaded audio to file');
 
             downloader.off('progress', progressHandler);
-
-            try {
-                const info = await downloader.getInfo(url);
-
-                if (info.thumbnail) {
-                    const coversDir = path.join(app.getPath('userData'), 'cache', 'covers');
-                    await fs.mkdir(coversDir, { recursive: true });
-
-                    // Tải ảnh từ Youtube (Node 18+ hỗ trợ sẵn fetch)
-                    const response = await fetch(info.thumbnail);
-                    const arrayBuffer = await response.arrayBuffer();
-                    const buffer = Buffer.from(arrayBuffer);
-
-                    // Băm MD5 chuẩn hóa y như Worker và Main
-                    const hash = crypto.createHash('md5').update(normalizePathForHash(savedPath)).digest('hex');
-                    const safeFileName = `${hash}.jpg`;
-                    const coverPath = path.join(coversDir, safeFileName);
-
-                    // Ghi file ảnh xuống ổ cứng
-                    await fs.writeFile(coverPath, buffer);
-                    console.log(`[Downloader] Đã lưu Thumbnail YouTube: ${safeFileName}`);
-                }
-            } catch (thumbErr) {
-                console.error('[Downloader] Lỗi khi tải thumbnail từ Youtube:', thumbErr);
-            }
 
             return { success: true, filePath: savedPath };
         } catch (error) {
@@ -128,7 +95,7 @@ export const setupDownloaderIPC = () => {
             const message = err instanceof Error ? err.message : String(err);
             logFileTrace('delete-file', filePath, 'FAIL', message);
             console.error('[IPC] Failed to delete file:', err);
-            return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+            return { success: false };
         }
     });
 };

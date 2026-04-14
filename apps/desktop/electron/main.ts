@@ -4,8 +4,6 @@ import { app, BrowserWindow, protocol, session } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import crypto from 'node:crypto';
-import { normalizePathForHash } from '@music/utils';
 import { setupLibraryIPC } from './ipc/library';
 import { setupStorageIPC } from './ipc/storage';
 import { setupDownloaderIPC } from './ipc/downloader';
@@ -26,7 +24,12 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist');
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST;
 
-// [MIME_TYPES removed: net.fetch handles detection naturally]
+// MIME type lookup for audio files
+const AUDIO_MIME_TYPES: Record<string, string> = {
+  '.mp3': 'audio/mpeg', '.flac': 'audio/flac', '.wav': 'audio/wav',
+  '.m4a': 'audio/mp4', '.aac': 'audio/aac', '.ogg': 'audio/ogg',
+  '.wma': 'audio/x-ms-wma', '.opus': 'audio/opus',
+};
 
 let win: BrowserWindow | null;
 
@@ -60,25 +63,14 @@ app.on('activate', () => {
   }
 });
 
-app.whenReady().then(async () => {
-  const COVERS_DIR = path.join(app.getPath('userData'), 'cache', 'covers');
-
+app.whenReady().then(() => {
+  // Protocol handler for melovista://app/{encodedFilePath}
+  // Supports HTTP Range requests for audio seeking
   protocol.handle('melovista', async (request) => {
-    const rawUrl = request.url;
-    let decodedString = '';
-    let requestType = '';
-
-    // 1. NHẬN DIỆN ĐƯỜNG CAO TỐC (Dựa vào Hostname)
-    if (rawUrl.startsWith('melovista://app/')) {
-      requestType = 'image';
-      decodedString = decodeURIComponent(rawUrl.slice('melovista://app/'.length));
-    } else if (rawUrl.startsWith('melovista://stream/')) {
-      requestType = 'audio';
-      decodedString = decodeURIComponent(rawUrl.slice('melovista://stream/'.length));
-    } else if (rawUrl.startsWith('melovista:///')) {
-      // Đề phòng trường hợp UI vẫn dùng ///
-      requestType = 'audio';
-      decodedString = decodeURIComponent(rawUrl.slice('melovista:///'.length));
+    const url = new URL(request.url);
+    let filePath = decodeURIComponent(url.pathname);
+    if (process.platform === 'win32' && filePath.startsWith('/')) {
+      filePath = filePath.slice(1);
     }
 
     try {
@@ -90,12 +82,7 @@ app.whenReady().then(async () => {
       const ext = path.extname(filePath).toLowerCase();
       const contentType = AUDIO_MIME_TYPES[ext] || 'application/octet-stream';
 
-    // ==========================================
-    // NHÁNH 1: XỬ LÝ ẢNH BÌA
-    // ==========================================
-    if (requestType === 'image') {
-      const hash = crypto.createHash('md5').update(normalizePathForHash(rawPath)).digest('hex');
-      const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
+      const rangeHeader = request.headers.get('range');
 
       if (rangeHeader) {
         const match = rangeHeader.match(/bytes=(\d+)-(\d*)/);
@@ -116,29 +103,15 @@ app.whenReady().then(async () => {
 
           return new Response(buffer, {
             status: 206,
+            statusText: 'Partial Content',
             headers: {
               'Content-Range': `bytes ${start}-${end}/${fileSize}`,
               'Accept-Ranges': 'bytes',
-              'Content-Length': String(chunksize),
+              'Content-Length': String(chunkSize),
               'Content-Type': contentType,
-              'Access-Control-Allow-Origin': '*' // Chìa khóa để Player không báo lỗi
-            },
-          });
-        } else {
-          const buffer = await fs.readFile(rawPath);
-          return new Response(buffer, {
-            status: 200,
-            headers: {
-              'Accept-Ranges': 'bytes',
-              'Content-Length': String(fileSize),
-              'Content-Type': contentType,
-              'Access-Control-Allow-Origin': '*'
             },
           });
         }
-      } catch (err: any) {
-        console.error('[AUDIO STREAM ERROR]', err.message);
-        return new Response('File not found', { status: 404 });
       }
 
       const buffer = await fs.readFile(filePath);
@@ -158,18 +131,16 @@ app.whenReady().then(async () => {
       console.error('melovista:// protocol error:', err);
       return new Response('File not found', { status: 404 });
     }
-
-    return new Response('Bad Request', { status: 400 });
   });
 
   // Inject CSP headers dynamically based on environment
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     const isDev = !!VITE_DEV_SERVER_URL;
-
-    // [FIX CSP]: Đổi melovista://* thành melovista: cho cả img-src và media-src
-    const csp = isDev
-      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista:; media-src 'self' melovista:; connect-src 'self' http://localhost:5173 ws://localhost:5173;"
-      : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista:; media-src 'self' melovista:; connect-src 'self';";
+    
+    // In Dev, we need 'unsafe-eval' for Vite HMR. In Prod, we strip it out.
+    const csp = isDev 
+      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self' http://localhost:5173 ws://localhost:5173;" 
+      : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self';";
 
     callback({
       responseHeaders: {
@@ -180,8 +151,7 @@ app.whenReady().then(async () => {
   });
 
   setupLibraryIPC();
-  await setupStorageIPC();
+  setupStorageIPC();
   setupDownloaderIPC();
-  setupDialogIPC();
   createWindow();
 });

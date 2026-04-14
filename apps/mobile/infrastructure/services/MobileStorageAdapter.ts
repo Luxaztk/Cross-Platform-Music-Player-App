@@ -72,11 +72,4 @@ export class MobileStorageAdapter implements IStorageAdapter {
   async saveLyricUsage(usage: Record<string, number>): Promise<void> {
     await AsyncStorage.setItem(STORAGE_KEYS.LYRIC_USAGE, JSON.stringify(usage));
   }
-
-  async incrementLyricUsage(lyricId: number | string): Promise<void> {
-    const usage = await this.getLyricUsage();
-    const idStr = lyricId.toString();
-    usage[idStr] = (usage[idStr] || 0) + 1;
-    await this.saveLyricUsage(usage);
-  }
 }

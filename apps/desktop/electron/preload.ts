@@ -2,7 +2,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { IpcRendererEvent } from 'electron';
 import type { Song, Playlist, PlayerState, RecentSearch, LyricSearchResult, ImportResult } from '@music/types';
 import type { YoutubeInfo } from './modules/downloader/YoutubeDownloader';
-import type { AppSettings } from './constants/SettingsConstants';
 
 export interface DuplicateCheckResult {
   isDuplicate: boolean;
@@ -51,9 +50,6 @@ export interface ElectronAPI {
   onDownloadProgress: (callback: (data: { url: string; percent: number }) => void) => () => void;
   openItemPath: (filePath: string) => Promise<void>;
   deleteFile: (filePath: string) => Promise<void>;
-  getSettings: () => Promise<AppSettings>;
-  saveSettings: (settings: Partial<AppSettings>) => Promise<void>;
-  selectDirectory: (title?: string) => Promise<string | null>;
 }
 
 // Expose safe APIs to the renderer process
@@ -106,9 +102,6 @@ const electronAPI: ElectronAPI = {
   },
   openItemPath: (filePath: string) => ipcRenderer.invoke('open-item-path', filePath),
   deleteFile: (filePath: string) => ipcRenderer.invoke('delete-file', filePath),
-  getSettings: () => ipcRenderer.invoke('storage:getSettings'),
-  saveSettings: (settings: Partial<AppSettings>) => ipcRenderer.invoke('storage:saveSettings', settings),
-  selectDirectory: (title?: string) => ipcRenderer.invoke('dialog:openDirectory', title),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

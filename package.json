@@ -28,7 +28,9 @@
   },
   "homepage": "https://github.com/Luxaztk/Cross-Platform-Music-Player-App#readme",
   "dependencies": {
+    "@types/react-window": "^1.8.8",
     "prettier": "^3.8.1",
+    "react-window": "^2.2.7",
     "typescript": "^5.9.3"
   },
   "devDependencies": {

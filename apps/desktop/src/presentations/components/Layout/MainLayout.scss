@@ -33,7 +33,7 @@
     width: 25%;
     min-width: 320px;
     max-width: 450px;
-    background: var(--bg-surface);
+    background: var(--bg-secondary);
     border-left: 1px solid var(--border-color);
     overflow: hidden;
     display: flex;
@@ -43,13 +43,6 @@
 }
 
 @keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }

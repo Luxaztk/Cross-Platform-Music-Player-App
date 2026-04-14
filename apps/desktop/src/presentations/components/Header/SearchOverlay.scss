@@ -6,7 +6,7 @@
   max-width: 600px;
   background-color: var(--bg-surface-solid);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md, var(--shadow-md));
+  box-shadow: var(--shadow-lg, var(--shadow-md));
   z-index: 1000;
   overflow: visible; // Chuyển thành visible để không bị cắt Menu Popup
   display: flex;
