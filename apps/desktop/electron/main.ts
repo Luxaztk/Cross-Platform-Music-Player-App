@@ -9,7 +9,7 @@ import { normalizePathForHash } from '@music/utils';
 import { setupLibraryIPC } from './ipc/library';
 import { setupStorageIPC } from './ipc/storage';
 import { setupDownloaderIPC } from './ipc/downloader';
-import { setupDialogIPC } from './ipc/dialog';
+import { logFileTrace } from './infrastructure/FileTraceLogger';
 
 // Register custom scheme BEFORE app is ready
 protocol.registerSchemesAsPrivileged([
@@ -81,12 +81,14 @@ app.whenReady().then(async () => {
       decodedString = decodeURIComponent(rawUrl.slice('melovista:///'.length));
     }
 
-    // 2. CHUẨN HÓA ĐƯỜNG DẪN "SẮT ĐÁ"
-    let rawPath = decodedString.normalize('NFC');
-    if (process.platform === 'win32' && rawPath.match(/^\/[a-zA-Z]:/)) {
-      rawPath = rawPath.slice(1);
-    }
-    rawPath = path.normalize(rawPath);
+    try {
+      logFileTrace('melovistaProtocol.resolvePath', filePath, 'SUCCESS', 'Resolved request URL to absolute path');
+      const fileStat = await fs.stat(filePath);
+      logFileTrace('melovistaProtocol.stat', filePath, 'SUCCESS', `File exists and size ${fileStat.size}`);
+
+      const fileSize = fileStat.size;
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType = AUDIO_MIME_TYPES[ext] || 'application/octet-stream';
 
     // ==========================================
     // NHÁNH 1: XỬ LÝ ẢNH BÌA
@@ -95,46 +97,22 @@ app.whenReady().then(async () => {
       const hash = crypto.createHash('md5').update(normalizePathForHash(rawPath)).digest('hex');
       const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
 
-      try {
-        const buffer = await fs.readFile(coverPath);
-        return new Response(buffer, {
-          headers: {
-            'Content-Type': 'image/jpeg',
-            'Access-Control-Allow-Origin': '*'
-          }
-        });
-      } catch (err) {
-        return new Response(null, { status: 404 }); // Không có ảnh thì trả 404 im lặng, UI sẽ hiện ảnh mặc định
-      }
-    }
-
-    // ==========================================
-    // NHÁNH 2: XỬ LÝ TRUYỀN PHÁT ÂM THANH
-    // ==========================================
-    if (requestType === 'audio') {
-      try {
-        await fs.access(rawPath, fs.constants.F_OK); // Đảm bảo file tồn tại
-        const fileStat = await fs.stat(rawPath);
-        const fileSize = fileStat.size;
-        const range = request.headers.get('range');
-
-        const ext = path.extname(rawPath).toLowerCase();
-        const MIME_TYPES: Record<string, string> = {
-          '.mp3': 'audio/mpeg', '.flac': 'audio/flac', '.wav': 'audio/wav',
-          '.aac': 'audio/aac', '.m4a': 'audio/mp4', '.ogg': 'audio/ogg'
-        };
-        const contentType = MIME_TYPES[ext] || 'audio/mpeg';
-
-        if (range) {
-          const parts = range.replace(/bytes=/, "").split("-");
-          const start = parseInt(parts[0], 10);
-          const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-          const chunksize = (end - start) + 1;
-
-          const fileHandle = await fs.open(rawPath, 'r');
-          const buffer = Buffer.alloc(chunksize);
-          await fileHandle.read(buffer, 0, chunksize, start);
+      if (rangeHeader) {
+        const match = rangeHeader.match(/bytes=(\d+)-(\d*)/);
+        if (match) {
+          const start = parseInt(match[1], 10);
+          const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
+          const chunkSize = end - start + 1;
+          const fileHandle = await fs.open(filePath, 'r');
+          const buffer = Buffer.alloc(chunkSize);
+          const { bytesRead } = await fileHandle.read(buffer, 0, chunkSize, start);
           await fileHandle.close();
+
+          if (bytesRead === 0) {
+            logFileTrace('melovistaProtocol.readRange', filePath, 'EMPTY_BUFFER', `Requested ${chunkSize} bytes from ${start}-${end}`);
+          } else {
+            logFileTrace('melovistaProtocol.readRange', filePath, 'SUCCESS', `Read ${bytesRead}/${chunkSize} bytes`);
+          }
 
           return new Response(buffer, {
             status: 206,
@@ -162,6 +140,23 @@ app.whenReady().then(async () => {
         console.error('[AUDIO STREAM ERROR]', err.message);
         return new Response('File not found', { status: 404 });
       }
+
+      const buffer = await fs.readFile(filePath);
+      logFileTrace('melovistaProtocol.readFull', filePath, buffer.length === 0 ? 'EMPTY_BUFFER' : 'SUCCESS', `Loaded full file, ${buffer.length} bytes`);
+
+      return new Response(buffer, {
+        status: 200,
+        headers: {
+          'Accept-Ranges': 'bytes',
+          'Content-Length': String(fileSize),
+          'Content-Type': contentType,
+        },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logFileTrace('melovistaProtocol', filePath, 'FAIL', message);
+      console.error('melovista:// protocol error:', err);
+      return new Response('File not found', { status: 404 });
     }
 
     return new Response('Bad Request', { status: 400 });

@@ -64,7 +64,7 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
       <div className="song-picker-modal">
         <div className="modal-header">
           <h2>{t('modal.selectSongs') || 'Chọn bài hát để thêm'}</h2>
-          <button className="close-btn" onClick={onClose}>
+          <button className="close-btn" onClick={onClose} title={t('common.close')}>
             <X size={20} />
           </button>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Copy, AlertCircle } from 'lucide-react';
+import { X, Check, Copy } from 'lucide-react';
 import type { Song } from '@music/types';
 import { useLanguage } from '../Language';
 import './DuplicateResolutionModal.scss';
@@ -51,7 +51,7 @@ export const DuplicateResolutionModal: React.FC<DuplicateResolutionModalProps> =
       <div className="duplicate-modal">
         <div className="modal-header">
           <h2>{t('modal.duplicatesFound') || 'Phát hiện trùng lặp'}</h2>
-          <button className="close-btn" onClick={onClose}>
+          <button className="close-btn" onClick={onClose} title={t('common.close')}>
             <X size={20} />
           </button>
         </div>

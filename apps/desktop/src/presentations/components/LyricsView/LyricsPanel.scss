@@ -3,7 +3,8 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  background: rgba(var(--bg-primary-rgb), 0.82);
+  background: rgba(var(--bg-secondary-rgb), 0.82);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   backdrop-filter: blur(28px) saturate(180%);
   color: var(--color-text-main);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
@@ -19,7 +20,6 @@
     gap: var(--spacing-sm);
 
     &:hover {
-
       .change-lyrics-btn,
       .close-lyrics-btn {
         opacity: 1;
@@ -43,6 +43,7 @@
     opacity: 0;
     transform: scale(0.85);
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
 
     &:hover {
@@ -68,6 +69,7 @@
     overflow-y: auto;
     padding: var(--spacing-xl) var(--spacing-lg);
     scroll-behavior: smooth;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
     mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
     position: relative;
 
@@ -357,7 +359,6 @@
   from {
     transform: rotate(0deg);
   }
-
   to {
     transform: rotate(360deg);
   }
@@ -368,7 +369,6 @@
     opacity: 0;
     transform: translateY(20px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);

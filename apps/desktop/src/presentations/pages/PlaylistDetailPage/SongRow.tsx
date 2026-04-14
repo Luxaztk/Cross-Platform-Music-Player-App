@@ -133,6 +133,7 @@ export const SongRow: React.FC<SongRowProps> = React.memo(({
         <button
           className={`row-more-btn ${isActiveMenu ? 'active' : ''}`}
           onClick={(e) => onToggleMenu(song.id, e)}
+          title='More actions'
         >
           <MoreVertical size={ICON_SIZES.SMALL} />
         </button>

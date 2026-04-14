@@ -8,6 +8,7 @@ import {
   GetPlaylistByIdUseCase, 
   UpdatePlaylistUseCase, 
   UpdateSongUseCase, 
+  PatchSongUseCase, 
   DeletePlaylistUseCase,
   DeleteSongUseCase,
   DeleteSongsUseCase,
@@ -38,6 +39,7 @@ interface LibraryActionsContextType {
   handleGetPlaylistDetail: (id: string) => Promise<PlaylistDetail | null>;
   handleUpdatePlaylist: (playlist: Playlist) => Promise<Playlist | null>;
   handleUpdateSong: (song: Song) => Promise<Song | null>;
+  handlePatchSong: (songId: string, updates: Partial<Song>) => Promise<Song | null>;
   handleDeleteSong: (songId: string) => Promise<boolean>;
   handleDeleteSongs: (songIds: string[]) => Promise<boolean>;
   handleRemoveSongsFromPlaylist: (playlistId: string, songIds: string[]) => Promise<boolean>;
@@ -78,6 +80,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
     getPlaylistById: new GetPlaylistByIdUseCase(repository),
     updatePlaylist: new UpdatePlaylistUseCase(repository),
     updateSong: new UpdateSongUseCase(repository),
+    patchSong: new PatchSongUseCase(repository),
     deletePlaylist: new DeletePlaylistUseCase(repository),
     deleteSong: new DeleteSongUseCase(repository),
     deleteSongs: new DeleteSongsUseCase(repository),
@@ -173,6 +176,19 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
     return updated;
   }, [useCases, fetchPlaylists]);
 
+  const handlePatchSong = React.useCallback(async (songId: string, updates: Partial<Song>) => {
+    // 1. Optimistic Update in Local State
+    setSongs(prev => prev.map(s => s.id === songId ? { ...s, ...updates } : s));
+    
+    // 2. DB Update in Background
+    const updated = await useCases.patchSong.execute(songId, updates);
+    
+    // 3. Update related data quietly
+    fetchPlaylists(); // Small set, usually fast
+    
+    return updated;
+  }, [useCases, fetchPlaylists]);
+
   const handleDeleteSong = React.useCallback(async (songId: string) => {
     const res = await useCases.deleteSong.execute(songId);
     if (res) {
@@ -240,6 +256,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
     handleGetPlaylistDetail,
     handleUpdatePlaylist,
     handleUpdateSong,
+    handlePatchSong,
     handleDeleteSong,
     handleDeleteSongs,
     handleRemoveSongsFromPlaylist,
@@ -252,7 +269,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   }), [
     handleImportFiles, handleImportFolder, handleAddSongs, clearDuplicates,
     handleCreatePlaylist, handleGetPlaylistDetail, handleUpdatePlaylist,
-    handleUpdateSong, handleDeleteSong, handleDeleteSongs,
+    handleUpdateSong, handlePatchSong, handleDeleteSong, handleDeleteSongs,
     handleRemoveSongsFromPlaylist, handleAddSongsToPlaylist,
     handleDeletePlaylist, fetchPlaylists, fetchLibrary,
     handleScanMissingFiles, repository

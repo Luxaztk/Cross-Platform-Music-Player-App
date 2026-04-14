@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
 import { MainMetadataService } from '../infrastructure/MainMetadataService';
+import { logFileTrace } from '../infrastructure/FileTraceLogger';
 import type { DuplicateSongInfo, Song, Playlist } from '@music/types';
 import { LibraryService } from '@music/core';
 import { extractYoutubeId, getCanonicalYoutubeUrl, getErrorMessage } from '@music/utils';
@@ -31,6 +32,8 @@ async function scanDirectory(dir: string): Promise<string[]> {
       }
     }
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    logFileTrace('scanDirectory', dir, 'FAIL', message);
     console.error(`Error scanning directory ${dir}:`, err);
   }
   return files;
@@ -173,8 +176,11 @@ export function setupLibraryIPC() {
 
     try {
       const data = await fs.readFile(filePath);
+      logFileTrace('library:pickImage.readFile', filePath, data.length === 0 ? 'EMPTY_BUFFER' : 'SUCCESS', `Loaded image (${mimeType}), bytes=${data.length}`);
       return `data:image/${mimeType};base64,${data.toString('base64')}`;
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logFileTrace('library:pickImage.readFile', filePath, 'FAIL', message);
       console.error('Error reading image file:', error);
       return null;
     }
@@ -194,9 +200,16 @@ export function setupLibraryIPC() {
       const newSongs: Song[] = [];
       for (const filePath of result.filePaths) {
         try {
+          logFileTrace('library:importFiles.extractMetadata', filePath, 'SUCCESS', 'Importing file');
           const songData = await MainMetadataService.extractMetadata(filePath);
-          if (songData) newSongs.push(songData);
+          if (songData) {
+            newSongs.push(songData);
+          } else {
+            logFileTrace('library:importFiles.extractMetadata', filePath, 'FAIL', 'Metadata extraction returned null');
+          }
         } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          logFileTrace('library:importFiles.extractMetadata', filePath, 'FAIL', message);
           console.error(`Metadata error for ${filePath}:`, err);
         }
       }
@@ -231,9 +244,16 @@ export function setupLibraryIPC() {
       const newSongs: Song[] = [];
       for (const filePath of audioFiles) {
         try {
+          logFileTrace('library:importFolder.extractMetadata', filePath, 'SUCCESS', 'Importing file from folder');
           const songData = await MainMetadataService.extractMetadata(filePath);
-          if (songData) newSongs.push(songData);
+          if (songData) {
+            newSongs.push(songData);
+          } else {
+            logFileTrace('library:importFolder.extractMetadata', filePath, 'FAIL', 'Metadata extraction returned null');
+          }
         } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          logFileTrace('library:importFolder.extractMetadata', filePath, 'FAIL', message);
           console.error(`Metadata error for ${filePath}:`, err);
         }
       }
@@ -285,9 +305,11 @@ export function setupLibraryIPC() {
 
   ipcMain.handle('library:importFromPath', async (_event, filePath: string, sourceUrl?: string, originId?: string) => {
     try {
+      logFileTrace('library:importFromPath', filePath, 'SUCCESS', `Importing downloaded or external file sourceUrl=${sourceUrl}`);
       const canonicalUrl = sourceUrl ? getCanonicalYoutubeUrl(sourceUrl) || sourceUrl : sourceUrl;
       const songData = await MainMetadataService.extractMetadata(filePath, canonicalUrl, originId);
       if (!songData) {
+        logFileTrace('library:importFromPath', filePath, 'FAIL', 'Metadata extraction returned null');
         return { success: false, reason: 'METADATA_ERROR' };
       }
 
@@ -396,7 +418,10 @@ export function setupLibraryIPC() {
       for (const song of songs) {
         try {
           await fs.access(song.filePath, fs.constants.F_OK);
-        } catch {
+          logFileTrace('library:scanMissingFiles.access', song.filePath, 'SUCCESS', `File exists for songId=${song.id}`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          logFileTrace('library:scanMissingFiles.access', song.filePath, 'FAIL', message);
           missingIds.push(song.id);
         }
       }

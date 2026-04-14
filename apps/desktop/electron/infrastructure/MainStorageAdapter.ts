@@ -287,114 +287,13 @@ export class MainStorageAdapter implements IStorageAdapter {
     await this.saveLyricUsage(usage);
   }
 
-
-  async getSettings(): Promise<AppSettings> {
-    const raw = this.store.get('settings');
-    const migrated = this.migrateSettings(raw);
-    return this.validateSettings(migrated);
-  }
-
-  async saveSettings(settings: Partial<AppSettings> | any): Promise<void> {
-    const current = await this.getSettings();
+  async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
+    const songs = await this.getSongs();
+    if (!songs[songId]) return null;
     
-    // Deep merge logic for categories
-    const merged = {
-      general: { ...current.general, ...(settings.general || {}) },
-      appearance: { ...current.appearance, ...(settings.appearance || {}) },
-      audio: { ...current.audio, ...(settings.audio || {}) },
-      downloads: { ...current.downloads, ...(settings.downloads || {}) },
-    };
-
-    // Support flat updates for backward compatibility or simple calls during transition
-    if (settings.language) merged.general.language = settings.language;
-    if (settings.notifications !== undefined) merged.general.notifications = settings.notifications;
-    if (settings.theme) merged.appearance.theme = settings.theme;
-    if (settings.audioDeviceId || settings.deviceId) {
-      merged.audio.deviceId = settings.audioDeviceId || settings.deviceId;
-    }
-    if (settings.downloadPath) merged.downloads.downloadPath = settings.downloadPath;
-    if (settings.autoImportPaths) merged.downloads.autoImportPaths = settings.autoImportPaths;
-    if (settings.bitrate) merged.downloads.bitrate = settings.bitrate;
-
-    const validated = this.validateSettings(merged);
-    this.store.set('settings', validated);
-  }
-
-  private migrateSettings(data: any): any {
-    if (!data || typeof data !== 'object') return data;
-
-    // If it's already nested, return as is
-    if (data.general || data.appearance || data.audio || data.downloads) {
-      return data;
-    }
-
-    console.log('[MainStorageAdapter] Migrating flat settings to nested structure...');
-    
-    // Migration from old flat schema
-    const migrated = {
-      general: {
-        language: data.language || DEFAULT_SETTINGS.general.language,
-        notifications: data.notifications !== undefined ? data.notifications : DEFAULT_SETTINGS.general.notifications,
-      },
-      appearance: {
-        theme: data.theme || DEFAULT_SETTINGS.appearance.theme,
-      },
-      audio: {
-        deviceId: data.audioDeviceId || DEFAULT_SETTINGS.audio.deviceId,
-      },
-      downloads: {
-        downloadPath: data.downloadPath || getSafeDefaultDownloadPath(),
-        autoImportPaths: data.autoImportPaths || DEFAULT_SETTINGS.downloads.autoImportPaths,
-        bitrate: data.bitrate || DEFAULT_SETTINGS.downloads.bitrate,
-      }
-    };
-
-    return migrated;
-  }
-
-  private validateSettings(data: any): AppSettings {
-    const defaultPath = getSafeDefaultDownloadPath();
-    const defaults = { 
-      ...DEFAULT_SETTINGS, 
-      downloads: { ...DEFAULT_SETTINGS.downloads, downloadPath: defaultPath } 
-    };
-
-    if (!data || typeof data !== 'object') return defaults;
-
-    const validated: any = {
-      general: { ...defaults.general },
-      appearance: { ...defaults.appearance },
-      audio: { ...defaults.audio },
-      downloads: { ...defaults.downloads },
-    };
-
-    // Validate General
-    if (data.general) {
-      if (typeof data.general.language === 'string') validated.general.language = data.general.language;
-      if (typeof data.general.notifications === 'boolean') validated.general.notifications = data.general.notifications;
-    }
-
-    // Validate Appearance
-    if (data.appearance) {
-      if (typeof data.appearance.theme === 'string') validated.appearance.theme = data.appearance.theme;
-    }
-
-    // Validate Audio
-    if (data.audio) {
-      if (typeof data.audio.deviceId === 'string') validated.audio.deviceId = data.audio.deviceId;
-    }
-
-    // Validate Downloads
-    if (data.downloads) {
-      if (typeof data.downloads.downloadPath === 'string' && data.downloads.downloadPath) {
-        validated.downloads.downloadPath = data.downloads.downloadPath;
-      }
-      if (Array.isArray(data.downloads.autoImportPaths)) {
-        validated.downloads.autoImportPaths = data.downloads.autoImportPaths.filter((p: any) => typeof p === 'string');
-      }
-      if (typeof data.downloads.bitrate === 'string') validated.downloads.bitrate = data.downloads.bitrate;
-    }
-
-    return validated as AppSettings;
+    const updatedSong = { ...songs[songId], ...updates };
+    songs[songId] = updatedSong;
+    await this.saveSongs(songs);
+    return updatedSong;
   }
 }

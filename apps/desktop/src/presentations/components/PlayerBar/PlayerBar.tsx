@@ -153,6 +153,7 @@ const PlayerBar: React.FC = () => {
             className="styled-range progress-range"
             style={{ '--range-progress': `${progressPercent}%` } as React.CSSProperties}
             disabled={!currentSong || !duration}
+            placeholder='Player'
           />
           <span className="time-total">{formatTime(duration || currentSong?.duration || 0)}</span>
         </div>
@@ -197,6 +198,7 @@ const PlayerBar: React.FC = () => {
             onChange={handleVolumeChange}
             className="styled-range volume-range"
             style={{ '--range-progress': `${volumePercent}%` } as React.CSSProperties}
+            placeholder="Volume"
           />
         </div>
 

@@ -154,14 +154,120 @@
       .active-filter-tag {
         display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        background: rgba(var(--color-primary-rgb), 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(var(--color-primary-rgb), 0.3);
-        border-radius: 500px;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        animation: fadeInScale 0.3s ease-out;
+        gap: 8px;
+        color: var(--color-text-dim);
+        padding-right: 4px;
+
+        .filter-icon {
+          color: var(--color-primary);
+          filter: drop-shadow(0 0 4px rgba(var(--color-primary-rgb), 0.6));
+        }
+
+        .filter-text {
+          font-size: 0.65rem;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          font-weight: 800;
+        }
+      }
+
+      .filter-tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .active-filter-tag {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 10px;
+          background: rgba(var(--color-primary-rgb), 0.1);
+          -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+          border-radius: 500px;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: fadeInScale 0.3s ease-out;
+
+          &:hover {
+            background: rgba(var(--color-primary-rgb), 0.15);
+            border-color: rgba(var(--color-primary-rgb), 0.5);
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.2);
+          }
+
+          .tag-value {
+            font-size: 0.85rem;
+            color: white;
+            font-weight: 600;
+          }
+
+          .remove-tag-btn {
+            background: transparent;
+            border: none;
+            color: var(--color-text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+
+            &:hover {
+              color: var(--color-error);
+              background: var(--color-error-bg);
+            }
+          }
+        }
+      }
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .list-header {
+      display: grid;
+      grid-template-columns: 80px 1.5fr 1fr 120px 80px;
+      padding: 12px var(--spacing-lg);
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 8px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-text-dim);
+      background: var(--bg-primary);
+      transition: all 0.3s ease;
+
+      &.is-sticky {
+        background: var(--bg-primary);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        border-bottom-color: var(--color-primary);
+      }
+
+      .checkbox-header-btn {
+        background: none;
+        border: none;
+        color: var(--color-text-dim);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        margin: 0 auto;
+        transition: all 0.2s ease;
 
         &:hover {
           background: rgba(var(--color-primary-rgb), 0.15);
@@ -292,6 +398,7 @@
       color: var(--color-text-dim);
       transition: all 0.2s ease;
       cursor: default;
+      -webkit-user-select: none;
       user-select: none;
       border: 1px solid transparent;
 
@@ -587,6 +694,7 @@
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-surface-solid);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   padding: 12px 24px;
   border-radius: var(--radius-md);

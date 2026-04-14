@@ -65,7 +65,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
       <div className="settings-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{t('header.settings')}</h2>
-          <button className="close-btn" onClick={onClose}>
+          <button className="close-btn" onClick={onClose} title={t('common.close')}>
             <X size={24} />
           </button>
         </div>

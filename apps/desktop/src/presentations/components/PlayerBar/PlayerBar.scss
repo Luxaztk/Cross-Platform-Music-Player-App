@@ -11,8 +11,7 @@
   position: relative; // Added for popover anchoring
 
   // Global styled-range input
-  input[type="range"].styled-range {
-
+  input[type='range'].styled-range {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
@@ -69,7 +68,9 @@
       position: relative;
       z-index: 2;
       opacity: 1;
-      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+      transition:
+        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+        background-color 0.2s ease;
       transform: scale(1);
       transform-origin: center center;
     }
@@ -184,7 +185,9 @@
         color: var(--color-text-muted);
         font-size: 1.2rem;
         cursor: pointer;
-        transition: color var(--transition-fast), transform var(--transition-fast);
+        transition:
+          color var(--transition-fast),
+          transform var(--transition-fast);
 
         &:hover:not(:disabled) {
           color: var(--color-text-main);
@@ -289,8 +292,8 @@
       width: 340px;
       max-height: 520px;
       background: var(--bg-surface-solid);
-      backdrop-filter: blur(40px);
       -webkit-backdrop-filter: blur(40px);
+      backdrop-filter: blur(40px);
       border: 1px solid var(--border-subtle);
       border-radius: 20px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
@@ -392,7 +395,9 @@
         background: transparent;
         border: none;
         cursor: pointer;
-        transition: color var(--transition-fast), transform var(--transition-fast);
+        transition:
+          color var(--transition-fast),
+          transform var(--transition-fast);
 
         &:hover {
           color: var(--color-text-main);
@@ -460,7 +465,12 @@
   padding: 10px 14px;
   border-radius: var(--radius-md);
   background: var(--bg-surface);
-  transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
   position: relative;
   border: 1px solid var(--border-color);
   font-family: inherit;
@@ -477,7 +487,9 @@
     background: var(--bg-surface-hover);
     border-color: var(--border-color-focus);
     transform: translateX(4px);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+    transition:
+      transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.2s ease;
 
     .drag-handle {
       color: var(--color-text-main);

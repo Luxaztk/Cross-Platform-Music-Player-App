@@ -19,4 +19,5 @@ export interface ILibraryRepository {
   getLyrics(songId: string): Promise<string | null>;
   saveLyrics(songId: string, lyrics: string, lyricId?: number): Promise<boolean>;
   searchLyrics(query: string): Promise<LyricSearchResult[]>;
+  patchSong(songId: string, updates: Partial<Song>): Promise<Song | null>;
 }

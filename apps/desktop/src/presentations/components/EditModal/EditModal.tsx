@@ -111,7 +111,7 @@ export const EditModal: React.FC<EditModalProps> = ({
       <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{modalTitle}</h2>
-          <button className="close-btn" onClick={onClose}>
+          <button className="close-btn" onClick={onClose} title={t('common.close')}>
             <X size={ICON_SIZES.MEDIUM} />
           </button>
         </div>

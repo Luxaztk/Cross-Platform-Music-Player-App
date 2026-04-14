@@ -15,6 +15,7 @@
     padding: 12px 16px;
     border-radius: var(--radius-md);
     background: var(--bg-surface);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
     display: flex;

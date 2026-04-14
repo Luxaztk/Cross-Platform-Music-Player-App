@@ -43,6 +43,8 @@ export interface ElectronAPI {
   saveRecentSearches: (searches: RecentSearch[]) => Promise<void>;
   getLyricUsage: () => Promise<Record<string, number>>;
   saveLyricUsage: (usage: Record<string, number>) => Promise<void>;
+  incrementLyricUsage: (id: number | string) => Promise<void>;
+  patchSong: (songId: string, updates: Partial<Song>) => Promise<Song | null>;
   fetchYtInfo: (url: string) => Promise<{ success: boolean; info?: YoutubeInfo; error?: string }>;
   downloadYtAudio: (url: string, title: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
   writeAudioMetadata: (filePath: string, metadata: Partial<Song>) => Promise<void>;
@@ -90,6 +92,8 @@ const electronAPI: ElectronAPI = {
   saveRecentSearches: (searches: RecentSearch[]) => ipcRenderer.invoke('storage:saveRecentSearches', searches),
   getLyricUsage: () => ipcRenderer.invoke('storage:getLyricUsage'),
   saveLyricUsage: (usage: Record<string, number>) => ipcRenderer.invoke('storage:saveLyricUsage', usage),
+  incrementLyricUsage: (id: number | string) => ipcRenderer.invoke('storage:incrementLyricUsage', id),
+  patchSong: (songId: string, updates: Partial<Song>) => ipcRenderer.invoke('storage:patchSong', songId, updates),
 
   // Downloader operations
   fetchYtInfo: (url: string) => ipcRenderer.invoke('fetch-yt-info', url),

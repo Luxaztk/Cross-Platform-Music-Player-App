@@ -1,7 +1,12 @@
-feat(protocol): bulletproof unicode pathing and cors support
+feat: implement mobile app with music library, playback, and playlists
 
-- Refactored `melovista://` protocol to use manual string parsing for absolute paths, bypassing Chromium's URL normalization issues.
-- Integrated `melovista://stream/` and `melovista://app/` (image) branching logic for cleaner resource routing.
-- Implemented "Bulletproof" path normalization (NFC + Case-insensitivity + Forward Slashes) to resolve "File not found" and MD5 mismatch errors on Windows with Vietnamese characters.
-- Added `Access-Control-Allow-Origin: '*'` to protocol responses, fixing audio playback and image loading blocks in the renderer.
-- Updated `AudioEngine` to utilize the new `melovista://stream/` endpoint for more reliable media delivery.
+- Add Expo app navigation with tab-based UI
+- Implement library screen with import, sort, and playback
+- Add search with recent searches and result filtering
+- Implement playlist management (create, rename, delete, add/remove songs)
+- Add audio playback engine using Expo Audio
+- Integrate playback controls (play/pause, skip, seek, shuffle, repeat)
+- Implement dark/light theme toggle with persistence
+- Add English/Vietnamese localization
+- Set up AsyncStorage-based persistence layer
+- Add toast notification system

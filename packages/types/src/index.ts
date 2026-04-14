@@ -16,6 +16,7 @@ export interface Song {
   sourceUrl?: string; // YouTube URL or similar
   originId?: string; // YouTube Video ID or similar
   lyricId?: number; // LRCLIB lyric ID
+  lyricSearchParam?: string; // Persistent search parameter for lyrics
 }
 
 export type DuplicateReason = 'URL' | 'HASH' | 'PATH' | 'METADATA';

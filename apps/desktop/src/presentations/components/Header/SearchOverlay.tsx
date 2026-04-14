@@ -119,6 +119,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                     e.stopPropagation();
                     onRemoveRecent(item.timestamp);
                   }}
+                  title={t('common.remove')}
                 >
                   <X size={14} />
                 </button>
@@ -196,6 +197,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                       <div className="item-actions">
                         <button 
                           className={`more-btn ${activeMenuId === song.id ? 'active' : ''}`}
+                          title={t('common.more') || 'More options'}
                           onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             if (activeMenuId === song.id) {
@@ -275,6 +277,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                       <div className="item-actions">
                         <button 
                           className={`more-btn ${activeMenuId === artist.id ? 'active' : ''}`}
+                          title={t('common.more') || 'More options'}
                           onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             if (activeMenuId === artist.id) {
@@ -340,6 +343,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                       <div className="item-actions">
                         <button 
                           className={`more-btn ${activeMenuId === album.id ? 'active' : ''}`}
+                          title={t('common.more') || 'More options'}
                           onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             if (activeMenuId === album.id) {

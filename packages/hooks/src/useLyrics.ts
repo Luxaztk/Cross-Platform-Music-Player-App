@@ -5,7 +5,7 @@ import { LyricsParser } from '@music/core';
 
 export const useLyrics = () => {
   const { currentSong, progress, updateCurrentSongMetadata } = usePlayer();
-  const { repository, handleUpdateSong } = useLibrary();
+  const { repository, handleUpdateSong, handlePatchSong } = useLibrary();
   
   const [rawLyrics, setRawLyrics] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,6 +103,25 @@ export const useLyrics = () => {
     }
   }, [currentSong, repository, updateCurrentSongMetadata, handleUpdateSong]);
 
+  const patchLyricSearchParam = useCallback(async (searchParam: string) => {
+    if (!currentSong) return false;
+    
+    try {
+      // Optimistic Update in Player state
+      updateCurrentSongMetadata({ lyricSearchParam: searchParam });
+      
+      // DB Update in Background
+      const updated = await handlePatchSong(currentSong.id, { lyricSearchParam: searchParam });
+      
+      return updated !== null;
+    } catch (err) {
+      console.error('Patch lyric search param error:', err);
+      // Rollback
+      updateCurrentSongMetadata({ lyricSearchParam: currentSong.lyricSearchParam });
+      return false;
+    }
+  }, [currentSong, updateCurrentSongMetadata, handlePatchSong]);
+
   return {
     rawLyrics,
     lyricLines,
@@ -111,6 +130,7 @@ export const useLyrics = () => {
     error,
     searchLyrics,
     saveLyrics,
+    patchLyricSearchParam,
     currentLine: currentLineIndex >= 0 ? lyricLines[currentLineIndex] : null
   };
 };

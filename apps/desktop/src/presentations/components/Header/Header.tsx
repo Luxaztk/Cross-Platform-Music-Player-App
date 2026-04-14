@@ -224,12 +224,12 @@ const Header: React.FC = () => {
             onFocus={() => setIsSearchFocused(true)}
           />
           {searchQuery && (
-            <button className="clear-search" onClick={() => setSearchQuery('')}>
+            <button className="clear-search" onClick={() => setSearchQuery('')} title={t('common.clear')}>
               <X size={14} />
             </button>
           )}
           <div className="search-divider" />
-          <button className="filter-options-btn">
+          <button className="filter-options-btn" title={t('header.filterOptions')}>
             <SlidersHorizontal size={14} />
           </button>
 

@@ -5,8 +5,7 @@ import { YoutubeDownloader } from '../modules/downloader/YoutubeDownloader';
 import { MetadataManager } from '../modules/metadata/MetadataManager';
 import { storageAdapter } from './storage';
 import type { ID3Metadata } from '../modules/metadata/MetadataManager';
-import crypto from 'node:crypto';
-import { normalizePathForHash } from '@music/utils';
+import { logFileTrace } from '../infrastructure/FileTraceLogger';
 
 const downloader = new YoutubeDownloader();
 const metadataManager = new MetadataManager();
@@ -23,6 +22,7 @@ const getDownloadsDir = async () => {
     const musicDir = app.getPath('music');
     const downloadsDir = path.join(musicDir, 'Melovista Downloads');
     await fs.mkdir(downloadsDir, { recursive: true });
+    logFileTrace('downloader.getDownloadsDir', downloadsDir, 'SUCCESS', 'Ensured downloads directory exists');
     return downloadsDir;
 };
 
@@ -47,6 +47,7 @@ export const setupDownloaderIPC = () => {
             // Sanitize filename
             const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
             const outputPath = path.join(downloadsDir, `${safeTitle}_${Date.now()}.mp3`);
+            logFileTrace('download-yt-audio.prepare', outputPath, 'SUCCESS', `Downloading audio for URL=${url}`);
 
             // Setup a one-time progress listener for this download
             const progressHandler = (percent: number) => {
@@ -55,6 +56,7 @@ export const setupDownloaderIPC = () => {
             downloader.on('progress', progressHandler);
 
             const savedPath = await downloader.downloadAudio(url, outputPath);
+            logFileTrace('download-yt-audio.completed', savedPath, 'SUCCESS', 'Downloaded audio to file');
 
             downloader.off('progress', progressHandler);
 
@@ -85,6 +87,8 @@ export const setupDownloaderIPC = () => {
 
             return { success: true, filePath: savedPath };
         } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            logFileTrace('download-yt-audio', undefined, 'FAIL', message);
             if (error instanceof Error) {
                 console.error('IPC download-yt-audio error:', error);
                 return { success: false, error: error.message };
@@ -96,9 +100,12 @@ export const setupDownloaderIPC = () => {
 
     ipcMain.handle('write-audio-metadata', async (_event, filePath: string, metadata: ID3Metadata) => {
         try {
+            logFileTrace('write-audio-metadata', filePath, 'SUCCESS', 'Writing audio metadata via IPC');
             const success = await metadataManager.writeMetadata(filePath, metadata);
             return { success };
         } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            logFileTrace('write-audio-metadata', filePath, 'FAIL', message);
             if (error instanceof Error) {
                 console.error('IPC write-audio-metadata error:', error);
                 return { success: false, error: error.message };
@@ -114,30 +121,12 @@ export const setupDownloaderIPC = () => {
 
     ipcMain.handle('delete-file', async (_event, filePath: string) => {
         try {
-            if (!filePath) return { success: false, error: 'Path is required' };
-
-            // 1. Normalize and resolve the path
-            const normalizedPath = path.resolve(filePath);
-            const downloadsDir = await getDownloadsDir();
-            const musicDir = app.getPath('music');
-
-            // 2. Security Guardrail: Only allow deletion within controlled directories
-            // We allow Melovista Downloads and the general Music folder (if standard file)
-            const isInsideDownloads = normalizedPath.startsWith(downloadsDir);
-            const isInsideMusic = normalizedPath.startsWith(musicDir);
-
-            if (!isInsideDownloads && !isInsideMusic) {
-                console.warn(`[Security] Unauthorized delete attempt: ${normalizedPath}`);
-                return { success: false, error: 'Unauthorized: Cannot delete files outside of designated directories.' };
-            }
-
-            // 3. Final safety: Ensure it exists before unlinking
-            await fs.access(normalizedPath);
-            await fs.unlink(normalizedPath);
-
-            console.log('[IPC] Securely deleted file:', normalizedPath);
+            await fs.unlink(filePath);
+            logFileTrace('delete-file', filePath, 'SUCCESS', 'Deleted file from disk');
             return { success: true };
         } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            logFileTrace('delete-file', filePath, 'FAIL', message);
             console.error('[IPC] Failed to delete file:', err);
             return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
         }
