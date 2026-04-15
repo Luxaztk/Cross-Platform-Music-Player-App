@@ -68,6 +68,7 @@ export interface ElectronAPI {
   getSettings: () => Promise<any>
   saveSettings: (settings: any) => Promise<void>
   selectDirectory: (title?: string) => Promise<string | null>
+  resetCache: () => Promise<{ success: boolean; message?: string }>
 
   // Các hàm Auto Update mới thêm vào
   onUpdateAvailable: (callback: (version: string) => void) => () => void
@@ -163,6 +164,7 @@ const electronAPI: ElectronAPI = {
   },
   restartApp: () => ipcRenderer.invoke('restart-app'),
   log: (level, message) => ipcRenderer.send('electron-log-message', { level, message }),
+  resetCache: () => ipcRenderer.invoke('library:reset-cache'),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

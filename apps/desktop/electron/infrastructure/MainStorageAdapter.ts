@@ -120,4 +120,9 @@ export class MainStorageAdapter implements IStorageAdapter {
     const current = await this.getSettings();
     this.store.set('settings', { ...current, ...settings });
   }
+  
+  async clear(): Promise<void> {
+    this.store.clear();
+    console.warn('\x1b[41m%s\x1b[0m', '🚨 [Storage] ADAPTER MEMORY WIPED');
+  }
 }

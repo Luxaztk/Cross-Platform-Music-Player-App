@@ -84,6 +84,7 @@ declare global {
       onUpdateProgress: (callback: (percent: number) => void) => () => void
       onUpdateDownloaded: (callback: () => void) => () => void
       restartApp: () => Promise<void>
+      resetCache: () => Promise<{ success: boolean; message?: string }>
     }
   }
 

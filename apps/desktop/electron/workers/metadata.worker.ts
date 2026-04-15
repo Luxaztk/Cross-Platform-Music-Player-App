@@ -4,7 +4,7 @@ import path from 'node:path';
 import NodeID3 from 'node-id3';
 import { randomUUID, createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import { getFixedFfmpegPath } from '../utils/ffmpegPath';
 import fs from 'node:fs/promises';
 import { splitArtists, normalizePathForHash } from '@music/utils';
 
@@ -24,9 +24,12 @@ function isNodeID3Lyric(obj: unknown): obj is NodeID3Lyric {
 }
 
 async function calculateAudioHash(filePath: string): Promise<string> {
+  const resolvedPath = getFixedFfmpegPath();
+  console.log('[Worker] FFmpeg Path Resolved:', resolvedPath);
+
   const runFfmpeg = (offset: number): Promise<Buffer> => {
     return new Promise((resolve) => {
-      const ffmpeg = spawn(ffmpegPath.path, [
+      const ffmpeg = spawn(resolvedPath, [
         '-ss', offset.toString(),
         '-t', '30',
         '-i', filePath,

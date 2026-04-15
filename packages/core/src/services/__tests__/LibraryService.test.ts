@@ -32,15 +32,43 @@ class MockStorageAdapter implements IStorageAdapter {
   async saveLyricUsage(_usage: Record<string, number>): Promise<void> {
     // Không làm gì cả
   }
+
+  async clear(): Promise<void> {
+    this.songs = {};
+    this.library = { id: '0', name: 'Library', songIds: [], createdAt: '', description: '' };
+    this.playlists = {};
+  }
+}
+
+class MockMetadataService {
+  async extract(filePath: string, _sourceUrl?: string, _originId?: string): Promise<Song | null> {
+    // Trả về một song tối thiểu cho mục đích test
+    return {
+      id: 'mock-id',
+      filePath,
+      title: 'Mock Title',
+      artist: 'Mock Artist',
+      duration: 180,
+      hash: 'p2:mockhash',
+      album: '',
+      genre: '',
+      fileSize: 1024,
+      artists: ['Mock Artist'],
+      year: 2024,
+      coverArt: null
+    };
+  }
 }
 
 describe('LibraryService', () => {
   let adapter: MockStorageAdapter;
+  let metadataService: MockMetadataService;
   let service: LibraryService;
 
   beforeEach(() => {
     adapter = new MockStorageAdapter();
-    service = new LibraryService(adapter);
+    metadataService = new MockMetadataService();
+    service = new LibraryService(adapter, metadataService as any);
   });
 
   describe('processAndAddSongs (Duplicate Detection)', () => {

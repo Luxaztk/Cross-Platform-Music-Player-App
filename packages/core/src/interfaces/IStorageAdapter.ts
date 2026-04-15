@@ -13,4 +13,5 @@ export interface IStorageAdapter {
   saveRecentSearches(searches: RecentSearch[]): Promise<void>;
   getLyricUsage(): Promise<Record<string, number>>;
   saveLyricUsage(usage: Record<string, number>): Promise<void>;
+  clear(): Promise<void>;
 }

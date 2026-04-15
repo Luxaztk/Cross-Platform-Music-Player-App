@@ -61,6 +61,7 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
   - [X] Cấu hình đường dẫn log vật lý deterministic: `%AppData%/MeloVista/logs/main.log`.
   - [X] Cơ chế **Production Log Stripping**: Sử dụng Oxc/Rolldown để loại bỏ hoàn toàn `console.log` trong bản build chính thức.
   - [X] Hệ thống **Diagnostic Tracing**: Nhúng log chi tiết vào vòng đời tải nhạc và Guard 3 giúp chẩn đoán Race Condition một cách chính xác.
+- [X] **Concurrency Protection**: Cơ chế khóa đường dẫn đang xử lý (Locking Path) với thời gian chờ 5 giây để bảo vệ tính toàn vẹn của thư viện trong các thao tác nạp dữ liệu song song.
 
 ---
 
@@ -86,6 +87,7 @@ Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 - [X] **Quản lý Hàng đợi nâng cao**: Kéo thả để thay đổi thứ tự ngay trong Queue Panel.
 - [X] **Global Hotkeys**: Tích hợp hệ thống phím tắt điều hướng toàn cục (Space, Mũi tên, Shift+N/P, /, Esc). Xây dựng cơ chế Guard Clause bảo vệ các ô input/textarea khỏi tình trạng nhận nhầm phím.
 - [X] Multi-level Profile Menu (Sub-menus support)
+- [X] **Release Pipeline (Automated Deploy)**: Tích hợp script `deploy.js` giúp tự động tăng version, commit code và kích hoạt tiến trình đóng gói bản release chỉ với một lệnh `npm run deploy`.
 
 ### 3. Debugging & QA
 
@@ -93,6 +95,7 @@ Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 - [X] **Hydration Synchronization**: Khắc phục lỗi không phát được nhạc khi khôi phục bài hát từ app khởi động thông qua cơ chế Just-in-Time Loading.
 - [X] **Volume Control**: Khắc phục lỗi mất giá trị âm lượng khi Tắt/Mở tiếng (Mute/Unmute).
 - [X] **Metadata Cover Fix**: Khắc phục lỗi không hiển thị ảnh bìa song trong PlayerBar khi đọc từ Metadata phức tạp.
+- [X] **FFmpeg ASAR Unpack Fix**: Giải quyết triệt để lỗi `ENOENT` khi thực thi FFmpeg trong bản build bằng cách giải nén binary ra `app.asar.unpacked` và đồng bộ hóa logic phân giải đường dẫn đa môi trường (Main/Worker).
 
 ### 🟢 GIAI ĐOẠN 3: Làm đẹp & Trải nghiệm Nâng cao (Mức độ ưu tiên THẤP)
 
@@ -115,7 +118,7 @@ Mục tiêu: Cung cấp các công cụ mạnh mẽ để quản lý và thưở
 
 Mục tiêu: Đưa trải nghiệm lên các nền tảng di động.
 
-- [/] **React Native Mobile App**: Xây dựng ứng dụng mobile dựa trên các UseCases/Hooks đã có (Đã xong Core Integration & Layout).
+- [X] **React Native Mobile App**: Xây dựng ứng dụng mobile dựa trên các UseCases/Hooks đã có (Đã xong Core Integration, Layout & MobileStorageAdapter).
 
 - [ ] **Hiệu ứng âm thanh (Audio FX)**: Bộ chỉnh âm (Equalizer), Visualizer (Sóng nhạc).
 - [ ] **Đồng bộ hóa (Sync)**: (Tùy chọn) Đồng bộ playlist và sở thích giữa Desktop & Mobile.
@@ -140,6 +143,7 @@ Mục tiêu: Bảo vệ logic dự án bằng Unit Test toàn diện (Full Cover
   - [X] Quản lý bài hát (Thêm, Xóa, Cập nhật)
   - [X] Quản lý Playlist (Tạo, Xóa, Thêm/Bớt bài hát)
 - [X] **UseCases**: Các lớp nghiệp vụ bọc ngoài LibraryService (100% Coverage)
+- [X] **Library Stability V3**: Triển khai cơ chế Mutex lock-out 5s và bỏ qua hash lỗi trong Guard 3, triệt tiêu hoàn toàn hiện tượng trùng lặp ảo (Ghost Duplication).
 
 ### 2. @music/utils (Tiện ích dùng chung)
 

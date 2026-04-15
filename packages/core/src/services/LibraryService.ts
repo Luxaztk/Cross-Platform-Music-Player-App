@@ -1,7 +1,9 @@
 import type { Song, Playlist, PlaylistDetail, DuplicateSongInfo, DuplicateReason } from '@music/types';
 import { isSamePath, normalizeString, logger } from '@music/utils';
 import type { IStorageAdapter } from '../interfaces/IStorageAdapter';
+import type { IMetadataService } from '../interfaces/IMetadataService';
 import { Mutex } from '../utils/Mutex';
+import path from 'node:path';
 
 // We'll use a simple fallback if crypto.randomUUID is not available (e.g. in some mobile environments)
 const generateId = (): string => {
@@ -17,10 +19,60 @@ const generateId = (): string => {
 
 export class LibraryService {
   private storageAdapter: IStorageAdapter;
+  private metadataService: IMetadataService;
   private mutex = new Mutex();
+  private processingPaths = new Set<string>();
+  private songs: Song[] = [];
 
-  constructor(storageAdapter: IStorageAdapter) {
+  constructor(storageAdapter: IStorageAdapter, metadataService: IMetadataService) {
     this.storageAdapter = storageAdapter;
+    this.metadataService = metadataService;
+  }
+
+  /**
+   * Absolute Entry Point for single-file imports.
+   * Orchestrates metadata extraction and library addition with path-level locking.
+   */
+  public async importFromPath(filePath: string, caller: string = 'UNKNOWN', sourceUrl?: string, originId?: string): Promise<{
+    success: boolean;
+    count: number;
+    duplicates: string[];
+    duplicateSongs: DuplicateSongInfo[];
+    reason?: string;
+  } | null> {
+    const normalizedPath = path.normalize(filePath).toLowerCase();
+
+    // 1. Synchronous Mutex Locking at the absolute entry point
+    if (this.processingPaths.has(normalizedPath)) {
+      console.warn('\x1b[33m%s\x1b[0m', `🛑 [MUTEX] BLOCKED | Caller: ${caller} | Path: ${normalizedPath}`);
+      return null;
+    }
+    this.processingPaths.add(normalizedPath);
+    console.log('\x1b[32m%s\x1b[0m', `🟢 [MUTEX] ACCEPTED | Caller: ${caller} | Path: ${normalizedPath}`);
+
+    try {
+      // 2. NOW execute async operations securely
+      const songData = await this.metadataService.extract(filePath, sourceUrl, originId);
+      if (!songData) {
+        return { success: false, count: 0, duplicates: [], duplicateSongs: [], reason: 'METADATA_ERROR' };
+      }
+
+      const { addedCount, duplicatePaths, duplicateSongs } = await this.processAndAddSongs([songData]);
+      
+      return {
+        success: true,
+        count: addedCount,
+        duplicates: duplicatePaths,
+        duplicateSongs: duplicateSongs,
+        reason: duplicateSongs.length > 0 ? (duplicateSongs[0] as DuplicateSongInfo).duplicateReason : undefined
+      };
+    } finally {
+      // 3. RELEASE LOCK with 5-second Cooldown
+      // This allows the Mutex to ignore delayed file watcher events firing after an IPC import
+      setTimeout(() => {
+        this.processingPaths.delete(normalizedPath);
+      }, 5000);
+    }
   }
 
   /**
@@ -47,7 +99,11 @@ export class LibraryService {
 
       // Priority 1: File Path
       const existingPaths = new Set(existingSongs.map(s => s.filePath));
-      const existingHashes = new Set(existingSongs.map(s => s.hash?.split('-')[0]).filter(Boolean));
+      const existingHashes = new Set(
+        existingSongs
+          .map(s => s.hash?.split('-')[0])
+          .filter(h => h && !h.startsWith('error'))
+      );
       const existingSourceUrls = new Set(existingSongs.map(s => s.sourceUrl).filter(Boolean));
       
       // Priority 3: Title + Artist (Guard 3)
@@ -101,32 +157,42 @@ export class LibraryService {
         const isDuplicateUrl = song.sourceUrl && existingSourceUrls.has(song.sourceUrl);
         // Priority 2: File Content Hash (Perceptual)
         let isDuplicateHash = false;
-        const normalizedHash = song.hash?.split('-')[0];
-        
-        if (normalizedHash && normalizedHash.startsWith('p2:')) {
-          const hashContent = normalizedHash.slice(3);
+        let normalizedHash: string | undefined;
+
+        // STRICT CODE RULE: If a hash starts with error-fallback, it MUST be treated as a unique entity
+        // and NEVER collide with another hash (since they represent processing failures).
+        const isErrorHash = song.hash?.startsWith('error-fallback');
+        if (isErrorHash) {
+          isDuplicateHash = false; // NEVER collide on error fallbacks
+          logger.warn('[Library] Bypassing duplicate hash check for error fallback', { path: song.filePath, hash: song.hash });
+        } else {
+          normalizedHash = song.hash?.split('-')[0];
           
-          for (const existing of existingSongs) {
-            const existingHash = existing.hash?.split('-')[0];
-            if (!existingHash || !existingHash.startsWith('p2:')) continue;
+          if (normalizedHash && normalizedHash.startsWith('p2:')) {
+            const hashContent = normalizedHash.slice(3);
             
-            const existingHashContent = existingHash.slice(3);
-            const similarity = this.calculateSimilarity(hashContent, existingHashContent);
-            
-            // Tiered Logic:
-            // 1. Strict Match (95% similarity regardless of duration)
-            // 2. Smart Match (75% similarity + duration matching < 0.5s)
-            const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
-            
-            if (similarity >= 0.95 || (similarity >= 0.75 && durationDiff < 0.5)) {
-              isDuplicateHash = true;
-              break;
+            for (const existing of existingSongs) {
+              const existingHash = existing.hash?.split('-')[0];
+              if (!existingHash || !existingHash.startsWith('p2:')) continue;
+              
+              const existingHashContent = existingHash.slice(3);
+              const similarity = this.calculateSimilarity(hashContent, existingHashContent);
+              
+              // Tiered Logic:
+              // 1. Strict Match (95% similarity regardless of duration)
+              // 2. Smart Match (75% similarity + duration matching < 0.5s)
+              const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
+              
+              if (similarity >= 0.95 || (similarity >= 0.75 && durationDiff < 0.5)) {
+                isDuplicateHash = true;
+                break;
+              }
             }
-          }
-        } else if (normalizedHash) {
-          // Fallback or binary hash (p1:)
-          if (existingHashes.has(normalizedHash)) {
-            isDuplicateHash = true;
+          } else if (normalizedHash) {
+            // Fallback or binary hash (p1:)
+            if (existingHashes.has(normalizedHash)) {
+              isDuplicateHash = true;
+            }
           }
         }
 
@@ -139,22 +205,47 @@ export class LibraryService {
         }
 
         let duplicateReason: DuplicateReason | undefined;
-        if (isDuplicateUrl) duplicateReason = 'URL';
-        else if (isDuplicatePath) duplicateReason = 'PATH';
-        else if (isDuplicateHash) duplicateReason = 'HASH';
-        else if (isDuplicateMetadata) duplicateReason = 'METADATA';
+        let collidingSong: Song | undefined;
+
+        if (isDuplicateUrl) {
+          duplicateReason = 'URL';
+          collidingSong = existingSongs.find(s => s.sourceUrl === song.sourceUrl);
+        } else if (isDuplicatePath) {
+          duplicateReason = 'PATH';
+          collidingSong = existingSongs.find(s => isSamePath(s.filePath, song.filePath));
+        } else if (isDuplicateHash) {
+          duplicateReason = 'HASH';
+          // Find the song that caused the hash collision (perceptual or strict)
+          if (normalizedHash?.startsWith('p2:')) {
+            const hashContent = normalizedHash.slice(3);
+            for (const existing of existingSongs) {
+              const existingHash = existing.hash?.split('-')[0];
+              if (!existingHash || !existingHash.startsWith('p2:')) continue;
+              const similarity = this.calculateSimilarity(hashContent, existingHash.slice(3));
+              const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
+              if (similarity >= 0.95 || (similarity >= 0.75 && durationDiff < 0.5)) {
+                collidingSong = existing;
+                break;
+              }
+            }
+          } else {
+            collidingSong = existingSongs.find(s => s.hash?.split('-')[0] === normalizedHash);
+          }
+        } else if (isDuplicateMetadata) {
+          duplicateReason = 'METADATA';
+          collidingSong = existingSongs.find(s => `${normalizeString(s.title)}|${normalizeString(s.artist)}` === nameArtistKey);
+        }
 
         if (duplicateReason) {
-          const matchedTitle = existingSongs.find(s => normalizeString(s.title) === normTitle)?.title || 'unknown';
-          logger.warn('[Library] Duplicate Detected', { guard: `Guard for ${duplicateReason}`, matchingTitle: matchedTitle, filePath: song.filePath });
-
-          if (duplicateReason === 'METADATA') {
-             logger.warn('[Guard 3 Collision]:', { 
-               newTitle: song.title, 
-               existingTitle: matchedTitle,
-               normalizedKey: nameArtistKey 
-             });
-          }
+          console.error('\x1b[41m%s\x1b[0m', `❌ [GUARD 3] COLLISION! Reason: ${duplicateReason}`);
+          console.error('New:', { path: song.filePath, hash: song.hash, title: song.title, artist: song.artist });
+          console.error('Existing:', { 
+            id: collidingSong?.id,
+            path: collidingSong?.filePath, 
+            hash: collidingSong?.hash,
+            title: collidingSong?.title, 
+            artist: collidingSong?.artist 
+          });
 
           duplicatePaths.push(song.filePath);
           // Return only essential info to avoid IPC overhead (exclude heavy fields like coverArt)
@@ -451,8 +542,9 @@ export class LibraryService {
   public async getLibrary(): Promise<{ songs: Song[]; library: Playlist }> {
     const songs = await this.storageAdapter.getSongs();
     const library = await this.storageAdapter.getLibrary();
+    this.songs = Object.values(songs); // Cache the read songs
     return {
-      songs: Object.values(songs),
+      songs: this.songs,
       library
     };
   }
@@ -493,6 +585,16 @@ export class LibraryService {
       songs,
       songCount: songs.length
     };
+  }
+
+  /**
+   * Radical Cache Clearing: Purges Service memory and Storage Adapter cache.
+   */
+  public async clearInternalCache(): Promise<void> {
+    this.songs = [];
+    this.processingPaths.clear();
+    await this.storageAdapter.clear();
+    console.log('\x1b[35m%s\x1b[0m', '🧹 [Library] Service Cache Cleared');
   }
 }
 

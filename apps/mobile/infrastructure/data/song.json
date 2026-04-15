@@ -1,0 +1,9 @@
+[
+  {
+    "id": "sample-1",
+    "title": "Welcome to MeloVista",
+    "artist": "Sample Artist",
+    "duration": 215,
+    "audioUrl": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  }
+]

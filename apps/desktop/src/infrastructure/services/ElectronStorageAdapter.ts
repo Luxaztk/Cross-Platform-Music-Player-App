@@ -58,4 +58,8 @@ export class ElectronStorageAdapter implements IStorageAdapter {
   async incrementLyricUsage(id: number | string): Promise<void> {
     await window.electronAPI.incrementLyricUsage(id);
   }
+
+  async clear(): Promise<void> {
+    await window.electronAPI.resetCache();
+  }
 }

@@ -11,19 +11,15 @@ import { fileURLToPath } from 'node:url'
 if (app) {
   const logFolder = path.join(app.getPath('appData'), 'MeloVista', 'logs');
   log.transports.file.resolvePathFn = () => path.join(logFolder, 'main.log');
-  
-  // Rotation: 5MB limit
+
+  // 1. Enforce File Logs globally (even in production)
+  log.transports.file.level = false;
+
+  // 2. Enforce File Size Limit (Safety Guard: 5MB)
   log.transports.file.maxSize = 5 * 1024 * 1024;
 
-  if (app.isPackaged) {
-    // FINAL PRODUCTION BUILD: Strictly disable both file and console logging
-    log.transports.file.level = false;
-    log.transports.console.level = false;
-  } else {
-    // NON-PRODUCTION (Dev/Test): Enable logging for troubleshooting
-    log.transports.file.level = 'info';
-    log.transports.console.level = 'debug';
-  }
+  // 3. Disable Console output in Production to keep UI/Terminal clean
+  log.transports.console.level = app.isPackaged ? false : 'silly';
 
   // Auto-capture renderer logs and setup IPC listeners
   log.initialize();

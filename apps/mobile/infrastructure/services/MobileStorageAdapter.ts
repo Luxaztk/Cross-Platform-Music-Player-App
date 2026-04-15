@@ -72,4 +72,8 @@ export class MobileStorageAdapter implements IStorageAdapter {
   async saveLyricUsage(usage: Record<string, number>): Promise<void> {
     await AsyncStorage.setItem(STORAGE_KEYS.LYRIC_USAGE, JSON.stringify(usage));
   }
+
+  async clear(): Promise<void> {
+    await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
+  }
 }

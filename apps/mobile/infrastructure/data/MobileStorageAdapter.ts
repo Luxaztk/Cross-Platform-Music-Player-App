@@ -93,5 +93,14 @@ export class MobileStorageAdapter implements IStorageAdapter {
   async saveLyricUsage(usage: Record<string, number>): Promise<void> {
     currentLyricUsage = usage;
   }
+
+  async clear(): Promise<void> {
+    currentSongs = {};
+    currentLibrary = { id: '0', name: 'Library', songIds: [], createdAt: '', description: '' };
+    currentPlaylists = {};
+    currentPlayerState = null;
+    currentRecentSearches = [];
+    currentLyricUsage = {};
+  }
 }
 

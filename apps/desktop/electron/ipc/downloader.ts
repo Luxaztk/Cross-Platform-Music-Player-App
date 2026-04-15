@@ -5,7 +5,7 @@ import { YoutubeDownloader } from '../modules/downloader/YoutubeDownloader';
 import { MetadataManager } from '../modules/metadata/MetadataManager';
 import type { ID3Metadata } from '../modules/metadata/MetadataManager';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
-import { logger } from '@music/utils';
+import { logger, normalizeString } from '@music/utils';
 
 const downloader = new YoutubeDownloader();
 const metadataManager = new MetadataManager();
@@ -37,8 +37,8 @@ export const setupDownloaderIPC = () => {
     ipcMain.handle('download-yt-audio', async (event, url: string, title: string) => {
         try {
             const downloadsDir = await getDownloadsDir();
-            // Sanitize filename
-            const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            // Use NFD normalization + space collapsing for clean, readable filenames
+            const safeTitle = normalizeString(title).replace(/[\s_]+/g, '_');
             const outputPath = path.join(downloadsDir, `${safeTitle}_${Date.now()}.mp3`);
             logFileTrace('download-yt-audio.prepare', outputPath, 'SUCCESS', `Downloading audio for URL=${url}`);
 

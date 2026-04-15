@@ -4,13 +4,16 @@ import path from 'node:path';
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
 import { MainMetadataService } from '../infrastructure/MainMetadataService';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
-import type { DuplicateSongInfo, Song, Playlist } from '@music/types';
-import { LibraryService } from '@music/core';
+import type { Song, Playlist } from '@music/types';
+import { LibraryService, type IMetadataService } from '@music/core';
 import { extractYoutubeId, getCanonicalYoutubeUrl, getErrorMessage, normalizeString, logger } from '@music/utils';
 import { LyricsManager } from '../modules/lyrics/LyricsManager';
 
 const storageAdapter = new MainStorageAdapter();
-const libraryService = new LibraryService(storageAdapter);
+const metadataService: IMetadataService = {
+  extract: (filePath, sourceUrl, originId) => MainMetadataService.extractMetadata(filePath, sourceUrl, originId)
+};
+const libraryService = new LibraryService(storageAdapter, metadataService);
 const lyricsManager = new LyricsManager();
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.aac', '.wav', '.m4a', '.ogg'];
@@ -307,44 +310,35 @@ export function setupLibraryIPC() {
     try {
       logger.info('[IPC] importFromPath triggered', { filePath, sourceUrl });
       logFileTrace('library:importFromPath', filePath, 'SUCCESS', `Importing downloaded or external file sourceUrl=${sourceUrl}`);
+
       const canonicalUrl = sourceUrl ? getCanonicalYoutubeUrl(sourceUrl) || sourceUrl : sourceUrl;
-      const songData = await MainMetadataService.extractMetadata(filePath, canonicalUrl, originId);
-      if (!songData) {
-        logger.warn('[IPC] Metadata extraction returned null', { filePath });
-        logFileTrace('library:importFromPath', filePath, 'FAIL', 'Metadata extraction returned null');
-        return { success: false, reason: 'METADATA_ERROR' };
+
+      // Utilize the new entry-point orchestration method which handles the Mutex locking
+      const result = await libraryService.importFromPath(filePath, 'IPC_DOWNLOADER', canonicalUrl, originId);
+
+      if (!result) {
+        // Mutex blocked the import
+        return { success: false, reason: 'CONCURRENT_IMPORT' };
       }
 
-      logger.debug('[Library] Extracted raw metadata', { title: songData.title, artist: songData.artist, hash: songData.hash });
+      if (!result.success) {
+        logger.warn('[IPC] importFromPath failed or blocked', { filePath, reason: result.reason });
+        return result;
+      }
 
-
-      const { addedCount, duplicatePaths, duplicateSongs } = await libraryService.processAndAddSongs([songData]);
-
-      const isDuplicate = addedCount === 0;
-      let duplicateReason: string | undefined;
-
-      if (isDuplicate && duplicateSongs.length > 0) {
-        duplicateReason = (duplicateSongs[0] as DuplicateSongInfo).duplicateReason;
-
+      if (result.count === 0 && result.reason) {
         // Automated Cleanup: Delete the redundant downloaded file if it's a duplicate
-        // We only do this for online downloads (where sourceUrl is provided) to avoid accidental deletion of manual imports
-        if (sourceUrl && (duplicateReason === 'HASH' || duplicateReason === 'URL' || duplicateReason === 'METADATA')) {
+        if (sourceUrl && (result.reason === 'HASH' || result.reason === 'URL' || result.reason === 'METADATA')) {
           try {
             await fs.unlink(filePath);
-            logger.info('[Library] Final Action: UNLINKED', { path: filePath, reason: duplicateReason });
+            logger.info('[Library] Final Action: UNLINKED', { path: filePath, reason: result.reason });
           } catch (unlinkErr) {
             logger.error(`[library:importFromPath] Failed to delete duplicate file: ${filePath}`, unlinkErr);
           }
         }
       }
 
-      return {
-        success: true,
-        count: addedCount,
-        duplicates: duplicatePaths,
-        duplicateSongs: duplicateSongs,
-        reason: duplicateReason
-      };
+      return result;
     } catch (err) {
       console.error('IPC library:importFromPath error:', err);
       return { success: false, reason: 'ERROR', message: getErrorMessage(err) };
@@ -505,6 +499,16 @@ export function setupLibraryIPC() {
     } catch (err) {
       console.error('IPC library:searchLyrics error:', err);
       return [];
+    }
+  });
+
+  ipcMain.handle('library:reset-cache', async () => {
+    try {
+      await libraryService.clearInternalCache();
+      return { success: true };
+    } catch (err) {
+      console.error('IPC library:reset-cache error:', err);
+      return { success: false, message: getErrorMessage(err) };
     }
   });
 }

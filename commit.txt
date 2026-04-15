@@ -1,7 +1,13 @@
-feat(logging): implement isomorphic tracing system with production stripping
+feat(core/desktop): stabilize library integrity and production deployment
 
-- Integrated 'electron-log' with a deterministic path: %AppData%/MeloVista/logs/main.log.
-- Built an isomorphic 'Logger' utility in packages/utils to safely bridge Main and Renderer logs.
-- Configured Vite 8 (Rolldown/Oxc) to physically strip console/debugger in production builds.
-- Injected granular diagnostic tracing into YoutubeDownloader and LibraryService to debug Guard 3 race conditions.
-- Fixed monorepo hoisting errors by installing electron at root and cleared release directory locks.
+Library & Deduplication:
+- feat(core): implement robust concurrency protection in LibraryService using Mutex and processing locks with 5s cooldown
+- fix(core): prevent false duplicate collisions by treating processing error-fallbacks as unique entities in Guard 3
+- feat(core): enhance Guard 3 diagnostic logging with detailed collision reporting (Path, Hash, Title/Artist)
+- feat(core): add `clearInternalCache` to synchronize volatile memory with persistent storage during hard resets
+
+Production & Build:
+- fix(desktop): resolve FFmpeg `ENOENT` error in production by unpacking binaries from ASAR and implementing a worker-safe `getFixedFfmpegPath` utility
+- feat(automation): integrate `scripts/deploy.js` pipeline for automated version bumping, git commits, and asset bundling
+- feat(infra): stabilize `MobileStorageAdapter` and `ElectronStorageAdapter` for cross-platform persistence consistency
+- chore(dx): update `task.md` roadmap and enhance diagnostic tracing across Metadata and Downloader modules

@@ -3,7 +3,7 @@
   "description": "Cross-Platform Music Player",
   "author": "Luxaztk",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "main": "dist-electron/main.js",
   "repository": {
@@ -88,8 +88,8 @@
     ],
     "extraResources": [
       {
-        "from": "resources",
-        "to": ".",
+        "from": "resources/bin",
+        "to": "bin",
         "filter": [
           "**/*"
         ]

@@ -3,8 +3,9 @@ import path from 'node:path';
 import NodeID3 from 'node-id3';
 import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import { getFixedFfmpegPath } from '../utils/ffmpegPath';
 import fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import type { Song } from '@music/types';
 import { splitArtists } from '@music/utils';
 import { MetadataManager } from '../modules/metadata/MetadataManager';
@@ -32,9 +33,29 @@ export class MainMetadataService {
    * This is extremely stable across different qualities (bitrates) and encoders.
    */
   public static async calculateAudioHash(filePath: string): Promise<string> {
-    const runFfmpeg = (offset: number): Promise<Buffer> => {
-      return new Promise((resolve) => {
-        const ffmpeg = spawn(ffmpegPath.path, [
+    // 1. Verify File Existence
+    try {
+      await fs.access(filePath);
+    } catch (err) {
+      console.error('\x1b[31m%s\x1b[0m', `[FFmpeg Hash] CRITICAL: File does not exist: ${filePath}`);
+      return `error-fallback-v2-missing-${randomUUID()}`;
+    }
+
+    // 2. Verify FFmpeg Binary
+    const resolvedPath = getFixedFfmpegPath();
+    console.log('\x1b[36m%s\x1b[0m', '🚀 FFmpeg Path Resolved:', resolvedPath);
+
+    try {
+      await fs.access(resolvedPath);
+    } catch (err) {
+      console.error('\x1b[31m%s\x1b[0m', `[FFmpeg Hash] CRITICAL: FFmpeg binary not found at: ${resolvedPath}`);
+      return `error-fallback-v2-no-binary-${randomUUID()}`;
+    }
+
+    let lastStderr = '';
+    const runFfmpeg = async (offset: number): Promise<Buffer> => {
+      const result = await new Promise<{ pcm: Buffer; stderr: string }>((resolve) => {
+        const args = [
           '-ss', offset.toString(),
           '-t', '30',
           '-i', filePath,
@@ -43,20 +64,34 @@ export class MainMetadataService {
           '-ar', '8000',
           '-loglevel', 'error',
           '-'
-        ]);
+        ];
 
+        console.log(`[FFmpeg Hash] Executing: ${resolvedPath} ${args.join(' ')}`);
+
+        const ffmpeg = spawn(resolvedPath, args);
         let pcmData = Buffer.alloc(0);
+        let stderr = '';
+
         ffmpeg.stdout.on('data', (chunk) => { pcmData = Buffer.concat([pcmData, chunk]); });
+        ffmpeg.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+
         ffmpeg.on('close', (code) => {
+          if (code !== 0 || pcmData.length === 0) {
+            console.error('\x1b[31m%s\x1b[0m', `[FFmpeg Hash] Failed (offset=${offset}). Code: ${code}, Bytes: ${pcmData.length}`);
+          }
           const status = (code === 0 && pcmData.length > 0) ? 'SUCCESS' : 'EMPTY_BUFFER';
-          logFileTrace('calculateAudioHash.ffmpeg', filePath, status, `offset=${offset} code=${code} bytes=${pcmData.length}`);
-          resolve(pcmData);
+          logFileTrace('calculateAudioHash.ffmpeg', filePath, status, `offset=${offset} code=${code} bytes=${pcmData.length} stderr_len=${stderr.length}`);
+          resolve({ pcm: pcmData, stderr });
         });
+
         ffmpeg.on('error', (error) => {
-          logFileTrace('calculateAudioHash.ffmpeg', filePath, 'FAIL', error instanceof Error ? error.message : String(error));
-          resolve(Buffer.alloc(0));
+          const errMsg = error instanceof Error ? error.message : String(error);
+          logFileTrace('calculateAudioHash.ffmpeg', filePath, 'FAIL', errMsg);
+          resolve({ pcm: Buffer.alloc(0), stderr: errMsg });
         });
       });
+      lastStderr = result.stderr;
+      return result.pcm;
     };
 
     // Try at 30s offset first (to avoid silence at start)
@@ -68,7 +103,16 @@ export class MainMetadataService {
     }
 
     if (pcm.length === 0) {
-      return `error-fallback-v2-${Date.now()}`;
+      console.error('\x1b[41m%s\x1b[0m', '!!! FFmpeg Hashing Failed !!!');
+      console.error(`[Diagnostic] FFmpeg Path: ${resolvedPath}`);
+      console.error(`[Diagnostic] File Exists: ${existsSync(filePath)}`);
+      console.error(`[Diagnostic] Target File: ${filePath}`);
+      if (lastStderr) {
+        console.error(`[Diagnostic] Raw Stderr: ${lastStderr}`);
+      } else {
+        console.error('[Diagnostic] Stderr was empty - possible binary execution failure or EBUSY');
+      }
+      return `error-fallback-v2-${randomUUID()}`; // Use UUID for absolute uniqueness
     }
 
     // Perceptual Fingerprinting logic:
@@ -93,7 +137,9 @@ export class MainMetadataService {
       envelope.push(charCode.toString(36));
     }
 
-    return `p2:${envelope.join('')}`;
+    const audioHash = `p2:${envelope.join('')}`;
+    console.log('\x1b[34m%s\x1b[0m', `[Hash] Generated for ${path.basename(filePath)}: ${audioHash}`);
+    return audioHash;
   }
 
   static async extractMetadata(filePath: string, sourceUrl?: string, originId?: string): Promise<Song | null> {

@@ -13,7 +13,8 @@
     "test": "npm run test --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "format": "prettier --write .",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "deploy": "node scripts/deploy.js"
   },
   "repository": {
     "type": "git",
