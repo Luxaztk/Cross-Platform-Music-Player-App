@@ -60,4 +60,22 @@ export default defineConfig({
     // bằng số phiên bản lấy từ package.json lúc build
     __APP_VERSION__: JSON.stringify(packageJson.version),
   },
+  esbuild: {
+    // We keep this for development/esbuild-based tools if any
+    // @ts-ignore
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        // @ts-ignore - Vite 8/Rolldown specific minification config
+        minify: process.env.NODE_ENV === 'production' ? {
+          compress: {
+            dropConsole: true,
+            dropDebugger: true,
+          },
+        } : false,
+      },
+    },
+  },
 });

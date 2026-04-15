@@ -4,3 +4,5 @@ export * from './youtube';
 export * from './lyrics';
 export * from './errorHandler';
 export * from './path';
+export * from './normalize';
+export * from './logger';

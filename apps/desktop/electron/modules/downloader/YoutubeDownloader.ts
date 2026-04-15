@@ -4,8 +4,9 @@ import { EventEmitter } from 'events';
 import { app } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { getErrorMessage } from '@music/utils';
+import { getErrorMessage, logger } from '@music/utils';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +32,7 @@ export interface YoutubeInfo {
 
 export class YoutubeDownloader extends EventEmitter {
   private ytDl: ReturnType<typeof createYoutubeDl>;
+  private binaryPath: string;
 
   constructor() {
     super();
@@ -63,9 +65,17 @@ export class YoutubeDownloader extends EventEmitter {
     }
 
     console.log('[YoutubeDownloader] yt-dlp path locked at:', binaryPath);
+    this.binaryPath = binaryPath;
 
     // 4. Khởi tạo instance với Binary tự quản lý
     this.ytDl = createYoutubeDl(binaryPath);
+  }
+
+  private getProductionFfmpegPath(): string {
+    if (app.isPackaged) {
+      return ffmpegPath.path.replace('app.asar', 'app.asar.unpacked');
+    }
+    return ffmpegPath.path;
   }
 
   public async getInfo(url: string): Promise<YoutubeInfo> {
@@ -104,29 +114,43 @@ export class YoutubeDownloader extends EventEmitter {
   }
 
   public async downloadAudio(url: string, outputPath: string): Promise<string> {
+    logger.info('[YT-DLP] Starting download', { url, outputPath });
+
     return new Promise((resolve, reject) => {
       let settled = false;
 
-      // Sử dụng this.ytDl.exec để gọi process
-      const subprocess = this.ytDl.exec(url, {
-        extractAudio: true,
-        audioFormat: 'mp3',
-        audioQuality: 0, // Best quality (VBR)
-        output: outputPath,
-        ffmpegLocation: ffmpegPath.path,
-        noCheckCertificates: true,
-        noWarnings: true,
-        preferFreeFormats: true,
-        noPlaylist: true,
-        addHeader: [
-          'referer:youtube.com',
-          'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-        ]
-      });
+      const args = [
+        '--extract-audio',
+        '--audio-format', 'mp3',
+        '--audio-quality', '0',
+        '--no-playlist',
+        '--restrict-filenames',
+        '--embed-thumbnail',
+        '--convert-thumbnails', 'jpg',
+        '--embed-metadata',
+        '--no-check-certificates',
+        '--no-warnings',
+        '--prefer-free-formats',
+        '--ffmpeg-location', this.getProductionFfmpegPath(),
+        '--add-header', 'referer:youtube.com',
+        '--add-header', 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        '-o', outputPath,
+        url // URL as the last argument, never shell-interpolated
+      ];
+
+      logger.debug('[YT-DLP process] Executable & Args:', { binaryPath: this.binaryPath, args });
+
+      // Sử dụng child_process.spawn thay vì ytDl.exec để tránh shell injection
+      const subprocess = spawn(this.binaryPath, args, { shell: false });
 
       // MUST consume stdout for progress
-      subprocess.stdout?.on('data', (data: Buffer | string) => {
+      subprocess.stdout.on('data', (data: Buffer | string) => {
         const text = data.toString();
+
+        if (text.includes('[ffmpeg]') || text.includes('[download]') || text.includes('[ExtractAudio]')) {
+          logger.debug('[YT-DLP process]:', text.trim());
+        }
+        // Cần parse progress ví dụ: [download]  10.5% of 5.00MiB
         const progressMatch = text.match(/\[download\]\s+(\d+\.?\d*)%/);
         if (progressMatch) {
           const percent = parseFloat(progressMatch[1]);
@@ -135,17 +159,19 @@ export class YoutubeDownloader extends EventEmitter {
       });
 
       // MUST consume stderr — otherwise the buffer fills up and the process hangs
-      subprocess.stderr?.on('data', (data) => {
+      subprocess.stderr.on('data', (data: Buffer | string) => {
         console.log('[yt-dlp stderr]', data.toString().trim());
       });
 
       subprocess.on('close', (code) => {
+        logger.info('[YT-DLP] Process closed', { code });
         if (settled) return;
         settled = true;
         if (code === 0) {
-          console.log('[yt-dlp] Download completed successfully:', outputPath);
+          logger.info('[yt-dlp] Download completed successfully:', outputPath);
           resolve(outputPath);
         } else {
+          logger.error('[yt-dlp] Process closed with error code:', { code });
           reject(new Error(`yt-dlp exited with code ${code}`));
         }
       });
@@ -153,7 +179,7 @@ export class YoutubeDownloader extends EventEmitter {
       subprocess.on('error', (err) => {
         if (settled) return;
         settled = true;
-        console.error('[yt-dlp] Process error:', err);
+        logger.error('[yt-dlp] Process error:', err);
         reject(err);
       });
     });

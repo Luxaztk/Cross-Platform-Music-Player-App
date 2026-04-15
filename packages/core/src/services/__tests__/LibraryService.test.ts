@@ -68,14 +68,15 @@ describe('LibraryService', () => {
       expect(adapter.library.songIds).toContain('1');
     });
 
-    it('should detect duplicate by File Path (Priority: PATH)', async () => {
+    it('should implement Self-Match Guard for same File Path (Success/Update instead of Duplicate)', async () => {
       await service.processAndAddSongs([mockSong]);
 
-      const duplicateSong = { ...mockSong, id: '2' };
+      const duplicateSong = { ...mockSong, id: '2', title: 'Updated Title' };
       const result = await service.processAndAddSongs([duplicateSong]);
 
-      expect(result.addedCount).toBe(0);
-      expect(result.duplicateSongs[0].duplicateReason).toBe('PATH');
+      expect(result.addedCount).toBe(1); // Now counts as success because it UPDATED
+      expect(result.duplicateSongs).toHaveLength(0);
+      expect(adapter.songs['1'].title).toBe('Updated Title');
     });
 
     it('should detect duplicate by Source URL (Priority: URL)', async () => {
@@ -180,6 +181,70 @@ describe('LibraryService', () => {
 
       expect(result.addedCount).toBe(0);
       expect(result.duplicateSongs[0].duplicateReason).toBe('METADATA');
+    });
+
+    it('[REGRESSION] should match Vietnamese titles with different accents/normalization (Vietnamese Support)', async () => {
+      const songVi: Song = { ...mockSong, title: 'Tiếng Việt', artist: 'Ca Sĩ', hash: 'p2:vi1' };
+      await service.processAndAddSongs([songVi]);
+
+      const duplicateVi: Song = {
+        ...mockSong,
+        id: 'vi2',
+        filePath: 'C:/music/tiengviet_copy.mp3',
+        title: 'tieng viet', // Normalized version
+        artist: 'ca si',
+        hash: 'p2:vi2' // Unique hash to force METADATA match
+      };
+      const result = await service.processAndAddSongs([duplicateVi]);
+
+      expect(result.addedCount).toBe(0);
+      expect(result.duplicateSongs[0].duplicateReason).toBe('METADATA');
+    });
+
+    it('[REGRESSION] should NOT collide when both songs have empty Title and Artist (Empty Metadata Guard)', async () => {
+      const emptySong1: Song = { ...mockSong, id: 'e1', title: '', artist: '', filePath: 'C:/path1.mp3', hash: 'p2:e1' };
+      await service.processAndAddSongs([emptySong1]);
+
+      const emptySong2: Song = { ...mockSong, id: 'e2', title: '  ', artist: '', filePath: 'C:/path2.mp3', hash: 'p2:e2' };
+      const result = await service.processAndAddSongs([emptySong2]);
+
+      expect(result.addedCount).toBe(1);
+      expect(result.duplicateSongs).toHaveLength(0);
+    });
+
+    it('[REGRESSION] should implement Self-Match Guard: Update metadata instead of deleting same-path file', async () => {
+      const initialSong: Song = { ...mockSong, id: 'orig', title: 'Initial Title', coverArt: null };
+      await service.processAndAddSongs([initialSong]);
+
+      // Second pass with updated metadata (e.g. after FFmpeg post-processing)
+      const updatedPass: Song = {
+        ...mockSong,
+        id: 'new-id-from-scan',
+        title: 'Updated Title',
+        coverArt: 'base64-data'
+      };
+
+      const result = await service.processAndAddSongs([updatedPass]);
+
+      expect(result.addedCount).toBe(1); // Treated as a successful "added" (actually updated)
+      expect(result.duplicateSongs).toHaveLength(0); // CRITICAL: No duplicate reason = No unlinking
+
+      // Verify the record was updated while keeping the original ID
+      const saved = adapter.songs['orig'];
+      expect(saved.title).toBe('Updated Title');
+      expect(saved.coverArt).toBe('base64-data');
+    });
+
+    it('[REGRESSION] should handle Windows path casing/slashes correctly (isSamePath Guard)', async () => {
+      const songWin: Song = { ...mockSong, id: 'w1', filePath: 'C:\\Music\\Song.mp3' };
+      await service.processAndAddSongs([songWin]);
+
+      const sameSongDiffPath: Song = { ...mockSong, id: 'w2', filePath: 'c:/music/song.mp3' };
+      const result = await service.processAndAddSongs([sameSongDiffPath]);
+
+      expect(result.addedCount).toBe(1);
+      expect(result.duplicateSongs).toHaveLength(0);
+      expect(adapter.songs['w1'].id).toBe('w1'); // Verified it updated instead of duplicate
     });
   });
 

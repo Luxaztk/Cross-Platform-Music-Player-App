@@ -56,6 +56,11 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [X] **Optimistic Metadata Sync (Zero Latency)**: Cơ chế cập nhật lạc quan kèm Auto-Rollback giúp UI phản hồi tức thì (<16ms) khi chỉnh sửa lyricId/metadata.
 - [X] **Window Virtualization Engine**: Nâng cấp ảo hóa danh sách dựa trên Window scroll, hỗ trợ cuộn mượt mà 60fps với Playlist 5000+ bài hát.
 - [X] **Premium UI/UX Polish**: Thiết kế trà viền (Edge-to-edge), Sticky Header với hiệu ứng Elevation (Shadow/Border) và Opacity solid chuyên nghiệp.
+- [X] **Hệ thống Logging đồng bộ (Isomorphic Logging)**:
+  - [X] Triển khai `Logger` đa môi trường (Main/Renderer/Preload) bọc ngoài `electron-log`.
+  - [X] Cấu hình đường dẫn log vật lý deterministic: `%AppData%/MeloVista/logs/main.log`.
+  - [X] Cơ chế **Production Log Stripping**: Sử dụng Oxc/Rolldown để loại bỏ hoàn toàn `console.log` trong bản build chính thức.
+  - [X] Hệ thống **Diagnostic Tracing**: Nhúng log chi tiết vào vòng đời tải nhạc và Guard 3 giúp chẩn đoán Race Condition một cách chính xác.
 
 ---
 

@@ -5,6 +5,7 @@ import { YoutubeDownloader } from '../modules/downloader/YoutubeDownloader';
 import { MetadataManager } from '../modules/metadata/MetadataManager';
 import type { ID3Metadata } from '../modules/metadata/MetadataManager';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
+import { logger } from '@music/utils';
 
 const downloader = new YoutubeDownloader();
 const metadataManager = new MetadataManager();
@@ -48,6 +49,8 @@ export const setupDownloaderIPC = () => {
             downloader.on('progress', progressHandler);
 
             const savedPath = await downloader.downloadAudio(url, outputPath);
+            
+            logger.info('[IPC] Download complete, returning path to frontend (which may request library import)', { path: savedPath });
             logFileTrace('download-yt-audio.completed', savedPath, 'SUCCESS', 'Downloaded audio to file');
 
             downloader.off('progress', progressHandler);

@@ -1,3 +1,4 @@
+import { logger } from '@music/utils';
 import path from 'node:path';
 
 export type FileTraceStatus = 'SUCCESS' | 'FAIL' | 'EMPTY_BUFFER';
@@ -8,9 +9,9 @@ export function logFileTrace(fnName: string, filePath: string | undefined, statu
   const message = `[FILE_TRACE] ${fnName} | ${absolutePath} | ${status}${detailText}`;
 
   if (status === 'FAIL') {
-    console.error(message);
+    logger.error(message);
   } else {
-    console.log(message);
+    logger.info(message);
   }
 }
 

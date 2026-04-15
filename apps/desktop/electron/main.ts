@@ -4,7 +4,38 @@ import { app, BrowserWindow, protocol, session, ipcMain } from 'electron' // Xó
 import { autoUpdater } from 'electron-updater'
 import path from 'node:path'
 import fs from 'node:fs/promises'
+import log from 'electron-log'
 import { fileURLToPath } from 'node:url'
+
+// --- CONFIG THE PHYSICAL LOGGER (electron-log) ---
+if (app) {
+  const logFolder = path.join(app.getPath('appData'), 'MeloVista', 'logs');
+  log.transports.file.resolvePathFn = () => path.join(logFolder, 'main.log');
+  
+  // Rotation: 5MB limit
+  log.transports.file.maxSize = 5 * 1024 * 1024;
+
+  if (app.isPackaged) {
+    // FINAL PRODUCTION BUILD: Strictly disable both file and console logging
+    log.transports.file.level = false;
+    log.transports.console.level = false;
+  } else {
+    // NON-PRODUCTION (Dev/Test): Enable logging for troubleshooting
+    log.transports.file.level = 'info';
+    log.transports.console.level = 'debug';
+  }
+
+  // Auto-capture renderer logs and setup IPC listeners
+  log.initialize();
+
+  // CRITICAL: Print the exact path to the terminal so the developer can find it
+  console.log('\n=======================================');
+  console.log('📝 LOG FILE PATH:', log.transports.file.getFile().path);
+  console.log('=======================================\n');
+
+  log.info('[System] Logger initialized successfully');
+}
+// -------------------------------------------------
 import { setupLibraryIPC } from './ipc/library'
 import { setupStorageIPC } from './ipc/storage'
 import { setupDownloaderIPC } from './ipc/downloader'

@@ -35,6 +35,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "electron": "^41.0.3",
     "eslint": "^9.39.4"
   }
 }

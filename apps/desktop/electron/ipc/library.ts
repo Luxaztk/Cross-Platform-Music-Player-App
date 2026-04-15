@@ -6,7 +6,7 @@ import { MainMetadataService } from '../infrastructure/MainMetadataService';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
 import type { DuplicateSongInfo, Song, Playlist } from '@music/types';
 import { LibraryService } from '@music/core';
-import { extractYoutubeId, getCanonicalYoutubeUrl, getErrorMessage } from '@music/utils';
+import { extractYoutubeId, getCanonicalYoutubeUrl, getErrorMessage, normalizeString, logger } from '@music/utils';
 import { LyricsManager } from '../modules/lyrics/LyricsManager';
 
 const storageAdapter = new MainStorageAdapter();
@@ -305,13 +305,18 @@ export function setupLibraryIPC() {
 
   ipcMain.handle('library:importFromPath', async (_event, filePath: string, sourceUrl?: string, originId?: string) => {
     try {
+      logger.info('[IPC] importFromPath triggered', { filePath, sourceUrl });
       logFileTrace('library:importFromPath', filePath, 'SUCCESS', `Importing downloaded or external file sourceUrl=${sourceUrl}`);
       const canonicalUrl = sourceUrl ? getCanonicalYoutubeUrl(sourceUrl) || sourceUrl : sourceUrl;
       const songData = await MainMetadataService.extractMetadata(filePath, canonicalUrl, originId);
       if (!songData) {
+        logger.warn('[IPC] Metadata extraction returned null', { filePath });
         logFileTrace('library:importFromPath', filePath, 'FAIL', 'Metadata extraction returned null');
         return { success: false, reason: 'METADATA_ERROR' };
       }
+
+      logger.debug('[Library] Extracted raw metadata', { title: songData.title, artist: songData.artist, hash: songData.hash });
+
 
       const { addedCount, duplicatePaths, duplicateSongs } = await libraryService.processAndAddSongs([songData]);
 
@@ -326,9 +331,9 @@ export function setupLibraryIPC() {
         if (sourceUrl && (duplicateReason === 'HASH' || duplicateReason === 'URL' || duplicateReason === 'METADATA')) {
           try {
             await fs.unlink(filePath);
-            console.log(`[library:importFromPath] Deleted duplicate file: ${filePath} (Reason: ${duplicateReason})`);
+            logger.info('[Library] Final Action: UNLINKED', { path: filePath, reason: duplicateReason });
           } catch (unlinkErr) {
-            console.error(`[library:importFromPath] Failed to delete duplicate file: ${filePath}`, unlinkErr);
+            logger.error(`[library:importFromPath] Failed to delete duplicate file: ${filePath}`, unlinkErr);
           }
         }
       }
@@ -381,16 +386,13 @@ export function setupLibraryIPC() {
         }
       }
 
-      // 2. Check by Title + Artist (Standard for all)
-      // Apply same normalization as MainMetadataService.extractMetadata
-      const normalizeTitle = (t: string) => t.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
-      const normalizedTitle = normalizeTitle(title.trim());
-      const normalizedArtist = artist.trim().toLowerCase();
+      const normalizedTitle = normalizeString(title.trim());
+      const normalizedArtist = normalizeString(artist.trim());
 
       const match = existingSongs.find(s => {
-        const titleMatch = normalizeTitle(s.title) === normalizedTitle;
+        const titleMatch = normalizeString(s.title) === normalizedTitle;
         // Artist matching is more lenient - check if one contains the other
-        const storedArtist = s.artist.trim().toLowerCase();
+        const storedArtist = normalizeString(s.artist);
         const artistMatch =
           storedArtist === normalizedArtist ||
           storedArtist.includes(normalizedArtist) ||

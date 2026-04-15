@@ -1,5 +1,7 @@
-chore(release): bump version to 1.0.1 and stabilize core build processes
+feat(logging): implement isomorphic tracing system with production stripping
 
-- chore: bump application version to 1.0.1 in package.json
-- fix(build): configure explicit 'author', 'description', and 'electronVersion' to bypass electron-builder strict cross-platform validations
-- fix(core): typecast 'process.env.VITE_PUBLIC' explicitly as string to resolve NodeJS implicit undefined typing in 'path.join'
+- Integrated 'electron-log' with a deterministic path: %AppData%/MeloVista/logs/main.log.
+- Built an isomorphic 'Logger' utility in packages/utils to safely bridge Main and Renderer logs.
+- Configured Vite 8 (Rolldown/Oxc) to physically strip console/debugger in production builds.
+- Injected granular diagnostic tracing into YoutubeDownloader and LibraryService to debug Guard 3 race conditions.
+- Fixed monorepo hoisting errors by installing electron at root and cleared release directory locks.

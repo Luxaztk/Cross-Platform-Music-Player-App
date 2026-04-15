@@ -63,8 +63,8 @@ export class MetadataManager {
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      logFileTrace('MetadataManager.writeMetadata', filePath, 'FAIL', message);
-      console.error('[MetadataManager] writeMetadata fatal error:', error);
+      logFileTrace('MetadataManager.writeMetadata', filePath, 'FAIL', `[Metadata Error]: ${message}`);
+      console.error('[Metadata Error]: writeMetadata fatal error:', error);
       throw error;
     }
   }
@@ -78,10 +78,16 @@ export class MetadataManager {
         logFileTrace('MetadataManager.resolveImageBuffer.coverUrl', metadata.coverUrl, 'SUCCESS', 'Fetching remote cover image');
         const response = await fetch(metadata.coverUrl);
         if (!response.ok) {
-          logFileTrace('MetadataManager.resolveImageBuffer.coverUrl', metadata.coverUrl, 'FAIL', `Fetch status ${response.status}`);
+          logFileTrace('MetadataManager.resolveImageBuffer.coverUrl', metadata.coverUrl, 'FAIL', `[Metadata Error]: Fetch status ${response.status}`);
           return null;
         }
         const buffer = Buffer.from(await response.arrayBuffer());
+        
+        if (buffer.length > 12 && buffer.toString('ascii', 8, 12) === 'WEBP') {
+           console.warn('[Metadata Error]: Remote thumbnail is WebP. Conversion to JPEG is required for MP3 tags.');
+           logFileTrace('MetadataManager.resolveImageBuffer', metadata.coverUrl, 'FAIL', '[Metadata Error]: WebP format detected from URL');
+        }
+        
         logFileTrace('MetadataManager.resolveImageBuffer.coverUrl', metadata.coverUrl, buffer.length === 0 ? 'EMPTY_BUFFER' : 'SUCCESS', `Fetched ${buffer.length} bytes`);
         return buffer;
       }
@@ -89,6 +95,12 @@ export class MetadataManager {
       if (metadata.coverPath) {
         logFileTrace('MetadataManager.resolveImageBuffer.coverPath', metadata.coverPath, 'SUCCESS', 'Reading local cover image');
         const buffer = await fs.readFile(metadata.coverPath);
+        
+        if (buffer.length > 12 && buffer.toString('ascii', 8, 12) === 'WEBP') {
+           console.warn('[Metadata Error]: Local cover file is WebP. Conversion to JPEG is required for MP3 tags.');
+           logFileTrace('MetadataManager.resolveImageBuffer', metadata.coverPath, 'FAIL', '[Metadata Error]: WebP format detected from file path');
+        }
+        
         logFileTrace('MetadataManager.resolveImageBuffer.coverPath', metadata.coverPath, buffer.length === 0 ? 'EMPTY_BUFFER' : 'SUCCESS', `Read ${buffer.length} bytes`);
         return buffer;
       }
@@ -97,12 +109,22 @@ export class MetadataManager {
         const base64Data = metadata.coverData.split(';base64,').pop();
         const buffer = base64Data ? Buffer.from(base64Data, 'base64') : null;
         logFileTrace('MetadataManager.resolveImageBuffer.coverData', undefined, buffer && buffer.length > 0 ? 'SUCCESS' : 'EMPTY_BUFFER', 'Decoded base64 image data');
+        
+        if (buffer && buffer.length > 12) {
+          const signature = buffer.toString('ascii', 8, 12);
+          if (signature === 'WEBP') {
+             console.warn('[Metadata Error]: Detected WebP cover data. Standard MP3 tags require JPEG/PNG.');
+             logFileTrace('MetadataManager.resolveImageBuffer', 'webp-detected', 'FAIL', '[Metadata Error]: WebP format is not compatible with standard ID3 tags');
+          }
+        }
+        
         return buffer;
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      logFileTrace('MetadataManager.resolveImageBuffer', metadata.coverPath || metadata.coverUrl, 'FAIL', message);
-      return null; // Fail-safe: Ảnh lỗi không làm chết luồng ghi metadata
+      logFileTrace('MetadataManager.resolveImageBuffer', metadata.coverPath || metadata.coverUrl, 'FAIL', `[Metadata Error]: ${message}`);
+      console.error('[Metadata Error]: resolveImageBuffer failed:', error);
+      return null;
     }
     return null;
   }

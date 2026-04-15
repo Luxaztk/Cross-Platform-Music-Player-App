@@ -18,6 +18,10 @@ vi.mock('youtube-dl-exec', () => ({
     default: vi.fn(),
 }));
 
+vi.mock('node:fs', () => ({
+    default: { existsSync: vi.fn().mockReturnValue(true) },
+}));
+
 describe('YoutubeDownloader Path Resolution', () => {
     const originalPlatform = process.platform;
     const originalResourcesPath = mockProcess.resourcesPath;
@@ -65,11 +69,11 @@ describe('YoutubeDownloader Path Resolution', () => {
     it('should resolve to local node_modules in development (Windows)', async () => {
         setupMockEnvironment(false, 'win32');
 
-        // Load lại module để nó đọc giá trị mock mới từ vi.doMock
-        await import('../YoutubeDownloader');
+        const { YoutubeDownloader } = await import('../YoutubeDownloader');
+        new YoutubeDownloader();
 
         const binName = 'yt-dlp.exe';
-        const expectedPath = path.join(process.cwd(), 'node_modules/youtube-dl-exec/bin', binName);
+        const expectedPath = path.join('mocked-app-path', 'resources/bin', binName);
 
         expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
     });
@@ -77,10 +81,11 @@ describe('YoutubeDownloader Path Resolution', () => {
     it('should resolve to local node_modules in development (POSIX)', async () => {
         setupMockEnvironment(false, 'linux');
 
-        await import('../YoutubeDownloader');
+        const { YoutubeDownloader } = await import('../YoutubeDownloader');
+        new YoutubeDownloader();
 
         const binName = 'yt-dlp';
-        const expectedPath = path.join(process.cwd(), 'node_modules/youtube-dl-exec/bin', binName);
+        const expectedPath = path.join('mocked-app-path', 'resources/bin', binName);
 
         expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
     });
@@ -89,10 +94,11 @@ describe('YoutubeDownloader Path Resolution', () => {
         const mockResources = 'C:\\Program Files\\Melovista\\resources';
         setupMockEnvironment(true, 'win32', mockResources);
 
-        await import('../YoutubeDownloader');
+        const { YoutubeDownloader } = await import('../YoutubeDownloader');
+        new YoutubeDownloader();
 
         const binName = 'yt-dlp.exe';
-        const expectedPath = path.join(mockResources, 'app.asar.unpacked/node_modules/youtube-dl-exec/bin', binName);
+        const expectedPath = path.join(mockResources, 'bin', binName);
 
         expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
     });
@@ -101,10 +107,11 @@ describe('YoutubeDownloader Path Resolution', () => {
         const mockResources = '/usr/lib/melovista/resources';
         setupMockEnvironment(true, 'linux', mockResources);
 
-        await import('../YoutubeDownloader');
+        const { YoutubeDownloader } = await import('../YoutubeDownloader');
+        new YoutubeDownloader();
 
         const binName = 'yt-dlp';
-        const expectedPath = path.join(mockResources, 'app.asar.unpacked/node_modules/youtube-dl-exec/bin', binName);
+        const expectedPath = path.join(mockResources, 'bin', binName);
 
         expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
     });

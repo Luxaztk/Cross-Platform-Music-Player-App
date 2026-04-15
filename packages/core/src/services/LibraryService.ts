@@ -1,5 +1,5 @@
 import type { Song, Playlist, PlaylistDetail, DuplicateSongInfo, DuplicateReason } from '@music/types';
-
+import { isSamePath, normalizeString, logger } from '@music/utils';
 import type { IStorageAdapter } from '../interfaces/IStorageAdapter';
 import { Mutex } from '../utils/Mutex';
 
@@ -49,19 +49,53 @@ export class LibraryService {
       const existingPaths = new Set(existingSongs.map(s => s.filePath));
       const existingHashes = new Set(existingSongs.map(s => s.hash?.split('-')[0]).filter(Boolean));
       const existingSourceUrls = new Set(existingSongs.map(s => s.sourceUrl).filter(Boolean));
-      // Priority 3: Title + Artist
+      
+      // Priority 3: Title + Artist (Guard 3)
       const existingNameArtistKeys = new Set(
-        existingSongs.map(s => `${s.title.toLowerCase()}|${s.artist.toLowerCase()}`)
+        existingSongs.map(s => `${normalizeString(s.title)}|${normalizeString(s.artist)}`)
       );
 
       const duplicatePaths: string[] = [];
       const duplicateSongs: DuplicateSongInfo[] = [];
       let addedCount = 0;
 
+      logger.info('[Library] Starting processAndAddSongs', { newSongCount: newSongs.length });
+
       for (const song of newSongs) {
-        const title = song.title.toLowerCase();
-        const artist = song.artist.toLowerCase();
-        const nameArtistKey = `${title}|${artist}`;
+        logger.debug('[Library] Processing song hash / metadata', { filePath: song.filePath, hash: song.hash, title: song.title, artist: song.artist });
+
+        const normTitle = normalizeString(song.title);
+        const normArtist = normalizeString(song.artist);
+        const nameArtistKey = `${normTitle}|${normArtist}`;
+
+        // 0. SELF-MATCH GUARD (Constraint 2: No ignore, Mandatory update)
+        // If we find an existing record with the exact same path, we UPDATE it.
+        // This solves the race condition where FFmpeg modifies the file after initial import.
+        let selfMatch: Song | undefined;
+        for (const existing of existingSongs) {
+          if (isSamePath(existing.filePath, song.filePath)) {
+            selfMatch = existing;
+            break;
+          }
+        }
+
+        if (selfMatch) {
+          logger.info('[Library] Self-Match Check: MATCHED', { isSelfMatch: true, newPath: song.filePath, existingPath: selfMatch.filePath });
+          logger.info(`[Library] Self-Match detected: Updating metadata for ${song.filePath}`);
+          // Merge new metadata into existing record. We keep the original ID.
+          // This ensures the second pass (with FFmpeg tags) persists into the DB.
+          songs[selfMatch.id] = { 
+            ...selfMatch, 
+            ...song, 
+            id: selfMatch.id,
+            filePath: selfMatch.filePath // Keep normalized/original path reference
+          };
+          addedCount++; // Counted as "processed successfully"
+          logger.info('[Library] Final Action: UPDATED (Self-Match)', { path: song.filePath });
+          continue;
+        } else {
+           logger.info('[Library] Self-Match Check: NOT MATCHED', { isSelfMatch: false, newPath: song.filePath });
+        }
 
         // Check Prioritized mức độ (Priority levels)
         const isDuplicateUrl = song.sourceUrl && existingSourceUrls.has(song.sourceUrl);
@@ -97,7 +131,12 @@ export class LibraryService {
         }
 
         const isDuplicatePath = existingPaths.has(song.filePath);
-        const isDuplicateMetadata = existingNameArtistKeys.has(nameArtistKey);
+        
+        // Guard 3: Strict check for empty metadata to prevent false collisions
+        let isDuplicateMetadata = false;
+        if (normTitle !== '' || normArtist !== '') {
+          isDuplicateMetadata = existingNameArtistKeys.has(nameArtistKey);
+        }
 
         let duplicateReason: DuplicateReason | undefined;
         if (isDuplicateUrl) duplicateReason = 'URL';
@@ -106,6 +145,17 @@ export class LibraryService {
         else if (isDuplicateMetadata) duplicateReason = 'METADATA';
 
         if (duplicateReason) {
+          const matchedTitle = existingSongs.find(s => normalizeString(s.title) === normTitle)?.title || 'unknown';
+          logger.warn('[Library] Duplicate Detected', { guard: `Guard for ${duplicateReason}`, matchingTitle: matchedTitle, filePath: song.filePath });
+
+          if (duplicateReason === 'METADATA') {
+             logger.warn('[Guard 3 Collision]:', { 
+               newTitle: song.title, 
+               existingTitle: matchedTitle,
+               normalizedKey: nameArtistKey 
+             });
+          }
+
           duplicatePaths.push(song.filePath);
           // Return only essential info to avoid IPC overhead (exclude heavy fields like coverArt)
           duplicateSongs.push({
@@ -121,11 +171,16 @@ export class LibraryService {
         if (song.sourceUrl) existingSourceUrls.add(song.sourceUrl);
         existingNameArtistKeys.add(nameArtistKey);
 
-        songs[song.id] = song;
-        if (!libraryUpdate.songIds.includes(song.id)) {
-          libraryUpdate.songIds.push(song.id);
-        }
+        // If no duplicates and no self-match, it's a new song
+        const newSongData = {
+          ...song,
+          id: generateId(),
+          createdAt: new Date().toISOString()
+        };
+        songs[newSongData.id] = newSongData;
+        libraryUpdate.songIds.push(newSongData.id);
         addedCount++;
+        logger.info('[Library] Final Action: ADDED', { path: song.filePath });
       }
 
       // Save back using the adapter

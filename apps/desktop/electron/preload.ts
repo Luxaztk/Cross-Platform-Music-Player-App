@@ -74,6 +74,7 @@ export interface ElectronAPI {
   onUpdateProgress: (callback: (percent: number) => void) => () => void
   onUpdateDownloaded: (callback: () => void) => () => void
   restartApp: () => Promise<void>
+  log: (level: string, message: string) => void
 }
 
 // Expose safe APIs to the renderer process
@@ -161,6 +162,7 @@ const electronAPI: ElectronAPI = {
     return () => ipcRenderer.off('update-downloaded', listener)
   },
   restartApp: () => ipcRenderer.invoke('restart-app'),
+  log: (level, message) => ipcRenderer.send('electron-log-message', { level, message }),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)
