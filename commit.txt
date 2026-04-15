@@ -1,9 +1,5 @@
-fix: resolve cross-package frontend and electron build errors
+chore(release): bump version to 1.0.1 and stabilize core build processes
 
-- fix(core): replace 'erasableSyntaxOnly' incompatible parameter properties in UseCase constructors
-- fix(services): add missing 'artists' compilation fallback mapping in MetadataService for Song type
-- fix(utils): fix case-sensitive import for 'errorHandler' and properly export 'path' modules
-- fix(ui): cast LucideIcon accurately to accept intrinsic attributes like 'size' in Icon.web.tsx
-- test(downloader): clean up unused 'Mock' vitest import in YoutubeDownloaderPath.test.ts
-
-Resolves all 17 TS1294, TS2741, TS2322, TS1261, TS2305, and TS6133 errors breaking 'npm run build:win'.
+- chore: bump application version to 1.0.1 in package.json
+- fix(build): configure explicit 'author', 'description', and 'electronVersion' to bypass electron-builder strict cross-platform validations
+- fix(core): typecast 'process.env.VITE_PUBLIC' explicitly as string to resolve NodeJS implicit undefined typing in 'path.join'

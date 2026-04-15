@@ -3,7 +3,7 @@
   "description": "Cross-Platform Music Player",
   "author": "Luxaztk",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "dist-electron/main.js",
   "repository": {
@@ -93,7 +93,14 @@
       }
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "icon": "build"
     },
     "nsis": {
       "oneClick": false,

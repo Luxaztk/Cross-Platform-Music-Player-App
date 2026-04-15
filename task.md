@@ -70,7 +70,8 @@ Mục tiêu: Đảm bảo người dùng có thể sử dụng hàng ngày ổn 
 - [X] **Lưu trữ trạng thái (Persistence)**: Tự động lưu lại Queue và History khi tắt/mở app (Đã tích hợp AsyncStorage/ElectronStore).
 - [X] **Sắp xếp mặc định (A-Z Sort)**: Danh sách bài hát luôn được sắp xếp theo bảng chữ cái từ A-Z.
 - [X] **Tuyệt đối ổn định IPC**: Các backend adapter lưu trữ (Cài đặt, Cấu hình) đã được route an toàn ra frontend.
-- [X] **Chuẩn bị Build (Release Candidate 1)**: Đóng băng thay đổi UI, dọn dẹp import / refactor codebase sẵn sàng cho quá trình đóng gói bản build đầu tiên.`
+- [X] **Chuẩn bị Build (Release Candidate 1)**: Đóng băng thay đổi UI, dọn dẹp import / refactor codebase sẵn sàng cho quá trình đóng gói bản build đầu tiên.
+- [X] **Đóng gói Phát hành (Phiên bản 1.0.1)**: Khắc phục triệt để lỗi biên dịch TypeScript đa module, định cấu hình chuẩn `electron-builder` (`author`, `description`, loại bỏ carets versioning) đảm bảo đóng gói thành công file EXE trên Windows.
 
 ### 🟡 GIAI ĐOẠN 2: Tối ưu & Chức năng Phụ (Mức độ ưu tiên TRUNG BÌNH)
 
