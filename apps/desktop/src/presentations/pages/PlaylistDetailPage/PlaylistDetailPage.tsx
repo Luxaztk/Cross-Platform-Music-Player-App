@@ -1,6 +1,7 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { useParams } from 'react-router-dom';
-import { FileMusic, FolderPlus, Loader2, X, CheckSquare, Square, Trash, Filter } from 'lucide-react';
+import { FileMusic, FolderPlus, Loader2, X, CheckSquare, Square, Trash, Filter, Play, PlaySquare, ListPlus, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import { useNotification } from '../../../application/hooks/useNotification';
 import { useLibraryContext } from '../../components/Library';
 import { usePlayer } from '@music/hooks';
@@ -50,11 +51,19 @@ export const PlaylistDetailPage: React.FC = () => {
   // Existing Menus/Modals state
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
   const [activeSubMenuId, setActiveSubMenuId] = React.useState<string | null>(null);
-  const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
   const [editingSong, setEditingSong] = React.useState<Song | null>(null);
   const [deletingSong, setDeletingSong] = React.useState<Song | null>(null);
   const [bulkDeleteMode, setBulkDeleteMode] = React.useState<'library' | 'playlist' | null>(null);
+
+  // Portal menu state: position is computed from the trigger button's bounding rect
+  const [menuPosition, setMenuPosition] = React.useState<{ top: number; right: number; placement: 'top' | 'bottom' }>({ top: 0, right: 0, placement: 'bottom' });
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const activeMenuIdRef = React.useRef<string | null>(null);
+
+  // Keep ref in sync with state for use in scroll handler
+  React.useEffect(() => {
+    activeMenuIdRef.current = activeMenuId;
+  }, [activeMenuId]);
 
   const {
     handleImportFiles,
@@ -110,24 +119,30 @@ export const PlaylistDetailPage: React.FC = () => {
 
     const handleScroll = () => {
       if (!containerRef.current) return;
-      
+
       const rect = containerRef.current.getBoundingClientRect();
       const mainRect = mainArea.getBoundingClientRect();
-      
+
       // Calculate how far the list has scrolled up past the top of the main area
       const relativeTop = mainRect.top - rect.top;
-      
+
       setScrollTop(Math.max(0, relativeTop));
       setIsHeaderSticky(relativeTop > 0);
+
+      // Close any open context menu on scroll (Portal menu position would be stale)
+      if (activeMenuIdRef.current) {
+        setActiveMenuId(null);
+        setActiveSubMenuId(null);
+      }
     };
 
     mainArea.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    
+
     return () => mainArea.removeEventListener('scroll', handleScroll);
   }, [id, libraryVersion]);
 
-  // Click out to close menu
+  // Click outside to close Portal menu
   React.useEffect(() => {
     const handleClickOut = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -139,6 +154,18 @@ export const PlaylistDetailPage: React.FC = () => {
       window.addEventListener('click', handleClickOut);
     }
     return () => window.removeEventListener('click', handleClickOut);
+  }, [activeMenuId]);
+
+  // Close Portal menu on window resize
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (activeMenuId) {
+        setActiveMenuId(null);
+        setActiveSubMenuId(null);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [activeMenuId]);
 
   // Keyboard shortcut for Delete
@@ -247,7 +274,7 @@ export const PlaylistDetailPage: React.FC = () => {
 
     const currentValues = libraryFilter.values;
     const index = currentValues.indexOf(value);
-    
+
     if (index > -1) {
       const next = currentValues.filter(v => v !== value);
       setLibraryFilter({
@@ -268,7 +295,7 @@ export const PlaylistDetailPage: React.FC = () => {
         const queries = libraryFilter.values
           .flatMap(v => splitArtists(v))
           .map(v => v.toLowerCase().trim());
-        
+
         const allArtists = (song.artists || [song.artist])
           .flatMap(a => splitArtists(a))
           .map(a => a.toLowerCase().trim());
@@ -342,14 +369,103 @@ export const PlaylistDetailPage: React.FC = () => {
     setActiveSubMenuId(null);
   };
 
+  // Get active song for the portal menu
+  const activeSong = activeMenuId ? filteredSongs.find(s => s.id === activeMenuId) : null;
+
   // Virtualization calculations
-  const viewportHeight = window.innerHeight; 
+  const viewportHeight = window.innerHeight;
   const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER_SIZE);
   const endIndex = Math.min(filteredSongs.length, Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + BUFFER_SIZE);
-  
+
   const visibleSongs = filteredSongs.slice(startIndex, endIndex);
   const totalHeight = filteredSongs.length * ROW_HEIGHT;
   const paddingOffset = startIndex * ROW_HEIGHT;
+
+  // Portal Menu: rendered via createPortal to document.body
+  const renderPortalMenu = () => {
+    if (!activeMenuId || !activeSong) return null;
+
+    const menuStyle: React.CSSProperties = {
+      position: 'fixed',
+      zIndex: 9999,
+      right: menuPosition.right,
+      ...(menuPosition.placement === 'bottom'
+        ? { top: menuPosition.top }
+        : { bottom: window.innerHeight - menuPosition.top }
+      ),
+    };
+
+    return ReactDOM.createPortal(
+      <div
+        className="song-row-portal-menu"
+        style={menuStyle}
+        ref={menuRef}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <MenuAction icon={<Play size={16} />} label={t('playlist.playNow')} onClick={() => {
+          const idx = filteredSongs.findIndex(s => s.id === activeSong.id);
+          if (idx !== -1) playList(filteredSongs, idx);
+          setActiveMenuId(null);
+        }} />
+        <MenuAction icon={<PlaySquare size={16} />} label={t('playlist.playNext')} onClick={() => {
+          playNext(activeSong);
+          setActiveMenuId(null);
+        }} />
+        <MenuAction icon={<ListPlus size={16} />} label={t('playlist.addToQueue')} onClick={() => {
+          addToQueue(activeSong);
+          setActiveMenuId(null);
+        }} />
+
+        <div className="menu-divider"></div>
+
+        {/* Nested Playlist Menu */}
+        <div
+          className={`menu-item nested-trigger ${activeSubMenuId === activeSong.id ? 'active' : ''}`}
+          onMouseEnter={() => setActiveSubMenuId(activeSong.id)}
+        >
+          <div className="item-content">
+            <FolderPlus size={16} />
+            <span>{t('playlist.addToPlaylist')}</span>
+          </div>
+          <ChevronRight size={14} />
+
+          {activeSubMenuId === activeSong.id && (
+            <div className="nested-menu">
+              {playlists.filter(p => p.id !== '0' && p.id !== id).length === 0 ? (
+                <div className="menu-item disabled">
+                  {t('sidebar.noPlaylists')}
+                </div>
+              ) : (
+                playlists
+                  .filter(p => p.id !== '0' && p.id !== id)
+                  .map(p => (
+                    <button
+                      key={p.id}
+                      className="menu-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddSongsToPlaylist(p.id, [activeSong.id]);
+                      }}
+                    >
+                      {p.name}
+                    </button>
+                  ))
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="menu-divider"></div>
+        <MenuAction icon={<Edit2 size={16} />} label={t('common.edit')} onClick={() => {
+          setEditingSong(activeSong);
+          setIsEditModalOpen(true);
+          setActiveMenuId(null);
+        }} />
+        <MenuAction icon={<Trash2 size={16} />} label={t('common.delete')} onClick={() => onDeleteSong(activeSong)} className="delete" />
+      </div>,
+      document.body
+    );
+  };
 
   return (
     <div className="playlist-detail-page">
@@ -439,7 +555,7 @@ export const PlaylistDetailPage: React.FC = () => {
               <Filter size={12} className="filter-icon" />
               <span className="filter-text">{t('playlist.filteringBy')}</span>
             </div>
-            
+
             <div className="filter-tags-list">
               {libraryFilter.values.map((val) => (
                 <div key={val} className="active-filter-tag">
@@ -463,7 +579,7 @@ export const PlaylistDetailPage: React.FC = () => {
           </div>
         )}
 
-        <div className={`list-header ${isHeaderSticky ? 'is-sticky' : ''}`} style={{ position: 'sticky', top: 0, zIndex: 101 }}>
+        <div className={`list-header ${isHeaderSticky ? 'is-sticky' : ''}`} style={{ position: 'sticky', top: 0 }}>
           <div className="col-idx">
             <button className="checkbox-header-btn" onClick={toggleSelectAll}>
               {selectedIds.size === filteredSongs.length && filteredSongs.length > 0 ? (
@@ -492,13 +608,10 @@ export const PlaylistDetailPage: React.FC = () => {
                   isSelected={selectedIds.has(song.id)}
                   isPlaying={currentSong?.id === song.id}
                   isActiveMenu={activeMenuId === song.id}
-                  activeSubMenuId={activeSubMenuId}
-                  menuPlacement={menuPlacement}
                   playlists={playlists}
                   currentPlaylistId={id}
                   t={t}
                   appIcon={appIcon}
-                  menuRef={menuRef}
                   onToggleSelect={toggleSelect}
                   onPlay={() => playList(filteredSongs, startIndex + i)}
                   onPlayNext={() => {
@@ -522,19 +635,34 @@ export const PlaylistDetailPage: React.FC = () => {
                     if (activeMenuId === sid) {
                       setActiveMenuId(null);
                     } else {
+                      // Compute position for the Portal menu from the trigger button
                       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      const spaceBelow = window.innerHeight - rect.bottom;
-                      setMenuPlacement(spaceBelow < 250 ? 'top' : 'bottom');
+                      const mainArea = document.querySelector('.main-area');
+                      const boundary = mainArea
+                        ? mainArea.getBoundingClientRect().bottom
+                        : window.innerHeight - 90;
+                      const spaceBelow = boundary - rect.bottom;
+                      const placement: 'top' | 'bottom' = spaceBelow < 250 ? 'top' : 'bottom';
+
+                      // Align menu's right edge with button's right edge
+                      const rightPos = Math.max(8, window.innerWidth - rect.right);
+                      setMenuPosition({
+                        top: placement === 'bottom' ? rect.bottom + 4 : rect.top - 4,
+                        right: rightPos,
+                        placement,
+                      });
                       setActiveMenuId(sid);
                     }
                   }}
-                  onToggleSubMenu={(sid) => setActiveSubMenuId(activeSubMenuId === sid ? null : sid)}
                 />
               ))
             )}
           </div>
         </div>
       </div>
+
+      {/* Portal-rendered More Menu — outside of all stacking contexts */}
+      {renderPortalMenu()}
 
       {selectedIds.size > 0 && (
         <div className="bulk-actions-bar">
@@ -580,11 +708,11 @@ export const PlaylistDetailPage: React.FC = () => {
         onConfirm={deletingSong ? confirmDeleteSong : confirmBulkDelete}
         title={bulkDeleteMode ? (t('modal.bulkDeleteTitle') || 'Xóa hàng loạt') : t('modal.deleteSongTitle')}
         message={
-          bulkDeleteMode === 'library' 
+          bulkDeleteMode === 'library'
             ? (t('modal.bulkDeleteLibraryMessage', { count: selectedIds.size }) || `Bạn có chắc muốn xóa vĩnh viễn ${selectedIds.size} bài hát đã chọn khỏi thư viện?`)
             : bulkDeleteMode === 'playlist'
-            ? (t('modal.bulkRemovePlaylistMessage', { count: selectedIds.size }) || `Bạn có chắc muốn gỡ ${selectedIds.size} bài hát khỏi playlist này?`)
-            : t('modal.deleteSongQuestion')
+              ? (t('modal.bulkRemovePlaylistMessage', { count: selectedIds.size }) || `Bạn có chắc muốn gỡ ${selectedIds.size} bài hát khỏi playlist này?`)
+              : t('modal.deleteSongQuestion')
         }
         itemName={deletingSong?.title}
         messageSuffix={deletingSong ? t('modal.deleteSongFromPlaylist') : undefined}
@@ -600,3 +728,11 @@ export const PlaylistDetailPage: React.FC = () => {
     </div>
   );
 };
+
+// Helper component để code sạch hơn
+const MenuAction = ({ icon, label, onClick, className = '' }: any) => (
+  <button className={`menu-item ${className}`} onClick={onClick}>
+    {icon}
+    <span>{label}</span>
+  </button>
+);

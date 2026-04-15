@@ -27,8 +27,6 @@
     "noUncheckedSideEffectImports": true,
 
     /* Monorepo */
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
       "@music/core": ["../../packages/core/src/index.ts"],
       "@music/core/*": ["../../packages/core/src/*"],

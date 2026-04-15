@@ -1,9 +1,13 @@
 {
   "name": "melovista-desktop",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "dist-electron/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Luxaztk/Cross-Platform-Music-Player-App.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -13,15 +17,17 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "postinstall": "node node_modules/youtube-dl-exec/scripts/postinstall.js || echo 'Warning: yt-dlp binary download failed!'",
-    "build:win": "npm run build && electron-builder --win",
-    "build:mac": "npm run build && electron-builder --mac"
+    "build:win": "npm run build && electron-builder --win --publish always",
+    "build:mac": "npm run build && electron-builder --mac --publish always"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@music/utils": "*",
     "@types/ffmpeg-installer__ffmpeg": "^1.0.2",
+    "axios": "^1.7.9",
     "electron-store": "^10.1.0",
+    "electron-updater": "^6.3.9",
     "fuse.js": "^7.1.0",
     "lucide-react": "^1.6.0",
     "music-metadata": "^11.12.3",
@@ -29,8 +35,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.2.0",
-    "youtube-dl-exec": "^3.1.4",
-    "axios": "^1.7.9"
+    "youtube-dl-exec": "^3.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -42,6 +47,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "electron": "^41.0.3",
     "electron-builder": "^26.8.1",
@@ -55,12 +61,18 @@
     "vite": "^8.0.1",
     "vite-plugin-electron": "^0.29.1",
     "vite-plugin-electron-renderer": "^0.14.6",
-    "@vitest/coverage-v8": "^4.1.3",
     "vitest": "^4.1.3"
   },
   "build": {
     "appId": "com.melovista.app",
     "productName": "Melovista",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Luxaztk",
+        "repo": "Cross-Platform-Music-Player-App"
+      }
+    ],
     "directories": {
       "output": "release"
     },
@@ -76,6 +88,14 @@
           "**/*"
         ]
       }
-    ]
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false
+    }
   }
 }

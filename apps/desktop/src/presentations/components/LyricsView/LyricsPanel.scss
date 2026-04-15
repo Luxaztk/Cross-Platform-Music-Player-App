@@ -15,7 +15,7 @@
     position: absolute;
     top: var(--spacing-md);
     right: var(--spacing-md);
-    z-index: 100;
+    z-index: 5000;
     display: flex;
     gap: var(--spacing-sm);
 
@@ -132,7 +132,7 @@
       padding: 6px 14px;
       transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
       position: relative;
-      z-index: 50;
+      z-index: 4999;
 
       &:focus-within {
         background: rgba(255, 255, 255, 0.07);

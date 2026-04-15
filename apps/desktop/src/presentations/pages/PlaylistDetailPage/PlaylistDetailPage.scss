@@ -116,8 +116,8 @@
   }
 
   .songs-list-container {
-    padding: 0 0 120px; // Remove side padding here, move it to children for true sticky
-    background: var(--bg-surface);
+    padding: 0;
+    // background: var(--bg-surface);
     // flex-grow: 1; // Allow natural height
 
     .filter-chip-container {
@@ -226,6 +226,7 @@
       color: var(--color-text-dim);
       background: var(--bg-primary);
       transition: all 0.3s ease;
+      z-index: 100;
 
       &.is-sticky {
         background: var(--bg-primary);
@@ -454,7 +455,6 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        position: relative;
 
         .row-more-btn {
           background: transparent;
@@ -476,85 +476,6 @@
             opacity: 1;
           }
         }
-
-        .more-menu {
-          position: absolute;
-          right: 0;
-          background: var(--bg-surface-solid);
-          border-radius: 4px;
-          box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
-          padding: 4px;
-          min-width: 200px;
-          z-index: 1100; // Above bulk actions bar if needed
-          border: 1px solid var(--border-subtle);
-
-          &.open-down {
-            top: 100%;
-            margin-top: 4px;
-          }
-
-          &.open-up {
-            bottom: 100%;
-            margin-bottom: 4px;
-          }
-
-          .menu-item {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: transparent;
-            border: none;
-            color: var(--color-text-main);
-            font-size: 0.875rem;
-            cursor: pointer;
-            border-radius: 2px;
-            text-align: left;
-
-            &:hover {
-              background: var(--bg-overlay);
-            }
-
-            &.delete {
-              color: var(--color-error);
-            }
-
-            &.nested-trigger {
-              justify-content: space-between;
-              position: relative;
-
-              &.active,
-              &:hover {
-                background: rgba(255, 255, 255, 0.1);
-              }
-
-              .nested-menu {
-                position: absolute;
-                right: 100%;
-                top: 0;
-                margin-right: 4px;
-                background: var(--bg-surface-solid);
-                border-radius: 4px;
-                box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3);
-                padding: 4px;
-                min-width: 180px;
-                z-index: 1200;
-                border: 1px solid var(--border-subtle);
-                animation: fadeIn 0.2s ease-out;
-
-                .menu-item {
-                  &.disabled {
-                    color: var(--color-text-dim);
-                    cursor: default;
-                    pointer-events: none;
-                    font-style: italic;
-                  }
-                }
-              }
-            }
-          }
-        }
       }
     }
 
@@ -562,6 +483,87 @@
       padding: 40px;
       text-align: center;
       color: var(--color-text-dim);
+    }
+  }
+}
+
+// Portal-rendered Song Row Context Menu (mounted on document.body)
+.song-row-portal-menu {
+  position: fixed;
+  z-index: 9999;
+  background: var(--bg-surface-solid);
+  border-radius: 4px;
+  box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  min-width: 200px;
+  border: 1px solid var(--border-subtle);
+  animation: fadeIn 0.15s ease-out;
+
+  .menu-divider {
+    height: 1px;
+    background-color: var(--border-subtle);
+    margin: 4px 0;
+  }
+
+  .menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: var(--color-text-main);
+    font-size: 0.875rem;
+    cursor: pointer;
+    border-radius: 2px;
+    text-align: left;
+
+    &:hover {
+      background: var(--bg-overlay);
+    }
+
+    &.delete {
+      color: var(--color-error);
+    }
+
+    &.nested-trigger {
+      justify-content: space-between;
+      position: relative;
+
+      &.active,
+      &:hover {
+        background: var(--bg-surface-hover);
+      }
+
+      .item-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .nested-menu {
+        position: absolute;
+        right: 100%;
+        top: 0;
+        margin-right: 4px;
+        background: var(--bg-surface-solid);
+        border-radius: 4px;
+        box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3);
+        padding: 4px;
+        min-width: 180px;
+        border: 1px solid var(--border-subtle);
+        animation: fadeIn 0.15s ease-out;
+
+        .menu-item {
+          &.disabled {
+            color: var(--color-text-dim);
+            cursor: default;
+            pointer-events: none;
+            font-style: italic;
+          }
+        }
+      }
     }
   }
 }

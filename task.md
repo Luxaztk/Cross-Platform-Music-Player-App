@@ -76,7 +76,8 @@ Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 
 - [X] **Cài đặt hệ thống (Settings)**: Lựa chọn thiết bị đầu ra âm thanh (Ngôn ngữ đã có trong Profile).
 - [X] **Quản lý Hàng đợi nâng cao**: Kéo thả để thay đổi thứ tự ngay trong Queue Panel.
-- [X] [X] **Global Hotkeys**: Tích hợp hệ thống phím tắt điều hướng toàn cục (Space, Mũi tên, Shift+N/P, /, Esc). Xây dựng cơ chế Guard Clause bảo vệ các ô input/textarea khỏi tình trạng nhận nhầm phím.
+- [X] **Global Hotkeys**: Tích hợp hệ thống phím tắt điều hướng toàn cục (Space, Mũi tên, Shift+N/P, /, Esc). Xây dựng cơ chế Guard Clause bảo vệ các ô input/textarea khỏi tình trạng nhận nhầm phím.
+- [X] Multi-level Profile Menu (Sub-menus support)
 
 ### 3. Debugging & QA
 

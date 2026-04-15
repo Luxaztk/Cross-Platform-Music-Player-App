@@ -9,7 +9,7 @@ import './EditModal.scss';
 
 interface EditModalProps {
   type: 'playlist' | 'song';
-  data: Song | Playlist;
+  data: Song | Playlist | null;
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedData: Song | Playlist) => void;

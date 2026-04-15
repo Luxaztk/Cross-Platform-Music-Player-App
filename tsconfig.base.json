@@ -5,7 +5,6 @@
     "moduleResolution": "Node",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "baseUrl": ".",
     "paths": {
       "@music/core": ["packages/core/src/index.ts"],
       "@music/core/*": ["packages/core/src/*"],

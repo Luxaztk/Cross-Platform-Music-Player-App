@@ -1,7 +1,5 @@
-feat(ui): implement global hotkeys and multi-level profile menu
+feat(ui): implement multi-level profile menu and enhance global hotkeys
 
-- Added useGlobalHotkeys hook for player control and global navigation.
-- Implemented strict guard clauses to prevent hotkey overlap with text inputs.
-- Refactored Profile Menu into a multi-level drill-down component.
-- Resolved styling bugs in menu items (text wrapping, icon shrinking) using semantic SCSS variables.
-- Updated task.md roadmap to reflect new milestones.
+- Implement multi-level (nested) menu structure for the user profile dropdown.
+- Add support for sub-menus in the profile section.
+- Refine global hotkey handling to prevent conflicts with input fields.

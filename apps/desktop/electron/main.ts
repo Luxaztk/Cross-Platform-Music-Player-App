@@ -1,6 +1,7 @@
 process.env.YOUTUBE_DL_SKIP_PYTHON_CHECK = '1';
 
-import { app, BrowserWindow, protocol, session } from 'electron';
+import { app, BrowserWindow, protocol, session, dialog } from 'electron'; // Đã thêm 'dialog'
+import { autoUpdater } from 'electron-updater'; // Đã thêm import autoUpdater
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -48,6 +49,39 @@ function createWindow() {
   } else {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'));
   }
+}
+
+// --- THÊM HÀM XỬ LÝ AUTO UPDATE ---
+function setupAutoUpdate() {
+  // Chỉ chạy chức năng tự cập nhật khi app đã đóng gói (chạy file .exe)
+  if (!app.isPackaged) {
+    console.log('Skipping auto-update check in development mode.');
+    return;
+  }
+
+  // Tự động kiểm tra bản cập nhật
+  autoUpdater.checkForUpdatesAndNotify();
+
+  // Khi bản cập nhật đã được tải xong ngầm ở dưới nền
+  autoUpdater.on('update-downloaded', (info) => {
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Đã có bản cập nhật mới',
+      message: `Phiên bản ${info.version} của MeloVista đã được tải xuống. Bạn có muốn khởi động lại ứng dụng để cài đặt bản cập nhật mới nhất không?`,
+      buttons: ['Cập nhật ngay', 'Để sau'],
+      defaultId: 0,
+      cancelId: 1
+    }).then((result) => {
+      // Nếu người dùng chọn nút "Cập nhật ngay"
+      if (result.response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('Lỗi khi tự động cập nhật:', err);
+  });
 }
 
 app.on('window-all-closed', () => {
@@ -136,10 +170,10 @@ app.whenReady().then(() => {
   // Inject CSP headers dynamically based on environment
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     const isDev = !!VITE_DEV_SERVER_URL;
-    
+
     // In Dev, we need 'unsafe-eval' for Vite HMR. In Prod, we strip it out.
-    const csp = isDev 
-      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self' http://localhost:5173 ws://localhost:5173;" 
+    const csp = isDev
+      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self' http://localhost:5173 ws://localhost:5173;"
       : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self';";
 
     callback({
@@ -154,4 +188,7 @@ app.whenReady().then(() => {
   setupStorageIPC();
   setupDownloaderIPC();
   createWindow();
+
+  // GỌI HÀM AUTO UPDATE SAU KHI APP SẴN SÀNG VÀ CỬA SỔ ĐÃ ĐƯỢC TẠO
+  setupAutoUpdate();
 });
