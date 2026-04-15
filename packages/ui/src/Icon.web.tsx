@@ -36,7 +36,7 @@ const map: Record<IconName, keyof typeof LucideIcons> = {
 };
 
 export const Icon: React.FC<IconProps> = ({ name, size = 24, color = 'currentColor', fill = 'none', className }) => {
-  const LucideIcon = LucideIcons[map[name]] as React.FC<unknown>;
+  const LucideIcon = LucideIcons[map[name]] as React.FC<{ size?: number; color?: string; fill?: string; className?: string }>;
   if (!LucideIcon) return null;
   return <LucideIcon size={size} color={color} fill={fill} className={className} />;
 };
