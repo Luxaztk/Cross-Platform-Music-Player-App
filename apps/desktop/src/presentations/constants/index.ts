@@ -1,1 +1,2 @@
-export * from './IconSizes'
+export * from './IconSizes';
+export * from './translations';

@@ -28,26 +28,26 @@
 
     /* Monorepo */
     "paths": {
-      "@music/core": ["../../packages/core/src/index.ts"],
+      "@music/core": ["../../packages/core/src"],
       "@music/core/*": ["../../packages/core/src/*"],
-      "@music/player": ["../../packages/player/src/index.ts"],
+      "@music/player": ["../../packages/player/src"],
       "@music/player/*": ["../../packages/player/src/*"],
-      "@music/types": ["../../packages/types/index.ts"],
+      "@music/types": ["../../packages/types"],
       "@music/types/*": ["../../packages/types/*"],
-      "@music/hooks": ["../../packages/hooks/index.ts"],
+      "@music/hooks": ["../../packages/hooks"],
       "@music/hooks/*": ["../../packages/hooks/*"],
-      "@music/utils": ["../../packages/utils/src/index.ts"],
+      "@music/utils": ["../../packages/utils/src"],
       "@music/utils/*": ["../../packages/utils/src/*"],
-      "@music/ui": ["../../packages/ui/index.ts"],
+      "@music/ui": ["../../packages/ui"],
       "@music/ui/*": ["../../packages/ui/*"],
       "@music/brand": ["../../packages/brand"],
-      "@components": ["./src/presentations/components/index.ts"],
+      "@components": ["./src/presentations/components"],
       "@components/*": ["./src/presentations/components/*"],
-      "@hooks": ["./src/application/hooks/index.ts"],
+      "@hooks": ["./src/application/hooks"],
       "@hooks/*": ["./src/application/hooks/*"],
-      "@infrastructure": ["./src/infrastructure/index.ts"],
+      "@infrastructure": ["./src/infrastructure"],
       "@infrastructure/*": ["./src/infrastructure/*"],
-      "@utils": ["./src/infrastructure/utils/index.ts"],
+      "@utils": ["./src/infrastructure/utils"],
       "@utils/*": ["./src/infrastructure/utils/*"],
       "@constants": ["./src/presentations/constants"],
     }
@@ -55,6 +55,6 @@
   "include": [
     "src",
     "../../packages/*/src",
-    "../../packages/*/index.ts"
+    "../../packages/*"
   ]
 }

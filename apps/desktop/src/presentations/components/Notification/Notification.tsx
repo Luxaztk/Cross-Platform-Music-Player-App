@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 import './Notification.scss';
-import type { NotificationType } from '../../../application/hooks';
-import { ICON_SIZES } from '../../constants/IconSizes';
+import type { NotificationType } from '@hooks';
+import { ICON_SIZES } from '@constants';
 
 interface NotificationProps {
   id: string;
@@ -17,7 +17,7 @@ const DISMISS_DELAY = 500; // 0.5s nếu đã quá thời hạn
 export const NotificationItem: React.FC<NotificationProps> = ({ id, type, message, onClose }) => {
   const [isHovered, setIsHovered] = useState(false);
   const startTimeRef = useRef<number>(Date.now());
-  const timerRef = useRef<unknown>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (timerRef.current) {

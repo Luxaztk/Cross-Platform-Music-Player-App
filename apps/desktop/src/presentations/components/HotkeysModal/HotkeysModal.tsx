@@ -2,7 +2,7 @@ import React from 'react';
 import './HotkeysModal.scss';
 import { ICON_SIZES } from '@constants';
 import { X } from 'lucide-react';
-import { useLanguage } from '../Language';
+import { useLanguage } from '@hooks';
 
 interface HotkeysModalProps {
   isOpen: boolean;

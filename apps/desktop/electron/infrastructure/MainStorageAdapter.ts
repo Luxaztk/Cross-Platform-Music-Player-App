@@ -1,6 +1,7 @@
 import Store from 'electron-store';
 import type { Song, Playlist, PlayerState, RecentSearch } from '@music/types';
 import type { IStorageAdapter } from '@music/core';
+import { DEFAULT_SETTINGS, type AppSettings } from '../constants/SettingsConstants';
 
 interface StoreSchema {
   library: Playlist;
@@ -9,6 +10,7 @@ interface StoreSchema {
   playerState: PlayerState | null;
   recentSearches: RecentSearch[];
   lyricUsage: Record<string, number>;
+  settings: AppSettings;
 }
 
 export class MainStorageAdapter implements IStorageAdapter {
@@ -29,7 +31,8 @@ export class MainStorageAdapter implements IStorageAdapter {
         playlists: {},
         playerState: null,
         recentSearches: [],
-        lyricUsage: {}
+        lyricUsage: {},
+        settings: DEFAULT_SETTINGS,
       }
     });
   }
@@ -108,5 +111,13 @@ export class MainStorageAdapter implements IStorageAdapter {
     songs[songId] = updatedSong;
     await this.saveSongs(songs);
     return updatedSong;
+  }
+  async getSettings(): Promise<AppSettings> {
+    return this.store.get('settings') || DEFAULT_SETTINGS;
+  }
+
+  async saveSettings(settings: Partial<AppSettings>): Promise<void> {
+    const current = await this.getSettings();
+    this.store.set('settings', { ...current, ...settings });
   }
 }

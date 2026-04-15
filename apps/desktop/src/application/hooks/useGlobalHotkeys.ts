@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { usePlayer } from './PlayerProvider';
+import { usePlayer } from '@music/hooks';
 
 interface UseGlobalHotkeysProps {
   onToggleFullscreen?: () => void;

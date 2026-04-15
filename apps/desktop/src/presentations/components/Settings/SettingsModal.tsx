@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Volume2 } from 'lucide-react';
-import { useLanguage } from '../Language';
+import { useLanguage } from '@hooks';
 import { useAudioDevices } from '@music/hooks';
 import './SettingsModal.scss';
 
@@ -77,9 +77,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               <div className="setting-info">
                 <Volume2 size={24} className="setting-icon" />
                 <div className="setting-text">
-                  <label htmlFor="audio-output-select">
-                    {t('settings.selectDevice')}
-                  </label>
+                  <label htmlFor="audio-output-select">{t('settings.selectDevice')}</label>
                 </div>
               </div>
               <div className="setting-action">
@@ -91,13 +89,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                 >
                   <option value="default">{t('settings.defaultDevice')}</option>
                   {devices
-                    .filter(d => d.deviceId !== 'default' && d.deviceId !== 'communications')
-                    .map(device => (
+                    .filter((d) => d.deviceId !== 'default' && d.deviceId !== 'communications')
+                    .map((device) => (
                       <option key={device.deviceId} value={device.deviceId}>
                         {device.label || `${t('settings.device')} ${device.deviceId.slice(0, 5)}`}
                       </option>
-                    ))
-                  }
+                    ))}
                 </select>
                 <button className="test-sound-btn" onClick={handleTestSound}>
                   {t('settings.testSound')}

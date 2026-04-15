@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { NotificationContext } from '../../../application/hooks';
-import type { Notification, NotificationType } from '../../../application/hooks';
+import { NotificationContext, type Notification, type NotificationType  } from '@hooks';
 import { NotificationItem } from './Notification';
 import './Notification.scss';
 

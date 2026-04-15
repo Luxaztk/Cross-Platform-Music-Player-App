@@ -5,8 +5,8 @@ import {
 } from 'lucide-react';
 import { usePlayer, useUI } from '@music/hooks';
 import { formatTime } from '@music/utils';
-import { ICON_SIZES } from '../../constants/IconSizes';
-import { useTheme } from '../Theme';
+import { ICON_SIZES } from '@constants';
+import { useTheme } from '@hooks';
 import QueuePanel from './QueuePanel';
 import './PlayerBar.scss';
 

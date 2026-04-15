@@ -1,41 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
-import { Header } from '../Header';
-import { Sidebar } from '../Sidebar';
-import { PlayerBar } from '../PlayerBar';
-import { useLibraryContext } from '../Library';
-import { useNotification } from '../../../application/hooks';
-import { DuplicateResolutionModal } from '../DuplicateResolutionModal/DuplicateResolutionModal';
-import { useUI } from '@music/hooks';
-import { useLanguage } from '../Language';
-import { LyricsPanel } from '../LyricsView';
-import { useGlobalHotkeys } from '@music/hooks';
-import { HotkeysModal } from '../HotkeysModal/HotkeysModal';
-import './MainLayout.scss';
+import React, { useState, useEffect } from 'react'
+import { Outlet } from 'react-router-dom'
+import {
+  Sidebar,
+  Header,
+  PlayerBar,
+  DuplicateResolutionModal,
+  LyricsPanel,
+  HotkeysModal,
+} from '@components'
+import { useUI, useLibraryContext } from '@music/hooks'
+import { useLanguage, useNotification, useGlobalHotkeys } from '@hooks'
+import './MainLayout.scss'
 
 const MainLayout: React.FC = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isHotkeysModalOpen, setIsHotkeysModalOpen] = useState(false);
-  const { duplicateSongs, handleAddSongs, clearDuplicates } = useLibraryContext();
-  const { showNotification } = useNotification();
-  const { isLyricsOpen } = useUI();
-  const { t } = useLanguage();
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isHotkeysModalOpen, setIsHotkeysModalOpen] = useState(false)
+  const { duplicateSongs, handleAddSongs, clearDuplicates } = useLibraryContext()
+  const { showNotification } = useNotification()
+  const { isLyricsOpen } = useUI()
+  const { t } = useLanguage()
 
-  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+  const toggleSidebar = () => setIsCollapsed(!isCollapsed)
 
   // Global hotkeys
   useGlobalHotkeys({
     onOpenHotkeysModal: () => setIsHotkeysModalOpen(true),
     onCloseHotkeysModal: () => setIsHotkeysModalOpen(false),
     isHotkeysModalOpen,
-  });
+  })
 
   // Show notification when duplicates are detected
   useEffect(() => {
     if (duplicateSongs.length > 0) {
-      showNotification('info', t('modal.duplicatesFound') || 'Phát hiện bài hát trùng lặp');
+      showNotification('info', t('modal.duplicatesFound') || 'Phát hiện bài hát trùng lặp')
     }
-  }, [duplicateSongs.length, showNotification, t]);
+  }, [duplicateSongs.length, showNotification, t])
 
   return (
     <div className={`main-layout ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -45,7 +44,7 @@ const MainLayout: React.FC = () => {
         <main className="main-area">
           <Outlet />
         </main>
-        
+
         {isLyricsOpen && (
           <aside className="lyrics-sidebar">
             <LyricsPanel />
@@ -61,12 +60,9 @@ const MainLayout: React.FC = () => {
         onResolve={handleAddSongs}
       />
 
-      <HotkeysModal
-        isOpen={isHotkeysModalOpen}
-        onClose={() => setIsHotkeysModalOpen(false)}
-      />
+      <HotkeysModal isOpen={isHotkeysModalOpen} onClose={() => setIsHotkeysModalOpen(false)} />
     </div>
-  );
-};
+  )
+}
 
-export default MainLayout;
+export default MainLayout

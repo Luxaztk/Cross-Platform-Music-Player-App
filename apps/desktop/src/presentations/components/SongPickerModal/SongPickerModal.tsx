@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, Search, Check } from 'lucide-react';
 import type { Song } from '@music/types';
-import { useLanguage } from '../Language';
-import { useTheme } from '../Theme';
+import { useTheme, useLanguage } from '@hooks';
 import './SongPickerModal.scss';
 
 interface SongPickerModalProps {
@@ -27,7 +26,7 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
 
   // Filter out songs already in the playlist
   const availableSongs = useMemo(() => {
-    return allSongs.filter(song => !existingSongIds.includes(song.id));
+    return allSongs.filter((song) => !existingSongIds.includes(song.id));
   }, [allSongs, existingSongIds]);
 
   // Filter by search query
@@ -35,9 +34,7 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
     if (!searchQuery.trim()) return availableSongs;
     const query = searchQuery.toLowerCase();
     return availableSongs.filter(
-      song => 
-        song.title.toLowerCase().includes(query) || 
-        song.artist.toLowerCase().includes(query)
+      (song) => song.title.toLowerCase().includes(query) || song.artist.toLowerCase().includes(query),
     );
   }, [availableSongs, searchQuery]);
 
@@ -88,8 +85,8 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
           ) : (
             <div className="song-list">
               {filteredSongs.map((song) => (
-                <div 
-                  key={song.id} 
+                <div
+                  key={song.id}
                   className={`song-item ${selectedIds.has(song.id) ? 'selected' : ''}`}
                   onClick={() => toggleSelect(song.id)}
                 >
@@ -106,9 +103,7 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
                       <span className="artist">{song.artist}</span>
                     </div>
                   </div>
-                  <div className="checkbox">
-                    {selectedIds.has(song.id) && <Check size={16} />}
-                  </div>
+                  <div className="checkbox">{selectedIds.has(song.id) && <Check size={16} />}</div>
                 </div>
               ))}
             </div>
@@ -119,11 +114,7 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
           <button className="secondary-btn" onClick={onClose}>
             {t('common.cancel')}
           </button>
-          <button 
-            className="primary-btn" 
-            onClick={handleAdd}
-            disabled={selectedIds.size === 0}
-          >
+          <button className="primary-btn" onClick={handleAdd} disabled={selectedIds.size === 0}>
             {t('common.addSelected') || 'Add selected'} ({selectedIds.size})
           </button>
         </div>

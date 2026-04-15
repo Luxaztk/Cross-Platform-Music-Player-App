@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Check, Copy } from 'lucide-react';
 import type { Song } from '@music/types';
-import { useLanguage } from '../Language';
+import { useLanguage } from '@hooks';
 import './DuplicateResolutionModal.scss';
 
 interface DuplicateResolutionModalProps {

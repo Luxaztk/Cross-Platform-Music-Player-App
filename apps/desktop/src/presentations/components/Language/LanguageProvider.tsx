@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
-import { translations, type Language } from './translations';
+import React, { createContext, useState, type ReactNode } from 'react';
+import { translations, type Language } from '@constants';
 
 interface LanguageContextType {
   language: Language;
@@ -7,7 +7,7 @@ interface LanguageContextType {
   t: (keyPath: string, variables?: Record<string, any>) => string;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+export const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
@@ -50,12 +50,4 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       {children}
     </LanguageContext.Provider>
   );
-};
-
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
 };

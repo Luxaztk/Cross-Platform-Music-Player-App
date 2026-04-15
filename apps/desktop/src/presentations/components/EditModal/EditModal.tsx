@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Song, Playlist } from '@music/types';
-import { ICON_SIZES } from '../../constants/IconSizes';
-import { useLanguage } from '../Language';
-import { useTheme } from '../Theme';
+import { ICON_SIZES } from '@constants';
+import { useLanguage, useTheme } from '@hooks';
 import { splitArtists } from '@music/utils';
 import './EditModal.scss';
 

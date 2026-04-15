@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
-import { useLanguage } from '../../../components/Language';
+import { useLanguage } from '@hooks';
 
 interface SettingsSearchProps {
     query: string;
@@ -21,7 +21,7 @@ export const SettingsSearch: React.FC<SettingsSearchProps> = ({ query, onQueryCh
                     placeholder={t('settings.searchPlaceholder')}
                 />
                 {query && (
-                    <button className="clear-btn" onClick={() => onQueryChange('')}>
+                    <button className="clear-btn" onClick={() => onQueryChange('')} title={t('common.clear')}>
                         <X size={16} />
                     </button>
                 )}

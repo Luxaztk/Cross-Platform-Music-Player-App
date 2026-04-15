@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Search, Download, Edit2, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Clipboard, ClipboardCheck } from 'lucide-react';
 import type { Song, Playlist } from '@music/types';
-import { ICON_SIZES } from '../../constants/IconSizes';
-import { useLanguage } from '../Language';
-import { useLibrary, useNotification } from '../../../application/hooks';
-import { EditModal } from '../EditModal/EditModal';
+import { ICON_SIZES } from '@constants';
+import { EditModal } from '@components'
+import { useLibrary, useNotification, useLanguage } from '@hooks'
 import { getErrorMessage } from '@music/utils';
 import './DownloaderModal.scss';
 

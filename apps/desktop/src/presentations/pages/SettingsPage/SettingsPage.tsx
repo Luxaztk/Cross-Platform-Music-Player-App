@@ -1,12 +1,8 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useLanguage } from '../../components/Language';
-import { useSettings } from '../../../application/hooks/useSettings';
+import { useLanguage, useSettings } from '@hooks';
 import { SettingsSearch } from './components/SettingsSearch';
-import { GeneralSection } from './sections/GeneralSection';
-import { AppearanceSection } from './sections/AppearanceSection';
-import { DownloadSection } from './sections/DownloadSection';
-import { AudioSection } from './sections/AudioSection';
+import { GeneralSection, AppearanceSection, DownloadSection, AudioSection } from './sections';
 import { Save, Check, Settings, Palette, Download, Volume2, Info } from 'lucide-react';
 import './SettingsPage.scss';
 
@@ -49,20 +45,26 @@ export const SettingsPage: React.FC = () => {
             case 'downloads': return <DownloadSection />;
             case 'about':
                 return (
-                    <div className="settings-section about-section">
-                        <div className="about-content">
-                            <div className="app-branding">
-                                <h1>Melovista</h1>
-                                <p>Version 1.0.0 (Desktop)</p>
-                            </div>
-                            <p>{t('settings.about.desc')}</p>
-                            <div className="footer-links">
-                                <a href="https://github.com/Luxaztk/Cross-Platform-Music-Player-App" target="_blank" rel="noreferrer">GitHub</a>
-                                <span>•</span>
-                                <a>License</a>
-                            </div>
-                        </div>
+                  <div className="settings-section about-section">
+                    <div className="about-content">
+                      <div className="app-branding">
+                        <h1>Melovista</h1>
+                        <p>Version {__APP_VERSION__} (Desktop)</p>
+                      </div>
+                      <p>{t('settings.about.desc')}</p>
+                      <div className="footer-links">
+                        <a
+                          href="https://github.com/Luxaztk/Cross-Platform-Music-Player-App"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          GitHub
+                        </a>
+                        <span>•</span>
+                        <a>License</a>
+                      </div>
                     </div>
+                  </div>
                 );
             default: return <GeneralSection />;
         }

@@ -1,4 +1,4 @@
-import { useLibraryContext } from '../../presentations/components/Library';
+import { useLibraryContext } from '@music/hooks';
 
 export function useLibrary() {
   return useLibraryContext();

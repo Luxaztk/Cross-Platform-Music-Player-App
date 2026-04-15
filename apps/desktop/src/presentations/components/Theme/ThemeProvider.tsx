@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import React, { createContext, useState, useEffect, type ReactNode } from 'react';
 import type { IStorageAdapter } from '@music/core';
 import app_icon_ios_dark from '@music/brand/logos/app_icon_ios_dark.png';
 import app_icon_ios_light from '@music/brand/logos/app_icon_ios_light.png';
@@ -12,7 +12,7 @@ interface ThemeContextType {
   appIcon: string;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode; storage?: IStorageAdapter }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeType>('midnight');
@@ -46,10 +46,4 @@ export const ThemeProvider: React.FC<{ children: ReactNode; storage?: IStorageAd
       {children}
     </ThemeContext.Provider>
   );
-};
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) throw new Error('useTheme must be used within ThemeProvider');
-  return context;
 };

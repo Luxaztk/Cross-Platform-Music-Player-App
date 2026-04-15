@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Headphones, Check } from 'lucide-react';
-import { useLanguage } from '../Language';
+import { useLanguage } from '@hooks';
 import { useAudioDevices } from '@music/hooks';
 import './AudioDeviceSelector.scss';
 

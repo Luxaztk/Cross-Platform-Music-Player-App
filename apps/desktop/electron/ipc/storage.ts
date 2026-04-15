@@ -60,4 +60,11 @@ export function setupStorageIPC() {
   ipcMain.handle('storage:patchSong', async (_event, songId: string, updates: Partial<Song>) => {
     return await storageAdapter.patchSong(songId, updates);
   });
+  ipcMain.handle('storage:getSettings', async () => {
+    return await storageAdapter.getSettings();
+  });
+
+  ipcMain.handle('storage:saveSettings', async (_event, settings) => {
+    return await storageAdapter.saveSettings(settings);
+  });
 }

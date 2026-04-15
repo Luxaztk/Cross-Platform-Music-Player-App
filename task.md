@@ -11,7 +11,8 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [X] Thiết lập cấu trúc Monorepo (`/apps`, `/packages`).
 - [X] Tích hợp Electron + Vite + React (Desktop).
 - [X] Hệ thống IPC Bridge bảo mật giữa Process chính và Renderer.
-- [X] Đa ngôn ngữ (i18n) - Tiếng Anh & Tiếng Việt.
+- [X] Đa ngôn ngữ (i18n) toàn diện: Tiếng Anh & Tiếng Việt (100% UI Coverage).
+- [X] Phân tách kiến trúc rõ ràng (Separation of Concerns): Sử dụng Barrel files (`index.ts`) và cô lập React Hooks ra khỏi Presentation UI.
 - [X] Hệ thống thông báo (Global Notifications).
 - [X] Quản lý Bảo mật (Dynamic CSP) điều khiển bởi Main Process.
 
@@ -68,13 +69,14 @@ Mục tiêu: Đảm bảo người dùng có thể sử dụng hàng ngày ổn 
 - [X] **Lọc & Sắp xếp Playlist (Sidebar)**: Một nút duy nhất mở Pop-up quản lý tìm kiếm và sắp xếp Playlist (A-Z, Z-A, Default).
 - [X] **Lưu trữ trạng thái (Persistence)**: Tự động lưu lại Queue và History khi tắt/mở app (Đã tích hợp AsyncStorage/ElectronStore).
 - [X] **Sắp xếp mặc định (A-Z Sort)**: Danh sách bài hát luôn được sắp xếp theo bảng chữ cái từ A-Z.
-- [X] **Bộ lọc & Sắp xếp nâng cao (Filter/Sort)**: (Tùy chọn) Thêm bộ lọc theo thời lượng hoặc ngày thêm trong tương lai.
+- [X] **Tuyệt đối ổn định IPC**: Các backend adapter lưu trữ (Cài đặt, Cấu hình) đã được route an toàn ra frontend.
+- [X] **Chuẩn bị Build (Release Candidate 1)**: Đóng băng thay đổi UI, dọn dẹp import / refactor codebase sẵn sàng cho quá trình đóng gói bản build đầu tiên.`
 
 ### 🟡 GIAI ĐOẠN 2: Tối ưu & Chức năng Phụ (Mức độ ưu tiên TRUNG BÌNH)
 
 Mục tiêu: Tăng tính tiện dụng và khả năng tùy biến.
 
-- [X] **Cài đặt hệ thống (Settings)**: Lựa chọn thiết bị đầu ra âm thanh (Ngôn ngữ đã có trong Profile).
+- [X] **Cài đặt hệ thống toàn diện (Settings)**: Giao diện trực quan tích hợp đa ngôn ngữ mạnh mẽ (General, Appearance, Audio, Downloads). Backend lưu trữ trạng thái tự động và an toàn.
 - [X] **Quản lý Hàng đợi nâng cao**: Kéo thả để thay đổi thứ tự ngay trong Queue Panel.
 - [X] **Global Hotkeys**: Tích hợp hệ thống phím tắt điều hướng toàn cục (Space, Mũi tên, Shift+N/P, /, Esc). Xây dựng cơ chế Guard Clause bảo vệ các ô input/textarea khỏi tình trạng nhận nhầm phím.
 - [X] Multi-level Profile Menu (Sub-menus support)

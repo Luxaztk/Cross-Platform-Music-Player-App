@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
-import { ICON_SIZES } from '../../constants/IconSizes';
-import { useLanguage } from '../Language';
+import { ICON_SIZES } from '@constants';
+import { useLanguage } from '@hooks';
 import './DeleteConfirmationModal.scss';
 
 interface DeleteConfirmationModalProps {

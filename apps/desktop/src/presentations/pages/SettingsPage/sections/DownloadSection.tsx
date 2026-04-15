@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useSettings } from '../../../../application/hooks/useSettings';
-import { useLanguage } from '../../../components/Language';
+import { useSettings, useLanguage } from '@hooks';
 import { Download, FolderOpen, Plus, Trash2, RefreshCcw } from 'lucide-react';
 
 interface DownloadSectionProps {
@@ -86,7 +85,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                             <p>{t('settings.downloads.pathDesc')}</p>
                         </div>
                         <div className="setting-control path-selector">
-                            <input type="text" readOnly value={settings.downloads.downloadPath} />
+                            <input type="text" readOnly value={settings.downloads.downloadPath} title={t('settings.downloads.path')} />
                             <button onClick={handleSelectPath} disabled={isSaving}>
                                 <FolderOpen size={16} />
                                 <span>{t('settings.downloads.browse')}</span>
@@ -112,6 +111,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                                         autoImportPaths: settings.downloads.autoImportPaths
                                     } 
                                 })}
+                                title={t('settings.downloads.qualitySelect')}
                             >
                                 <option value="128">128kbps (Standard)</option>
                                 <option value="192">192kbps (Medium)</option>
@@ -133,12 +133,12 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                             {settings.downloads.autoImportPaths.map((path: string) => (
                                 <div key={path} className="import-path-item">
                                     <span title={path}>{path}</span>
-                                    <button onClick={() => handleRemoveImportPath(path)}>
+                                    <button onClick={() => handleRemoveImportPath(path)} title={t('settings.downloads.removeFolder')}>
                                         <Trash2 size={14} />
                                     </button>
                                 </div>
                             ))}
-                            <button className="add-path-btn" onClick={handleAddImportPath}>
+                            <button className="add-path-btn" onClick={handleAddImportPath} title={t('settings.downloads.addFolder')}>
                                 <Plus size={16} />
                                 <span>{t('settings.downloads.addFolder')}</span>
                             </button>

@@ -12,4 +12,4 @@ export const ICON_SIZES = {
   LARGE: 28,
 } as const;
 
-export type IconSize = typeof ICON_SIZES[keyof typeof ICON_SIZES];
+export type IconSize = (typeof ICON_SIZES)[keyof typeof ICON_SIZES];

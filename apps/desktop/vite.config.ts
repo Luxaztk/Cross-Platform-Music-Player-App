@@ -5,6 +5,7 @@ import { builtinModules } from 'node:module'
 
 import electron from 'vite-plugin-electron/simple'
 import path from 'node:path'
+import packageJson from './package.json'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -42,7 +43,7 @@ export default defineConfig({
                 'electron-store',
                 'axios',
                 ...builtinModules,
-                ...builtinModules.map(m => `node:${m}`),
+                ...builtinModules.map((m) => `node:${m}`),
               ],
               platform: 'node',
             },
@@ -54,4 +55,9 @@ export default defineConfig({
       },
     }),
   ],
-})
+  define: {
+    // Vite sẽ tự động thay thế chuỗi __APP_VERSION__ trong code
+    // bằng số phiên bản lấy từ package.json lúc build
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+  },
+});

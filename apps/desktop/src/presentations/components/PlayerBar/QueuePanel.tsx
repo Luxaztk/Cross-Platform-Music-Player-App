@@ -4,8 +4,7 @@ import { GripVertical, Trash2, ListMusic } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { usePlayer } from '@music/hooks';
-import { useLanguage } from '../Language';
-import { useTheme } from '../Theme';
+import { useLanguage, useTheme } from '@hooks';
 
 import type { Song } from '@music/types';
 

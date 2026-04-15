@@ -79,8 +79,15 @@ declare global {
       selectDirectory: (title?: string) => Promise<string | null>
       incrementLyricUsage: (id: string | number) => Promise<void>
       patchSong: (songId: string, updates: Partial<Song>) => Promise<Song | null>
+      // Autoupdate
+      onUpdateAvailable: (callback: (version: string) => void) => () => void
+      onUpdateProgress: (callback: (percent: number) => void) => () => void
+      onUpdateDownloaded: (callback: () => void) => () => void
+      restartApp: () => Promise<void>
     }
   }
+
+  const __APP_VERSION__: string;
 }
 
 export {}

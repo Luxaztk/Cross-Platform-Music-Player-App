@@ -1,5 +1,8 @@
-feat(ui): implement multi-level profile menu and enhance global hotkeys
+feat(release): finalize i18n readiness, harden settings IPC, and modularize hooks
 
-- Implement multi-level (nested) menu structure for the user profile dropdown.
-- Add support for sub-menus in the profile section.
-- Refine global hotkey handling to prevent conflicts with input fields.
+- Finalized multilingual support by completing all missing Vietnamese and English translation mappings across `common`, `header`, and `settings`.
+- Hardened settings IPC flow by exposing `getSettings`, `saveSettings`, and `selectDirectory` via `preload.ts`.
+- Added persistent settings storage through `electron-store` integration in `MainStorageAdapter`.
+- Extracted state management logic into dedicated hooks (`useLanguage`, `useTheme`, `useGlobalHotkeys`) to enforce clearer separation of concerns.
+- Introduced barrel exports (`index.ts`) across component and section modules to simplify import paths and improve maintainability.
+- Resolved `SettingsProvider` context rendering issues caused by missing main-process binding.

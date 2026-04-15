@@ -1,18 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { useParams } from 'react-router-dom';
-import { FileMusic, FolderPlus, Loader2, X, CheckSquare, Square, Trash, Filter, Play, PlaySquare, ListPlus, ChevronRight, Edit2, Trash2 } from 'lucide-react';
-import { useNotification } from '../../../application/hooks/useNotification';
-import { useLibraryContext } from '../../components/Library';
-import { usePlayer } from '@music/hooks';
+import {
+  FileMusic,
+  FolderPlus,
+  Loader2,
+  X,
+  CheckSquare,
+  Square,
+  Trash,
+  Filter,
+  Play,
+  PlaySquare,
+  ListPlus,
+  ChevronRight,
+  Edit2,
+  Trash2,
+} from 'lucide-react';
+import { usePlayer, useLibraryContext } from '@music/hooks';
 import { splitArtists } from '@music/utils';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
-import { ICON_SIZES } from '../../constants/IconSizes';
-import { EditModal } from '../../components/EditModal';
-import { DeleteConfirmationModal } from '../../components/DeleteConfirmationModal/DeleteConfirmationModal';
-import { SongPickerModal } from '../../components/SongPickerModal/SongPickerModal';
-import { useLanguage } from '../../components/Language';
-import { useTheme } from '../../components/Theme';
+import { ICON_SIZES } from '@constants';
+import { EditModal, DeleteConfirmationModal, SongPickerModal } from '@components';
+import { useNotification, useLanguage, useTheme } from '@hooks';
 import { SongRow } from './SongRow';
 import './PlaylistDetailPage.scss';
 
@@ -56,7 +66,11 @@ export const PlaylistDetailPage: React.FC = () => {
   const [bulkDeleteMode, setBulkDeleteMode] = React.useState<'library' | 'playlist' | null>(null);
 
   // Portal menu state: position is computed from the trigger button's bounding rect
-  const [menuPosition, setMenuPosition] = React.useState<{ top: number; right: number; placement: 'top' | 'bottom' }>({ top: 0, right: 0, placement: 'bottom' });
+  const [menuPosition, setMenuPosition] = React.useState<{ top: number; right: number; placement: 'top' | 'bottom' }>({
+    top: 0,
+    right: 0,
+    placement: 'bottom',
+  });
   const menuRef = React.useRef<HTMLDivElement>(null);
   const activeMenuIdRef = React.useRef<string | null>(null);
 
@@ -79,7 +93,7 @@ export const PlaylistDetailPage: React.FC = () => {
     libraryFilter,
     setLibraryFilter,
     libraryVersion,
-    songs: allSongs
+    songs: allSongs,
   } = useLibraryContext();
 
   const { showNotification } = useNotification();
@@ -96,15 +110,17 @@ export const PlaylistDetailPage: React.FC = () => {
       setLocalSongs([]);
       setSelectedIds(new Set());
 
-      handleGetPlaylistDetail(id).then((data: PlaylistDetail | null) => {
-        if (data) {
-          setPlaylist(data);
-          setLocalSongs(data.songs || []);
-        }
-        setIsLoading(false);
-      }).catch(() => {
-        setIsLoading(false);
-      });
+      handleGetPlaylistDetail(id)
+        .then((data: PlaylistDetail | null) => {
+          if (data) {
+            setPlaylist(data);
+            setLocalSongs(data.songs || []);
+          }
+          setIsLoading(false);
+        })
+        .catch(() => {
+          setIsLoading(false);
+        });
     }
 
     return () => {
@@ -184,13 +200,13 @@ export const PlaylistDetailPage: React.FC = () => {
     if (editingSong) {
       const result = await handleUpdateSong(updated as Song);
       if (result) {
-        setLocalSongs(prev => prev.map(s => s.id === result.id ? result : s));
+        setLocalSongs((prev) => prev.map((s) => (s.id === result.id ? result : s)));
         showNotification('success', t('playlist.updateSongSuccess'));
       }
     } else if (playlist) {
       const result = await handleUpdatePlaylist(updated as Playlist);
       if (result) {
-        setPlaylist(prev => prev ? { ...prev, ...result } : null);
+        setPlaylist((prev) => (prev ? { ...prev, ...result } : null));
         showNotification('success', t('playlist.updateSuccess'));
       }
     }
@@ -208,10 +224,10 @@ export const PlaylistDetailPage: React.FC = () => {
 
     const success = await handleDeleteSong(deletingSong.id);
     if (success) {
-      setLocalSongs(prev => prev.filter(s => s.id !== deletingSong.id));
+      setLocalSongs((prev) => prev.filter((s) => s.id !== deletingSong.id));
       showNotification('success', t('playlist.deleteSongSuccess'));
       setDeletingSong(null);
-      setSelectedIds(prev => {
+      setSelectedIds((prev) => {
         const next = new Set(prev);
         next.delete(deletingSong.id);
         return next;
@@ -232,7 +248,7 @@ export const PlaylistDetailPage: React.FC = () => {
     }
 
     if (success) {
-      setLocalSongs(prev => prev.filter(s => !selectedIds.has(s.id)));
+      setLocalSongs((prev) => prev.filter((s) => !selectedIds.has(s.id)));
       showNotification('success', t('playlist.bulkDeleteSuccess', { count: selectedIds.size }));
       setSelectedIds(new Set());
     }
@@ -247,7 +263,7 @@ export const PlaylistDetailPage: React.FC = () => {
     if (selectedIds.size === filteredSongs.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredSongs.map(s => s.id)));
+      setSelectedIds(new Set(filteredSongs.map((s) => s.id)));
     }
   };
 
@@ -255,7 +271,7 @@ export const PlaylistDetailPage: React.FC = () => {
     if (e) {
       e.stopPropagation();
     }
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(songId)) {
         next.delete(songId);
@@ -276,38 +292,40 @@ export const PlaylistDetailPage: React.FC = () => {
     const index = currentValues.indexOf(value);
 
     if (index > -1) {
-      const next = currentValues.filter(v => v !== value);
+      const next = currentValues.filter((v) => v !== value);
       setLibraryFilter({
         type: next.length === 0 ? 'none' : type,
-        values: next
+        values: next,
       });
     } else {
       setLibraryFilter({
         type,
-        values: [...currentValues, value]
+        values: [...currentValues, value],
       });
     }
   };
 
   const filteredSongs = React.useMemo(() => {
-    const sorted = [...(libraryFilter.type !== 'none' && libraryFilter.values.length > 0 ? localSongs.filter(song => {
-      if (libraryFilter.type === 'artist') {
-        const queries = libraryFilter.values
-          .flatMap(v => splitArtists(v))
-          .map(v => v.toLowerCase().trim());
+    const sorted = [
+      ...(libraryFilter.type !== 'none' && libraryFilter.values.length > 0
+        ? localSongs.filter((song) => {
+            if (libraryFilter.type === 'artist') {
+              const queries = libraryFilter.values.flatMap((v) => splitArtists(v)).map((v) => v.toLowerCase().trim());
 
-        const allArtists = (song.artists || [song.artist])
-          .flatMap(a => splitArtists(a))
-          .map(a => a.toLowerCase().trim());
+              const allArtists = (song.artists || [song.artist])
+                .flatMap((a) => splitArtists(a))
+                .map((a) => a.toLowerCase().trim());
 
-        return queries.every(q => allArtists.includes(q));
-      }
-      if (libraryFilter.type === 'album') {
-        const queries = libraryFilter.values.map(v => v.toLowerCase().trim());
-        return queries.includes(song.album?.toLowerCase().trim() || '');
-      }
-      return true;
-    }) : localSongs)];
+              return queries.every((q) => allArtists.includes(q));
+            }
+            if (libraryFilter.type === 'album') {
+              const queries = libraryFilter.values.map((v) => v.toLowerCase().trim());
+              return queries.includes(song.album?.toLowerCase().trim() || '');
+            }
+            return true;
+          })
+        : localSongs),
+    ];
 
     return sorted.sort((a, b) => a.title.localeCompare(b.title));
   }, [localSongs, libraryFilter]);
@@ -351,7 +369,7 @@ export const PlaylistDetailPage: React.FC = () => {
   };
 
   const onAddSongsToPlaylist = async (playlistId: string, songIds: string[]) => {
-    const targetPlaylist = playlists.find(p => p.id === playlistId);
+    const targetPlaylist = playlists.find((p) => p.id === playlistId);
     if (!targetPlaylist) return;
 
     const success = await handleAddSongsToPlaylist(playlistId, songIds);
@@ -370,7 +388,7 @@ export const PlaylistDetailPage: React.FC = () => {
   };
 
   // Get active song for the portal menu
-  const activeSong = activeMenuId ? filteredSongs.find(s => s.id === activeMenuId) : null;
+  const activeSong = activeMenuId ? filteredSongs.find((s) => s.id === activeMenuId) : null;
 
   // Virtualization calculations
   const viewportHeight = window.innerHeight;
@@ -391,30 +409,36 @@ export const PlaylistDetailPage: React.FC = () => {
       right: menuPosition.right,
       ...(menuPosition.placement === 'bottom'
         ? { top: menuPosition.top }
-        : { bottom: window.innerHeight - menuPosition.top }
-      ),
+        : { bottom: window.innerHeight - menuPosition.top }),
     };
 
     return ReactDOM.createPortal(
-      <div
-        className="song-row-portal-menu"
-        style={menuStyle}
-        ref={menuRef}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <MenuAction icon={<Play size={16} />} label={t('playlist.playNow')} onClick={() => {
-          const idx = filteredSongs.findIndex(s => s.id === activeSong.id);
-          if (idx !== -1) playList(filteredSongs, idx);
-          setActiveMenuId(null);
-        }} />
-        <MenuAction icon={<PlaySquare size={16} />} label={t('playlist.playNext')} onClick={() => {
-          playNext(activeSong);
-          setActiveMenuId(null);
-        }} />
-        <MenuAction icon={<ListPlus size={16} />} label={t('playlist.addToQueue')} onClick={() => {
-          addToQueue(activeSong);
-          setActiveMenuId(null);
-        }} />
+      <div className="song-row-portal-menu" style={menuStyle} ref={menuRef} onClick={(e) => e.stopPropagation()}>
+        <MenuAction
+          icon={<Play size={16} />}
+          label={t('playlist.playNow')}
+          onClick={() => {
+            const idx = filteredSongs.findIndex((s) => s.id === activeSong.id);
+            if (idx !== -1) playList(filteredSongs, idx);
+            setActiveMenuId(null);
+          }}
+        />
+        <MenuAction
+          icon={<PlaySquare size={16} />}
+          label={t('playlist.playNext')}
+          onClick={() => {
+            playNext(activeSong);
+            setActiveMenuId(null);
+          }}
+        />
+        <MenuAction
+          icon={<ListPlus size={16} />}
+          label={t('playlist.addToQueue')}
+          onClick={() => {
+            addToQueue(activeSong);
+            setActiveMenuId(null);
+          }}
+        />
 
         <div className="menu-divider"></div>
 
@@ -431,14 +455,12 @@ export const PlaylistDetailPage: React.FC = () => {
 
           {activeSubMenuId === activeSong.id && (
             <div className="nested-menu">
-              {playlists.filter(p => p.id !== '0' && p.id !== id).length === 0 ? (
-                <div className="menu-item disabled">
-                  {t('sidebar.noPlaylists')}
-                </div>
+              {playlists.filter((p) => p.id !== '0' && p.id !== id).length === 0 ? (
+                <div className="menu-item disabled">{t('sidebar.noPlaylists')}</div>
               ) : (
                 playlists
-                  .filter(p => p.id !== '0' && p.id !== id)
-                  .map(p => (
+                  .filter((p) => p.id !== '0' && p.id !== id)
+                  .map((p) => (
                     <button
                       key={p.id}
                       className="menu-item"
@@ -456,14 +478,23 @@ export const PlaylistDetailPage: React.FC = () => {
         </div>
 
         <div className="menu-divider"></div>
-        <MenuAction icon={<Edit2 size={16} />} label={t('common.edit')} onClick={() => {
-          setEditingSong(activeSong);
-          setIsEditModalOpen(true);
-          setActiveMenuId(null);
-        }} />
-        <MenuAction icon={<Trash2 size={16} />} label={t('common.delete')} onClick={() => onDeleteSong(activeSong)} className="delete" />
+        <MenuAction
+          icon={<Edit2 size={16} />}
+          label={t('common.edit')}
+          onClick={() => {
+            setEditingSong(activeSong);
+            setIsEditModalOpen(true);
+            setActiveMenuId(null);
+          }}
+        />
+        <MenuAction
+          icon={<Trash2 size={16} />}
+          label={t('common.delete')}
+          onClick={() => onDeleteSong(activeSong)}
+          className="delete"
+        />
       </div>,
-      document.body
+      document.body,
     );
   };
 
@@ -491,16 +522,14 @@ export const PlaylistDetailPage: React.FC = () => {
             </>
           ) : (
             <>
-              <div className='playlist-infor'>
+              <div className="playlist-infor">
                 <h1
                   className={`playlist-name ${!playlist?.description ? 'large' : ''}`}
                   onClick={() => !isLibrary && setIsEditModalOpen(true)}
                 >
                   {playlist?.name || (isLibrary ? t('playlist.libraryTitle') : '')}
                 </h1>
-                {playlist?.description && (
-                  <p className="playlist-description">{playlist.description}</p>
-                )}
+                {playlist?.description && <p className="playlist-description">{playlist.description}</p>}
               </div>
               <div className="playlist-metadata">
                 <div>
@@ -509,7 +538,10 @@ export const PlaylistDetailPage: React.FC = () => {
                     <>
                       <span className="metadata-separator">•</span>
                       <span className="metadata-item">
-                        {libraryFilter.type !== 'none' && libraryFilter.values.length > 0 ? `${filteredSongs.length} / ${localSongs.length}` : localSongs.length} {t('playlist.songs')}
+                        {libraryFilter.type !== 'none' && libraryFilter.values.length > 0
+                          ? `${filteredSongs.length} / ${localSongs.length}`
+                          : localSongs.length}{' '}
+                        {t('playlist.songs')}
                       </span>
                       <span className="metadata-separator">•</span>
                       <span className="metadata-item">{formatTotalDuration(totalDuration, t)}</span>
@@ -539,7 +571,9 @@ export const PlaylistDetailPage: React.FC = () => {
                       )}
                     </div>
                   ) : (
-                    <button onClick={onAddFromSystem} className="btn-primary-action">+ {t('playlist.addFromLibrary')}</button>
+                    <button onClick={onAddFromSystem} className="btn-primary-action">
+                      + {t('playlist.addFromLibrary')}
+                    </button>
                   )}
                 </div>
               </div>
@@ -563,10 +597,10 @@ export const PlaylistDetailPage: React.FC = () => {
                   <button
                     className="remove-tag-btn"
                     onClick={() => {
-                      const next = libraryFilter.values.filter(v => v !== val);
+                      const next = libraryFilter.values.filter((v) => v !== val);
                       setLibraryFilter({
                         type: next.length === 0 ? 'none' : libraryFilter.type,
-                        values: next
+                        values: next,
                       });
                     }}
                     title={t('common.clear')}
@@ -638,9 +672,7 @@ export const PlaylistDetailPage: React.FC = () => {
                       // Compute position for the Portal menu from the trigger button
                       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                       const mainArea = document.querySelector('.main-area');
-                      const boundary = mainArea
-                        ? mainArea.getBoundingClientRect().bottom
-                        : window.innerHeight - 90;
+                      const boundary = mainArea ? mainArea.getBoundingClientRect().bottom : window.innerHeight - 90;
                       const spaceBelow = boundary - rect.bottom;
                       const placement: 'top' | 'bottom' = spaceBelow < 250 ? 'top' : 'bottom';
 
@@ -706,12 +738,14 @@ export const PlaylistDetailPage: React.FC = () => {
           setBulkDeleteMode(null);
         }}
         onConfirm={deletingSong ? confirmDeleteSong : confirmBulkDelete}
-        title={bulkDeleteMode ? (t('modal.bulkDeleteTitle') || 'Xóa hàng loạt') : t('modal.deleteSongTitle')}
+        title={bulkDeleteMode ? t('modal.bulkDeleteTitle') || 'Xóa hàng loạt' : t('modal.deleteSongTitle')}
         message={
           bulkDeleteMode === 'library'
-            ? (t('modal.bulkDeleteLibraryMessage', { count: selectedIds.size }) || `Bạn có chắc muốn xóa vĩnh viễn ${selectedIds.size} bài hát đã chọn khỏi thư viện?`)
+            ? t('modal.bulkDeleteLibraryMessage', { count: selectedIds.size }) ||
+              `Bạn có chắc muốn xóa vĩnh viễn ${selectedIds.size} bài hát đã chọn khỏi thư viện?`
             : bulkDeleteMode === 'playlist'
-              ? (t('modal.bulkRemovePlaylistMessage', { count: selectedIds.size }) || `Bạn có chắc muốn gỡ ${selectedIds.size} bài hát khỏi playlist này?`)
+              ? t('modal.bulkRemovePlaylistMessage', { count: selectedIds.size }) ||
+                `Bạn có chắc muốn gỡ ${selectedIds.size} bài hát khỏi playlist này?`
               : t('modal.deleteSongQuestion')
         }
         itemName={deletingSong?.title}
@@ -722,7 +756,7 @@ export const PlaylistDetailPage: React.FC = () => {
         isOpen={isSongPickerOpen}
         onClose={() => setIsSongPickerOpen(false)}
         allSongs={allSongs}
-        existingSongIds={localSongs.map(s => s.id)}
+        existingSongIds={localSongs.map((s) => s.id)}
         onAdd={(songIds) => id && onAddSongsToPlaylist(id, songIds)}
       />
     </div>

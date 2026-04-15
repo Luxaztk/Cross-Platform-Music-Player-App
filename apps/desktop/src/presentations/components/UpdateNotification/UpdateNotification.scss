@@ -1,0 +1,81 @@
+.update-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  background-color: #1e293b; /* slate-800 */
+  color: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #334155; /* slate-700 */
+  z-index: 9999; /* Đảm bảo luôn nổi lên trên cùng */
+
+  h3.title {
+    font-weight: bold;
+    font-size: 1.125rem;
+    margin: 0 0 8px 0;
+  }
+
+  p.version {
+    font-size: 0.875rem;
+    color: #cbd5e1; /* slate-300 */
+    margin: 0 0 12px 0;
+  }
+
+  .progress-track {
+    width: 100%;
+    background-color: #475569; /* slate-600 */
+    border-radius: 9999px;
+    height: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+
+    .progress-fill {
+      background-color: #3b82f6; /* blue-500 */
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.3s ease-in-out;
+    }
+  }
+
+  .actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+
+    .status-text {
+      font-size: 0.75rem;
+      color: #94a3b8; /* slate-400 */
+    }
+
+    button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      color: white;
+
+      &.btn-secondary {
+        background-color: #334155; /* slate-700 */
+        
+        &:hover {
+          background-color: #475569; /* slate-600 */
+        }
+      }
+
+      &.btn-primary {
+        background-color: #2563eb; /* blue-600 */
+        font-weight: 600;
+
+        &:hover {
+          background-color: #3b82f6; /* blue-500 */
+        }
+      }
+    }
+  }
+}

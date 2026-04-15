@@ -1,34 +1,43 @@
-import React, { useEffect, useRef } from 'react';
-import { CornerDownLeft, ArrowUp, ArrowDown, Play, PlaySquare, ListPlus, MoreVertical, X, Clock, Trash2 } from 'lucide-react';
-import type { Song, RecentSearch } from '@music/types';
-import { useLanguage } from '../Language';
-import { useTheme } from '../Theme';
-import type { SearchResults } from '../../../application/hooks';
-import './SearchOverlay.scss';
+import React, { useEffect, useRef } from 'react'
+import {
+  CornerDownLeft,
+  ArrowUp,
+  ArrowDown,
+  Play,
+  PlaySquare,
+  ListPlus,
+  MoreVertical,
+  X,
+  Clock,
+  Trash2,
+} from 'lucide-react'
+import type { Song, RecentSearch } from '@music/types'
+import { type SearchResults, useLanguage, useTheme } from '@hooks'
+import './SearchOverlay.scss'
 
-export type SearchResultItem = 
+export type SearchResultItem =
   | { type: 'song'; item: Song }
   | { type: 'artist'; item: SearchResults['artists'][number] }
-  | { type: 'album'; item: SearchResults['albums'][number] };
+  | { type: 'album'; item: SearchResults['albums'][number] }
 
 interface SearchOverlayProps {
-  query: string;
-  results: SearchResults;
-  recentSearches: RecentSearch[];
-  selectedIndex: number;
-  onSelect: (item: SearchResultItem) => void;
-  onSelectRecent: (recent: RecentSearch) => void;
-  onRemoveRecent: (timestamp: number) => void;
-  onClearRecent: () => void;
-  onPlayNext: (song: Song) => void;
-  onAddToQueue: (song: Song) => void;
-  onClose: () => void;
+  query: string
+  results: SearchResults
+  recentSearches: RecentSearch[]
+  selectedIndex: number
+  onSelect: (item: SearchResultItem) => void
+  onSelectRecent: (recent: RecentSearch) => void
+  onRemoveRecent: (timestamp: number) => void
+  onClearRecent: () => void
+  onPlayNext: (song: Song) => void
+  onAddToQueue: (song: Song) => void
+  onClose: () => void
 }
 
 const ICON_SIZES = {
   SMALL: 16,
-  MEDIUM: 20
-};
+  MEDIUM: 20,
+}
 
 export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   query,
@@ -42,42 +51,42 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   onPlayNext,
   onAddToQueue,
 }) => {
-  const { t } = useLanguage();
-  const { appIcon } = useTheme();
-  const contentRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage()
+  const { appIcon } = useTheme()
+  const contentRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
-  const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
-  const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom');
+  const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null)
+  const [menuPlacement, setMenuPlacement] = React.useState<'top' | 'bottom'>('bottom')
 
   // Auto-scroll logic when selectedIndex changes
   useEffect(() => {
     if (contentRef.current) {
-      const activeItem = contentRef.current.querySelector('.search-item.active');
+      const activeItem = contentRef.current.querySelector('.search-item.active')
       if (activeItem) {
         activeItem.scrollIntoView({
           behavior: 'smooth',
           block: 'nearest',
-        });
+        })
       }
     }
-  }, [selectedIndex]);
+  }, [selectedIndex])
 
   // Click out to close menu
   useEffect(() => {
     const handleClickOut = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setActiveMenuId(null);
+        setActiveMenuId(null)
       }
-    };
-    if (activeMenuId) {
-      window.addEventListener('mousedown', handleClickOut);
     }
-    return () => window.removeEventListener('mousedown', handleClickOut);
-  }, [activeMenuId]);
+    if (activeMenuId) {
+      window.addEventListener('mousedown', handleClickOut)
+    }
+    return () => window.removeEventListener('mousedown', handleClickOut)
+  }, [activeMenuId])
 
   if (!query) {
-    if (recentSearches.length === 0) return null;
+    if (recentSearches.length === 0) return null
 
     return (
       <div className="search-overlay recent-view">
@@ -93,8 +102,8 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
         <div className="search-overlay-content">
           <div className="recent-list">
             {recentSearches.map((item) => (
-              <div 
-                key={item.timestamp} 
+              <div
+                key={item.timestamp}
                 className="recent-item"
                 onClick={() => onSelectRecent(item)}
               >
@@ -107,17 +116,21 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                     </div>
                   )}
                   <div className="item-info">
-                    <span className="item-name">{item.type === 'query' ? item.text : item.name}</span>
+                    <span className="item-name">
+                      {item.type === 'query' ? item.text : item.name}
+                    </span>
                     {item.type === 'entity' && (
-                      <span className="item-type">{item.entityType === 'artist' ? t('search.artists') : t('search.albums')}</span>
+                      <span className="item-type">
+                        {item.entityType === 'artist' ? t('search.artists') : t('search.albums')}
+                      </span>
                     )}
                   </div>
                 </div>
-                <button 
-                  className="remove-btn" 
+                <button
+                  className="remove-btn"
                   onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    onRemoveRecent(item.timestamp);
+                    e.stopPropagation()
+                    onRemoveRecent(item.timestamp)
                   }}
                   title={t('common.remove')}
                 >
@@ -128,21 +141,17 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // Flatten results for unified indexing (Must match Header.tsx logic)
-  const flattenedSongs = results.songs.map(s => ({ type: 'song', item: s }));
-  const flattenedArtists = results.artists.map(a => ({ type: 'artist', item: a }));
-  const flattenedAlbums = results.albums.map(al => ({ type: 'album', item: al }));
-  
-  const flatResults = [
-    ...flattenedSongs,
-    ...flattenedArtists,
-    ...flattenedAlbums,
-  ];
+  const flattenedSongs = results.songs.map((s) => ({ type: 'song', item: s }))
+  const flattenedArtists = results.artists.map((a) => ({ type: 'artist', item: a }))
+  const flattenedAlbums = results.albums.map((al) => ({ type: 'album', item: al }))
 
-  const hasResults = flatResults.length > 0;
+  const flatResults = [...flattenedSongs, ...flattenedArtists, ...flattenedAlbums]
+
+  const hasResults = flatResults.length > 0
 
   return (
     <div className="search-overlay">
@@ -172,16 +181,16 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
               <div className="results-section">
                 <h4 className="section-title">{t('search.songs')}</h4>
                 {results.songs.map((song, idx) => {
-                  const globalIdx = idx;
+                  const globalIdx = idx
                   return (
-                    <div 
+                    <div
                       key={`song-${song.id}`}
                       className={`search-item song ${selectedIndex === globalIdx ? 'active' : ''}`}
                       onClick={() => onSelect({ type: 'song', item: song })}
                     >
                       <div className="song-info">
                         {song.coverArt ? (
-                           <img src={song.coverArt} alt="" className="song-thumb" />
+                          <img src={song.coverArt} alt="" className="song-thumb" />
                         ) : (
                           <div className="song-thumb-placeholder">
                             <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
@@ -189,54 +198,68 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         )}
                         <div className="song-meta">
                           <span className="song-title">{song.title}</span>
-                          <span className="song-artist">{t('search.songs')} • {song.artist}</span>
+                          <span className="song-artist">
+                            {t('search.songs')} • {song.artist}
+                          </span>
                         </div>
                       </div>
-                      
-                      
+
                       <div className="item-actions">
-                        <button 
+                        <button
                           className={`more-btn ${activeMenuId === song.id ? 'active' : ''}`}
                           title={t('common.more') || 'More options'}
                           onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
+                            e.stopPropagation()
                             if (activeMenuId === song.id) {
-                              setActiveMenuId(null);
+                              setActiveMenuId(null)
                             } else {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const containerRect = contentRef.current?.getBoundingClientRect();
-                              const spaceBelow = containerRect ? containerRect.bottom - rect.bottom : window.innerHeight - rect.bottom;
-                              const menuHeight = 180;
-                              setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
-                              setActiveMenuId(song.id);
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const containerRect = contentRef.current?.getBoundingClientRect()
+                              const spaceBelow = containerRect
+                                ? containerRect.bottom - rect.bottom
+                                : window.innerHeight - rect.bottom
+                              const menuHeight = 180
+                              setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom')
+                              setActiveMenuId(song.id)
                             }
                           }}
                         >
                           <MoreVertical size={ICON_SIZES.SMALL} />
                         </button>
-                        
+
                         {activeMenuId === song.id && (
-                          <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} 
+                          <div
+                            className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`}
                             ref={menuRef}
-                            onClick={(e) => e.stopPropagation()}>
-                            <button className="menu-item" onClick={() => {
-                              onSelect({ type: 'song', item: song });
-                              setActiveMenuId(null);
-                            }}>
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              className="menu-item"
+                              onClick={() => {
+                                onSelect({ type: 'song', item: song })
+                                setActiveMenuId(null)
+                              }}
+                            >
                               <Play size={16} />
                               {t('playlist.playNow')}
                             </button>
-                            <button className="menu-item" onClick={() => {
-                              onPlayNext(song);
-                              setActiveMenuId(null);
-                            }}>
+                            <button
+                              className="menu-item"
+                              onClick={() => {
+                                onPlayNext(song)
+                                setActiveMenuId(null)
+                              }}
+                            >
                               <PlaySquare size={16} />
                               {t('playlist.playNext')}
                             </button>
-                            <button className="menu-item" onClick={() => {
-                              onAddToQueue(song);
-                              setActiveMenuId(null);
-                            }}>
+                            <button
+                              className="menu-item"
+                              onClick={() => {
+                                onAddToQueue(song)
+                                setActiveMenuId(null)
+                              }}
+                            >
                               <ListPlus size={16} />
                               {t('playlist.addToQueue')}
                             </button>
@@ -244,7 +267,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         )}
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -254,9 +277,9 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
               <div className="results-section">
                 <h4 className="section-title">{t('search.artists')}</h4>
                 {results.artists.map((artist, idx) => {
-                  const globalIdx = results.songs.length + idx;
+                  const globalIdx = results.songs.length + idx
                   return (
-                    <div 
+                    <div
                       key={`artist-${artist.id}`}
                       className={`search-item artist ${selectedIndex === globalIdx ? 'active' : ''}`}
                       onClick={() => onSelect({ type: 'artist', item: artist })}
@@ -275,34 +298,41 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         </div>
                       </div>
                       <div className="item-actions">
-                        <button 
+                        <button
                           className={`more-btn ${activeMenuId === artist.id ? 'active' : ''}`}
                           title={t('common.more') || 'More options'}
                           onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
+                            e.stopPropagation()
                             if (activeMenuId === artist.id) {
-                              setActiveMenuId(null);
+                              setActiveMenuId(null)
                             } else {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const containerRect = contentRef.current?.getBoundingClientRect();
-                              const spaceBelow = containerRect ? containerRect.bottom - rect.bottom : window.innerHeight - rect.bottom;
-                              const menuHeight = 120;
-                              setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
-                              setActiveMenuId(artist.id);
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const containerRect = contentRef.current?.getBoundingClientRect()
+                              const spaceBelow = containerRect
+                                ? containerRect.bottom - rect.bottom
+                                : window.innerHeight - rect.bottom
+                              const menuHeight = 120
+                              setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom')
+                              setActiveMenuId(artist.id)
                             }
                           }}
                         >
                           <MoreVertical size={ICON_SIZES.SMALL} />
                         </button>
-                        
+
                         {activeMenuId === artist.id && (
-                          <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} 
+                          <div
+                            className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`}
                             ref={menuRef}
-                            onClick={(e) => e.stopPropagation()}>
-                            <button className="menu-item" onClick={() => {
-                              onSelect({ type: 'artist', item: artist });
-                              setActiveMenuId(null);
-                            }}>
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              className="menu-item"
+                              onClick={() => {
+                                onSelect({ type: 'artist', item: artist })
+                                setActiveMenuId(null)
+                              }}
+                            >
                               <Play size={16} />
                               {t('playlist.playNow')}
                             </button>
@@ -310,7 +340,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         )}
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -320,16 +350,16 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
               <div className="results-section">
                 <h4 className="section-title">{t('search.albums')}</h4>
                 {results.albums.map((album, idx) => {
-                  const globalIdx = results.songs.length + results.artists.length + idx;
+                  const globalIdx = results.songs.length + results.artists.length + idx
                   return (
-                    <div 
+                    <div
                       key={`album-${album.id}`}
                       className={`search-item album ${selectedIndex === globalIdx ? 'active' : ''}`}
                       onClick={() => onSelect({ type: 'album', item: album })}
                     >
                       <div className="song-info">
                         {album.coverArt ? (
-                           <img src={album.coverArt} alt="" className="song-thumb" />
+                          <img src={album.coverArt} alt="" className="song-thumb" />
                         ) : (
                           <div className="song-thumb-placeholder">
                             <img src={appIcon} alt="" className="placeholder-brand-icon-mini" />
@@ -337,38 +367,47 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         )}
                         <div className="song-meta">
                           <span className="song-title">{album.name}</span>
-                          <span className="song-artist">{t('search.albums')} • {album.artist}</span>
+                          <span className="song-artist">
+                            {t('search.albums')} • {album.artist}
+                          </span>
                         </div>
                       </div>
                       <div className="item-actions">
-                        <button 
+                        <button
                           className={`more-btn ${activeMenuId === album.id ? 'active' : ''}`}
                           title={t('common.more') || 'More options'}
                           onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
+                            e.stopPropagation()
                             if (activeMenuId === album.id) {
-                              setActiveMenuId(null);
+                              setActiveMenuId(null)
                             } else {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const containerRect = contentRef.current?.getBoundingClientRect();
-                              const spaceBelow = containerRect ? containerRect.bottom - rect.bottom : window.innerHeight - rect.bottom;
-                              const menuHeight = 120;
-                              setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom');
-                              setActiveMenuId(album.id);
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const containerRect = contentRef.current?.getBoundingClientRect()
+                              const spaceBelow = containerRect
+                                ? containerRect.bottom - rect.bottom
+                                : window.innerHeight - rect.bottom
+                              const menuHeight = 120
+                              setMenuPlacement(spaceBelow < menuHeight ? 'top' : 'bottom')
+                              setActiveMenuId(album.id)
                             }
                           }}
                         >
                           <MoreVertical size={ICON_SIZES.SMALL} />
                         </button>
-                        
+
                         {activeMenuId === album.id && (
-                          <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} 
+                          <div
+                            className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`}
                             ref={menuRef}
-                            onClick={(e) => e.stopPropagation()}>
-                            <button className="menu-item" onClick={() => {
-                              onSelect({ type: 'album', item: album });
-                              setActiveMenuId(null);
-                            }}>
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              className="menu-item"
+                              onClick={() => {
+                                onSelect({ type: 'album', item: album })
+                                setActiveMenuId(null)
+                              }}
+                            >
                               <Play size={16} />
                               {t('playlist.playNow')}
                             </button>
@@ -377,7 +416,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         )}
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -385,5 +424,5 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}

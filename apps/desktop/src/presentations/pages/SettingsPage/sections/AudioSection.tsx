@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSettings } from '../../../../application/hooks/useSettings';
-import { useLanguage } from '../../../components/Language';
+import { useSettings, useLanguage } from '@hooks';
 import { useAudioDevices } from '@music/hooks';
 import { Volume2, Play } from 'lucide-react';
 
@@ -96,6 +95,7 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
                             <select 
                                 value={currentDeviceId || settings.audio.deviceId} 
                                 onChange={handleDeviceChange}
+                                title={t('settings.audio.deviceSelect')}
                             >
                                 {devices.map((device) => (
                                     <option key={device.deviceId} value={device.deviceId}>

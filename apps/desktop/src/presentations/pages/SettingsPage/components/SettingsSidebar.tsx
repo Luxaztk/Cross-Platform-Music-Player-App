@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLanguage } from '../../../components/Language';
+import { useLanguage } from '@hooks';
 import { Settings, Palette, Download, Volume2, Info } from 'lucide-react';
 
 interface SettingsSidebarProps {
