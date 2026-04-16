@@ -98,9 +98,12 @@ function createWindow() {
 // --- HÀM XỬ LÝ AUTO UPDATE (CƠ CHẾ BROADCAST) ---
 function setupAutoUpdate() {
   autoUpdater.logger = log
-  
-  if (!app.isPackaged) {
-    log.info('[Updater] Đang chạy ở chế độ Development - Bỏ qua kiểm tra cập nhật.')
+
+  // Kiểm tra xem app có đang chạy trong thư mục "win-unpacked" của lệnh build:fast không
+  const isUnpackedTest = app.getAppPath().includes('unpacked');
+
+  if (!app.isPackaged || isUnpackedTest) {
+    log.info('[Updater] Chạy ở Development hoặc Test Local - Bỏ qua kiểm tra cập nhật.');
     return
   }
 
@@ -275,7 +278,7 @@ app.whenReady().then(() => {
   setupStorageIPC()
   setupDownloaderIPC()
   createWindow()
-  
+
   // Khởi chạy cơ chế tự động cập nhật
   setupAutoUpdate()
 })

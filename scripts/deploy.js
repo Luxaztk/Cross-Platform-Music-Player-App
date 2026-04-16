@@ -33,12 +33,29 @@ try {
   execSync('git add .');
   execSync(`git commit -m "release: v${newVersion} - ${commitMessage}"`);
 
-  // 4. Chạy Build (Dùng build:win để đẩy lên GitHub hoặc build:local để test máy)
+  // 4. Dọn dẹp môi trường trước khi build
+  console.log('🧹 Đang dọn dẹp tiến trình và file cũ (Chống lỗi rcedit)...');
+  try {
+    // Ép tắt app nếu đang chạy ngầm
+    execSync('taskkill /F /IM Melovista.exe /T', { stdio: 'ignore' });
+  } catch (e) { /* Bỏ qua nếu app không chạy */ }
+
+  try {
+    // Xóa sạch thư mục release cũ
+    const releasePath = path.resolve('apps/desktop/release');
+    if (fs.existsSync(releasePath)) {
+      fs.rmSync(releasePath, { recursive: true, force: true });
+    }
+  } catch (e) {
+    console.error('⚠️ Không thể xóa thư mục release, có thể file đang bị mở ở đâu đó.');
+  }
+
+  // 5. Chạy Build (Dùng build:win để đẩy lên GitHub hoặc build:local để test máy)
   console.log('🏗️ Đang bắt đầu build bản Release...');
   // Thay 'build:win' bằng 'build:local' nếu bạn muốn tự tay upload GitHub sau
   execSync('npm run build:win --workspace=apps/desktop', { stdio: 'inherit' });
 
-  // 5. Dọn dẹp
+  // 6. Dọn dẹp
   fs.writeFileSync(commitMsgPath, ''); // Xóa trống file commit sau khi xong
   console.log(`✅ Đã xong! Bản v${newVersion} đã sẵn sàng.`);
 } catch (error) {

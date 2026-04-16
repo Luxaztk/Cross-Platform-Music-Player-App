@@ -1,1 +1,1 @@
-hotfix: inject log for yt-dlp
+hotfix: log yt-dlp
