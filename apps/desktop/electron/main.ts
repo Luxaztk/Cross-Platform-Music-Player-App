@@ -9,11 +9,11 @@ import { fileURLToPath } from 'node:url'
 
 // --- CONFIG THE PHYSICAL LOGGER (electron-log) ---
 if (app) {
-  const logFolder = path.join(app.getPath('appData'), 'MeloVista', 'logs');
+  const logFolder = path.join(app.getPath('userData'), 'logs');
   log.transports.file.resolvePathFn = () => path.join(logFolder, 'main.log');
 
   // 1. Enforce File Logs globally (even in production)
-  log.transports.file.level = false;
+  log.transports.file.level = 'info';
 
   // 2. Enforce File Size Limit (Safety Guard: 5MB)
   log.transports.file.maxSize = 5 * 1024 * 1024;
@@ -95,32 +95,49 @@ function createWindow() {
   }
 }
 
-// --- HÀM XỬ LÝ AUTO UPDATE MỚI CÓ TRUYỀN WINDOW ---
-function setupAutoUpdate(mainWindow: BrowserWindow) {
+// --- HÀM XỬ LÝ AUTO UPDATE (CƠ CHẾ BROADCAST) ---
+function setupAutoUpdate() {
+  autoUpdater.logger = log
+  
   if (!app.isPackaged) {
-    console.log('Skipping auto-update check in development mode.')
+    log.info('[Updater] Đang chạy ở chế độ Development - Bỏ qua kiểm tra cập nhật.')
     return
   }
 
+  log.info('[Updater] Bắt đầu kiểm tra bản cập nhật mới...')
   autoUpdater.checkForUpdatesAndNotify()
 
-  // Báo cho React biết có bản mới
+  const broadcast = (channel: string, data?: any) => {
+    BrowserWindow.getAllWindows().forEach((w) => {
+      w.webContents.send(channel, data)
+    })
+  }
+
+  autoUpdater.on('checking-for-update', () => {
+    log.info('[Updater] Đang kiểm tra cập nhật...')
+  })
+
   autoUpdater.on('update-available', (info) => {
-    mainWindow.webContents.send('update-available', info.version)
+    log.info(`[Updater] Đã tìm thấy bản cập nhật mới: ${info.version}`)
+    broadcast('update-available', info.version)
   })
 
-  // Gửi phần trăm tải xuống để làm thanh Progress
+  autoUpdater.on('update-not-available', () => {
+    log.info('[Updater] Không có bản cập nhật nào mới.')
+  })
+
   autoUpdater.on('download-progress', (progressObj) => {
-    mainWindow.webContents.send('update-progress', progressObj.percent)
+    log.debug(`[Updater] Tiến độ tải: ${progressObj.percent}%`)
+    broadcast('update-progress', progressObj.percent)
   })
 
-  // Báo cho React khi đã tải xong ngầm
-  autoUpdater.on('update-downloaded', () => {
-    mainWindow.webContents.send('update-downloaded')
+  autoUpdater.on('update-downloaded', (info) => {
+    log.info(`[Updater] Bản cập nhật ${info.version} đã tải xong ngầm. Sẵn sàng khởi động lại.`)
+    broadcast('update-downloaded')
   })
 
   autoUpdater.on('error', (err) => {
-    console.error('Lỗi khi tự động cập nhật:', err)
+    log.error('[Updater] Lỗi nghiêm trọng khi cập nhật:', err)
   })
 }
 
@@ -258,9 +275,7 @@ app.whenReady().then(() => {
   setupStorageIPC()
   setupDownloaderIPC()
   createWindow()
-
-  // Truyền cửa sổ `win` vào cho setupAutoUpdate
-  if (win) {
-    setupAutoUpdate(win)
-  }
+  
+  // Khởi chạy cơ chế tự động cập nhật
+  setupAutoUpdate()
 })

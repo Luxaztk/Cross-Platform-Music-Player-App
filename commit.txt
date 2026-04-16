@@ -1,1 +1,1 @@
-hotfix: fix yt-dlp path and user-agent parsing in production
+hotfix: auto update
