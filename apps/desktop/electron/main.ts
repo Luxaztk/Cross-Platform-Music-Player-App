@@ -23,6 +23,7 @@ if (app) {
 
   // Auto-capture renderer logs and setup IPC listeners
   log.initialize();
+  log.errorHandler.startCatching();
 
   // CRITICAL: Print the exact path to the terminal so the developer can find it
   console.log('\n=======================================');

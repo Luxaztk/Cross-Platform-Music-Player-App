@@ -1,4 +1,3 @@
-import { create as createYoutubeDl } from 'youtube-dl-exec';
 import { getFixedFfmpegPath } from '../../utils/ffmpegPath';
 import { EventEmitter } from 'events';
 import { app } from 'electron';
@@ -6,7 +5,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { getErrorMessage, logger } from '@music/utils';
+import log from 'electron-log/main';
 import { waitForFileUnlock } from '../../utils/fileState';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -32,7 +31,6 @@ export interface YoutubeInfo {
 }
 
 export class YoutubeDownloader extends EventEmitter {
-  private ytDl: ReturnType<typeof createYoutubeDl>;
   private binaryPath: string;
 
   constructor() {
@@ -48,9 +46,6 @@ export class YoutubeDownloader extends EventEmitter {
     }
 
     console.log('[YoutubeDownloader] yt-dlp path locked at:', this.binaryPath);
-
-    // 4. Khởi tạo instance với Binary tự quản lý
-    this.ytDl = createYoutubeDl(this.binaryPath);
   }
 
   /**
@@ -86,52 +81,97 @@ export class YoutubeDownloader extends EventEmitter {
     const cacheDir = path.join(app.getPath('userData'), 'yt-dlp-cache');
     const ffmpegPath = getFixedFfmpegPath();
 
-    // Fail-fast check
     if (!fs.existsSync(this.binaryPath)) {
       throw new Error(`[yt-dlp] Binary not found at: ${this.binaryPath}`);
     }
 
-    try {
-      const info = (await this.ytDl(url, {
-        dumpSingleJson: true,
-        noCheckCertificates: true,
-        noWarnings: true,
-        preferFreeFormats: true,
-        noPlaylist: true,
-        skipDownload: true,
-        noCheckFormats: true,
-        // Robust Flag Injection
-        jsRuntimes: `node:${process.execPath}`,
-        ffmpegLocation: path.dirname(ffmpegPath),
-        cacheDir: cacheDir,
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        referer: 'youtube.com'
-      }, {
-        cwd: musicPath,
+    return new Promise((resolve, reject) => {
+      let stdoutData = '';
+      let stderrData = '';
+      let settled = false;
+
+      const args = [
+        '--dump-json',
+        '--no-warnings',
+        '--no-playlist',
+        '--no-check-certificates',
+        '--prefer-free-formats',
+        '--no-check-formats',
+        '--ffmpeg-location', path.dirname(ffmpegPath),
+        '--js-runtime', process.execPath,
+        '--cache-dir', cacheDir,
+        '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        '--referer', 'youtube.com',
+        url
+      ];
+
+      log.info('[YT-DLP] Fetching info (spawn):', { url });
+      
+      const subprocess = spawn(this.binaryPath, args, {
         shell: false,
+        cwd: musicPath,
         env: { ...process.env }
-      })) as unknown as YtDlpRawInfo;
+      });
 
-      if (!info || !info.id) {
-        throw new Error('Could not parse YouTube video information.');
-      }
+      // 3. Strict Timeout (20 seconds)
+      const timeout = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        log.warn('[YT-DLP] getInfo timed out after 20s. Killing process.');
+        subprocess.kill('SIGKILL');
+        reject(new Error('YTDL_TIMEOUT'));
+      }, 20000);
 
-      return {
-        id: info.id,
-        title: info.title || info.fulltitle || 'Unknown Title',
-        thumbnail: info.thumbnail || '',
-        artist: info.channel || info.uploader || 'Unknown Artist',
-        album: 'YouTube Download',
-        duration: info.duration || 0,
-      };
-    } catch (error) {
-      console.error('Failed to get YouTube info:', getErrorMessage(error));
-      throw error;
-    }
+      subprocess.stdout.on('data', (data) => {
+        stdoutData += data.toString();
+      });
+
+      subprocess.stderr.on('data', (data) => {
+        const text = data.toString().trim();
+        if (text) {
+          stderrData += text;
+          log.warn('[YT-DLP getInfo stderr]:', text);
+        }
+      });
+
+      subprocess.on('error', (err) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        log.error('[YT-DLP getInfo spawn error]:', err);
+        reject(err);
+      });
+
+      subprocess.on('close', (code) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+
+        if (code === 0) {
+          try {
+            const info = JSON.parse(stdoutData) as YtDlpRawInfo;
+            resolve({
+              id: info.id,
+              title: info.title || info.fulltitle || 'Unknown Title',
+              thumbnail: info.thumbnail || '',
+              artist: info.channel || info.uploader || 'Unknown Artist',
+              album: 'YouTube Download',
+              duration: info.duration || 0,
+            });
+          } catch (parseErr) {
+            log.error('[YT-DLP] Failed to parse stdout JSON:', parseErr);
+            reject(new Error('Failed to parse YouTube info.'));
+          }
+        } else {
+          log.error(`[YT-DLP] getInfo failed with code ${code}:`, stderrData);
+          reject(new Error(`yt-dlp info failed with code ${code}`));
+        }
+      });
+    });
   }
 
   public async downloadAudio(url: string, outputPath: string): Promise<string> {
-    logger.info('[YT-DLP] Starting download', { url, outputPath });
+    log.info('[YT-DLP] Starting download', { url, outputPath });
 
     const musicPath = app.getPath('music');
     const cacheDir = path.join(app.getPath('userData'), 'yt-dlp-cache');
@@ -170,7 +210,7 @@ export class YoutubeDownloader extends EventEmitter {
         url
       ];
 
-      logger.warn('[DIAGNOSTIC] YT-DLP EXECUTION DATA:', {
+      log.warn('[DIAGNOSTIC] YT-DLP EXECUTION DATA:', {
         binary: this.binaryPath,
         args: args,
         exists: { 
@@ -180,7 +220,8 @@ export class YoutubeDownloader extends EventEmitter {
         cwd: musicPath
       });
 
-      logger.info('[YT-DLP process] Executable & Args:', { binaryPath: this.binaryPath, args, cwd: musicPath });
+      log.warn('[YT-DLP] FINAL SPAWN CALL:', { binary: this.binaryPath, url: url });
+      log.info('[YT-DLP process] Executable & Args:', { binary: this.binaryPath, args, cwd: musicPath });
 
       // V3 Secure Spawn: No Shell, Inherit Env, Safe CWD
       const subprocess = spawn(this.binaryPath, args, { 
@@ -194,7 +235,7 @@ export class YoutubeDownloader extends EventEmitter {
         const text = data.toString();
 
         if (text.includes('[ffmpeg]') || text.includes('[download]') || text.includes('[ExtractAudio]')) {
-          logger.debug('[YT-DLP process]:', text.trim());
+          log.debug('[YT-DLP process]:', text.trim());
         }
         // Cần parse progress ví dụ: [download]  10.5% of 5.00MiB
         const progressMatch = text.match(/\[download\]\s+(\d+\.?\d*)%/);
@@ -208,11 +249,11 @@ export class YoutubeDownloader extends EventEmitter {
       subprocess.stderr.on('data', (data: Buffer | string) => {
         const stderrText = data.toString();
         errorOutput += stderrText;
-        logger.error('[YT-DLP STDERR]:', stderrText.trim());
+        log.error('[YT-DLP STDERR]:', stderrText.trim());
       });
 
       subprocess.on('close', async (code) => {
-        logger.info('[YT-DLP] Process closed', { code });
+        log.info('[YT-DLP] Process closed', { code });
         if (settled) return;
         
         if (code === 0) {
@@ -221,16 +262,16 @@ export class YoutubeDownloader extends EventEmitter {
             await waitForFileUnlock(outputPath);
             
             settled = true;
-            logger.info('[yt-dlp] Download completed and file unlocked:', outputPath);
+            log.info('[yt-dlp] Download completed and file unlocked:', outputPath);
             resolve(outputPath);
           } catch (unlockErr) {
             settled = true;
-            logger.error('[yt-dlp] File lock timeout/error:', unlockErr);
+            log.error('[yt-dlp] File lock timeout/error:', unlockErr);
             reject(unlockErr);
           }
         } else {
           settled = true;
-          logger.error('[yt-dlp] Process closed with error code:', { code, errorOutput });
+          log.error('[yt-dlp] Process closed with error code:', { code, errorOutput });
           reject(new Error(`yt-dlp exited with code ${code}\n${errorOutput.trim()}`));
         }
       });
@@ -238,14 +279,14 @@ export class YoutubeDownloader extends EventEmitter {
       subprocess.on('error', (err: any) => {
         if (settled) return;
         settled = true;
-        logger.error('[YT-DLP] CRITICAL SPAWN ERROR:', {
+        log.error('[YT-DLP] CRITICAL SPAWN ERROR:', {
           code: err.code,
           path: err.path,
           message: err.message,
           stack: err.stack
         });
         
-        logger.error('[yt-dlp] Process error:', err);
+        log.error('[yt-dlp] Process error:', err);
         reject(err);
       });
     });

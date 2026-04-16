@@ -56,11 +56,20 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [X] **Optimistic Metadata Sync (Zero Latency)**: Cơ chế cập nhật lạc quan kèm Auto-Rollback giúp UI phản hồi tức thì (<16ms) khi chỉnh sửa lyricId/metadata.
 - [X] **Window Virtualization Engine**: Nâng cấp ảo hóa danh sách dựa trên Window scroll, hỗ trợ cuộn mượt mà 60fps với Playlist 5000+ bài hát.
 - [X] **Premium UI/UX Polish**: Thiết kế trà viền (Edge-to-edge), Sticky Header với hiệu ứng Elevation (Shadow/Border) và Opacity solid chuyên nghiệp.
-- [X] **Hệ thống Logging đồng bộ (Isomorphic Logging)**:
-  - [X] Triển khai `Logger` đa môi trường (Main/Renderer/Preload) bọc ngoài `electron-log`.
-  - [X] Cấu hình đường dẫn log vật lý deterministic: `%AppData%/MeloVista/logs/main.log`.
+- [X] Hệ thống **Logging & Diagnostic Tracing**:
+  - [X] Kết nối `electron-log` toàn cục cho cả Downloader và Updater.
+  - [X] Hợp nhất thư mục log vào chung thư mục dữ liệu hệ thống (`%AppData%/melovista-desktop/logs/main.log`).
+  - [X] Kích hoạt ghi log file trong Production (`info` level) và cơ chế tự động bắt lỗi toàn cục (`log.errorHandler`).
   - [X] Cơ chế **Production Log Stripping**: Sử dụng Oxc/Rolldown để loại bỏ hoàn toàn `console.log` trong bản build chính thức.
-  - [X] Hệ thống **Diagnostic Tracing**: Nhúng log chi tiết vào vòng đời tải nhạc và Guard 3 giúp chẩn đoán Race Condition một cách chính xác.
+- [X] **Production-Ready Downloader (V3 Architecture)**:
+  - [X] Loại bỏ hoàn toàn wrapper `youtube-dl-exec` để sử dụng `spawn` thuần túy, triệt tiêu lỗi treo bộ đệm (deadlock).
+  - [X] Triển khai **Kill Switch (20s Timeout)** cho tiến trình trích xuất thông tin nhạc.
+  - [X] Fix lỗi Shell Lexer (cắt chuỗi URL có ký tự `&`) và xử lý đường dẫn chứa khoảng trắng an toàn.
+  - [X] Đảm bảo binary `yt-dlp` và `ffmpeg` luôn được phân giải đúng đường dẫn `asar.unpacked`.
+- [X] **Auto-Update Stabilization**:
+  - [X] Chuyển đổi sang cơ chế **Broadcast** sự kiện cập nhật đến tất cả cửa sổ thay vì phụ thuộc vào một window reference duy nhất.
+  - [X] Bổ sung log vết chi tiết cho toàn bộ vòng đời cập nhật ứng dụng.
+- [X] **Release Pipeline Hardening**: Cập nhật script `deploy.js` với cơ chế `taskkill` triệt để, ngăn chặn lỗi "Access is denied" do file bị khóa khi đóng gói.
 - [X] **Concurrency Protection**: Cơ chế khóa đường dẫn đang xử lý (Locking Path) với thời gian chờ 5 giây để bảo vệ tính toàn vẹn của thư viện trong các thao tác nạp dữ liệu song song.
 
 ---

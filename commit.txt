@@ -1,1 +1,7 @@
-hotfix: log yt-dlp
+fix(desktop): comprehensive production stability overhaul for downloader, updater, and logging
+
+- YoutubeDownloader: Replaced youtube-dl-exec with a pure spawn implementation + 20s extraction timeout.
+- YoutubeDownloader: Fixed URL splitting issues for YouTube radio/mix links and ensured binary path resolution for ASAR unpacked mode.
+- Logging: Consolidated all system logs into the 'userData/logs' directory and enabled 'info' level logging in Production.
+- Auto-Update: Synchronized with the global logger and implemented a broadcast mechanism to notify all renderer windows reliably.
+- Release Pipeline: Hardened 'deploy.js' with forced process termination to prevent build file locking ("Access is denied").
