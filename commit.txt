@@ -1,1 +1,1 @@
-hotfix: auto update
+hotfix: inject log for yt-dlp

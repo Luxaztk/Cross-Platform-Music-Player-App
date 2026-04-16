@@ -170,6 +170,23 @@ export class YoutubeDownloader extends EventEmitter {
         url
       ];
 
+      // ==========================================
+      // DEEP DIAGNOSTIC LOGS
+      // ==========================================
+      const ANSI_YELLOW = '\x1b[33m';
+      const ANSI_CYAN = '\x1b[36m';
+      const ANSI_RESET = '\x1b[0m';
+      
+      console.log(`\n${ANSI_YELLOW}--- YT-DLP EXECUTION DIAGNOSTICS ---${ANSI_RESET}`);
+      console.log(`${ANSI_CYAN}FINAL_BINARY_PATH:${ANSI_RESET}`, this.binaryPath);
+      console.log(`${ANSI_CYAN}FINAL_ARGS_ARRAY:${ANSI_RESET}`, JSON.stringify(args, null, 2));
+      console.log(`${ANSI_CYAN}FINAL_OPTIONS:${ANSI_RESET}`, JSON.stringify({ cwd: musicPath, shell: false, envKeysCount: Object.keys(process.env).length }, null, 2));
+      console.log(`${ANSI_CYAN}PATH_EXISTS_CHECK:${ANSI_RESET}`, {
+        ytDlp: fs.existsSync(this.binaryPath),
+        ffmpeg: fs.existsSync(ffmpegPath)
+      });
+      console.log(`${ANSI_YELLOW}------------------------------------${ANSI_RESET}\n`);
+
       logger.debug('[YT-DLP process] Executable & Args:', { binaryPath: this.binaryPath, args, cwd: musicPath });
 
       // V3 Secure Spawn: No Shell, Inherit Env, Safe CWD
@@ -225,9 +242,17 @@ export class YoutubeDownloader extends EventEmitter {
         }
       });
 
-      subprocess.on('error', (err) => {
+      subprocess.on('error', (err: any) => {
         if (settled) return;
         settled = true;
+        const ANSI_RED = '\x1b[31m';
+        const ANSI_RESET = '\x1b[0m';
+        console.log(`\n${ANSI_RED}--- YT-DLP CRITICAL SPAWN ERROR ---${ANSI_RESET}`);
+        console.log(`${ANSI_RED}RAW ERROR:${ANSI_RESET}`, err);
+        console.log(`${ANSI_RED}ERR CODE:${ANSI_RESET}`, err.code);
+        console.log(`${ANSI_RED}ERR PATH:${ANSI_RESET}`, err.path);
+        console.log(`${ANSI_RED}-----------------------------------${ANSI_RESET}\n`);
+        
         logger.error('[yt-dlp] Process error:', err);
         reject(err);
       });
