@@ -157,7 +157,7 @@ Mục tiêu: Bảo vệ logic dự án bằng Unit Test toàn diện (Full Cover
 
 ### 4. @music/hooks (React Hooks & State)
 
-- [X] **YoutubeDownloader**: Logic trích xuất thông tin, tải audio và phân giải đường dẫn binary (100% Coverage)
+- [X] **YoutubeDownloader**: Logic trích xuất thông tin, tải audio và phân giải đường dẫn binary (Đã sửa lỗi Production ENOENT & Shell Lexer) (100% Coverage)
 - [X] **LibraryProvider** & **PlayerProvider**: Đồng bộ trạng thái UI (100% Coverage)
 
 ---
