@@ -1,6 +1,1 @@
-fix(downloader): resolve FFmpeg path and User-Agent parsing in production
-
-Summary of fixes:
-- Explicitly pass FFmpeg directory via --ffmpeg-location flag to fix ENOENT in ASAR.
-- Switch to dedicated --user-agent and --referer flags to prevent Shell Lexer from splitting UA strings with spaces.
-- Ensure all arguments are passed via Array in spawn to guarantee literal interpretation on Windows.
+hotfix: fix yt-dlp path and user-agent parsing in production

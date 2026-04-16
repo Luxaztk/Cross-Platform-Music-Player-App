@@ -55,25 +55,42 @@ export class YoutubeDownloader extends EventEmitter {
 
   /**
    * Resolves the path to the yt-dlp binary based on the environment.
+   * Ensures the path points to the unpacked version if in ASAR.
    */
   private getYtDlpPath(): string {
     const isWin = process.platform === 'win32';
     const binaryName = isWin ? 'yt-dlp.exe' : 'yt-dlp';
+    let resolvedPath: string;
 
     if (app.isPackaged) {
       // PRODUCTION: Binary is in the resources/bin folder
-      return path.join(process.resourcesPath, 'bin', binaryName);
+      resolvedPath = path.join(process.resourcesPath, 'bin', binaryName);
+    } else {
+      // DEVELOPMENT: Flexible path resolution for Vite & Monorepo
+      const path1 = path.join(app.getAppPath(), 'resources', 'bin', binaryName);
+      const path2 = path.join(__dirname, '../../resources/bin', binaryName);
+      resolvedPath = fs.existsSync(path1) ? path1 : path2;
     }
 
-    // DEVELOPMENT: Flexible path resolution for Vite & Monorepo
-    const path1 = path.join(app.getAppPath(), 'resources', 'bin', binaryName);
-    const path2 = path.join(__dirname, '../../resources/bin', binaryName);
+    // CRITICAL: Handle ASAR Unpacked resolution for the binary itself
+    if (resolvedPath.includes('app.asar') && !resolvedPath.includes('app.asar.unpacked')) {
+      resolvedPath = resolvedPath.replace('app.asar', 'app.asar.unpacked');
+    }
 
-    return fs.existsSync(path1) ? path1 : path2;
+    return resolvedPath;
   }
 
 
   public async getInfo(url: string): Promise<YoutubeInfo> {
+    const musicPath = app.getPath('music');
+    const cacheDir = path.join(app.getPath('userData'), 'yt-dlp-cache');
+    const ffmpegPath = getFixedFfmpegPath();
+
+    // Fail-fast check
+    if (!fs.existsSync(this.binaryPath)) {
+      throw new Error(`[yt-dlp] Binary not found at: ${this.binaryPath}`);
+    }
+
     try {
       const info = (await this.ytDl(url, {
         dumpSingleJson: true,
@@ -83,9 +100,16 @@ export class YoutubeDownloader extends EventEmitter {
         noPlaylist: true,
         skipDownload: true,
         noCheckFormats: true,
-        noCacheDir: true,
+        // Robust Flag Injection
+        jsRuntimes: `node:${process.execPath}`,
+        ffmpegLocation: path.dirname(ffmpegPath),
+        cacheDir: cacheDir,
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         referer: 'youtube.com'
+      }, {
+        cwd: musicPath,
+        shell: false,
+        env: { ...process.env }
       })) as unknown as YtDlpRawInfo;
 
       if (!info || !info.id) {
@@ -109,6 +133,18 @@ export class YoutubeDownloader extends EventEmitter {
   public async downloadAudio(url: string, outputPath: string): Promise<string> {
     logger.info('[YT-DLP] Starting download', { url, outputPath });
 
+    const musicPath = app.getPath('music');
+    const cacheDir = path.join(app.getPath('userData'), 'yt-dlp-cache');
+    const ffmpegPath = getFixedFfmpegPath();
+
+    // 1. Fail-fast binary check
+    if (!fs.existsSync(this.binaryPath)) {
+      throw new Error(`[yt-dlp] Binary not found at: ${this.binaryPath}`);
+    }
+    if (!fs.existsSync(ffmpegPath)) {
+      throw new Error(`[ffmpeg] Binary not found at: ${ffmpegPath}`);
+    }
+
     return new Promise((resolve, reject) => {
       let settled = false;
       let errorOutput = '';
@@ -125,17 +161,23 @@ export class YoutubeDownloader extends EventEmitter {
         '--no-check-certificates',
         '--no-warnings',
         '--prefer-free-formats',
-        '--ffmpeg-location', path.dirname(getFixedFfmpegPath()),
+        '--ffmpeg-location', path.dirname(ffmpegPath),
+        '--js-runtime', process.execPath,
+        '--cache-dir', cacheDir,
         '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         '--referer', 'youtube.com',
-        '-o', outputPath,
-        url // URL as the last argument, never shell-interpolated
+        '-o', outputPath, // Absolute output path
+        url
       ];
 
-      logger.debug('[YT-DLP process] Executable & Args:', { binaryPath: this.binaryPath, args });
+      logger.debug('[YT-DLP process] Executable & Args:', { binaryPath: this.binaryPath, args, cwd: musicPath });
 
-      // Sử dụng child_process.spawn thay vì ytDl.exec để tránh shell injection
-      const subprocess = spawn(this.binaryPath, args, { shell: false });
+      // V3 Secure Spawn: No Shell, Inherit Env, Safe CWD
+      const subprocess = spawn(this.binaryPath, args, { 
+        shell: false,
+        cwd: musicPath,
+        env: { ...process.env }
+      });
 
       // MUST consume stdout for progress
       subprocess.stdout.on('data', (data: Buffer | string) => {
