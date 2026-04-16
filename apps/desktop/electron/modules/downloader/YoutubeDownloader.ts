@@ -84,10 +84,8 @@ export class YoutubeDownloader extends EventEmitter {
         skipDownload: true,
         noCheckFormats: true,
         noCacheDir: true,
-        addHeader: [
-          'referer:youtube.com',
-          'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-        ]
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        referer: 'youtube.com'
       })) as unknown as YtDlpRawInfo;
 
       if (!info || !info.id) {
@@ -127,9 +125,9 @@ export class YoutubeDownloader extends EventEmitter {
         '--no-check-certificates',
         '--no-warnings',
         '--prefer-free-formats',
-        '--ffmpeg-location', getFixedFfmpegPath(),
-        '--add-header', 'referer:youtube.com',
-        '--add-header', 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        '--ffmpeg-location', path.dirname(getFixedFfmpegPath()),
+        '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        '--referer', 'youtube.com',
         '-o', outputPath,
         url // URL as the last argument, never shell-interpolated
       ];

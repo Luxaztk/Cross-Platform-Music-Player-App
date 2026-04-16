@@ -1,13 +1,6 @@
-feat(core/desktop): stabilize library integrity and production deployment
+fix(downloader): resolve FFmpeg path and User-Agent parsing in production
 
-Library & Deduplication:
-- feat(core): implement robust concurrency protection in LibraryService using Mutex and processing locks with 5s cooldown
-- fix(core): prevent false duplicate collisions by treating processing error-fallbacks as unique entities in Guard 3
-- feat(core): enhance Guard 3 diagnostic logging with detailed collision reporting (Path, Hash, Title/Artist)
-- feat(core): add `clearInternalCache` to synchronize volatile memory with persistent storage during hard resets
-
-Production & Build:
-- fix(desktop): resolve FFmpeg `ENOENT` error in production by unpacking binaries from ASAR and implementing a worker-safe `getFixedFfmpegPath` utility
-- feat(automation): integrate `scripts/deploy.js` pipeline for automated version bumping, git commits, and asset bundling
-- feat(infra): stabilize `MobileStorageAdapter` and `ElectronStorageAdapter` for cross-platform persistence consistency
-- chore(dx): update `task.md` roadmap and enhance diagnostic tracing across Metadata and Downloader modules
+Summary of fixes:
+- Explicitly pass FFmpeg directory via --ffmpeg-location flag to fix ENOENT in ASAR.
+- Switch to dedicated --user-agent and --referer flags to prevent Shell Lexer from splitting UA strings with spaces.
+- Ensure all arguments are passed via Array in spawn to guarantee literal interpretation on Windows.
