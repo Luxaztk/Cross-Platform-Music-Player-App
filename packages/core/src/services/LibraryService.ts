@@ -1,5 +1,5 @@
 import type { Song, Playlist, PlaylistDetail, DuplicateSongInfo, DuplicateReason } from '@music/types';
-import { isSamePath, normalizeString, logger } from '@music/utils';
+import { isSamePath, normalizeString, logger, getCanonicalYoutubeUrl } from '@music/utils';
 import type { IStorageAdapter } from '../interfaces/IStorageAdapter';
 import type { IMetadataService } from '../interfaces/IMetadataService';
 import { Mutex } from '../utils/Mutex';
@@ -99,7 +99,11 @@ export class LibraryService {
 
       // Priority 1: File Path
       const existingPaths = new Set(existingSongs.map(s => s.filePath));
-      const existingSourceUrls = new Set(existingSongs.map(s => s.sourceUrl).filter(Boolean));
+      const existingSourceUrls = new Set(
+        existingSongs
+          .map(s => s.sourceUrl ? getCanonicalYoutubeUrl(s.sourceUrl) || s.sourceUrl : null)
+          .filter((url): url is string => url !== null)
+      );
       
       const existingHashes = new Set(
         existingSongs
@@ -124,6 +128,11 @@ export class LibraryService {
         const normTitle = normalizeString(song.title);
         const normArtist = normalizeString(song.artist);
         const nameArtistKey = `${normTitle}|${normArtist}`;
+
+        // Normalize URL before check/save
+        if (song.sourceUrl) {
+          song.sourceUrl = getCanonicalYoutubeUrl(song.sourceUrl) || song.sourceUrl;
+        }
 
         // 0. SELF-MATCH GUARD (Constraint 2: No ignore, Mandatory update)
         // If we find an existing record with the exact same path, we UPDATE it.
@@ -168,10 +177,11 @@ export class LibraryService {
             if (!existingHash) continue;
 
             // 🚀 BỘ LỌC 1: LỌC THỜI LƯỢNG (O(1) - Siêu nhanh)
-            // Hai bài hát chênh nhau quá 3 giây thì KHÔNG THỂ là cùng 1 mã băm.
+            // Tolerate 2% duration difference, up to a maximum of 15 seconds (min 3s).
             // Giúp loại trừ ngay 99% thư viện.
+            const maxTolerance = Math.max(3.0, Math.min(15.0, (existing.duration || 0) * 0.02));
             const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
-            if (durationDiff > 3.0) continue;
+            if (durationDiff > maxTolerance) continue;
 
             // 🚀 BỘ LỌC 2: TRƯỢT TÌM CHÍNH XÁC (Narrow Phase - Tốn CPU)
             // Hàm calculateSimilarity (Sliding Window) handles temporal shifts and compression jitter.
@@ -203,7 +213,11 @@ export class LibraryService {
 
         if (isDuplicateUrl) {
           duplicateReason = 'URL';
-          collidingSong = existingSongs.find(s => s.sourceUrl === song.sourceUrl);
+          collidingSong = existingSongs.find(s => {
+            if (!s.sourceUrl) return false;
+            const normalizedExisting = getCanonicalYoutubeUrl(s.sourceUrl) || s.sourceUrl;
+            return normalizedExisting === song.sourceUrl;
+          });
         } else if (isDuplicatePath) {
           duplicateReason = 'PATH';
           collidingSong = existingSongs.find(s => isSamePath(s.filePath, song.filePath));
@@ -216,8 +230,9 @@ export class LibraryService {
                const existingHash = existing.hash?.startsWith('p2:') ? existing.hash.slice(3) : null;
                if (!existingHash) continue;
                
+               const maxTolerance = Math.max(3.0, Math.min(15.0, (existing.duration || 0) * 0.02));
                const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
-               if (durationDiff > 3.0) continue;
+               if (durationDiff > maxTolerance) continue;
                
                const similarity = this.calculateSimilarity(hashContent, existingHash);
                if (similarity >= 0.85 || (similarity >= 0.70 && durationDiff < 1.0)) {

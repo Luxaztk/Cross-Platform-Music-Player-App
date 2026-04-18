@@ -153,6 +153,8 @@ Mục tiêu: Bảo vệ logic dự án bằng Unit Test toàn diện (Full Cover
   - [X] Quản lý Playlist (Tạo, Xóa, Thêm/Bớt bài hát)
 - [X] **UseCases**: Các lớp nghiệp vụ bọc ngoài LibraryService (100% Coverage)
 - [X] **Library Stability V3**: Triển khai cơ chế Mutex lock-out 5s và bỏ qua hash lỗi trong Guard 3, triệt tiêu hoàn toàn hiện tượng trùng lặp ảo (Ghost Duplication).
+- [X] **Deduplication Engine V4**: Chuẩn hóa URL YouTube (loại bỏ tracking params) và triển khai bộ lọc thời lượng động (Proportional Tolerance 2%) giúp nhận diện chính xác các bản thu dài/mixtapes.
+- [X] **Test Suite Stabilization**: Đồng bộ hóa bộ test core với logic ID động và dữ liệu kiểm thử chuẩn hóa, đạt 100% pass rate.
 
 ### 2. @music/utils (Tiện ích dùng chung)
 

@@ -33,6 +33,9 @@ try {
   execSync('git add .');
   execSync(`git commit -m "release: v${newVersion} - ${commitMessage}"`);
 
+  console.log('☁️ Đang push code lên GitHub...');
+  execSync('git push', { stdio: 'inherit' });
+
   // 4. Dọn dẹp môi trường trước khi build
   console.log('🧹 Đang dọn dẹp tiến trình và file cũ (Chống lỗi rcedit)...');
   try {

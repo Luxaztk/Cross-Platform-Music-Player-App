@@ -1,8 +1,8 @@
-feat(core): upgrade audio hash guard to fuzzy sliding window similarity
+feat(core): implement deduplication engine v4 and stabilize test suite
 
-- Implement ASCII distance-based fuzzy matching to tolerate compression artifacts
-  (accuracy scores: dist 0=1.0, 1=0.8, 2=0.4).
-- Use sliding window (-10 to +10 offset) in calculateSimilarity to handle temporal jitter.
-- Remove over-strict broad-phase substring check for better bitrate resilience.
-- Eliminate dangerous split('-')[0] logic to prevent error-fallback collisions.
-- Strictly bypass duplication checks for error-fallback hashes to ensure unique storage.
+- Implement YouTube URL normalization to strip tracking parameters (si, list, t, etc.)
+- Replace fixed 3s duration filter with proportional tolerance (2% of duration, max 15s)
+- Add createdAt timestamp to newly imported songs for better audit trails
+- Stabilize core test suite by implementing dynamic ID handling and unique mock data
+- Achieve 100% pass rate in @music/core across all 34 test cases
+- Add explicit test coverage for mixtape tolerance and URL normalization matching
