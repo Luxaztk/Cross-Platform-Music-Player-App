@@ -1,8 +1,9 @@
-feat(core): implement deduplication engine v4 and stabilize test suite
+feat(desktop): implement professional bulk actions and refined SongRow UX
 
-- Implement YouTube URL normalization to strip tracking parameters (si, list, t, etc.)
-- Replace fixed 3s duration filter with proportional tolerance (2% of duration, max 15s)
-- Add createdAt timestamp to newly imported songs for better audit trails
-- Stabilize core test suite by implementing dynamic ID handling and unique mock data
-- Achieve 100% pass rate in @music/core across all 34 test cases
-- Add explicit test coverage for mixtape tolerance and URL normalization matching
+- Rewrite SongRow interaction model: unified title/icon click for standard playback, row click for selection.
+- Implement high-performance Bulk Actions Bar using React Portals to eliminate initial layout shifts.
+- Standardize centering logic using a Flexbox wrapper (fixed positioning with left/right: 0) to avoid scrollbar traps.
+- Add "Add to Queue" bulk operation with strict visual (top-to-bottom) ordering logic.
+- Optimize entry animations by unifying transforms to purely Y-axis transitions (slideUpOnly).
+- Refine visual hierarchy with brand primary colors for positive actions and danger red for destructive/cancel hovers.
+- Fix Ephemeral Hint logic for Lyrics Panel to improve discoverability of hidden controls.

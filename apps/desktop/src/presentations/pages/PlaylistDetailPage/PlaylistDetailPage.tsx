@@ -99,7 +99,7 @@ export const PlaylistDetailPage: React.FC = () => {
   const { showNotification } = useNotification();
   const { t } = useLanguage();
   const { appIcon } = useTheme();
-  const { playList, playNext, addToQueue, currentSong } = usePlayer();
+  const { playList, playNext, addToQueue, addSongsToQueue, currentSong } = usePlayer();
 
   const isLibrary = id === '0';
 
@@ -280,6 +280,17 @@ export const PlaylistDetailPage: React.FC = () => {
       }
       return next;
     });
+  };
+  
+  const onBulkAddToQueue = () => {
+    // MAINTAIN VISUAL ORDERING: Map selection against the ordered filteredSongs list
+    const selectedSongs = filteredSongs.filter((song) => selectedIds.has(song.id));
+
+    if (selectedSongs.length > 0) {
+      addSongsToQueue(selectedSongs);
+      showNotification('success', t('playlist.addedToQueueSuccess', { count: selectedSongs.length }) || `Đã thêm ${selectedSongs.length} bài hát vào hàng đợi`);
+      setSelectedIds(new Set());
+    }
   };
 
   const toggleFilter = (type: 'artist' | 'album', value: string) => {
@@ -642,6 +653,7 @@ export const PlaylistDetailPage: React.FC = () => {
                   isSelected={selectedIds.has(song.id)}
                   isPlaying={currentSong?.id === song.id}
                   isActiveMenu={activeMenuId === song.id}
+                  hasActiveSelection={selectedIds.size > 0}
                   playlists={playlists}
                   currentPlaylistId={id}
                   t={t}
@@ -696,30 +708,39 @@ export const PlaylistDetailPage: React.FC = () => {
       {/* Portal-rendered More Menu — outside of all stacking contexts */}
       {renderPortalMenu()}
 
-      {selectedIds.size > 0 && (
-        <div className="bulk-actions-bar">
-          <div className="selection-info">
-            <span className="count">{selectedIds.size}</span>
-            <span className="text">{t('playlist.songsSelected') || 'bài hát được chọn'}</span>
-          </div>
-          <div className="bulk-btns">
-            {!isLibrary && (
-              <button className="bulk-btn secondary" onClick={() => onBulkDelete('playlist')}>
-                <X size={16} />
-                {t('playlist.removeFromPlaylist') || 'Gỡ khỏi playlist'}
-              </button>
-            )}
-            <button className="bulk-btn delete" onClick={() => onBulkDelete('library')}>
-              <Trash size={16} />
-              {t('playlist.deleteFromLibrary') || 'Xóa khỏi thư viện'}
-            </button>
-            <div className="bulk-divider" />
-            <button className="bulk-btn close" onClick={() => setSelectedIds(new Set())}>
-              {t('common.cancel')}
-            </button>
-          </div>
-        </div>
-      )}
+      {selectedIds.size > 0 &&
+        ReactDOM.createPortal(
+          <div className="bulk-actions-wrapper">
+            <div className="bulk-actions-bar">
+              <div className="selection-info">
+                <span className="count">{selectedIds.size}</span>
+                <span className="text">{t('playlist.songsSelected') || 'bài hát được chọn'}</span>
+              </div>
+              <div className="bulk-btns">
+                {!isLibrary && (
+                  <button className="bulk-btn secondary" onClick={() => onBulkDelete('playlist')}>
+                    <X size={16} />
+                    {t('playlist.removeFromPlaylist') || 'Gỡ khỏi playlist'}
+                  </button>
+                )}
+                <button className="bulk-btn delete" onClick={() => onBulkDelete('library')}>
+                  <Trash size={16} />
+                  {t('playlist.deleteFromLibrary') || 'Xóa khỏi thư viện'}
+                </button>
+                <div className="bulk-divider" />
+                <button className="bulk-btn secondary" onClick={onBulkAddToQueue}>
+                  <ListPlus size={16} />
+                  {t('playlist.addToQueue') || 'Thêm vào hàng đợi'}
+                </button>
+                <div className="bulk-divider" />
+                <button className="bulk-btn close" onClick={() => setSelectedIds(new Set())}>
+                  {t('common.cancel')}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
 
       <EditModal
         type={editingSong ? 'song' : 'playlist'}

@@ -470,7 +470,8 @@
           border-radius: 50%;
 
           &:hover,
-          &.active {
+          &.active,
+          &.visible {
             background: var(--bg-overlay);
             color: var(--color-text-main);
             opacity: 1;
@@ -568,11 +569,19 @@
   }
 }
 
-.bulk-actions-bar {
+.bulk-actions-wrapper {
   position: fixed;
   bottom: 110px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.bulk-actions-bar {
+  position: relative;
   background: var(--bg-surface-solid);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -583,8 +592,8 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  z-index: 1000;
-  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+  animation: slideUpOnly 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   .selection-info {
     display: flex;
@@ -638,11 +647,12 @@
       transition: all 0.2s ease;
 
       &.secondary {
-        background: var(--bg-overlay);
-        color: var(--color-text);
+        background: rgba(var(--color-primary-rgb), 0.05);
+        color: var(--color-primary);
+        border: 1px solid rgba(var(--color-primary-rgb), 0.3);
 
         &:hover {
-          background: var(--bg-overlay);
+          background: var(--color-primary-hover, rgba(var(--color-primary-rgb), 0.8));
         }
       }
 
@@ -656,11 +666,19 @@
       }
 
       &.close {
-        background: transparent;
-        color: var(--color-text-dim);
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--color-text-main);
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
 
         &:hover {
-          color: var(--color-text);
+          background: var(--color-danger, #ff4d4f);
+          color: white;
+        }
+
+        &:active {
+          transform: scale(0.95);
         }
       }
     }
@@ -677,14 +695,14 @@
   }
 }
 
-@keyframes slideUp {
+@keyframes slideUpOnly {
   from {
-    transform: translate(-50%, 40px);
+    transform: translateY(40px);
     opacity: 0;
   }
 
   to {
-    transform: translate(-50%, 0);
+    transform: translateY(0);
     opacity: 1;
   }
 }

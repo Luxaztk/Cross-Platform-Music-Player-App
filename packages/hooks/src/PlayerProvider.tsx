@@ -26,6 +26,7 @@ export interface PlayerContextProps {
   playNow: (song: Song) => void;
   playNext: (song: Song) => void;
   addToQueue: (song: Song) => void;
+  addSongsToQueue: (songs: Song[]) => void;
   playList: (songs: Song[], startIndex: number) => void;
   removeFromQueue: (index: number) => void;
   reorderQueue: (startIndex: number, endIndex: number) => void;
@@ -319,6 +320,13 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
     setQueue(prev => [...prev, { uid: generateUid(), song }]);
   }, [generateUid]);
 
+  const addSongsToQueue = useCallback((songs: Song[]) => {
+    setQueue(prev => [
+      ...prev,
+      ...songs.map(song => ({ uid: generateUid(), song }))
+    ]);
+  }, [generateUid]);
+
   const removeFromQueue = useCallback((index: number) => {
     setQueue(prev => prev.filter((_, i) => i !== index));
   }, []);
@@ -414,6 +422,7 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
     playNow,
     playNext,
     addToQueue,
+    addSongsToQueue,
     playList,
     removeFromQueue,
     reorderQueue,
@@ -427,7 +436,7 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
     toggleShuffle
   }), [
     currentSong, isPlaying, progress, duration, volume, queue, history,
-    repeatMode, isShuffle, updateCurrentSongMetadata, playNow, playNext, addToQueue, playList,
+    repeatMode, isShuffle, updateCurrentSongMetadata, playNow, playNext, addToQueue, addSongsToQueue, playList,
     removeFromQueue, reorderQueue, play, pause, next, prev, seek,
     setVolume, toggleShuffle
   ]);

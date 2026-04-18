@@ -24,6 +24,7 @@ export const LyricsPanel: React.FC = () => {
   const [searchResults, setSearchResults] = useState<LyricSearchResult[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [lastQueryUsed, setLastQueryUsed] = useState('');
+  const [showHint, setShowHint] = useState(true);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeLineRef = useRef<HTMLDivElement>(null);
@@ -44,6 +45,14 @@ export const LyricsPanel: React.FC = () => {
     setIsSearching(false);
     setSearchQuery(currentSong?.lyricSearchParam || (currentSong ? formatLyricsSearchQuery(currentSong.title, currentSong.artist) : ''));
   }, [currentSong?.id, currentSong?.title, currentSong?.artist, currentSong?.lyricSearchParam]);
+
+  // Ephemeral Hint: Briefly show hidden buttons when panel opens
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowHint(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleLineClick = (time: number) => {
     seek(time);
@@ -102,7 +111,11 @@ export const LyricsPanel: React.FC = () => {
     <div className="lyrics-sidebar-container">
       <div className="lyrics-header">
         {lyricLines.length > 0 && searchResults.length === 0 && (
-          <button className="change-lyrics-btn" onClick={handleSearch} title={t('lyrics.changeLyrics')}>
+          <button 
+            className={`change-lyrics-btn ${showHint ? 'hint-active' : ''}`} 
+            onClick={handleSearch} 
+            title={t('lyrics.changeLyrics')}
+          >
             <RotateCcw size={16} />
           </button>
         )}

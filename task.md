@@ -71,6 +71,10 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
   - [X] Bổ sung log vết chi tiết cho toàn bộ vòng đời cập nhật ứng dụng.
 - [X] **Release Pipeline Hardening**: Cập nhật script `deploy.js` với cơ chế `taskkill` triệt để, ngăn chặn lỗi "Access is denied" do file bị khóa khi đóng gói.
 - [X] **Concurrency Protection**: Cơ chế khóa đường dẫn đang xử lý (Locking Path) với thời gian chờ 5 giây để bảo vệ tính toàn vẹn của thư viện trong các thao tác nạp dữ liệu song song.
+- [X] **SongRow UX Refactoring**: Đồng bộ hóa logic click (Title/Index) cho việc phát nhạc tiêu chuẩn và Click Row cho chế độ chọn multi-select chuyên nghiệp.
+- [X] **Bulk Actions Stability (Zero-Shift Architecture)**: Triển khai thanh tác vụ hàng loạt thông qua React Portal và Flexbox Wrapper (Scrollbar-trap safe), triệt tiêu hoàn toàn hiện tượng "nhảy" layout khi hiển thị.
+- [X] **Visual Ordering Engine**: Cơ chế bóc tách và sắp xếp bài hát theo thứ tự hiển thị (Top-to-bottom) khi thực hiện các thao tác hàng loạt (Add to Queue), bất kể thứ tự người dùng click chọn.
+- [X] **Ephemeral Hint (Lyrics Panel)**: Cơ chế hiển thị tạm thời (5 giây) cho các nút chức năng ẩn để tăng khả năng khám phá tính năng cho người dùng mới.
 
 ---
 

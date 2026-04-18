@@ -12,6 +12,7 @@ interface SongRowProps {
   isActiveMenu: boolean;
   playlists: Playlist[];
   currentPlaylistId: string | undefined;
+  hasActiveSelection: boolean;
   t: (key: string, options?: any) => string;
   appIcon: string;
   onToggleSelect: (id: string, e?: React.MouseEvent) => void;
@@ -32,6 +33,7 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
     isSelected,
     isPlaying,
     isActiveMenu,
+    hasActiveSelection,
     appIcon,
     onToggleSelect,
     onPlay,
@@ -53,13 +55,25 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
       [onPlay],
     );
 
+    const handleFirstColumnClick = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (hasActiveSelection) {
+          onToggleSelect(song.id, e);
+        } else {
+          onPlay();
+        }
+      },
+      [hasActiveSelection, song.id, onToggleSelect, onPlay],
+    );
+
     return (
       <div
         className={`song-row ${isSelected ? 'selected' : ''} ${isActiveMenu ? 'menu-open' : ''} ${isPlaying ? 'playing' : ''}`}
         onClick={() => onToggleSelect(song.id)}
       >
-        <div className="col-idx">
-          <div className="checkbox-cell" onClick={(e) => onToggleSelect(song.id, e)}>
+        <div className="col-idx" onClick={handleFirstColumnClick}>
+          <div className="checkbox-cell">
             {isSelected ? (
               <CheckSquare size={16} className="text-primary" />
             ) : isPlaying ? (
@@ -115,7 +129,7 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
 
         <div className="col-more">
           <button
-            className={`row-more-btn ${isActiveMenu ? 'active' : ''}`}
+            className={`row-more-btn ${isActiveMenu ? 'active' : ''} ${isPlaying ? 'visible' : ''}`}
             onClick={(e) => onToggleMenu(song.id, e)}
             title="More actions"
           >
@@ -133,6 +147,7 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
       prev.isSelected === next.isSelected &&
       prev.isPlaying === next.isPlaying &&
       prev.isActiveMenu === next.isActiveMenu &&
+      prev.hasActiveSelection === next.hasActiveSelection &&
       prev.index === next.index &&
       prev.playlists.length === next.playlists.length // So sánh nông (Shallow) một cách thông minh
     );

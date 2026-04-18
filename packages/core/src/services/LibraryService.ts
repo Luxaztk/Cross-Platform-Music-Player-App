@@ -52,7 +52,8 @@ export class LibraryService {
 
     try {
       // 2. NOW execute async operations securely
-      const songData = await this.metadataService.extract(filePath, sourceUrl, originId);
+      const cleanSourceUrl = sourceUrl ? getCanonicalYoutubeUrl(sourceUrl) || sourceUrl : sourceUrl;
+      const songData = await this.metadataService.extract(filePath, cleanSourceUrl, originId);
       if (!songData) {
         return { success: false, count: 0, duplicates: [], duplicateSongs: [], reason: 'METADATA_ERROR' };
       }
@@ -177,9 +178,9 @@ export class LibraryService {
             if (!existingHash) continue;
 
             // 🚀 BỘ LỌC 1: LỌC THỜI LƯỢNG (O(1) - Siêu nhanh)
-            // Tolerate 2% duration difference, up to a maximum of 15 seconds (min 3s).
-            // Giúp loại trừ ngay 99% thư viện.
-            const maxTolerance = Math.max(3.0, Math.min(15.0, (existing.duration || 0) * 0.02));
+            // Tolerate 5% duration difference, up to a maximum of 60 seconds (min 3s).
+            // Giúp loại trừ ngay 90-95% thư viện tùy vào độ dài track.
+            const maxTolerance = Math.max(3.0, Math.min(60.0, (existing.duration || 0) * 0.05));
             const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
             if (durationDiff > maxTolerance) continue;
 
@@ -230,7 +231,7 @@ export class LibraryService {
                const existingHash = existing.hash?.startsWith('p2:') ? existing.hash.slice(3) : null;
                if (!existingHash) continue;
                
-               const maxTolerance = Math.max(3.0, Math.min(15.0, (existing.duration || 0) * 0.02));
+               const maxTolerance = Math.max(3.0, Math.min(60.0, (existing.duration || 0) * 0.05));
                const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
                if (durationDiff > maxTolerance) continue;
                

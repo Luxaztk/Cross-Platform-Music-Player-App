@@ -41,11 +41,13 @@ class MockStorageAdapter implements IStorageAdapter {
 }
 
 class MockMetadataService {
-  async extract(filePath: string, _sourceUrl?: string, _originId?: string): Promise<Song | null> {
+  async extract(filePath: string, sourceUrl?: string, originId?: string): Promise<Song | null> {
     // Trả về một song tối thiểu cho mục đích test
     return {
       id: 'mock-id',
       filePath,
+      sourceUrl,
+      originId,
       title: 'Mock Title',
       artist: 'Mock Artist',
       duration: 180,
@@ -316,13 +318,49 @@ describe('LibraryService', () => {
         id: 'mix2',
         title: 'Different Title', // Change to force hash check
         filePath: 'C:/music/mix2.mp3',
-        duration: 610, // 10s difference, within 12s tolerance (2% of 600)
+        duration: 625, // 25s difference, now within 30s tolerance (5% of 600)
         hash: baseHash
       };
 
       const result = await service.processAndAddSongs([duplicateMixtape]);
       expect(result.addedCount).toBe(0);
       expect(result.duplicateSongs[0].duplicateReason).toBe('HASH');
+    });
+
+    it('should respect the 60s cap for extremely long mixtapes', async () => {
+      const baseHash = 'p2:' + 'a'.repeat(64);
+      const longMix: Song = { 
+        ...mockSong, 
+        id: 'mix3', 
+        filePath: 'C:/music/mix3.mp3',
+        duration: 2000, // 33.3 minutes
+        hash: baseHash 
+      };
+      await service.processAndAddSongs([longMix]);
+
+      // 5% of 2000 is 100s, but cap is 60s.
+      // So 2059s should be duplicate, 2061s should NOT.
+      
+      const duplicateMix: Song = {
+        ...mockSong,
+        id: 'mix4',
+        filePath: 'C:/music/mix4.mp3',
+        duration: 2059, // 59s diff
+        hash: baseHash
+      };
+      const res1 = await service.processAndAddSongs([duplicateMix]);
+      expect(res1.addedCount).toBe(0);
+
+      const uniqueMix: Song = {
+        ...mockSong,
+        id: 'mix5',
+        title: 'Unique Metadata',
+        filePath: 'C:/music/mix5.mp3',
+        duration: 2065, // 65s diff (> 60s)
+        hash: baseHash
+      };
+      const res2 = await service.processAndAddSongs([uniqueMix]);
+      expect(res2.addedCount).toBe(1);
     });
 
     it('should detect duplicate with normalized YouTube URLs (Clean vs Dirty)', async () => {
@@ -347,6 +385,22 @@ describe('LibraryService', () => {
       const result = await service.processAndAddSongs([duplicate]);
       expect(result.addedCount).toBe(0);
       expect(result.duplicateSongs[0].duplicateReason).toBe('URL');
+    });
+
+    it('should scrub URLs at the earliest entry point (importFromPath)', async () => {
+      const dirtyUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&si=trackingparams';
+      const cleanUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+      
+      const spy = vi.spyOn(metadataService, 'extract');
+      
+      await service.importFromPath('C:/music/test.mp3', 'TEST', dirtyUrl);
+      
+      // Verify extract was called with cleaned URL
+      expect(spy).toHaveBeenCalledWith(expect.any(String), cleanUrl, undefined);
+      
+      // Verify URL saved in adapter is also clean
+      const addedSong = Object.values(adapter.songs)[0];
+      expect(addedSong.sourceUrl).toBe(cleanUrl);
     });
   });
 
