@@ -1,7 +1,8 @@
-fix(desktop): comprehensive production stability overhaul for downloader, updater, and logging
+feat(core): upgrade audio hash guard to fuzzy sliding window similarity
 
-- YoutubeDownloader: Replaced youtube-dl-exec with a pure spawn implementation + 20s extraction timeout.
-- YoutubeDownloader: Fixed URL splitting issues for YouTube radio/mix links and ensured binary path resolution for ASAR unpacked mode.
-- Logging: Consolidated all system logs into the 'userData/logs' directory and enabled 'info' level logging in Production.
-- Auto-Update: Synchronized with the global logger and implemented a broadcast mechanism to notify all renderer windows reliably.
-- Release Pipeline: Hardened 'deploy.js' with forced process termination to prevent build file locking ("Access is denied").
+- Implement ASCII distance-based fuzzy matching to tolerate compression artifacts
+  (accuracy scores: dist 0=1.0, 1=0.8, 2=0.4).
+- Use sliding window (-10 to +10 offset) in calculateSimilarity to handle temporal jitter.
+- Remove over-strict broad-phase substring check for better bitrate resilience.
+- Eliminate dangerous split('-')[0] logic to prevent error-fallback collisions.
+- Strictly bypass duplication checks for error-fallback hashes to ensure unique storage.

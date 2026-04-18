@@ -22,7 +22,7 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [X] Protocol tùy chỉnh `melovista://` để stream file nội bộ an toàn.
   - [X] **Vân tay âm thanh Perceptual (Guard 3 - v2)**:
     - [X] Nâng cấp thuật toán Hashing dựa trên **Energy-Envelope (16kHz, Mono)**, giúp nhận diện bài hát chính xác bất chấp sự khác biệt về bitrate (128kbps vs 320kbps).
-    - [X] Triển khai cơ chế **Smart Fingerprinting**: Kết hợp độ tương đồng Hash (>=75%) và sai lệch thời lượng (<0.5s) để chặn đứng các bản thu trùng lặp từ nhiều nguồn khác nhau (YouTube, CD, Local).
+    - [X] Triển khai **Fuzzy Sliding Window Matching**: Kết hợp thuật toán trượt (-10 to +10) và đối chiếu khoảng cách **ASCII Fuzzy** để tolerate sai lệch do nén audio (compression jitter).
     - [X] Hoàn tất tiến trình **Background Migration** để nâng cấp toàn bộ thư viện cũ sang chuẩn mã Hash v2 một cách tự động.
   - [X] **Xác minh & Tài liệu hóa**:
     - [X] Nhúng metadata định danh (`origin_id`, `source_url`) trực tiếp vào tag `TXXX` của file MP3 khi tải về.

@@ -99,12 +99,13 @@ export class LibraryService {
 
       // Priority 1: File Path
       const existingPaths = new Set(existingSongs.map(s => s.filePath));
+      const existingSourceUrls = new Set(existingSongs.map(s => s.sourceUrl).filter(Boolean));
+      
       const existingHashes = new Set(
         existingSongs
-          .map(s => s.hash?.split('-')[0])
-          .filter(h => h && !h.startsWith('error'))
+          .map(s => s.hash)
+          .filter(h => h && !h.startsWith('error-fallback'))
       );
-      const existingSourceUrls = new Set(existingSongs.map(s => s.sourceUrl).filter(Boolean));
       
       // Priority 3: Title + Artist (Guard 3)
       const existingNameArtistKeys = new Set(
@@ -155,44 +156,37 @@ export class LibraryService {
 
         // Check Prioritized mức độ (Priority levels)
         const isDuplicateUrl = song.sourceUrl && existingSourceUrls.has(song.sourceUrl);
-        // Priority 2: File Content Hash (Perceptual)
+        // 🛡️ GUARD 2: Đối chiếu Vân tay âm thanh (Audio Hash) - BẢN TỐI ƯU HIỆU NĂNG CAO
         let isDuplicateHash = false;
-        let normalizedHash: string | undefined;
-
-        // STRICT CODE RULE: If a hash starts with error-fallback, it MUST be treated as a unique entity
-        // and NEVER collide with another hash (since they represent processing failures).
         const isErrorHash = song.hash?.startsWith('error-fallback');
-        if (isErrorHash) {
-          isDuplicateHash = false; // NEVER collide on error fallbacks
-          logger.warn('[Library] Bypassing duplicate hash check for error fallback', { path: song.filePath, hash: song.hash });
-        } else {
-          normalizedHash = song.hash?.split('-')[0];
-          
-          if (normalizedHash && normalizedHash.startsWith('p2:')) {
-            const hashContent = normalizedHash.slice(3);
-            
-            for (const existing of existingSongs) {
-              const existingHash = existing.hash?.split('-')[0];
-              if (!existingHash || !existingHash.startsWith('p2:')) continue;
-              
-              const existingHashContent = existingHash.slice(3);
-              const similarity = this.calculateSimilarity(hashContent, existingHashContent);
-              
-              // Tiered Logic:
-              // 1. Strict Match (95% similarity regardless of duration)
-              // 2. Smart Match (75% similarity + duration matching < 0.5s)
-              const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
-              
-              if (similarity >= 0.95 || (similarity >= 0.75 && durationDiff < 0.5)) {
-                isDuplicateHash = true;
-                break;
-              }
-            }
-          } else if (normalizedHash) {
-            // Fallback or binary hash (p1:)
-            if (existingHashes.has(normalizedHash)) {
+
+        if (!isErrorHash && song.hash?.startsWith('p2:')) {
+          const hashContent = song.hash.slice(3);
+
+          for (const existing of existingSongs) {
+            const existingHash = existing.hash?.startsWith('p2:') ? existing.hash.slice(3) : null;
+            if (!existingHash) continue;
+
+            // 🚀 BỘ LỌC 1: LỌC THỜI LƯỢNG (O(1) - Siêu nhanh)
+            // Hai bài hát chênh nhau quá 3 giây thì KHÔNG THỂ là cùng 1 mã băm.
+            // Giúp loại trừ ngay 99% thư viện.
+            const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
+            if (durationDiff > 3.0) continue;
+
+            // 🚀 BỘ LỌC 2: TRƯỢT TÌM CHÍNH XÁC (Narrow Phase - Tốn CPU)
+            // Hàm calculateSimilarity (Sliding Window) handles temporal shifts and compression jitter.
+            const similarity = this.calculateSimilarity(hashContent, existingHash);
+
+            // Ngưỡng an toàn khi đã dùng thuật toán trượt. Dùng logic 85% và 70% + 1.0s diff.
+            if (similarity >= 0.85 || (similarity >= 0.70 && durationDiff < 1.0)) {
               isDuplicateHash = true;
+              break;
             }
+          }
+        } else if (!isErrorHash && song.hash) {
+          // Fallback or binary hash (legacy support)
+          if (existingHashes.has(song.hash)) {
+            isDuplicateHash = true;
           }
         }
 
@@ -215,21 +209,24 @@ export class LibraryService {
           collidingSong = existingSongs.find(s => isSamePath(s.filePath, song.filePath));
         } else if (isDuplicateHash) {
           duplicateReason = 'HASH';
-          // Find the song that caused the hash collision (perceptual or strict)
-          if (normalizedHash?.startsWith('p2:')) {
-            const hashContent = normalizedHash.slice(3);
-            for (const existing of existingSongs) {
-              const existingHash = existing.hash?.split('-')[0];
-              if (!existingHash || !existingHash.startsWith('p2:')) continue;
-              const similarity = this.calculateSimilarity(hashContent, existingHash.slice(3));
-              const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
-              if (similarity >= 0.95 || (similarity >= 0.75 && durationDiff < 0.5)) {
-                collidingSong = existing;
-                break;
-              }
-            }
-          } else {
-            collidingSong = existingSongs.find(s => s.hash?.split('-')[0] === normalizedHash);
+          // Find the song that caused the hash collision
+          if (!isErrorHash && song.hash?.startsWith('p2:')) {
+             const hashContent = song.hash.slice(3);
+             for (const existing of existingSongs) {
+               const existingHash = existing.hash?.startsWith('p2:') ? existing.hash.slice(3) : null;
+               if (!existingHash) continue;
+               
+               const durationDiff = Math.abs((song.duration || 0) - (existing.duration || 0));
+               if (durationDiff > 3.0) continue;
+               
+               const similarity = this.calculateSimilarity(hashContent, existingHash);
+               if (similarity >= 0.85 || (similarity >= 0.70 && durationDiff < 1.0)) {
+                 collidingSong = existing;
+                 break;
+               }
+             }
+          } else if (!isErrorHash && song.hash) {
+            collidingSong = existingSongs.find(s => s.hash === song.hash);
           }
         } else if (isDuplicateMetadata) {
           duplicateReason = 'METADATA';
@@ -287,13 +284,46 @@ export class LibraryService {
   /**
    * Simple similarity check for fingerprints (0 to 1)
    */
-  private calculateSimilarity(h1: string, h2: string): number {
-    if (h1.length !== h2.length) return 0;
-    let matches = 0;
-    for (let i = 0; i < h1.length; i++) {
-      if (h1[i] === h2[i]) matches++;
+  /**
+   * Calculates similarity between two audio fingerprints using Fuzzy Matching and a Sliding Window approach.
+   * Tolerates audio compression artifacts by awarding partial scores for characters with minor ASCII distances.
+   */
+  private calculateSimilarity(hashA: string, hashB: string): number {
+    const lenA = hashA.length;
+    const lenB = hashB.length;
+    if (lenA === 0 || lenB === 0) return 0;
+
+    let maxScore = 0;
+    const offsetRange = 10;
+
+    // Slide hashB over hashA with an offset from -10 to +10
+    for (let offset = -offsetRange; offset <= offsetRange; offset++) {
+      let score = 0;
+
+      for (let i = 0; i < lenA; i++) {
+        const j = i + offset;
+        // Ensure index j is within bounds for hashB
+        if (j >= 0 && j < lenB) {
+          // FUZZY MATCH: Calculate ASCII distance
+          const dist = Math.abs(hashA.charCodeAt(i) - hashB.charCodeAt(j));
+          if (dist === 0) {
+            score += 1.0; // Exact match
+          } else if (dist === 1) {
+            score += 0.8; // Minor compression artifact (e.g., 'm' vs 'l')
+          } else if (dist === 2) {
+            score += 0.4; // Moderate distortion
+          }
+        }
+      }
+
+      // We normalize by the length of the anchor (hashA)
+      const normalizedScore = score / lenA;
+      if (normalizedScore > maxScore) {
+        maxScore = normalizedScore;
+      }
     }
-    return matches / h1.length;
+
+    return maxScore;
   }
 
   /**
