@@ -16,3 +16,4 @@ export * from './Sidebar';
 export * from './SongPickerModal';
 export * from './Theme';
 export * from './UpdateNotification';
+export * from './Dropdown';

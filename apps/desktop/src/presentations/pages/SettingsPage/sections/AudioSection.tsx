@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSettings, useLanguage } from '@hooks';
 import { useAudioDevices } from '@music/hooks';
 import { Volume2, Play } from 'lucide-react';
+import { CustomDropdown } from '@components';
 
 interface AudioSectionProps {
     searchQuery?: string;
@@ -26,10 +27,10 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
     if (searchQuery && !showsDevice && !showsTest) return null;
 
     // Sync currentDeviceId with settings if needed
-    const handleDeviceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newId = e.target.value;
-        setAudioDevice(newId);
-        updateSettings({ audio: { deviceId: newId } });
+    const handleDeviceChange = (newId: string | number) => {
+        const idStr = String(newId);
+        setAudioDevice(idStr);
+        updateSettings({ audio: { deviceId: idStr } });
     };
 
     const handleTestSound = () => {
@@ -92,17 +93,15 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
                             <p>{t('settings.audio.deviceDesc')}</p>
                         </div>
                         <div className="setting-control">
-                            <select 
-                                value={currentDeviceId || settings.audio.deviceId} 
+                            <CustomDropdown
+                                value={currentDeviceId || settings.audio.deviceId}
                                 onChange={handleDeviceChange}
+                                options={devices.map((device) => ({
+                                    value: device.deviceId,
+                                    label: device.label || `Device ${device.deviceId.slice(0, 5)}...`,
+                                }))}
                                 title={t('settings.audio.deviceSelect')}
-                            >
-                                {devices.map((device) => (
-                                    <option key={device.deviceId} value={device.deviceId}>
-                                        {device.label || `Device ${device.deviceId.slice(0, 5)}...`}
-                                    </option>
-                                ))}
-                            </select>
+                            />
                         </div>
                     </div>
                 )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSettings, useLanguage } from '@hooks';
 import { Download, FolderOpen, Plus, Trash2, RefreshCcw } from 'lucide-react';
+import { CustomDropdown } from '@components';
 
 interface DownloadSectionProps {
     searchQuery?: string;
@@ -102,22 +103,23 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                             <p>{t('settings.downloads.qualityDesc')}</p>
                         </div>
                         <div className="setting-control">
-                            <select 
-                                value={settings.downloads.bitrate} 
-                                onChange={(e) => updateSettings({ 
+                            <CustomDropdown
+                                value={settings.downloads.bitrate}
+                                onChange={(val) => updateSettings({ 
                                     downloads: { 
-                                        bitrate: e.target.value,
+                                        bitrate: String(val),
                                         downloadPath: settings.downloads.downloadPath,
                                         autoImportPaths: settings.downloads.autoImportPaths
                                     } 
                                 })}
+                                options={[
+                                    { value: '128', label: '128kbps (Standard)' },
+                                    { value: '192', label: '192kbps (Medium)' },
+                                    { value: '256', label: '256kbps (High)' },
+                                    { value: '320', label: '320kbps (Best)' },
+                                ]}
                                 title={t('settings.downloads.qualitySelect')}
-                            >
-                                <option value="128">128kbps (Standard)</option>
-                                <option value="192">192kbps (Medium)</option>
-                                <option value="256">256kbps (High)</option>
-                                <option value="320">320kbps (Best)</option>
-                            </select>
+                            />
                         </div>
                     </div>
                 )}

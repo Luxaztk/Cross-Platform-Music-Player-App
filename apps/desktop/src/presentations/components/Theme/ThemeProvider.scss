@@ -29,9 +29,18 @@
   --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+%global-dropdown-surface {
+  background-color: var(--bg-surface-solid);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+}
+
 /* Midnight Theme (Default - Dark Charcoal & Emerald) */
-body[data-theme='midnight'],
-body:not([data-theme]) {
+%theme-midnight-vars {
   --bg-primary: #0a0a0a;
   --bg-surface: rgba(255, 255, 255, 0.05);
   --bg-surface-hover: rgba(255, 255, 255, 0.08);
@@ -72,8 +81,13 @@ body:not([data-theme]) {
   --bg-surface-dim: rgba(255, 255, 255, 0.03);
 }
 
+body[data-theme='midnight'],
+body:not([data-theme]) {
+  @extend %theme-midnight-vars;
+}
+
 /* Amoled Theme (True Black) */
-body[data-theme='amoled'] {
+%theme-amoled-vars {
   --bg-primary: #000000;
   --bg-surface: rgba(255, 255, 255, 0.06);
   --bg-surface-hover: rgba(255, 255, 255, 0.12);
@@ -111,8 +125,12 @@ body[data-theme='amoled'] {
   --bg-surface-dim: rgba(255, 255, 255, 0.04);
 }
 
+body[data-theme='amoled'] {
+  @extend %theme-amoled-vars;
+}
+
 /* Nord Theme (Snowy Blue-Grey & Frost) */
-body[data-theme='nord'] {
+%theme-nord-vars {
   --bg-primary: #2e3440;
   --bg-surface: #434c5e;
   --bg-surface-hover: #4c566a;
@@ -150,8 +168,12 @@ body[data-theme='nord'] {
   --bg-surface-dim: rgba(236, 239, 244, 0.04);
 }
 
+body[data-theme='nord'] {
+  @extend %theme-nord-vars;
+}
+
 /* Rose Theme (Deep Stone & Dusty Rose) */
-body[data-theme='rose'] {
+%theme-rose-vars {
   --bg-primary: #1c1917;
   --bg-surface: #292524;
   --bg-surface-hover: #44403c;
@@ -189,8 +211,12 @@ body[data-theme='rose'] {
   --bg-surface-dim: rgba(250, 250, 249, 0.03);
 }
 
+body[data-theme='rose'] {
+  @extend %theme-rose-vars;
+}
+
 /* Ocean Theme (Deep Navy & Cyan) */
-body[data-theme='ocean'] {
+%theme-ocean-vars {
   --bg-primary: #0f172a;
   --bg-surface: #1e293b;
   --bg-surface-hover: #334155;
@@ -228,8 +254,12 @@ body[data-theme='ocean'] {
   --bg-surface-dim: rgba(248, 250, 252, 0.03);
 }
 
+body[data-theme='ocean'] {
+  @extend %theme-ocean-vars;
+}
+
 /* Snow Theme (Soft Porcelain - Optimized for Readability & Harmony) */
-body[data-theme='snow'] {
+%theme-snow-vars {
   /* Surfaces: Layered depth using subtle warm tones */
   --bg-primary: #f9f8f7;         // Very light warm porcelain
   --bg-surface: #ffffff;         // Pure white for elevation (Card/Modal)
@@ -272,6 +302,10 @@ body[data-theme='snow'] {
   --border-subtle: rgba(45, 42, 40, 0.08);
   --bg-overlay: rgba(45, 42, 40, 0.05);
   --bg-surface-dim: rgba(45, 42, 40, 0.03);
+}
+
+body[data-theme='snow'] {
+  @extend %theme-snow-vars;
 }
 
 * {

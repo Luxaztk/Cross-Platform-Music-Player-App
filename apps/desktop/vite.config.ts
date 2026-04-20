@@ -78,4 +78,14 @@ export default defineConfig({
       },
     },
   },
+  // @ts-ignore
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/tests/setup.ts',
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+    },
+  },
 });

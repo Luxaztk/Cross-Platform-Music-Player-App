@@ -175,6 +175,12 @@ Mục tiêu: Bảo vệ logic dự án bằng Unit Test toàn diện (Full Cover
 - [X] **YoutubeDownloader**: Logic trích xuất thông tin, tải audio và phân giải đường dẫn binary (Đã sửa lỗi Production ENOENT & Shell Lexer) (100% Coverage)
 - [X] **LibraryProvider** & **PlayerProvider**: Đồng bộ trạng thái UI (100% Coverage)
 
+### 5. Presentations (Giao diện & Thành phần)
+
+- [X] **CustomDropdown Component**: Thay thế toàn bộ `<select>` nguyên bản bằng kiến trúc Portal + ARIA accessibility (100% Coverage).
+- [X] **Settings Page Ecosystem**: Chuẩn hóa toàn bộ logic và giao diện các mục General, Appearance, Audio, Downloads.
+- [X] **Centralized Testing Architecture**: Di chuyển toàn bộ Unit Test sang thư mục `src/tests/` tập trung, gương mẫu kiến trúc production.
+
 ---
 
 > [!TIP]

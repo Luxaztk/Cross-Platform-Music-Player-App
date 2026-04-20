@@ -18,7 +18,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
-import { DownloaderModal, DeleteConfirmationModal } from '@components';
+import { DownloaderModal, DeleteConfirmationModal, type ThemeType } from '@components';
 import {
   useSearch,
   useLibrary,
@@ -45,6 +45,7 @@ export interface MenuItem {
   isDivider?: boolean;
   isSelected?: boolean;
   className?: string;
+  themeId?: ThemeType;
 }
 
 const Header: React.FC = () => {
@@ -293,6 +294,7 @@ const Header: React.FC = () => {
         {
           id: 'midnight',
           label: 'Midnight',
+          themeId: 'midnight',
           action: () => setTheme('midnight'),
           isSelected: theme === 'midnight',
           rightElement: theme === 'midnight' ? <Check size={14} className="check-icon" /> : undefined,
@@ -300,6 +302,7 @@ const Header: React.FC = () => {
         {
           id: 'amoled',
           label: 'Amoled',
+          themeId: 'amoled',
           action: () => setTheme('amoled'),
           isSelected: theme === 'amoled',
           rightElement: theme === 'amoled' ? <Check size={14} className="check-icon" /> : undefined,
@@ -307,6 +310,7 @@ const Header: React.FC = () => {
         {
           id: 'nord',
           label: 'Nord',
+          themeId: 'nord',
           action: () => setTheme('nord'),
           isSelected: theme === 'nord',
           rightElement: theme === 'nord' ? <Check size={14} className="check-icon" /> : undefined,
@@ -314,6 +318,7 @@ const Header: React.FC = () => {
         {
           id: 'rose',
           label: 'Rose',
+          themeId: 'rose',
           action: () => setTheme('rose'),
           isSelected: theme === 'rose',
           rightElement: theme === 'rose' ? <Check size={14} className="check-icon" /> : undefined,
@@ -321,6 +326,7 @@ const Header: React.FC = () => {
         {
           id: 'ocean',
           label: 'Ocean',
+          themeId: 'ocean',
           action: () => setTheme('ocean'),
           isSelected: theme === 'ocean',
           rightElement: theme === 'ocean' ? <Check size={14} className="check-icon" /> : undefined,
@@ -328,6 +334,7 @@ const Header: React.FC = () => {
         {
           id: 'snow',
           label: 'Snow',
+          themeId: 'snow',
           action: () => setTheme('snow'),
           isSelected: theme === 'snow',
           rightElement: theme === 'snow' ? <Check size={14} className="check-icon" /> : undefined,
@@ -533,6 +540,7 @@ const Header: React.FC = () => {
                                 }}
                               >
                                 <div className="item-left">
+                                  {item.themeId && <div className="theme-dot" data-theme={item.themeId} />}
                                   {item.icon && <div className="item-icon">{item.icon}</div>}
                                   <span className="item-label">{item.label}</span>
                                 </div>

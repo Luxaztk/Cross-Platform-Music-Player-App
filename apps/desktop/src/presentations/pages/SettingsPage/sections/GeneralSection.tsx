@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSettings, useLanguage } from '@hooks';
 import { RotateCcw, Languages } from 'lucide-react';
+import { CustomDropdown } from '@components';
 
 interface GeneralSectionProps {
   searchQuery?: string;
@@ -8,7 +9,7 @@ interface GeneralSectionProps {
 
 export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) => {
   const { t, setLanguage } = useLanguage();
-  const { settings, resetSettings, isSaving } = useSettings();
+  const { settings, updateSettings, resetSettings, isSaving } = useSettings();
 
   const handleReset = () => {
     if (window.confirm(t('settings.general.resetConfirm'))) {
@@ -42,10 +43,18 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
               <p>{t('settings.general.languageDesc')}</p>
             </div>
             <div className="setting-control">
-              <select value={settings.general.language} onChange={(e) => setLanguage(e.target.value as any)} title={t('settings.general.languageSelect')}>
-                <option value="vi">Tiếng Việt</option>
-                <option value="en">English</option>
-              </select>
+              <CustomDropdown
+                value={settings.general.language}
+                onChange={(val) => {
+                  setLanguage(val as any);
+                  updateSettings({ general: { language: val } });
+                }}
+                options={[
+                  { value: 'vi', label: 'Tiếng Việt' },
+                  { value: 'en', label: 'English' },
+                ]}
+                title={t('settings.general.languageSelect')}
+              />
             </div>
           </div>
         )}

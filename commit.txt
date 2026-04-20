@@ -1,9 +1,10 @@
-feat(desktop): implement professional bulk actions and refined SongRow UX
+feat(desktop): standardize dropdown UI and centralized testing architecture
 
-- Rewrite SongRow interaction model: unified title/icon click for standard playback, row click for selection.
-- Implement high-performance Bulk Actions Bar using React Portals to eliminate initial layout shifts.
-- Standardize centering logic using a Flexbox wrapper (fixed positioning with left/right: 0) to avoid scrollbar traps.
-- Add "Add to Queue" bulk operation with strict visual (top-to-bottom) ordering logic.
-- Optimize entry animations by unifying transforms to purely Y-axis transitions (slideUpOnly).
-- Refine visual hierarchy with brand primary colors for positive actions and danger red for destructive/cancel hovers.
-- Fix Ephemeral Hint logic for Lyrics Panel to improve discoverability of hidden controls.
+- Implement reusable production-grade `CustomDropdown` with Portal rendering.
+- Add ARIA accessibility attributes (`listbox`, `option`, `aria-haspopup`, `aria-expanded`).
+- Refactor Settings sections (General, Audio, Download, Appearance) to use the new standardized dropdown components.
+- Fix event propagation and reactivity bugs in Settings state management.
+- Standardize sub-menu headers and menu item dimensions across the application.
+- Relocate all unit tests to a centralized `src/tests/` directory with a mirrored architecture.
+- Harden unit tests with strict assertions for button types and UI reactivity using `user-event`.
+- Update Vitest and RTL configurations for optimized testing environment.

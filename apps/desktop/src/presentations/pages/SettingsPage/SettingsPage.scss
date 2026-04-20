@@ -1,3 +1,5 @@
+@use "../../components/Theme/ThemeProvider.scss" as *;
+
 .settings-page {
     height: 100%;
     display: flex;
@@ -378,6 +380,30 @@
         &.active {
             border-color: var(--color-primary);
             background: rgba(var(--color-primary-rgb), 0.05);
+        }
+
+        &[data-theme='midnight'] {
+            @extend %theme-midnight-vars;
+        }
+
+        &[data-theme='amoled'] {
+            @extend %theme-amoled-vars;
+        }
+
+        &[data-theme='nord'] {
+            @extend %theme-nord-vars;
+        }
+
+        &[data-theme='rose'] {
+            @extend %theme-rose-vars;
+        }
+
+        &[data-theme='ocean'] {
+            @extend %theme-ocean-vars;
+        }
+
+        &[data-theme='snow'] {
+            @extend %theme-snow-vars;
         }
 
         .theme-preview {

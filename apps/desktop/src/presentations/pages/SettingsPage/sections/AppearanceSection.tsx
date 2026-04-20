@@ -3,13 +3,13 @@ import { type ThemeType } from '@components';
 import { useTheme, useLanguage } from '@hooks';
 import { Palette, Check } from 'lucide-react';
 
-const THEMES: { id: ThemeType; color: string; nameKey: string }[] = [
-  { id: 'midnight', color: '#1a1a2e', nameKey: 'settings.appearance.themeMidnight' },
-  { id: 'amoled', color: '#000000', nameKey: 'settings.appearance.themeAmoled' },
-  { id: 'nord', color: '#2e3440', nameKey: 'settings.appearance.themeNord' },
-  { id: 'rose', color: '#1e1e2e', nameKey: 'settings.appearance.themeRose' },
-  { id: 'ocean', color: '#0f172a', nameKey: 'settings.appearance.themeOcean' },
-  { id: 'snow', color: '#f8f9fa', nameKey: 'settings.appearance.themeSnow' },
+const THEMES: { id: ThemeType; colorVar: string; nameKey: string }[] = [
+  { id: 'midnight', colorVar: '--color-primary', nameKey: 'settings.appearance.themeMidnight' },
+  { id: 'amoled', colorVar: '--color-primary', nameKey: 'settings.appearance.themeAmoled' },
+  { id: 'nord', colorVar: '--color-primary', nameKey: 'settings.appearance.themeNord' },
+  { id: 'rose', colorVar: '--color-primary', nameKey: 'settings.appearance.themeRose' },
+  { id: 'ocean', colorVar: '--color-primary', nameKey: 'settings.appearance.themeOcean' },
+  { id: 'snow', colorVar: '--color-primary', nameKey: 'settings.appearance.themeSnow' },
 ];
 
 interface AppearanceSectionProps {
@@ -53,9 +53,9 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({ searchQuer
                 key={tItem.id}
                 className={`theme-card ${theme === tItem.id ? 'active' : ''}`}
                 onClick={() => setTheme(tItem.id)}
-                style={{ '--color-primary': tItem.color } as any}
+                data-theme={tItem.id}
               >
-                <div className="theme-preview" />
+                <div className="theme-preview" style={{ backgroundColor: `var(${tItem.colorVar})` }} />
                 <div className="theme-name">
                   <span>{t(tItem.nameKey)}</span>
                   {theme === tItem.id && <Check size={14} />}

@@ -5,6 +5,11 @@ import path from 'path';
 const pkgPath = path.resolve('apps/desktop/package.json');
 const commitMsgPath = path.resolve('commit.txt');
 
+if (!process.env.GH_TOKEN) {
+  console.error('\n THIẾU GITHUB TOKEN');
+  process.exit(1); // Dừng script ngay lập tức, không cho commit hay build
+}
+
 // 1. Đọc file commit.txt
 if (!fs.existsSync(commitMsgPath)) {
   console.error('Lỗi: Không tìm thấy file commit.txt!');
