@@ -14,5 +14,4 @@ npm run desktop
 
 ## Run mobile
 
-cd apps/mobile
-npx react-native run-android
+npm run mobile

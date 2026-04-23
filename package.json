@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "desktop": "npm run dev --workspace=apps/desktop",
-    "mobile": "npm run android --workspace=apps/mobile",
+    "mobile": "npm run start --workspace=apps/mobile",
     "test": "npm run test --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "format": "prettier --write .",
