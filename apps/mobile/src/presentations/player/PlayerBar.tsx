@@ -14,10 +14,15 @@ export function PlayerBar() {
   const pathname = usePathname()
   const insets = useSafeAreaInsets()
 
-  const isInTabs = pathname.includes('(tabs)') || pathname === '/' || pathname === '/library' || pathname === '/search' || pathname === '/playlists' || pathname === '/settings'
-  const marginBottom = isInTabs ? 90 : insets.bottom + 12
+  const isInTabs =
+    pathname.includes('(tabs)') ||
+    pathname === '/' ||
+    pathname === '/library' ||
+    pathname === '/search' ||
+    pathname === '/playlists' ||
+    pathname === '/settings'
 
-  const positionMs = progress.positionMs
+  const marginBottom = isInTabs ? 90 : insets.bottom + 12
 
   const title = currentSong?.title ?? 'Nothing playing'
   const subtitle = currentSong ? currentSong.artist : 'Tap a song to start'
@@ -25,8 +30,13 @@ export function PlayerBar() {
   const canShow = !!currentSong
 
   const timeLabel = useMemo(() => {
-    return `${formatTime(positionMs)} / ${formatTime(progress.durationMs)}`
-  }, [positionMs, progress.durationMs])
+    return `${formatTime(progress.positionMs)} / ${formatTime(progress.durationMs)}`
+  }, [progress.positionMs, progress.durationMs])
+
+  const progressPercent =
+    progress.durationMs > 0
+      ? Math.min((progress.positionMs / progress.durationMs) * 100, 100)
+      : 0
 
   if (!canShow) return null
 
@@ -35,57 +45,85 @@ export function PlayerBar() {
       onPress={() => router.push('/now-playing')}
       style={[
         styles.container,
-        { 
-          backgroundColor: theme.colors.surface, 
+        {
+          backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
           bottom: marginBottom,
         },
       ]}
     >
-      <View style={styles.text}>
-        <Text numberOfLines={1} style={[styles.title, { color: theme.colors.text }]}>
-          {title}
-        </Text>
-        <Text numberOfLines={1} style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-          {subtitle}
-        </Text>
-      </View>
+      <View style={styles.topRow}>
+        <View style={[styles.cover, { backgroundColor: theme.colors.primary + '18' }]}>
+          <Text style={[styles.coverText, { color: theme.colors.primary }]}>M</Text>
+        </View>
 
-      <View style={styles.controls}>
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation()
-            void playPrevious()
-          }}
-          hitSlop={10}
-        >
-          <Text style={[styles.controlText, { color: theme.colors.text }]}>⏮</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation()
-            void togglePlayPause()
-          }}
-          hitSlop={10}
-        >
-          <Text style={[styles.controlText, { color: theme.colors.text }]}>
-            {progress.isPlaying ? '⏸' : '▶'}
+        <View style={styles.textWrap}>
+          <Text numberOfLines={1} style={[styles.title, { color: theme.colors.text }]}>
+            {title}
           </Text>
-        </Pressable>
+          <Text numberOfLines={1} style={[styles.subtitle, { color: theme.colors.mutedText }]}>
+            {subtitle}
+          </Text>
+        </View>
 
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation()
-            void playNext()
-          }}
-          hitSlop={10}
-        >
-          <Text style={[styles.controlText, { color: theme.colors.text }]}>⏭</Text>
-        </Pressable>
+        <View style={styles.controls}>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation()
+              void playPrevious()
+            }}
+            hitSlop={10}
+            style={styles.iconBtn}
+          >
+            <Text style={[styles.controlText, { color: theme.colors.text }]}>⏮</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation()
+              void togglePlayPause()
+            }}
+            hitSlop={10}
+            style={[styles.playBtn, { backgroundColor: theme.colors.text }]}
+          >
+            <Text style={[styles.playBtnText, { color: theme.colors.background }]}>
+              {progress.isPlaying ? '⏸' : '▶'}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation()
+              void playNext()
+            }}
+            hitSlop={10}
+            style={styles.iconBtn}
+          >
+            <Text style={[styles.controlText, { color: theme.colors.text }]}>⏭</Text>
+          </Pressable>
+        </View>
       </View>
 
-      <Text style={[styles.time, { color: theme.colors.mutedText }]}>{timeLabel}</Text>
+      <View style={styles.bottomRow}>
+        <View
+          style={[
+            styles.progressTrack,
+            { backgroundColor: theme.colors.border },
+          ]}
+        >
+          <View
+            style={[
+              styles.progressFill,
+              {
+                backgroundColor: theme.colors.primary,
+                width: `${progressPercent}%` as any,
+              },
+            ]}
+          />
+        </View>
+
+        <Text style={[styles.time, { color: theme.colors.mutedText }]}>{timeLabel}</Text>
+      </View>
     </Pressable>
   )
 }
@@ -96,29 +134,74 @@ const styles = StyleSheet.create({
     left: 12,
     right: 12,
     borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
-    gap: 10,
+    borderRadius: 18,
+    padding: 14,
+    gap: 12,
   },
-  text: {
-    gap: 2,
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  cover: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  coverText: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  textWrap: {
+    flex: 1,
+    gap: 3,
   },
   title: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
   },
   subtitle: {
     fontSize: 12,
   },
   controls: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 18,
+    gap: 10,
+  },
+  iconBtn: {
+    width: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   controlText: {
     fontSize: 18,
     fontWeight: '700',
+  },
+  playBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playBtnText: {
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  bottomRow: {
+    gap: 8,
+  },
+  progressTrack: {
+    width: '100%',
+    height: 4,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 4,
+    borderRadius: 999,
   },
   time: {
     fontSize: 11,
