@@ -11,6 +11,7 @@ import { formatTime } from '../presentations/player/format'
 export default function NowPlayingScreen() {
   const { theme } = useTheme()
   const insets = useSafeAreaInsets()
+
   const {
     currentSong,
     state,
@@ -22,6 +23,7 @@ export default function NowPlayingScreen() {
     setShuffle,
     setRepeatMode,
   } = usePlayerState()
+
   const progress = usePlayerProgress()
 
   const [isSeeking, setIsSeeking] = useState(false)
@@ -38,30 +40,77 @@ export default function NowPlayingScreen() {
   }, [state.repeatMode, setRepeatMode])
 
   const repeatLabel =
-    state.repeatMode === 'ONE' ? '🔂' : state.repeatMode === 'ALL' ? '🔁' : '➡️'
+    state.repeatMode === 'ONE'
+      ? '🔂'
+      : state.repeatMode === 'ALL'
+        ? '🔁'
+        : '➡️'
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top }]}>
-      {/* Drag handle / dismiss */}
-      <Pressable onPress={() => router.back()} style={styles.handleArea} hitSlop={12}>
-        <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
-      </Pressable>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.background,
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom + 20,
+        },
+      ]}
+    >
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
+          <Text style={[styles.backText, { color: theme.colors.text }]}>←</Text>
+        </Pressable>
 
-      {/* Album art placeholder */}
-      <View style={[styles.artContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-        <Text style={[styles.artEmoji, { color: theme.colors.primary }]}>🎵</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.mutedText }]}>
+          Đang phát
+        </Text>
+
+        <View style={styles.headerRight} />
+      </View>
+
+      {/* Album art */}
+      <View
+        style={[
+          styles.artContainer,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.artInner,
+            { backgroundColor: theme.colors.primary + '18' },
+          ]}
+        >
+          <Text style={[styles.artLogo, { color: theme.colors.primary }]}>M</Text>
+        </View>
       </View>
 
       {/* Song info */}
       <View style={styles.info}>
-        <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>
-          {currentSong?.title ?? 'Nothing playing'}
+        <Text
+          style={[styles.title, { color: theme.colors.text }]}
+          numberOfLines={2}
+        >
+          {currentSong?.title ?? 'Chưa chọn bài hát'}
         </Text>
-        <Text style={[styles.subtitle, { color: theme.colors.mutedText }]} numberOfLines={1}>
-          {currentSong?.artist ?? ''}
+
+        <Text
+          style={[styles.subtitle, { color: theme.colors.mutedText }]}
+          numberOfLines={1}
+        >
+          {currentSong?.artist ?? 'Unknown Artist'}
         </Text>
+
         {currentSong?.album ? (
-          <Text style={[styles.album, { color: theme.colors.mutedText }]} numberOfLines={1}>
+          <Text
+            style={[styles.album, { color: theme.colors.mutedText }]}
+            numberOfLines={1}
+          >
             {currentSong.album}
           </Text>
         ) : null}
@@ -87,6 +136,7 @@ export default function NowPlayingScreen() {
             void seekTo(v)
           }}
         />
+
         <View style={styles.timeRow}>
           <Text style={[styles.time, { color: theme.colors.mutedText }]}>
             {formatTime(positionMs)}
@@ -99,39 +149,79 @@ export default function NowPlayingScreen() {
 
       {/* Main controls */}
       <View style={styles.controls}>
-        <Pressable onPress={() => void setShuffle(!state.isShuffle)} style={styles.sideBtn} hitSlop={10}>
-          <Text style={[styles.sideIcon, { color: state.isShuffle ? theme.colors.primary : theme.colors.mutedText }]}>
+        <Pressable
+          onPress={() => void setShuffle(!state.isShuffle)}
+          style={styles.sideBtn}
+          hitSlop={10}
+        >
+          <Text
+            style={[
+              styles.sideIcon,
+              {
+                color: state.isShuffle
+                  ? theme.colors.primary
+                  : theme.colors.mutedText,
+              },
+            ]}
+          >
             🔀
           </Text>
         </Pressable>
 
-        <Pressable onPress={() => void playPrevious()} style={styles.controlBtn} hitSlop={10}>
+        <Pressable
+          onPress={() => void playPrevious()}
+          style={styles.controlBtn}
+          hitSlop={10}
+        >
           <Text style={[styles.controlIcon, { color: theme.colors.text }]}>⏮</Text>
         </Pressable>
 
         <Pressable
           onPress={() => void togglePlayPause()}
-          style={[styles.playBtn, { backgroundColor: theme.colors.primary }]}
+          style={[styles.playBtn, { backgroundColor: theme.colors.text }]}
         >
-          <Text style={styles.playIcon}>
+          <Text style={[styles.playIcon, { color: theme.colors.background }]}>
             {progress.isPlaying ? '⏸' : '▶'}
           </Text>
         </Pressable>
 
-        <Pressable onPress={() => void playNext()} style={styles.controlBtn} hitSlop={10}>
+        <Pressable
+          onPress={() => void playNext()}
+          style={styles.controlBtn}
+          hitSlop={10}
+        >
           <Text style={[styles.controlIcon, { color: theme.colors.text }]}>⏭</Text>
         </Pressable>
 
         <Pressable onPress={cycleRepeat} style={styles.sideBtn} hitSlop={10}>
-          <Text style={[styles.sideIcon, { color: state.repeatMode !== 'OFF' ? theme.colors.primary : theme.colors.mutedText }]}>
+          <Text
+            style={[
+              styles.sideIcon,
+              {
+                color:
+                  state.repeatMode !== 'OFF'
+                    ? theme.colors.primary
+                    : theme.colors.mutedText,
+              },
+            ]}
+          >
             {repeatLabel}
           </Text>
         </Pressable>
       </View>
 
       {/* Volume */}
-      <View style={styles.volumeRow}>
+      <View
+        style={[
+          styles.volumeCard,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
+        ]}
+      >
         <Text style={[styles.volumeIcon, { color: theme.colors.mutedText }]}>🔈</Text>
+
         <Slider
           style={styles.volumeSlider}
           minimumValue={0}
@@ -142,6 +232,7 @@ export default function NowPlayingScreen() {
           thumbTintColor={theme.colors.primary}
           onSlidingComplete={(v) => void setVolume(v)}
         />
+
         <Text style={[styles.volumeIcon, { color: theme.colors.mutedText }]}>🔊</Text>
       </View>
     </View>
@@ -151,46 +242,71 @@ export default function NowPlayingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 28,
-    gap: 16,
+    paddingHorizontal: 24,
+    gap: 20,
   },
-  handleArea: {
+  header: {
+    height: 52,
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    justifyContent: 'space-between',
   },
-  handle: {
-    width: 40,
-    height: 5,
-    borderRadius: 3,
+  backBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  backText: {
+    fontSize: 26,
+    fontWeight: '700',
+  },
+  headerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  headerRight: {
+    width: 44,
+    height: 44,
   },
   artContainer: {
-    aspectRatio: 1,
     width: '100%',
-    borderRadius: 18,
+    aspectRatio: 1,
+    borderRadius: 28,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  artEmoji: {
-    fontSize: 64,
+  artInner: {
+    width: '78%',
+    aspectRatio: 1,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  artLogo: {
+    fontSize: 90,
+    fontWeight: '900',
   },
   info: {
-    gap: 4,
+    gap: 6,
     alignItems: 'center',
+    paddingHorizontal: 8,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 16,
     textAlign: 'center',
   },
   album: {
     fontSize: 13,
-    fontStyle: 'italic',
     textAlign: 'center',
+    opacity: 0.9,
   },
   seekSection: {
     gap: 2,
@@ -207,36 +323,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   controls: {
+    marginTop: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 20,
+    gap: 18,
   },
   sideBtn: {
-    padding: 8,
+    width: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sideIcon: {
     fontSize: 20,
   },
   controlBtn: {
-    padding: 10,
+    width: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   controlIcon: {
     fontSize: 28,
     fontWeight: '800',
   },
   playBtn: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 74,
+    height: 74,
+    borderRadius: 37,
     alignItems: 'center',
     justifyContent: 'center',
   },
   playIcon: {
-    fontSize: 28,
-    color: '#FFFFFF',
+    fontSize: 30,
+    fontWeight: '800',
   },
-  volumeRow: {
+  volumeCard: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
