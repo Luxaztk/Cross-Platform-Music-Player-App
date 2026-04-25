@@ -15,19 +15,17 @@ interface ThemeContextType {
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode; storage?: IStorageAdapter }> = ({ children }) => {
-  const [theme, setThemeState] = useState<ThemeType>('midnight');
-
-  // Initial load and sync
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('melovista-theme') as ThemeType;
-    if (savedTheme) {
-      setThemeState(savedTheme);
-    } else {
-      // First run: detect OS preference
-      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-      setThemeState(prefersLight ? 'nord' : 'midnight');
+  const [theme, setThemeState] = useState<ThemeType>(() => {
+    if (typeof localStorage !== 'undefined') {
+      const savedTheme = localStorage.getItem('melovista-theme') as ThemeType;
+      if (savedTheme) return savedTheme;
     }
-  }, []);
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      return prefersLight ? 'nord' : 'midnight';
+    }
+    return 'midnight';
+  });
 
   // Update body attribute and persist
   useEffect(() => {

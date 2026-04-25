@@ -110,3 +110,10 @@ Thumbs.db
 *.orig.*
 *.pem
 app-example
+
+# =========================
+# AI Tooling & Prompts
+# =========================
+AI_RULES.md
+.cursorrules
+/.agents

@@ -27,7 +27,7 @@ class Logger {
       try {
         const log = (await import('electron-log')).default;
         (log as any)[level](message);
-      } catch (err) {
+      } catch (_err) {
         console[level === 'debug' || level === 'verbose' ? 'log' : level](message);
       }
     } else {

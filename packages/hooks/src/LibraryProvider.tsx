@@ -47,7 +47,7 @@ interface LibraryActionsContextType {
   handleDeletePlaylist: (playlistId: string) => Promise<boolean>;
   refreshPlaylists: () => Promise<void>;
   refreshLibrary: () => Promise<void>;
-  handleScanMissingFiles: () => Promise<string[]>;
+  handleScanMissingFiles: () => Promise<Song[]>;
   repository: ILibraryRepository;
 }
 
@@ -103,8 +103,10 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, repo
   }, [useCases]);
 
   useEffect(() => {
-    fetchLibrary();
-    fetchPlaylists();
+    const init = async () => {
+      await Promise.all([fetchLibrary(), fetchPlaylists()]);
+    };
+    init();
   }, [fetchLibrary, fetchPlaylists]);
 
   const handleImportFiles = React.useCallback(async () => {

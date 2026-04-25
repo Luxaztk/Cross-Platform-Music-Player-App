@@ -75,6 +75,11 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [X] **Bulk Actions Stability (Zero-Shift Architecture)**: Triển khai thanh tác vụ hàng loạt thông qua React Portal và Flexbox Wrapper (Scrollbar-trap safe), triệt tiêu hoàn toàn hiện tượng "nhảy" layout khi hiển thị.
 - [X] **Visual Ordering Engine**: Cơ chế bóc tách và sắp xếp bài hát theo thứ tự hiển thị (Top-to-bottom) khi thực hiện các thao tác hàng loạt (Add to Queue), bất kể thứ tự người dùng click chọn.
 - [X] **Ephemeral Hint (Lyrics Panel)**: Cơ chế hiển thị tạm thời (5 giây) cho các nút chức năng ẩn để tăng khả năng khám phá tính năng cho người dùng mới.
+- [X] **Downloader & Cleanup Hardening (V4)**:
+    - [X] Đồng bộ cấu trúc Settings Downloads: Chuyển đổi sang `downloadPath`, `bitrate` và `autoImportPaths` chuẩn theo kiến trúc hệ thống.
+    - [X] Nâng cấp **Library Cleanup**: Tích hợp API `scanMissingFiles` chuyên dụng, hỗ trợ quét file lỗi nhanh và giao diện dọn dẹp hàng loạt chuyên nghiệp qua `CleanupResolutionModal`.
+    - [X] Khắc phục xung đột CSS: Loại bỏ các định dạng trùng lặp, đảm bảo giao diện "pixel-perfect" cho mục Online Downloader trong Settings.
+    - [X] Sửa lỗi TypeScript nghiêm trọng liên quan đến kiểu dữ liệu `duration` (number | undefined) trong `DownloaderModal`.
 
 ---
 

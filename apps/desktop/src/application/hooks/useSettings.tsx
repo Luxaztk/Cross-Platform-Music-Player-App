@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { AppSettings } from '../../../electron/constants/SettingsConstants';
+import type { AppSettings } from '@constants';
 
 interface SettingsContextType {
   settings: AppSettings;
@@ -9,7 +9,7 @@ interface SettingsContextType {
   isSaving: boolean;
 }
 
-export const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AppSettings | null>(null);

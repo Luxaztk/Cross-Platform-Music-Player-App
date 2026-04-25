@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@hooks';
 import './UpdateNotification.scss';
 
 export function UpdateNotification() {
+  const { t } = useLanguage();
   const [show, setShow] = useState(false);
   const [version, setVersion] = useState('');
   const [progress, setProgress] = useState(0);
@@ -65,8 +67,8 @@ export function UpdateNotification() {
 
   return (
     <div className="update-notification">
-      <h3 className="title">{isDownloaded ? 'Cập nhật sẵn sàng!' : 'Đang tải bản cập nhật...'}</h3>
-      <p className="version">Phiên bản: {version}</p>
+      <h3 className="title">{isDownloaded ? t('update.ready') : t('update.downloading')}</h3>
+      <p className="version">{t('update.version', { version })}</p>
 
       {!isDownloaded && (
         <div className="progress-track">
@@ -76,25 +78,25 @@ export function UpdateNotification() {
 
       <div className="actions">
         {!isDownloaded ? (
-          <span className="status-text">Đang tải ngầm: {progress}%</span>
+          <span className="status-text">{t('update.downloadingSilent', { progress })}</span>
         ) : (
           <>
             <button className="btn-secondary" onClick={() => setShow(false)}>
-              Để sau
+              {t('update.later')}
             </button>
             <button
               className="btn-primary"
               onClick={() => {
                 // Mock nút click trong lúc dev
                 if (import.meta.env.DEV) {
-                  alert('Chức năng khởi động lại chỉ hoạt động ở bản build .exe!');
+                  alert(t('update.devRestartWarning'));
                   setShow(false);
                 } else {
                   window.electronAPI.restartApp();
                 }
               }}
             >
-              Khởi động lại ngay
+              {t('update.restartNow')}
             </button>
           </>
         )}

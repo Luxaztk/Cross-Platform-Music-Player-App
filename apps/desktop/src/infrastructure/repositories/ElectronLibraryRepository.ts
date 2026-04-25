@@ -95,7 +95,7 @@ export class ElectronLibraryRepository implements ILibraryRepository {
     return window.electronAPI.addSongs(songs);
   }
 
-  async scanMissingFiles(): Promise<string[]> {
+  async scanMissingFiles(): Promise<Song[]> {
     return window.electronAPI.scanMissingFiles();
   }
 

@@ -1,4 +1,7 @@
-import '@testing-library/jest-dom';
+import * as matchers from '@testing-library/jest-dom/matchers';
+import { expect } from 'vitest';
+
+expect.extend(matchers);
 import { vi } from 'vitest';
 
 // Global mock for electronAPI
@@ -15,7 +18,7 @@ const electronAPIMock = {
   onThemeChanged: vi.fn().mockReturnValue(() => {}),
 };
 
-// @ts-ignore
+// @ts-expect-error - mock global electronAPI for testing
 window.electronAPI = electronAPIMock;
 
 // Mock for ResizeObserver which is missing in jsdom
@@ -35,7 +38,11 @@ const mockAudioContext = vi.fn().mockImplementation(function (this: any) {
     stop: vi.fn(),
   });
   this.createGain = vi.fn().mockReturnValue({
-    gain: { setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
+    gain: { 
+      setValueAtTime: vi.fn(), 
+      linearRampToValueAtTime: vi.fn(),
+      exponentialRampToValueAtTime: vi.fn() 
+    },
     connect: vi.fn(),
   });
   this.currentTime = 0;
@@ -43,9 +50,8 @@ const mockAudioContext = vi.fn().mockImplementation(function (this: any) {
   return this;
 });
 
-// @ts-ignore
-window.AudioContext = mockAudioContext;
-// @ts-ignore
+window.AudioContext = mockAudioContext as any;
+// @ts-expect-error - mock global webkitAudioContext for testing
 window.webkitAudioContext = mockAudioContext;
 global.AudioContext = mockAudioContext;
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
+import { CheckCircle, AlertCircle, Info, X, AlertTriangle } from 'lucide-react';
 import './Notification.scss';
 import type { NotificationType } from '@hooks';
 import { ICON_SIZES } from '@constants';
@@ -16,7 +16,7 @@ const DISMISS_DELAY = 500; // 0.5s nếu đã quá thời hạn
 
 export const NotificationItem: React.FC<NotificationProps> = ({ id, type, message, onClose }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const startTimeRef = useRef<number>(Date.now());
+  const [startTime] = useState(() => Date.now());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export const NotificationItem: React.FC<NotificationProps> = ({ id, type, messag
     }
 
     if (!isHovered) {
-      const elapsed = Date.now() - startTimeRef.current;
+      const elapsed = Date.now() - startTime;
       const remainingTime = DEFAULT_DURATION - elapsed;
       const delay = remainingTime > 0 ? remainingTime : DISMISS_DELAY;
 
@@ -51,6 +51,7 @@ export const NotificationItem: React.FC<NotificationProps> = ({ id, type, messag
         {type === 'success' && <CheckCircle size={ICON_SIZES.SMALL} />}
         {type === 'error' && <AlertCircle size={ICON_SIZES.SMALL} />}
         {type === 'info' && <Info size={ICON_SIZES.SMALL} />}
+        {type === 'warning' && <AlertTriangle size={ICON_SIZES.SMALL} />}
       </div>
       <div className="notification-message">{message}</div>
       <div className="notification-close" onClick={() => onClose(id)}>

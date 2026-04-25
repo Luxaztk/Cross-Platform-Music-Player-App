@@ -44,7 +44,7 @@ const PlayerBar: React.FC = () => {
     };
   }, [isQueueOpen]);
 
-  const isSeeking = useRef(false);
+  const [isSeeking, setIsSeeking] = useState(false);
   const [localProgress, setLocalProgress] = useState(0);
   const [lastVolume, setLastVolume] = useState(1);
 
@@ -54,7 +54,7 @@ const PlayerBar: React.FC = () => {
   };
 
   const handleSeekStart = () => {
-    isSeeking.current = true;
+    setIsSeeking(true);
     setLocalProgress(progress);
   };
 
@@ -64,10 +64,10 @@ const PlayerBar: React.FC = () => {
   };
 
   const handleSeekEnd = (e: React.PointerEvent<HTMLInputElement>) => {
-    if (isSeeking.current) {
+    if (isSeeking) {
       const val = parseFloat(e.currentTarget.value);
       seek(val);
-      isSeeking.current = false;
+      setIsSeeking(false);
     }
   };
 
@@ -92,7 +92,7 @@ const PlayerBar: React.FC = () => {
     else setRepeatMode('OFF');
   };
 
-  const displayProgress = isSeeking.current ? localProgress : progress;
+  const displayProgress = isSeeking ? localProgress : progress;
   const progressPercent = duration ? (displayProgress / duration) * 100 : 0;
   const volumePercent = volume * 100;
 
@@ -119,7 +119,7 @@ const PlayerBar: React.FC = () => {
       <div className="player-center">
         <div className="player-controls">
           <button className={`control-btn secondary-btn ${isShuffle ? 'active' : ''}`} title="Shuffle" onClick={toggleShuffle}>
-            <Shuffle size={16} />
+            <Shuffle size={ICON_SIZES.XSMALL} />
           </button>
           <button className="control-btn" title="Previous" onClick={prev} disabled={!currentSong}>
             <SkipBack size={ICON_SIZES.MEDIUM} fill={currentSong ? "currentColor" : "none"} />
@@ -135,7 +135,7 @@ const PlayerBar: React.FC = () => {
             <SkipForward size={ICON_SIZES.MEDIUM} fill={queue.length > 0 || currentSong ? "currentColor" : "none"} />
           </button>
           <button className={`control-btn secondary-btn ${repeatMode !== 'OFF' ? 'active' : ''}`} title="Repeat" onClick={toggleRepeat}>
-            {repeatMode === 'ONE' ? <Repeat1 size={16} /> : <Repeat size={16} />}
+            {repeatMode === 'ONE' ? <Repeat1 size={ICON_SIZES.XSMALL} /> : <Repeat size={ICON_SIZES.XSMALL} />}
           </button>
         </div>
 

@@ -14,7 +14,7 @@
 }
 
 .duplicate-modal {
-  background-color: #282828;
+  background-color: var(--bg-modal);
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 600px;

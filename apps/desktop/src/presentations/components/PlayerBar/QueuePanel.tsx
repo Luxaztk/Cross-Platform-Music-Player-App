@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo, useEffect } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { GripVertical, Trash2, ListMusic } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -27,13 +27,13 @@ const QueueItemRow = memo(({ item, index, isDraggingActive, onRemove, t }: Queue
             {...provided.draggableProps}
             style={provided.draggableProps.style}
           >
-            <div 
+            <div
               className={`queue-item-content ${snapshot.isDragging ? 'is-dragging' : ''} ${isDraggingActive && !snapshot.isDragging ? 'is-dimmed' : ''}`}
             >
               <div className="drag-handle" {...provided.dragHandleProps}>
                 <GripVertical size={14} />
               </div>
-              
+
               <div className="queue-item-info">
                 <div className="queue-item-title" title={item.song.title}>{item.song.title}</div>
                 <div className="queue-item-artist" title={item.song.artist}>{item.song.artist}</div>
@@ -74,12 +74,13 @@ const QueuePanel: React.FC = () => {
   const [isDraggingActive, setIsDraggingActive] = useState(false);
   const [localQueue, setLocalQueue] = useState(globalQueue);
 
-  // Sync local queue with global queue when global updates (but not during drag)
-  useEffect(() => {
+  const [prevGlobalQueue, setPrevGlobalQueue] = useState(globalQueue);
+  if (globalQueue !== prevGlobalQueue) {
+    setPrevGlobalQueue(globalQueue);
     if (!isDraggingActive) {
       setLocalQueue(globalQueue);
     }
-  }, [globalQueue, isDraggingActive]);
+  }
 
   const onDragStart = useCallback(() => {
     setIsDraggingActive(true);
@@ -122,7 +123,7 @@ const QueuePanel: React.FC = () => {
       <div className="queue-list-container">
         {localQueue.length === 0 ? (
           <div className="queue-empty">
-             <img src={appIcon} alt="" className="empty-brand-icon" />
+            <img src={appIcon} alt="" className="empty-brand-icon" />
             <p>{t('playlist.queueEmpty')}</p>
           </div>
         ) : (

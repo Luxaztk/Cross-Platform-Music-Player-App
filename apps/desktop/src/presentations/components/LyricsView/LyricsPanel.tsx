@@ -39,12 +39,16 @@ export const LyricsPanel: React.FC = () => {
     }
   }, [currentLineIndex]);
 
-  // Reset search state when song changes
-  useEffect(() => {
+  const [prevSongId, setPrevSongId] = useState(currentSong?.id);
+  const [prevSearchParam, setPrevSearchParam] = useState(currentSong?.lyricSearchParam);
+
+  if (currentSong?.id !== prevSongId || currentSong?.lyricSearchParam !== prevSearchParam) {
+    setPrevSongId(currentSong?.id);
+    setPrevSearchParam(currentSong?.lyricSearchParam);
     setSearchResults([]);
     setIsSearching(false);
     setSearchQuery(currentSong?.lyricSearchParam || (currentSong ? formatLyricsSearchQuery(currentSong.title, currentSong.artist) : ''));
-  }, [currentSong?.id, currentSong?.title, currentSong?.artist, currentSong?.lyricSearchParam]);
+  }
 
   // Ephemeral Hint: Briefly show hidden buttons when panel opens
   useEffect(() => {

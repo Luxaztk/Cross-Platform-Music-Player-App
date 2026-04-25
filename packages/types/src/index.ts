@@ -78,14 +78,13 @@ export type RecentSearchInput =
   | { type: 'query'; text: string }
   | { type: 'entity'; entityType: 'artist' | 'album'; id: string; name: string };
 
-// Thêm vào file types của bạn
-export interface ImportResult {
-  success: boolean;
-  count: number;
-  songs?: Song[];
-  duplicates?: string[];
-  duplicateSongs?: DuplicateSongInfo[];
-  reason?: 'CANCELED' | 'ERROR' | undefined;
-  message?: string;
-  totalAttempted?: number;
+
+export interface YoutubeInfo {
+  id: string;
+  url: string;
+  title: string;
+  artist: string;
+  album: string;
+  thumbnail: string;
+  duration?: number;
 }

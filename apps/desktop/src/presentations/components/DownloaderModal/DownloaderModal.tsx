@@ -20,7 +20,7 @@ interface YouTubeVideoInfo {
   artist: string;
   album: string;
   thumbnail: string;
-  duration: number;
+  duration?: number;
 }
 
 export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClose }) => {
@@ -46,8 +46,9 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
 
   const urlInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset Modal State
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setState('input');
       setUrl('');
@@ -56,8 +57,11 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
       setVideoInfo(null);
       setDownloadedPath(null);
       setDuplicateInfo({ warning: null, isAfterDownload: false, reasonAfterDownload: null });
+    }
+  }
 
-      // Focus input mà không dùng setTimeout nếu có thể, hoặc dùng requestAnimationFrame
+  useEffect(() => {
+    if (isOpen) {
       requestAnimationFrame(() => urlInputRef.current?.focus());
     }
   }, [isOpen]);
@@ -217,7 +221,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
         return (
           <div className="downloader-input-state">
             <div className="input-header">
-              <Search size={48} className="placeholder-icon" />
+              <Search size={ICON_SIZES.XLARGE * 1.5} className="placeholder-icon" />
               <p>{t('downloader.urlPlaceholder')}</p>
             </div>
             <div className="input-group">
@@ -235,7 +239,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
                   onClick={handlePaste}
                   title={t('downloader.paste')}
                 >
-                  {isPasted ? <ClipboardCheck size={16} /> : <Clipboard size={16} />}
+                  {isPasted ? <ClipboardCheck size={ICON_SIZES.XSMALL} /> : <Clipboard size={ICON_SIZES.XSMALL} />}
                 </button>
               </div>
               <button
@@ -252,7 +256,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
       case 'fetching':
         return (
           <div className="downloader-loading-state">
-            <Loader2 size={48} className="spinning-icon" />
+            <Loader2 size={ICON_SIZES.XLARGE * 1.5} className="spinning-icon" />
             <p>{t('downloader.searching')}</p>
           </div>
         );
@@ -274,7 +278,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
             {/* === HIỂN THỊ CẢNH BÁO TRÙNG LẶP (Chốt 1) === */}
             {duplicateInfo.warning && (
               <div className="duplicate-warning">
-                <AlertTriangle size={16} />
+                <AlertTriangle size={ICON_SIZES.XSMALL} />
                 <div>
                   <strong>{t('downloader.duplicateWarning')}</strong>
                   <p>
@@ -336,7 +340,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
             {/* Thông báo nếu bị trùng sau khi tải (Chốt 2) */}
             {duplicateInfo.isAfterDownload && (
               <div className="duplicate-info-banner">
-                <AlertTriangle size={14} />
+                <AlertTriangle size={ICON_SIZES.TINY} />
                 <span>
                   {duplicateInfo.reasonAfterDownload === 'HASH'
                     ? t('downloader.duplicateHashFound')
@@ -417,5 +421,3 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
     </>
   );
 };
-
-export default DownloaderModal;

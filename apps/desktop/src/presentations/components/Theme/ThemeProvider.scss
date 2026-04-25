@@ -71,10 +71,14 @@
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
 
   --color-success: #10b981;
+  --color-success-rgb: 16, 185, 129;
   --color-error: #ef4444;
+  --color-error-rgb: 239, 68, 68;
   --color-error-bg: rgba(239, 68, 68, 0.12);
   --color-warning: #f59e0b;
+  --color-warning-rgb: 245, 158, 11;
   --color-info: #3b82f6;
+  --color-info-rgb: 59, 130, 246;
 
   --border-subtle: rgba(255, 255, 255, 0.08);
   --bg-overlay: rgba(255, 255, 255, 0.06);
@@ -115,10 +119,14 @@ body:not([data-theme]) {
   --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.1);
 
   --color-success: #34d399;
+  --color-success-rgb: 52, 211, 153;
   --color-error: #ff5252;
+  --color-error-rgb: 255, 82, 82;
   --color-error-bg: rgba(255, 82, 82, 0.15);
   --color-warning: #fbbf24;
+  --color-warning-rgb: 251, 191, 36;
   --color-info: #60a5fa;
+  --color-info-rgb: 96, 165, 250;
 
   --border-subtle: rgba(255, 255, 255, 0.1);
   --bg-overlay: rgba(255, 255, 255, 0.08);
@@ -158,10 +166,14 @@ body[data-theme='amoled'] {
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 
   --color-success: #a3be8c;
+  --color-success-rgb: 163, 190, 140;
   --color-error: #bf616a;
+  --color-error-rgb: 191, 97, 106;
   --color-error-bg: rgba(191, 97, 106, 0.15);
   --color-warning: #ebcb8b;
+  --color-warning-rgb: 235, 203, 139;
   --color-info: #81a1c1;
+  --color-info-rgb: 129, 161, 193;
 
   --border-subtle: rgba(236, 239, 244, 0.12);
   --bg-overlay: rgba(236, 239, 244, 0.08);

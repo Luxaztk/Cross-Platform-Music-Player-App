@@ -7,15 +7,26 @@ import type { ID3Metadata } from '../modules/metadata/MetadataManager';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
 import { logger, normalizeString } from '@music/utils';
 
+import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
+
 const downloader = new YoutubeDownloader();
 const metadataManager = new MetadataManager();
+const storageAdapter = new MainStorageAdapter();
 
 const getDownloadsDir = async () => {
-    // Save to User's Music/Melovista Downloads folder
-    const musicDir = app.getPath('music');
-    const downloadsDir = path.join(musicDir, 'Melovista Downloads');
+    // 1. Get path from settings
+    const settings = await storageAdapter.getSettings();
+    let downloadsDir = settings.downloads.downloadPath;
+
+    // 2. Fallback to default if not set (though StorageAdapter handles it, we guard)
+    if (!downloadsDir) {
+        const musicDir = app.getPath('music');
+        downloadsDir = path.join(musicDir, 'Melovista Downloads');
+    }
+
+    // 3. Ensure exists
     await fs.mkdir(downloadsDir, { recursive: true });
-    logFileTrace('downloader.getDownloadsDir', downloadsDir, 'SUCCESS', 'Ensured downloads directory exists');
+    logFileTrace('downloader.getDownloadsDir', downloadsDir, 'SUCCESS', 'Resolved download path from settings');
     return downloadsDir;
 };
 

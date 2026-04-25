@@ -36,6 +36,7 @@ if (app) {
 import { setupLibraryIPC } from './ipc/library'
 import { setupStorageIPC } from './ipc/storage'
 import { setupDownloaderIPC } from './ipc/downloader'
+import { setupDialogIPC } from './ipc/dialog'
 import { logFileTrace } from './infrastructure/FileTraceLogger'
 
 // Register custom scheme BEFORE app is ready
@@ -278,6 +279,7 @@ app.whenReady().then(() => {
   setupLibraryIPC()
   setupStorageIPC()
   setupDownloaderIPC()
+  setupDialogIPC()
   createWindow()
 
   // Khởi chạy cơ chế tự động cập nhật

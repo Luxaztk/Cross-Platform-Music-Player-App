@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { X, Search, Check } from 'lucide-react';
 import type { Song } from '@music/types';
 import { useTheme, useLanguage } from '@hooks';
+import { ICON_SIZES } from '@constants';
 import './SongPickerModal.scss';
 
 interface SongPickerModalProps {
@@ -62,12 +63,12 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
         <div className="modal-header">
           <h2>{t('modal.selectSongs') || 'Chọn bài hát để thêm'}</h2>
           <button className="close-btn" onClick={onClose} title={t('common.close')}>
-            <X size={20} />
+            <X size={ICON_SIZES.MEDIUM} />
           </button>
         </div>
 
         <div className="search-container">
-          <Search size={18} className="search-icon" />
+          <Search size={ICON_SIZES.SMALL} className="search-icon" />
           <input
             type="text"
             placeholder={t('header.searchPlaceholder')}
@@ -103,7 +104,7 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
                       <span className="artist">{song.artist}</span>
                     </div>
                   </div>
-                  <div className="checkbox">{selectedIds.has(song.id) && <Check size={16} />}</div>
+                  <div className="checkbox">{selectedIds.has(song.id) && <Check size={ICON_SIZES.XSMALL} />}</div>
                 </div>
               ))}
             </div>

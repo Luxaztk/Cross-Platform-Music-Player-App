@@ -18,7 +18,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
-import { DownloaderModal, DeleteConfirmationModal, type ThemeType } from '@components';
+import { DownloaderModal, CleanupResolutionModal, type ThemeType } from '@components';
 import {
   useSearch,
   useLibrary,
@@ -35,7 +35,7 @@ import { SearchOverlay, type SearchResultItem } from './SearchOverlay';
 import logo from '@music/brand/logos/icon_only_gradient.png';
 import './Header.scss';
 
-export interface MenuItem {
+interface MenuItem {
   id: string;
   label: string;
   icon?: React.ReactNode;
@@ -67,7 +67,7 @@ const Header: React.FC = () => {
   const { recentSearches, addSearch, removeSearch, clearAll } = useRecentSearches();
   const [showDownloader, setShowDownloader] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
-  const [missingFileIds, setMissingFileIds] = React.useState<string[] | null>(null);
+  const [missingSongs, setMissingSongs] = React.useState<Song[] | null>(null);
 
   const searchResults = useSearch(songs, playlists, searchQuery);
   const profileRef = React.useRef<HTMLDivElement>(null);
@@ -84,6 +84,34 @@ const Header: React.FC = () => {
       item: al,
     })),
   ];
+
+  const handleSelectResult = React.useCallback((result: SearchResultItem) => {
+    if (result.type === 'song') {
+      const songIdx = songs.findIndex((s: Song) => s.id === result.item.id);
+
+      if (songIdx !== -1) playList(songs, songIdx);
+    } else if (result.type === 'artist') {
+      setLibraryFilter({ type: 'artist', values: [result.item.name] });
+      navigate('/playlist/0');
+    } else if (result.type === 'album') {
+      setLibraryFilter({ type: 'album', values: [result.item.name] });
+      navigate('/playlist/0');
+    }
+    setIsSearchFocused(false);
+    setSearchQuery('');
+
+    // Add to recent searches
+    if (result.type === 'song') {
+      addSearch({ type: 'query', text: result.item.title });
+    } else if (result.type === 'artist' || result.type === 'album') {
+      addSearch({
+        type: 'entity',
+        entityType: result.type,
+        id: result.item.id,
+        name: result.item.name,
+      });
+    }
+  }, [songs, playList, setLibraryFilter, navigate, addSearch]);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -124,35 +152,7 @@ const Header: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeydown);
     };
-  }, [showProfileMenu, isSearchFocused, selectedIndex, flatResults, searchQuery]);
-
-  const handleSelectResult = (result: SearchResultItem) => {
-    if (result.type === 'song') {
-      const songIdx = songs.findIndex((s: Song) => s.id === result.item.id);
-
-      if (songIdx !== -1) playList(songs, songIdx);
-    } else if (result.type === 'artist') {
-      setLibraryFilter({ type: 'artist', values: [result.item.name] });
-      navigate('/playlist/0');
-    } else if (result.type === 'album') {
-      setLibraryFilter({ type: 'album', values: [result.item.name] });
-      navigate('/playlist/0');
-    }
-    setIsSearchFocused(false);
-    setSearchQuery('');
-
-    // Add to recent searches
-    if (result.type === 'song') {
-      addSearch({ type: 'query', text: result.item.title });
-    } else if (result.type === 'artist' || result.type === 'album') {
-      addSearch({
-        type: 'entity',
-        entityType: result.type,
-        id: result.item.id,
-        name: result.item.name,
-      });
-    }
-  };
+  }, [showProfileMenu, isSearchFocused, selectedIndex, flatResults, searchQuery, handleSelectResult]);
 
   const handleSelectRecent = (recent: RecentSearch) => {
     if (recent.type === 'query') {
@@ -217,7 +217,7 @@ const Header: React.FC = () => {
       if (missing.length === 0) {
         showNotification('info', t('libraryCleanup.noMissing'));
       } else {
-        setMissingFileIds(missing);
+        setMissingSongs(missing);
       }
     } catch (err) {
       console.error('Scan missing files error:', err);
@@ -226,14 +226,14 @@ const Header: React.FC = () => {
     }
   };
 
-  const confirmCleanup = async () => {
-    if (!missingFileIds) return;
-    const count = missingFileIds.length;
-    const success = await handleDeleteSongs(missingFileIds);
+  const confirmCleanup = async (selectedIds: string[]) => {
+    if (!selectedIds.length) return;
+    const count = selectedIds.length;
+    const success = await handleDeleteSongs(selectedIds);
     if (success) {
       showNotification('success', t('libraryCleanup.success').replace('{count}', count.toString()));
     }
-    setMissingFileIds(null);
+    setMissingSongs(null);
   };
 
   React.useEffect(() => {
@@ -564,14 +564,11 @@ const Header: React.FC = () => {
 
       <DownloaderModal isOpen={showDownloader} onClose={() => setShowDownloader(false)} />
 
-      <DeleteConfirmationModal
-        isOpen={!!missingFileIds}
-        onClose={() => setMissingFileIds(null)}
+      <CleanupResolutionModal
+        isOpen={!!missingSongs}
+        missingSongs={missingSongs || []}
+        onClose={() => setMissingSongs(null)}
         onConfirm={confirmCleanup}
-        title={t('libraryCleanup.title')}
-        confirmText={t('common.delete')}
-        message={t('libraryCleanup.foundMissing').replace('{count}', missingFileIds?.length.toString() || '0')}
-        messageSuffix={t('libraryCleanup.confirmMessage')}
       />
     </>
   );

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { ChevronDown } from 'lucide-react';
+import { ICON_SIZES } from '@constants';
 import './CustomDropdown.scss';
 
-export interface DropdownOption {
+interface DropdownOption {
   value: string | number;
   label: string;
 }
@@ -33,6 +34,17 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0 });
   const selectedOption = options.find((opt) => String(opt.value) === String(value));
 
+  const updatePosition = React.useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -53,18 +65,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
-
-  const updatePosition = () => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
-      });
-    }
-  };
+  }, [isOpen, updatePosition]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -113,14 +114,14 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             {selectedOption ? selectedOption.label : placeholder}
           </span>
         </div>
-        <ChevronDown size={16} className={`chevron ${isOpen ? 'open' : ''}`} />
+        <ChevronDown size={ICON_SIZES.XSMALL} className={`chevron ${isOpen ? 'open' : ''}`} />
       </button>
 
       {isOpen &&
         ReactDOM.createPortal(
-          <div 
-            className="dropdown-portal-menu" 
-            style={menuStyle} 
+          <div
+            className="dropdown-portal-menu"
+            style={menuStyle}
             ref={menuRef}
             onClick={(e) => e.stopPropagation()}
             role="listbox"
