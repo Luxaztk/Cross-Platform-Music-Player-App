@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router'
-import { useLanguage } from '../../i18n'
+import { useLanguage } from '../../presentations/components/Language'
 
 export default function TabsLayout() {
   const { t } = useLanguage()

@@ -13,9 +13,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import type { Song } from '@music/types'
 
-import { useTheme } from '../../theme'
-import { useLanguage } from '../../i18n'
-import { useNotifications } from '../../notifications'
+import { useTheme } from '../../presentations/components/Theme'
+import { useLanguage } from '../../presentations/components/Language'
+import { useNotifications } from '../../presentations/components/Notification'
 import { useLibrary } from '../../application'
 import { usePlayer } from '../../application/player'
 import { formatTime } from '../../presentations/player/format'

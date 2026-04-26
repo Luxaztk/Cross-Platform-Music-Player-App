@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
-import { useTheme } from '../../theme'
-import { useLanguage } from '../../i18n'
+import { useTheme } from '../../presentations/components/Theme'
+import { useLanguage } from '../../presentations/components/Language'
 
 export default function SettingsScreen() {
   const { theme, themeName, toggleTheme, isHydrated } = useTheme()

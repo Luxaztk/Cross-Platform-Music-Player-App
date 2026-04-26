@@ -4,7 +4,7 @@ import { Alert } from 'react-native'
 import type { PlayerState, Song } from '@music/types'
 
 import { MobileStorageAdapter } from '../../infrastructure/storage'
-import { useLanguage } from '../../i18n'
+import { useLanguage } from '../../presentations/components/Language'
 import { useLibrary } from '../library/LibraryProvider'
 import { PlayerService, type PlayerProgress } from './PlayerService'
 

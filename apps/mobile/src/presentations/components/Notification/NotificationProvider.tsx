@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import type { Toast, ToastKind } from './types'
-import { useTheme } from '../theme'
+import { useTheme } from '../Theme'
 
 type NotifyInput = {
   message: string

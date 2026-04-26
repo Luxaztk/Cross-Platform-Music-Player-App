@@ -4,9 +4,9 @@ import * as DocumentPicker from 'expo-document-picker'
 
 import type { Song } from '@music/types'
 
-import { useTheme } from '../../theme'
-import { useLanguage } from '../../i18n'
-import { useNotifications } from '../../notifications'
+import { useTheme } from '../../presentations/components/Theme'
+import { useLanguage } from '../../presentations/components/Language'
+import { useNotifications } from '../../presentations/components/Notification'
 import { useLibrary } from '../../application'
 import { usePlayerState } from '../../application/player'
 

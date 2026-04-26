@@ -4,7 +4,7 @@ import React, { useCallback, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { useTheme } from '../theme'
+import { useTheme } from '../presentations/components/Theme'
 import { usePlayerState, usePlayerProgress } from '../application/player'
 import { formatTime } from '../presentations/player/format'
 
