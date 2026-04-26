@@ -9,7 +9,7 @@ import { formatTime } from './format'
 
 export function PlayerBar() {
   const { theme } = useTheme()
-  const { currentSong, togglePlayPause, playNext, playPrevious } = usePlayerState()
+  const { currentSong, togglePlayPause, next, prev } = usePlayerState()
   const progress = usePlayerProgress()
   const pathname = usePathname()
   const insets = useSafeAreaInsets()
@@ -70,7 +70,7 @@ export function PlayerBar() {
           <Pressable
             onPress={(e) => {
               e.stopPropagation()
-              void playPrevious()
+              void prev()
             }}
             hitSlop={10}
             style={styles.iconBtn}
@@ -94,7 +94,7 @@ export function PlayerBar() {
           <Pressable
             onPress={(e) => {
               e.stopPropagation()
-              void playNext()
+              void next()
             }}
             hitSlop={10}
             style={styles.iconBtn}

@@ -3,6 +3,7 @@ export type EngineProgress = {
   isPlaying: boolean
   positionMs: number
   durationMs: number
+  didJustFinish?: boolean
 }
 
 export type ProgressListener = (p: EngineProgress) => void

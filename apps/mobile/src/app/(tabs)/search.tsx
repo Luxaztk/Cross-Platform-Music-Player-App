@@ -119,7 +119,7 @@ export default function SearchScreen() {
     removeRecentSearch, 
     clearRecentSearches 
   } = useLibrary()
-  const { playFromQueue } = usePlayerState()
+  const { playList } = usePlayerState()
 
   const [query, setQuery] = useState('')
   const trimmedQuery = query.trim().toLowerCase()
@@ -131,12 +131,13 @@ export default function SearchScreen() {
       if (query.trim()) {
         void addRecentSearch(query)
       }
-      const res = await playFromQueue([songId], songId)
-      if (!res.ok) {
+      try {
+        await playList([songId], 0)
+      } catch {
         notify({ message: t.library.playbackFailed, kind: 'error' })
       }
     },
-    [playFromQueue, notify, t, query, addRecentSearch],
+    [playList, notify, t, query, addRecentSearch],
   )
 
   const onOpenPlaylist = useCallback((id: string) => {

@@ -40,6 +40,7 @@ export class ExpoAudioEngine implements PlayerEngine {
       isPlaying: !!status.playing,
       positionMs: Math.floor((status.currentTime ?? 0) * 1000),
       durationMs: Math.floor((status.duration ?? 0) * 1000),
+      didJustFinish: status.didJustFinish,
     })
   }
 
@@ -106,6 +107,7 @@ export class ExpoAudioEngine implements PlayerEngine {
 
     if (!this.player) {
       this.player = createAudioPlayer({ uri }, { updateInterval: 250 })
+      // @ts-ignore: addListener exists at runtime on SharedObject but may have type mismatch in this env
       this.player.addListener('playbackStatusUpdate', this.onStatus)
     } else {
       this.player.replace({ uri })

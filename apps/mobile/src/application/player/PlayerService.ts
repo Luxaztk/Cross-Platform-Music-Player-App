@@ -1,10 +1,7 @@
 import { ExpoAudioEngine } from './engine/ExpoAudioEngine'
 import type { EngineProgress, PlayerEngine, ProgressListener } from './engine/types'
 import type { LockScreenMetadata } from './engine/types'
-import { AudioPlayerState } from './states/AudioPlayerState'
-import { IdleState } from './states/IdleState'
-import { PlayingState } from './states/PlayingState'
-import { PausedState } from './states/PausedState'
+import { AudioPlayerState, IdleState, PlayingState, PausedState } from './states/AudioPlayerState'
 
 export type PlayerProgress = EngineProgress
 

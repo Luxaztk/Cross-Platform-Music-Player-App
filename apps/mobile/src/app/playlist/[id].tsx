@@ -113,8 +113,7 @@ export default function PlaylistDetailScreen() {
     addSongsToPlaylist, 
     removeSongsFromPlaylist 
   } = useLibrary()
-  
-  const { playFromQueue, state: playerState } = usePlayer()
+  const { playList, state: playerState } = usePlayer()
 
   const [addModalVisible, setAddModalVisible] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -139,11 +138,12 @@ export default function PlaylistDetailScreen() {
 
   const onPlayAll = useCallback(async () => {
     if (playlistSongs.length === 0) return
-    const res = await playFromQueue(playlist.songIds, playlist.songIds[0])
-    if (!res.ok) {
+    try {
+      await playList(playlist.songIds, 0)
+    } catch {
       notify({ message: t.library.playbackFailed, kind: 'error' })
     }
-  }, [playlist, playlistSongs, playFromQueue, notify, t])
+  }, [playlist, playlistSongs, playList, notify, t])
 
   const onRemoveSong = useCallback(async (songId: string) => {
     await removeSongsFromPlaylist(id, [songId])
@@ -151,11 +151,13 @@ export default function PlaylistDetailScreen() {
   }, [id, removeSongsFromPlaylist, notify, t])
 
   const onPlaySong = useCallback(async (songId: string) => {
-    const res = await playFromQueue(playlist.songIds, songId)
-    if (!res.ok) {
+    try {
+      const idx = playlist.songIds.indexOf(songId)
+      await playList(playlist.songIds, idx >= 0 ? idx : 0)
+    } catch {
       notify({ message: t.library.playbackFailed, kind: 'error' })
     }
-  }, [playlist, playFromQueue, notify, t])
+  }, [playlist, playList, notify, t])
 
   const onToggleSelect = useCallback((sid: string) => {
     setSelectedIds(prev => 

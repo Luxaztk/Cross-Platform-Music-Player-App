@@ -79,7 +79,7 @@ export default function LibraryScreen() {
   const { t } = useLanguage()
   const { notify } = useNotifications()
   const { isHydrated, songsById, library, importPickedAudio, deleteSongs } = useLibrary()
-  const { playFromQueue, state: playerState } = usePlayerState()
+  const { playList, state: playerState } = usePlayerState()
 
   const [sortField, setSortField] = useState<SortField>('title')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
@@ -144,11 +144,13 @@ export default function LibraryScreen() {
   const onPressSong = useCallback(
     (songId: string) => {
       void (async () => {
-        const res = await playFromQueue(sortedIds, songId)
-        if (!res.ok) {
+        try {
+          const idx = sortedIds.indexOf(songId)
+          await playList(sortedIds, idx >= 0 ? idx : 0)
+        } catch (err: any) {
           notify({
             message:
-              res.error === 'AUDIO_MODULE_UNAVAILABLE'
+              err?.message === 'AUDIO_MODULE_UNAVAILABLE'
                 ? t.library.playbackUnavailable
                 : t.library.playbackFailed,
             kind: 'error',
@@ -156,7 +158,7 @@ export default function LibraryScreen() {
         }
       })()
     },
-    [playFromQueue, sortedIds, notify, t],
+    [playList, sortedIds, notify, t],
   )
 
   // ── Sort toggle ─────────────────────────────────

@@ -16,11 +16,11 @@ export default function NowPlayingScreen() {
     currentSong,
     state,
     togglePlayPause,
-    playNext,
-    playPrevious,
+    next,
+    prev,
     seekTo,
     setVolume,
-    setShuffle,
+    toggleShuffle,
     setRepeatMode,
   } = usePlayerState()
 
@@ -150,7 +150,7 @@ export default function NowPlayingScreen() {
       {/* Main controls */}
       <View style={styles.controls}>
         <Pressable
-          onPress={() => void setShuffle(!state.isShuffle)}
+          onPress={() => void toggleShuffle()}
           style={styles.sideBtn}
           hitSlop={10}
         >
@@ -169,7 +169,7 @@ export default function NowPlayingScreen() {
         </Pressable>
 
         <Pressable
-          onPress={() => void playPrevious()}
+          onPress={() => void prev()}
           style={styles.controlBtn}
           hitSlop={10}
         >
@@ -186,7 +186,7 @@ export default function NowPlayingScreen() {
         </Pressable>
 
         <Pressable
-          onPress={() => void playNext()}
+          onPress={() => void next()}
           style={styles.controlBtn}
           hitSlop={10}
         >
