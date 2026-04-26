@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSettings, useLanguage } from '@hooks';
+import { ICON_SIZES } from '@constants';
 import { RotateCcw, Languages } from 'lucide-react';
 import { CustomDropdown } from '@components';
 
@@ -31,7 +32,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
   return (
     <div className="settings-section">
       <div className="section-header">
-        <Languages size={20} />
+        <Languages size={ICON_SIZES.MEDIUM} />
         <h2>{t('settings.general.title')}</h2>
       </div>
 
@@ -67,7 +68,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
             </div>
             <div className="setting-control">
               <button className="reset-btn" onClick={handleReset} disabled={isSaving}>
-                <RotateCcw size={16} />
+                <RotateCcw size={ICON_SIZES.XSMALL} />
                 <span>{t('settings.general.resetBtn')}</span>
               </button>
             </div>

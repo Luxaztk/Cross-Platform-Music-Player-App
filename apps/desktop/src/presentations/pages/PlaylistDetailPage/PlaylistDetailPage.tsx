@@ -103,13 +103,17 @@ export const PlaylistDetailPage: React.FC = () => {
 
   const isLibrary = id === '0';
 
+  const [prevId, setPrevId] = React.useState(id);
+  if (id !== prevId) {
+    setPrevId(id);
+    setIsLoading(true);
+    setPlaylist(null);
+    setLocalSongs([]);
+    setSelectedIds(new Set());
+  }
+
   React.useEffect(() => {
     if (id) {
-      setIsLoading(true);
-      setPlaylist(null);
-      setLocalSongs([]);
-      setSelectedIds(new Set());
-
       handleGetPlaylistDetail(id)
         .then((data: PlaylistDetail | null) => {
           if (data) {
@@ -184,6 +188,10 @@ export const PlaylistDetailPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [activeMenuId]);
 
+  const onBulkDelete = React.useCallback((mode: 'library' | 'playlist') => {
+    setBulkDeleteMode(mode);
+  }, []);
+
   // Keyboard shortcut for Delete
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -194,7 +202,7 @@ export const PlaylistDetailPage: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIds, isLibrary]);
+  }, [selectedIds, isLibrary, onBulkDelete]);
 
   const onSaveMetadata = async (updated: Song | Playlist) => {
     if (editingSong) {
@@ -255,10 +263,6 @@ export const PlaylistDetailPage: React.FC = () => {
     setBulkDeleteMode(null);
   };
 
-  const onBulkDelete = (mode: 'library' | 'playlist') => {
-    setBulkDeleteMode(mode);
-  };
-
   const toggleSelectAll = () => {
     if (selectedIds.size === filteredSongs.length) {
       setSelectedIds(new Set());
@@ -316,6 +320,7 @@ export const PlaylistDetailPage: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const filteredSongs = React.useMemo(() => {
     const sorted = [
       ...(libraryFilter.type !== 'none' && libraryFilter.values.length > 0
@@ -426,7 +431,7 @@ export const PlaylistDetailPage: React.FC = () => {
     return ReactDOM.createPortal(
       <div className="song-row-portal-menu" style={menuStyle} ref={menuRef} onClick={(e) => e.stopPropagation()}>
         <MenuAction
-          icon={<Play size={16} />}
+          icon={<Play size={ICON_SIZES.XSMALL} />}
           label={t('playlist.playNow')}
           onClick={() => {
             const idx = filteredSongs.findIndex((s) => s.id === activeSong.id);
@@ -435,7 +440,7 @@ export const PlaylistDetailPage: React.FC = () => {
           }}
         />
         <MenuAction
-          icon={<PlaySquare size={16} />}
+          icon={<PlaySquare size={ICON_SIZES.XSMALL} />}
           label={t('playlist.playNext')}
           onClick={() => {
             playNext(activeSong);
@@ -443,7 +448,7 @@ export const PlaylistDetailPage: React.FC = () => {
           }}
         />
         <MenuAction
-          icon={<ListPlus size={16} />}
+          icon={<ListPlus size={ICON_SIZES.XSMALL} />}
           label={t('playlist.addToQueue')}
           onClick={() => {
             addToQueue(activeSong);
@@ -459,10 +464,10 @@ export const PlaylistDetailPage: React.FC = () => {
           onMouseEnter={() => setActiveSubMenuId(activeSong.id)}
         >
           <div className="item-content">
-            <FolderPlus size={16} />
+            <FolderPlus size={ICON_SIZES.XSMALL} />
             <span>{t('playlist.addToPlaylist')}</span>
           </div>
-          <ChevronRight size={14} />
+          <ChevronRight size={ICON_SIZES.TINY} />
 
           {activeSubMenuId === activeSong.id && (
             <div className="nested-menu">
@@ -490,7 +495,7 @@ export const PlaylistDetailPage: React.FC = () => {
 
         <div className="menu-divider"></div>
         <MenuAction
-          icon={<Edit2 size={16} />}
+          icon={<Edit2 size={ICON_SIZES.XSMALL} />}
           label={t('common.edit')}
           onClick={() => {
             setEditingSong(activeSong);
@@ -597,7 +602,7 @@ export const PlaylistDetailPage: React.FC = () => {
         {libraryFilter.type !== 'none' && libraryFilter.values.length > 0 && (
           <div className="filter-chip-container">
             <div className="active-filter-label">
-              <Filter size={12} className="filter-icon" />
+              <Filter size={ICON_SIZES.MINI} className="filter-icon" />
               <span className="filter-text">{t('playlist.filteringBy')}</span>
             </div>
 
@@ -616,7 +621,7 @@ export const PlaylistDetailPage: React.FC = () => {
                     }}
                     title={t('common.clear')}
                   >
-                    <X size={12} />
+                    <X size={ICON_SIZES.MINI} />
                   </button>
                 </div>
               ))}
@@ -628,9 +633,9 @@ export const PlaylistDetailPage: React.FC = () => {
           <div className="col-idx">
             <button className="checkbox-header-btn" onClick={toggleSelectAll}>
               {selectedIds.size === filteredSongs.length && filteredSongs.length > 0 ? (
-                <CheckSquare size={16} className="text-primary" />
+                <CheckSquare size={ICON_SIZES.XSMALL} className="text-primary" />
               ) : (
-                <Square size={16} />
+                <Square size={ICON_SIZES.XSMALL} />
               )}
             </button>
           </div>
@@ -719,17 +724,17 @@ export const PlaylistDetailPage: React.FC = () => {
               <div className="bulk-btns">
                 {!isLibrary && (
                   <button className="bulk-btn secondary" onClick={() => onBulkDelete('playlist')}>
-                    <X size={16} />
+                    <X size={ICON_SIZES.XSMALL} />
                     {t('playlist.removeFromPlaylist') || 'Gỡ khỏi playlist'}
                   </button>
                 )}
                 <button className="bulk-btn delete" onClick={() => onBulkDelete('library')}>
-                  <Trash size={16} />
+                  <Trash size={ICON_SIZES.XSMALL} />
                   {t('playlist.deleteFromLibrary') || 'Xóa khỏi thư viện'}
                 </button>
                 <div className="bulk-divider" />
                 <button className="bulk-btn secondary" onClick={onBulkAddToQueue}>
-                  <ListPlus size={16} />
+                  <ListPlus size={ICON_SIZES.XSMALL} />
                   {t('playlist.addToQueue') || 'Thêm vào hàng đợi'}
                 </button>
                 <div className="bulk-divider" />

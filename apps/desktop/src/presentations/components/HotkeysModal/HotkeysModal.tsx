@@ -10,9 +10,9 @@ interface HotkeysModalProps {
 }
 
 export const HotkeysModal: React.FC<HotkeysModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
   const { t } = useLanguage();
+
+  if (!isOpen) return null;
 
   const hotkeyGroups = [
     {

@@ -37,11 +37,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   // If the user never picked a theme, follow system changes before hydration finishes.
-  useEffect(() => {
-    if (!isHydrated) {
-      setThemeNameState(systemThemeName)
-    }
-  }, [isHydrated, systemThemeName])
+  const [prevSystemThemeName, setPrevSystemThemeName] = useState(systemThemeName)
+  if (!isHydrated && systemThemeName !== prevSystemThemeName) {
+    setPrevSystemThemeName(systemThemeName)
+    setThemeNameState(systemThemeName)
+  }
 
   const setThemeName = useCallback((next: ThemeName) => {
     setThemeNameState(next)

@@ -217,7 +217,7 @@
 
     .list-header {
       display: grid;
-      grid-template-columns: 80px 1.5fr 1fr 120px 80px;
+      grid-template-columns: 80px 1.5fr 0.75fr 120px 80px;
       padding: 12px var(--spacing-lg);
       align-items: center;
       border-bottom: 1px solid var(--border-subtle);
@@ -266,7 +266,7 @@
       }
 
       .col-album {
-        text-align: left;
+        text-align: center;
       }
 
       .col-duration {
@@ -276,7 +276,7 @@
 
     .song-row {
       display: grid;
-      grid-template-columns: 80px 1.5fr 1fr 120px 80px;
+      grid-template-columns: 80px 1.5fr 0.75fr 120px 80px;
       align-items: center;
       padding: 8px var(--spacing-lg);
       border-radius: 4px;
@@ -442,7 +442,7 @@
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
-        text-align: left;
+        text-align: center;
         padding: 0 8px;
       }
 

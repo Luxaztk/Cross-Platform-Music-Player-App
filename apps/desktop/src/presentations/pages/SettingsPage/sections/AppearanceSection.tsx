@@ -1,6 +1,7 @@
 import React from 'react';
 import { type ThemeType } from '@components';
 import { useTheme, useLanguage } from '@hooks';
+import { ICON_SIZES } from '@constants';
 import { Palette, Check } from 'lucide-react';
 
 const THEMES: { id: ThemeType; colorVar: string; nameKey: string }[] = [
@@ -37,7 +38,7 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({ searchQuer
   return (
     <div className="settings-section">
       <div className="section-header">
-        <Palette size={20} />
+        <Palette size={ICON_SIZES.MEDIUM} />
         <h2>{t('settings.appearance.title')}</h2>
       </div>
 
@@ -55,10 +56,20 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({ searchQuer
                 onClick={() => setTheme(tItem.id)}
                 data-theme={tItem.id}
               >
-                <div className="theme-preview" style={{ backgroundColor: `var(${tItem.colorVar})` }} />
+                <div className="theme-preview">
+                  <div className="mock-header" />
+                  <div className="mock-content">
+                    <div className="mock-sidebar" />
+                    <div className="mock-main">
+                      <div className="mock-item" />
+                      <div className="mock-item" />
+                      <div className="mock-item" />
+                    </div>
+                  </div>
+                </div>
                 <div className="theme-name">
                   <span>{t(tItem.nameKey)}</span>
-                  {theme === tItem.id && <Check size={14} />}
+                  {theme === tItem.id && <Check size={ICON_SIZES.TINY} />}
                 </div>
               </div>
             ))}

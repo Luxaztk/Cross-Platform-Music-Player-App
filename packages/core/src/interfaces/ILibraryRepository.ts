@@ -15,7 +15,7 @@ export interface ILibraryRepository {
   importFiles(): Promise<ImportResult>;
   importFolder(): Promise<ImportResult>;
   addSongs(songs: Song[]): Promise<{ success: boolean; count: number }>;
-  scanMissingFiles(): Promise<string[]>;
+  scanMissingFiles(): Promise<Song[]>;
   getLyrics(songId: string): Promise<string | null>;
   saveLyrics(songId: string, lyrics: string, lyricId?: number): Promise<boolean>;
   searchLyrics(query: string): Promise<LyricSearchResult[]>;

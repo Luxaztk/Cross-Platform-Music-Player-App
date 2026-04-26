@@ -38,7 +38,11 @@ export const useAudioDevices = () => {
   }, []);
 
   useEffect(() => {
-    fetchDevices();
+    const init = async () => {
+      await fetchDevices();
+    };
+    init();
+
     // Listen for plugged/unplugged devices
     if (navigator.mediaDevices && typeof navigator.mediaDevices.addEventListener === 'function') {
       navigator.mediaDevices.addEventListener('devicechange', fetchDevices);

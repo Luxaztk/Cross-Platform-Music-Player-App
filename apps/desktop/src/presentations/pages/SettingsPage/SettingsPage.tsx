@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage, useSettings } from '@hooks';
+import { ICON_SIZES } from '@constants';
 import { SettingsSearch } from './components/SettingsSearch';
 import { GeneralSection, AppearanceSection, DownloadSection, AudioSection } from './sections';
 import { Save, Check, Settings, Palette, Download, Volume2, Info } from 'lucide-react';
@@ -15,11 +16,11 @@ export const SettingsPage: React.FC = () => {
     const activeTab = searchParams.get('tab') || 'general';
 
     const menuItems = useMemo(() => [
-        { id: 'general', label: t('settings.menu.general'), icon: <Settings size={18} /> },
-        { id: 'appearance', label: t('settings.menu.appearance'), icon: <Palette size={18} /> },
-        { id: 'audio', label: t('settings.menu.audio'), icon: <Volume2 size={18} /> },
-        { id: 'downloads', label: t('settings.menu.downloads'), icon: <Download size={18} /> },
-        { id: 'about', label: t('settings.menu.about'), icon: <Info size={18} /> },
+        { id: 'general', label: t('settings.menu.general'), icon: <Settings size={ICON_SIZES.SMALL} /> },
+        { id: 'appearance', label: t('settings.menu.appearance'), icon: <Palette size={ICON_SIZES.SMALL} /> },
+        { id: 'audio', label: t('settings.menu.audio'), icon: <Volume2 size={ICON_SIZES.SMALL} /> },
+        { id: 'downloads', label: t('settings.menu.downloads'), icon: <Download size={ICON_SIZES.SMALL} /> },
+        { id: 'about', label: t('settings.menu.about'), icon: <Info size={ICON_SIZES.SMALL} /> },
     ], [t]);
 
     const setActiveTab = (id: string) => {
@@ -45,26 +46,26 @@ export const SettingsPage: React.FC = () => {
             case 'downloads': return <DownloadSection />;
             case 'about':
                 return (
-                  <div className="settings-section about-section">
-                    <div className="about-content">
-                      <div className="app-branding">
-                        <h1>Melovista</h1>
-                        <p>Version {__APP_VERSION__} (Desktop)</p>
-                      </div>
-                      <p>{t('settings.about.desc')}</p>
-                      <div className="footer-links">
-                        <a
-                          href="https://github.com/Luxaztk/Cross-Platform-Music-Player-App"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          GitHub
-                        </a>
-                        <span>•</span>
-                        <a>License</a>
-                      </div>
+                    <div className="settings-section about-section">
+                        <div className="about-content">
+                            <div className="app-branding">
+                                <h1>Melovista</h1>
+                                <p>Version {__APP_VERSION__} (Desktop)</p>
+                            </div>
+                            <p>{t('settings.about.desc')}</p>
+                            <div className="footer-links">
+                                <a
+                                    href="https://github.com/Luxaztk/Cross-Platform-Music-Player-App"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    GitHub
+                                </a>
+                                <span>•</span>
+                                <a>License</a>
+                            </div>
+                        </div>
                     </div>
-                  </div>
                 );
             default: return <GeneralSection />;
         }
@@ -80,12 +81,12 @@ export const SettingsPage: React.FC = () => {
                         <div className={`save-indicator ${isSaving ? 'active' : ''}`}>
                             {isSaving ? (
                                 <div className="saving">
-                                    <Save size={14} className="spinning" />
+                                    <Save size={ICON_SIZES.TINY} className="spinning" />
                                     <span>{t('settings.saving')}</span>
                                 </div>
                             ) : (
                                 <div className="saved">
-                                    <Check size={14} />
+                                    <Check size={ICON_SIZES.TINY} />
                                     <span>{t('settings.saved')}</span>
                                 </div>
                             )}
@@ -120,5 +121,3 @@ export const SettingsPage: React.FC = () => {
         </div>
     );
 };
-
-export default SettingsPage;

@@ -1,3 +1,4 @@
+export * from './CleanupResolutionModal';
 export * from './DeleteConfirmationModal';
 export * from './DownloaderModal';
 export * from './DuplicateResolutionModal';
@@ -11,9 +12,9 @@ export * from './Library';
 export * from './LyricsView';
 export * from './Notification';
 export * from './PlayerBar';
-export * from './Settings';
 export * from './Sidebar';
 export * from './SongPickerModal';
 export * from './Theme';
 export * from './UpdateNotification';
 export * from './Dropdown';
+export * from './Tooltip';

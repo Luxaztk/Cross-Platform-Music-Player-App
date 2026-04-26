@@ -75,9 +75,9 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
         <div className="col-idx" onClick={handleFirstColumnClick}>
           <div className="checkbox-cell">
             {isSelected ? (
-              <CheckSquare size={16} className="text-primary" />
+              <CheckSquare size={ICON_SIZES.XSMALL} className="text-primary" />
             ) : isPlaying ? (
-              <Play size={14} className="playing-icon" />
+              <Play size={ICON_SIZES.TINY} className="playing-icon" />
             ) : (
               index + 1
             )}

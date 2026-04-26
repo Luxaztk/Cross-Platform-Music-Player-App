@@ -1,3 +1,4 @@
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import {
@@ -6,11 +7,12 @@ import {
   LanguageProvider,
   LibraryProvider,
   UpdateNotification,
+  ErrorBoundary,
 } from '@components'
 import { PlayerProvider, UIProvider, useLibraryContext } from '@music/hooks'
 import { ElectronStorageAdapter } from './infrastructure/services/ElectronStorageAdapter'
 import { useNotification, useLanguage } from '@hooks'
-import { SettingsProvider } from './application/hooks/useSettings'
+import { SettingsProvider, DownloadProvider } from './application/hooks'
 const storage = new ElectronStorageAdapter()
 
 const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) => {
@@ -32,21 +34,27 @@ const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) => {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <UIProvider>
-    <LanguageProvider>
-      <ThemeProvider storage={storage}>
-        <NotificationProvider>
-          <SettingsProvider>
-            <LibraryProvider>
-              <PlayerWithLibrary>
-                <App />
-              </PlayerWithLibrary>
-            </LibraryProvider>
-          </SettingsProvider>
-        </NotificationProvider>
-        {/* KHU VỰC GLOBAL OVERLAY (NỔI TRÊN CÙNG) */}
-        <UpdateNotification />
-      </ThemeProvider>
-    </LanguageProvider>
-  </UIProvider>,
+  <StrictMode>
+    <ErrorBoundary componentName="MeloVista App">
+      <UIProvider>
+        <LanguageProvider>
+          <ThemeProvider storage={storage}>
+            <NotificationProvider>
+              <SettingsProvider>
+                <LibraryProvider>
+                  <DownloadProvider>
+                    <PlayerWithLibrary>
+                      <App />
+                    </PlayerWithLibrary>
+                  </DownloadProvider>
+                </LibraryProvider>
+              </SettingsProvider>
+            </NotificationProvider>
+            {/* KHU VỰC GLOBAL OVERLAY (NỔI TRÊN CÙNG) */}
+            <UpdateNotification />
+          </ThemeProvider>
+        </LanguageProvider>
+      </UIProvider>
+    </ErrorBoundary>
+  </StrictMode>,
 )

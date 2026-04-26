@@ -37,10 +37,10 @@
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
-      color: #ff4d4d;
+      color: var(--color-error);
 
       .icon-wrapper {
-        background-color: rgba(255, 77, 77, 0.1);
+        background-color: var(--color-error-bg);
         padding: 8px;
         border-radius: 50%;
         display: flex;
@@ -103,7 +103,7 @@
 
       .warning-text {
         margin: 0;
-        color: #ff4d4d;
+        color: var(--color-error);
         font-size: var(--font-size-sm);
         font-weight: 600;
         letter-spacing: 0.02em;
@@ -148,11 +148,12 @@
     }
 
     .delete-confirm-btn {
-      background-color: #ff4d4d;
+      background-color: var(--color-error);
       color: white;
 
       &:hover {
-        background-color: #ff3333;
+        background-color: var(--color-error);
+        filter: brightness(1.1);
       }
     }
   }

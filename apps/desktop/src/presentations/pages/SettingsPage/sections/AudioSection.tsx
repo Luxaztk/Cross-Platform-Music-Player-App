@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSettings, useLanguage } from '@hooks';
-import { useAudioDevices } from '@music/hooks';
-import { Volume2, Play } from 'lucide-react';
-import { CustomDropdown } from '@components';
+import { ICON_SIZES } from '@constants';
+import { useAudioDevices, usePlayer } from '@music/hooks';
+import { Volume2, Play, HelpCircle } from 'lucide-react';
+import { CustomDropdown, SmartTooltip } from '@components';
 
 interface AudioSectionProps {
     searchQuery?: string;
@@ -11,9 +12,10 @@ interface AudioSectionProps {
 export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
     const { settings, updateSettings } = useSettings();
     const { t } = useLanguage();
+    const { isPlaying, getAnalyser } = usePlayer();
     const { devices, currentDeviceId, setAudioDevice } = useAudioDevices();
     const [isPlayingTest, setIsPlayingTest] = useState(false);
-    const [peakLevel, setPeakLevel] = useState(0);
+    const meterFillRef = useRef<HTMLDivElement>(null);
     const animationRef = useRef<number | null>(null);
 
     const matchesSearch = (text: string) => {
@@ -24,26 +26,118 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
     const showsDevice = matchesSearch(t('settings.audio.device')) || matchesSearch(t('settings.audio.deviceDesc'));
     const showsTest = matchesSearch(t('settings.audio.test')) || matchesSearch(t('settings.audio.testDesc'));
 
-    if (searchQuery && !showsDevice && !showsTest) return null;
+    useEffect(() => {
+        return () => {
+            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+        };
+    }, []);
 
-    // Sync currentDeviceId with settings if needed
     const handleDeviceChange = (newId: string | number) => {
         const idStr = String(newId);
         setAudioDevice(idStr);
         updateSettings({ audio: { deviceId: idStr } });
     };
 
-    const handleTestSound = () => {
-        if (isPlayingTest) return;
+    useEffect(() => {
+        // High-frequency animation loop
+        const start = Date.now();
+        let frameId: number;
+
+        // Use Float32Array for high-precision dBFS calculation
+        const dataArray = new Float32Array(128);
+
+        const animate = () => {
+            const analyser = getAnalyser();
+            let level = 0;
+            let isClipping = false;
+
+            if (isPlaying && analyser) {
+                // Task 1: Use Float data (-1.0 to 1.0)
+                analyser.getFloatTimeDomainData(dataArray);
+
+                let maxAmplitude = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    const absValue = Math.abs(dataArray[i]);
+                    if (absValue > maxAmplitude) maxAmplitude = absValue;
+                }
+
+                // Calculate dBFS
+                let db = -Infinity;
+                if (maxAmplitude > 0) {
+                    db = 20 * Math.log10(maxAmplitude);
+                }
+
+                // Map dB to Percentage (Floor: -60dB, Ceiling: 0dB)
+                const MIN_DB = -60;
+                const MAX_DB = 0;
+                
+                if (db > MIN_DB) {
+                    level = ((db - MIN_DB) / (MAX_DB - MIN_DB)) * 100;
+                }
+                level = Math.max(0, Math.min(100, level));
+                isClipping = level >= 98;
+            } else if (isPlayingTest) {
+                // MOCK DATA for Test Sound (Scaled to look like dBFS)
+                const elapsed = Date.now() - start;
+                if (elapsed > 1100) {
+                    setIsPlayingTest(false);
+                    level = 0;
+                } else {
+                    if (elapsed < 200) level = (elapsed / 200) * 85;
+                    else if (elapsed < 900) level = 85 + (Math.random() * 10);
+                    else level = ((1100 - elapsed) / 200) * 85;
+                }
+            }
+
+            // DIRECT DOM MUTATION
+            if (meterFillRef.current) {
+                const fill = meterFillRef.current;
+                fill.style.width = `${Math.max(0, level)}%`;
+                
+                // Task 1.3: Dynamic color styling
+                if (isClipping) {
+                    fill.style.background = '#ff0000'; // Clipping warning
+                    fill.style.boxShadow = '0 0 15px #ff0000';
+                } else {
+                    fill.style.background = 'linear-gradient(90deg, #4caf50, #fdd835)';
+                    fill.style.boxShadow = '0 0 15px rgba(76, 175, 80, 0.4)';
+                }
+            }
+            
+            frameId = requestAnimationFrame(animate);
+        };
+
+        frameId = requestAnimationFrame(animate);
+        return () => {
+            if (frameId) cancelAnimationFrame(frameId);
+        };
+    }, [isPlaying, isPlayingTest, getAnalyser]);
+
+    const handleTestSound = async () => {
+        if (isPlayingTest || isPlaying) return;
 
         setIsPlayingTest(true);
-        // Play a simple beep/chime
+        
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+        // Apply selected output device to the test context
+        if (currentDeviceId && typeof (audioContext as any).setSinkId === 'function') {
+            try {
+                await (audioContext as any).setSinkId(currentDeviceId === 'default' ? '' : currentDeviceId);
+            } catch (e) {
+                console.error('Failed to set sinkId on test audioContext:', e);
+            }
+        }
+
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
+
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
 
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
@@ -53,35 +147,14 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
         gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
 
         oscillator.stop(audioContext.currentTime + 1.2);
-
-        // Peak Level Animation
-        let start = Date.now();
-        const animate = () => {
-            const elapsed = Date.now() - start;
-            if (elapsed > 1200) {
-                setPeakLevel(0);
-                setIsPlayingTest(false);
-                return;
-            }
-
-            // Simple mock peak level based on gain ramp
-            const mockLevel = Math.max(0, 1 - Math.abs((elapsed - 500) / 500)) * 80;
-            setPeakLevel(mockLevel + (Math.random() * 10)); // Add some jitter
-            animationRef.current = requestAnimationFrame(animate);
-        };
-        animationRef.current = requestAnimationFrame(animate);
     };
 
-    useEffect(() => {
-        return () => {
-            if (animationRef.current) cancelAnimationFrame(animationRef.current);
-        };
-    }, []);
+    if (searchQuery && !showsDevice && !showsTest) return null;
 
     return (
         <div className="settings-section">
             <div className="section-header">
-                <Volume2 size={20} />
+                <Volume2 size={ICON_SIZES.MEDIUM} />
                 <h2>{t('settings.audio.title')}</h2>
             </div>
 
@@ -107,37 +180,49 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
                 )}
 
                 {showsTest && (
-                    <div className="setting-item vertical">
-                        <div className="setting-info">
-                            <h3>{t('settings.audio.test')}</h3>
-                            <p>{t('settings.audio.testDesc')}</p>
-                        </div>
-                        <div className="audio-test-area">
+                    <>
+                        <div className="setting-item">
+                            <div className="setting-info">
+                                <h3>{t('settings.audio.test')}</h3>
+                                <p>{t('settings.audio.testDesc')}</p>
+                            </div>
                             <button 
-                                className={`test-btn ${isPlayingTest ? 'active' : ''}`}
+                                className={`test-btn-mini ${isPlayingTest ? 'active' : ''}`}
                                 onClick={handleTestSound}
-                                disabled={isPlayingTest}
+                                disabled={isPlayingTest || isPlaying}
+                                title={isPlaying ? "Disabled while playing music" : ""}
                             >
-                                <Play size={16} />
+                                <Play size={14} fill="currentColor" />
                                 <span>{t('settings.audio.testBtn')}</span>
                             </button>
-                            
+                        </div>
+                        
+                        <div className="audio-test-area">
+                            <div className="peak-meter-header">
+                                <span className="peak-meter-label">{t('settings.audio.peakMeter')}</span>
+                                <SmartTooltip content={t('settings.audio.peakMeterTooltip')}>
+                                    <div className="tooltip-container">
+                                        <HelpCircle size={14} className="tooltip-icon" />
+                                    </div>
+                                </SmartTooltip>
+                            </div>
                             <div className="peak-meter-container">
                                 <div className="peak-meter-bg">
                                     <div 
+                                        ref={meterFillRef}
                                         className="peak-meter-fill" 
-                                        style={{ width: `${peakLevel}%` }}
+                                        style={{ width: '0%' }}
                                     />
                                 </div>
                                 <div className="peak-meter-labels">
-                                    <span>-inf</span>
+                                    <span>-60dB</span>
+                                    <span>-40dB</span>
                                     <span>-20dB</span>
-                                    <span>-10dB</span>
                                     <span>0dB</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </>
                 )}
             </div>
         </div>

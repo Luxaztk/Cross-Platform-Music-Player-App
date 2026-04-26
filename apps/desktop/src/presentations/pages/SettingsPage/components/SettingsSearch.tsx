@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
 import { useLanguage } from '@hooks';
+import { ICON_SIZES } from '@constants';
 
 interface SettingsSearchProps {
     query: string;
@@ -13,7 +14,7 @@ export const SettingsSearch: React.FC<SettingsSearchProps> = ({ query, onQueryCh
     return (
         <div className="settings-search">
             <div className="search-input-wrapper">
-                <Search size={18} className="search-icon" />
+                <Search size={ICON_SIZES.SMALL} className="search-icon" />
                 <input 
                     type="text" 
                     value={query}
@@ -22,7 +23,7 @@ export const SettingsSearch: React.FC<SettingsSearchProps> = ({ query, onQueryCh
                 />
                 {query && (
                     <button className="clear-btn" onClick={() => onQueryChange('')} title={t('common.clear')}>
-                        <X size={16} />
+                        <X size={ICON_SIZES.XSMALL} />
                     </button>
                 )}
             </div>

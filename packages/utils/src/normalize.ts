@@ -23,7 +23,7 @@ export const isSamePath = (pathA: string, pathB: string): boolean => {
   if (!pathA || !pathB) return false;
   try {
     return path.resolve(pathA).toLowerCase() === path.resolve(pathB).toLowerCase();
-  } catch (err) {
+  } catch (_err) {
     // Fallback for non-standard paths or environments where path.resolve might fail
     return pathA.toLowerCase() === pathB.toLowerCase();
   }

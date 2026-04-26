@@ -34,6 +34,7 @@ export interface AudioEvents {
 
 export class AudioEngine {
   private howl: Howl | null = null;
+  private analyser: AnalyserNode | null = null;
   private animationFrameId: number | null = null;
   private events: AudioEngineEvents = {};
   private currentSinkId: string = 'default';
@@ -51,16 +52,28 @@ export class AudioEngine {
 
   public async setSinkId(deviceId: string) {
     this.currentSinkId = deviceId;
-    if (!this.howl) return;
+    
+    // Web Audio API approach (Standard for modern browsers)
+    // This affects ALL sounds playing through the Howler global context
+    if (typeof window !== 'undefined' && Howler.ctx && typeof (Howler.ctx as any).setSinkId === 'function') {
+      try {
+        await (Howler.ctx as any).setSinkId(deviceId === 'default' ? '' : deviceId);
+      } catch (e) {
+        console.error('Failed to set sinkId on Howler.ctx:', e);
+      }
+    }
 
-    const sounds = (this.howl as HowlInternal)._sounds;
-    if (sounds) {
-      for (const sound of sounds) {
-        if (sound._node && typeof sound._node.setSinkId === 'function') {
-          try {
-            await sound._node.setSinkId(deviceId);
-          } catch (e) {
-            console.error('Failed to set sinkId on node:', e);
+    // HTML5 Audio approach (Fallback or for specific node control)
+    if (this.howl) {
+      const sounds = (this.howl as HowlInternal)._sounds;
+      if (sounds) {
+        for (const sound of sounds) {
+          if (sound._node && typeof sound._node.setSinkId === 'function') {
+            try {
+              await sound._node.setSinkId(deviceId === 'default' ? '' : deviceId);
+            } catch (e) {
+              console.error('Failed to set sinkId on HTML5 node:', e);
+            }
           }
         }
       }
@@ -70,6 +83,13 @@ export class AudioEngine {
   private lastUrl: string | null = null;
 
   public load(filePath: string, autoplay: boolean = false) {
+    // EXPLICIT WAKE-UP: Force Howler's getter to synchronously initialize the AudioContext.
+    // This prevents race conditions where the UI's Peak Meter requests the Analyser too early.
+    if (typeof window !== 'undefined' && !Howler.ctx) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      Howler.ctx; 
+    }
+
     this.stop(); // Stop anything currently playing
     this.pendingSeek = null; // Reset pending seek on new load
 
@@ -79,10 +99,17 @@ export class AudioEngine {
 
     this.howl = new Howl({
       src: [url],
-      html5: true, // Standardized protocol now supports Range requests in HTML5 mode
+      html5: false, // Use Web Audio for visualization support
       autoplay: autoplay,
       format: ['mp3', 'flac', 'wav', 'm4a', 'aac', 'ogg'],
       onplay: () => {
+        // AGGRESSIVE RESUME: Defeat Autoplay Policy Suspensions
+        if (Howler.ctx && Howler.ctx.state === 'suspended') {
+          Howler.ctx.resume().then(() => {
+            console.log('AudioContext forced to resume!');
+          }).catch(err => console.error('Failed to resume context:', err));
+        }
+
         if (this.events.onPlay) this.events.onPlay();
         this.startTrackingProgress();
       },
@@ -226,5 +253,35 @@ export class AudioEngine {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
+  }
+
+  public getAnalyser(): AnalyserNode | null {
+    if (!Howler.ctx) return null;
+
+    // Create analyser if it doesn't exist
+    if (!this.analyser) {
+      try {
+        this.analyser = Howler.ctx.createAnalyser();
+        this.analyser.fftSize = 256;
+        this.analyser.smoothingTimeConstant = 0.4;
+      } catch (e) {
+        console.error('Failed to create AnalyserNode:', e);
+        return null;
+      }
+    }
+
+    // ALWAYS RE-CONNECT to guarantee we aren't listening to a dead node
+    if (Howler.masterGain && this.analyser) {
+      try {
+        // Disconnect first to prevent memory leaks/infinite routing loops
+        this.analyser.disconnect(); 
+        Howler.masterGain.connect(this.analyser);
+      } catch (e) {
+        console.warn('Silent routing error:', e);
+      }
+      return this.analyser;
+    }
+
+    return null;
   }
 }

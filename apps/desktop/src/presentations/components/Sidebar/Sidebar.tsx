@@ -202,7 +202,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                           <span>{t('playlist.importFiles')}</span>
                         </button>
                         <button className="menu-item" onClick={onImportFolder}>
-                          <ListMusic size={14} />
+                          <ListMusic size={ICON_SIZES.TINY} />
                           <span>{t('playlist.importFolder')}</span>
                         </button>
                       </div>
@@ -230,7 +230,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                   onMouseDown={handleSearchToggle}
                   title={t('header.searchPlaceholder')}
                 >
-                  <Search size={16} />
+                  <Search size={ICON_SIZES.XSMALL} />
                 </button>
                 <div className="search-input-wrapper">
                   <input
@@ -252,7 +252,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                     title={t('sidebar.sort')}
                     onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
                   >
-                    <ArrowUpDown size={16} />
+                    <ArrowUpDown size={ICON_SIZES.XSMALL} />
                   </button>
                   {isSortMenuOpen && (
                     <div className="sort-menu open-down">
@@ -327,11 +327,11 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                             ref={menuRef}
                           >
                             <button className="menu-item" onClick={(e) => onEditPlaylist(e, playlist)}>
-                              <Edit2 size={14} />
+                              <Edit2 size={ICON_SIZES.TINY} />
                               <span>{t('common.edit')}</span>
                             </button>
                             <button className="menu-item delete" onClick={(e) => onDeletePlaylist(e, playlist)}>
-                              <Trash2 size={14} />
+                              <Trash2 size={ICON_SIZES.TINY} />
                               <span>{t('common.delete')}</span>
                             </button>
                           </div>

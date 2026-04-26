@@ -409,7 +409,7 @@ export function setupLibraryIPC() {
     try {
       const songsMap = await storageAdapter.getSongs();
       const songs = Object.values(songsMap);
-      const missingIds: string[] = [];
+      const missingSongs: Song[] = [];
 
       for (const song of songs) {
         try {
@@ -418,11 +418,11 @@ export function setupLibraryIPC() {
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           logFileTrace('library:scanMissingFiles.access', song.filePath, 'FAIL', message);
-          missingIds.push(song.id);
+          missingSongs.push(song);
         }
       }
 
-      return missingIds;
+      return missingSongs;
     } catch (err) {
       console.error('IPC library:scanMissingFiles error:', err);
       return [];

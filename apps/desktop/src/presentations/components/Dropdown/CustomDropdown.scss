@@ -14,6 +14,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px; // Added gap to prevent sticking
     cursor: pointer;
     transition: all var(--transition-fast);
     color: var(--color-text-main);
@@ -34,6 +35,7 @@
       align-items: center;
       gap: 10px;
       min-width: 0;
+      flex: 1; // Take available space
 
       .trigger-icon {
         color: var(--color-text-muted);
@@ -53,9 +55,10 @@
       color: var(--color-text-muted);
       transition: transform var(--transition-fast);
       flex-shrink: 0;
+      transform: rotate(90deg); // Points Right by default (Closed)
 
       &.open {
-        transform: rotate(180deg);
+        transform: rotate(0deg); // Points Down (Open)
         color: var(--color-primary);
       }
     }
@@ -72,11 +75,11 @@
   .dropdown-items-list {
     max-height: 250px;
     overflow-y: auto;
-    
+
     &::-webkit-scrollbar {
       width: 4px;
     }
-    
+
     &::-webkit-scrollbar-thumb {
       background: var(--border-subtle);
       border-radius: 2px;
@@ -117,6 +120,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

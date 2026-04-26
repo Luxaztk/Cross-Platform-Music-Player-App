@@ -35,22 +35,24 @@ export const EditModal: React.FC<EditModalProps> = ({
   const [album, setAlbum] = useState('');
   const [coverArt, setCoverArt] = useState('');
 
-  useEffect(() => {
-    if (!data) return;
-
-    if (type === 'playlist') {
-      const p = data as Playlist;
-      setName(p.name || '');
-      setDescription(p.description || '');
-      setThumbnail(p.thumbnail || '');
-    } else {
-      const s = data as Song;
-      setTitle(s.title || '');
-      setArtist(s.artist || '');
-      setAlbum(s.album || '');
-      setCoverArt(s.coverArt || '');
+  const [prevData, setPrevData] = useState<Song | Playlist | null>(null);
+  if (data !== prevData) {
+    setPrevData(data);
+    if (data) {
+      if (type === 'playlist') {
+        const p = data as Playlist;
+        setName(p.name || '');
+        setDescription(p.description || '');
+        setThumbnail(p.thumbnail || '');
+      } else {
+        const s = data as Song;
+        setTitle(s.title || '');
+        setArtist(s.artist || '');
+        setAlbum(s.album || '');
+        setCoverArt(s.coverArt || '');
+      }
     }
-  }, [data, type]);
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

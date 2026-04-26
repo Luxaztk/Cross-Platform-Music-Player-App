@@ -1,3 +1,4 @@
+import type { Song } from '@music/types';
 import type { ILibraryRepository } from '../interfaces/ILibraryRepository';
 
 export class ScanMissingFilesUseCase {
@@ -6,7 +7,7 @@ export class ScanMissingFilesUseCase {
     this.repository = repository;
   }
 
-  async execute(): Promise<string[]> {
+  async execute(): Promise<Song[]> {
     return this.repository.scanMissingFiles();
   }
 }

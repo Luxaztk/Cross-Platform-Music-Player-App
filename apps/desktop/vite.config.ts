@@ -62,13 +62,12 @@ export default defineConfig({
   },
   esbuild: {
     // We keep this for development/esbuild-based tools if any
-    // @ts-ignore
+    // @ts-expect-error - drop is not typed correctly in esbuild options
     drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
   },
   build: {
     rolldownOptions: {
       output: {
-        // @ts-ignore - Vite 8/Rolldown specific minification config
         minify: process.env.NODE_ENV === 'production' ? {
           compress: {
             dropConsole: true,
@@ -78,7 +77,6 @@ export default defineConfig({
       },
     },
   },
-  // @ts-ignore
   test: {
     globals: true,
     environment: 'jsdom',

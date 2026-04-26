@@ -40,7 +40,7 @@ declare global {
         reason?: 'URL' | 'METADATA' | 'HASH' // Thêm HASH cho đồng bộ Main
         existingSong: { id: string; title: string; artist: string } | null
       }>
-      scanMissingFiles: () => Promise<string[]>
+      scanMissingFiles: () => Promise<Song[]>
       getLyrics: (songId: string) => Promise<string | null>
       saveLyrics: (songId: string, lyrics: string, lyricId?: number) => Promise<boolean>
       searchLyrics: (query: string) => Promise<LyricSearchResult[]>

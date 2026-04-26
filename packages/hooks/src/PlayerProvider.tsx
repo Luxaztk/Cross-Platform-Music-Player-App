@@ -39,6 +39,7 @@ export interface PlayerContextProps {
   setVolume: (vol: number) => void;
   setRepeatMode: (mode: RepeatMode) => void;
   toggleShuffle: () => void;
+  getAnalyser: () => AnalyserNode | null;
   updateCurrentSongMetadata: (partial: Partial<Song>) => void;
 }
 
@@ -81,13 +82,23 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
   const engineRef = useRef<AudioEngine | null>(null);
 
   // We need refs to latest state for the AudioEngine callbacks
-  const queueRef = useRef(queue); queueRef.current = queue;
-  const historyRef = useRef(history); historyRef.current = history;
-  const originalContextRef = useRef(originalContext); originalContextRef.current = originalContext;
-  const currentSongRef = useRef(currentSong); currentSongRef.current = currentSong;
-  const repeatModeRef = useRef(repeatMode); repeatModeRef.current = repeatMode;
-  const isShuffleRef = useRef(isShuffle); isShuffleRef.current = isShuffle;
-  const onFileErrorRef = useRef(onFileError); onFileErrorRef.current = onFileError;
+  const queueRef = useRef(queue);
+  const historyRef = useRef(history);
+  const originalContextRef = useRef(originalContext);
+  const currentSongRef = useRef(currentSong);
+  const repeatModeRef = useRef(repeatMode);
+  const isShuffleRef = useRef(isShuffle);
+  const onFileErrorRef = useRef(onFileError);
+
+  React.useLayoutEffect(() => {
+    queueRef.current = queue;
+    historyRef.current = history;
+    originalContextRef.current = originalContext;
+    currentSongRef.current = currentSong;
+    repeatModeRef.current = repeatMode;
+    isShuffleRef.current = isShuffle;
+    onFileErrorRef.current = onFileError;
+  });
 
   const pushToHistory = useCallback((song: Song) => {
     setHistory(prev => {
@@ -408,6 +419,10 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
     }
   }, []);
 
+  const getAnalyser = useCallback(() => {
+    return engineRef.current?.getAnalyser() || null;
+  }, []);
+
   const contextValue = useMemo(() => ({
     currentSong,
     isPlaying,
@@ -433,12 +448,13 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
     seek,
     setVolume,
     setRepeatMode,
-    toggleShuffle
+    toggleShuffle,
+    getAnalyser
   }), [
     currentSong, isPlaying, progress, duration, volume, queue, history,
     repeatMode, isShuffle, updateCurrentSongMetadata, playNow, playNext, addToQueue, addSongsToQueue, playList,
     removeFromQueue, reorderQueue, play, pause, next, prev, seek,
-    setVolume, toggleShuffle
+    setVolume, toggleShuffle, getAnalyser
   ]);
 
   return (

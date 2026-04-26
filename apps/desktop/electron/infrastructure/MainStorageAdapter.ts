@@ -1,7 +1,9 @@
+import path from 'node:path';
+import { app } from 'electron';
 import Store from 'electron-store';
 import type { Song, Playlist, PlayerState, RecentSearch } from '@music/types';
 import type { IStorageAdapter } from '@music/core';
-import { DEFAULT_SETTINGS, type AppSettings } from '../constants/SettingsConstants';
+import { DEFAULT_SETTINGS, type AppSettings } from '../../src/presentations/constants/SettingsConstants';
 
 interface StoreSchema {
   library: Playlist;
@@ -17,6 +19,22 @@ export class MainStorageAdapter implements IStorageAdapter {
   private store: Store<StoreSchema>;
 
   constructor() {
+    // Determine default download path dynamically
+    let defaultDownloadPath = '';
+    try {
+      defaultDownloadPath = path.join(app.getPath('music'), 'Melovista Downloads');
+    } catch (e) {
+      console.warn('[Storage] Failed to get music path, using empty default');
+    }
+
+    const mergedDefaults = {
+      ...DEFAULT_SETTINGS,
+      downloads: {
+        ...DEFAULT_SETTINGS.downloads,
+        downloadPath: defaultDownloadPath
+      }
+    };
+
     this.store = new Store<StoreSchema>({
       name: 'melovista-library',
       defaults: {
@@ -32,7 +50,7 @@ export class MainStorageAdapter implements IStorageAdapter {
         playerState: null,
         recentSearches: [],
         lyricUsage: {},
-        settings: DEFAULT_SETTINGS,
+        settings: mergedDefaults as AppSettings,
       }
     });
   }
@@ -113,7 +131,18 @@ export class MainStorageAdapter implements IStorageAdapter {
     return updatedSong;
   }
   async getSettings(): Promise<AppSettings> {
-    return this.store.get('settings') || DEFAULT_SETTINGS;
+    const settings = this.store.get('settings') || { ...DEFAULT_SETTINGS };
+    
+    // Ensure downloadPath is never empty when sent to UI
+    if (!settings.downloads.downloadPath) {
+      try {
+        settings.downloads.downloadPath = path.join(app.getPath('music'), 'Melovista Downloads');
+      } catch (e) {
+        console.warn('[Storage] Failed to resolve default download path in getSettings');
+      }
+    }
+    
+    return settings;
   }
 
   async saveSettings(settings: Partial<AppSettings>): Promise<void> {

@@ -36,11 +36,12 @@ export const useGlobalHotkeys = ({
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // Guard clause: Skip if typing in input fields
-      const activeElement = document.activeElement;
+      const activeElement = document.activeElement as HTMLElement;
+      const isRangeInput = activeElement?.tagName === 'INPUT' && (activeElement as HTMLInputElement).type === 'range';
       const isInputField =
-        activeElement?.tagName === 'INPUT' ||
+        (activeElement?.tagName === 'INPUT' && !isRangeInput) ||
         activeElement?.tagName === 'TEXTAREA' ||
-        (activeElement as HTMLElement)?.contentEditable === 'true';
+        activeElement?.contentEditable === 'true';
 
       if (isInputField && e.key !== 'Escape') {
         return;
@@ -99,9 +100,11 @@ export const useGlobalHotkeys = ({
         case 'r':
         case 'R':
           e.preventDefault();
-          const nextRepeatMode: typeof repeatMode =
-            repeatMode === 'OFF' ? 'ALL' : repeatMode === 'ALL' ? 'ONE' : 'OFF';
-          setRepeatMode(nextRepeatMode);
+          {
+            const nextRepeatMode: typeof repeatMode =
+              repeatMode === 'OFF' ? 'ALL' : repeatMode === 'ALL' ? 'ONE' : 'OFF';
+            setRepeatMode(nextRepeatMode)
+          }
           break;
 
         case 's':
@@ -134,7 +137,7 @@ export const useGlobalHotkeys = ({
           }
           break;
 
-        case '/':
+        case '/': {
           e.preventDefault();
           // Focus search input - assuming there's a search input with id 'search-input'
           const searchInput = document.getElementById('search-input') as HTMLInputElement;
@@ -142,6 +145,7 @@ export const useGlobalHotkeys = ({
             searchInput.focus();
           }
           break;
+        }
 
         case '?':
           if (e.shiftKey) {

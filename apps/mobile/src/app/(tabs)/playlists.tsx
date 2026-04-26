@@ -101,10 +101,16 @@ function NameModal({
 }) {
   const [value, setValue] = useState(initialValue)
 
-  // Reset value when modal opens
-  React.useEffect(() => {
-    if (visible) setValue(initialValue)
-  }, [visible, initialValue])
+  const [prevVisible, setPrevVisible] = useState(visible)
+  const [prevInitialValue, setPrevInitialValue] = useState(initialValue)
+
+  if (visible !== prevVisible || initialValue !== prevInitialValue) {
+    setPrevVisible(visible)
+    setPrevInitialValue(initialValue)
+    if (visible) {
+      setValue(initialValue)
+    }
+  }
 
   const trimmed = value.trim()
 
