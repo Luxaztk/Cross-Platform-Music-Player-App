@@ -1,13 +1,3 @@
-Edited __B%C3%81O_C%C3%81O.md
-Edited __B%C3%81O_C%C3%81O_BTL.md
-Viewed useLanguage.ts:1-11
-Listed directory desktop
-Listed directory electron
-Listed directory src
-Listed directory infrastructure
-Listed directory ipc
-Viewed preload.ts:1-171
-
 This report outlines the technical structure of the **Melovista Desktop** application, which is built using **Electron**, **Vite**, **React**, and **TypeScript**.
 
 The application is split into two primary processes: **Main (Node.js)** and **Renderer (Chromium)**, following Electron's security and performance best practices.

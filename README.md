@@ -1,17 +1,21 @@
 # Setup
 
-## Clone project
+## 1. Clone project
 
 git clone https://github.com/Luxaztk/Cross-Platform-Music-Player-App.git
 
-## Install dependencies
+## 2. Install dependencies
 
 npm install
 
-## Run desktop
+## 3. Run desktop
 
 npm run desktop
 
-## Run mobile
+## 4. Run mobile
 
 npm run mobile
+
+### Yêu cầu mobile
+- Phiên bản Expo Go: Sử dụng SDK 55 (https://expo.dev/go)
+- Phiên bản Development Build: Tải 
