@@ -253,23 +253,27 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     let nextId: string | null = null
     let nextQueueItems = [...items]
 
-    if (items.length > 0) {
-      // Standard queue pop
+    if (s.repeatMode === 'ONE') {
+      nextId = s.currentSongId
+      console.log('[Player] Skip Next: Repeat ONE active.')
+    } else if (items.length > 0) {
+      // Pick first from queue
       nextId = items[0].id
-      nextQueueItems.shift()
-      console.log(`[Player] Skip Next: Popped from queue. New queue length: ${nextQueueItems.length}`)
-    } else if (s.repeatMode === 'ALL' && s.originalContextIds.length > 0) {
-      // Repeat ALL loops back to start
-      let newIds = [...s.originalContextIds]
-      if (s.isShuffle) {
-        newIds = shuffleArray(newIds)
+
+      if (s.repeatMode === 'ALL' && s.currentSongId) {
+        // Loop All: Move current song to end of queue to keep it circular
+        nextQueueItems = [...items.slice(1), { uid: generateUid(), id: s.currentSongId }]
+        console.log(`[Player] Skip Next: Loop ALL active. Moved ${s.currentSongId} to end of queue.`)
+      } else {
+        // No Loop (OFF): Just pop
+        nextQueueItems.shift()
+        console.log(`[Player] Skip Next: Popped from queue. New queue length: ${nextQueueItems.length}`)
       }
-      nextId = newIds[0]
-      nextQueueItems = newIds.slice(1).map(id => ({ uid: generateUid(), id }))
-      console.log(`[Player] Skip Next: Looping library (Repeat ALL). New queue length: ${nextQueueItems.length}`)
-    } else if (s.repeatMode === 'OFF' && s.originalContextIds.length > 0) {
-      // Optional: if the queue is empty but we have a context, should we loop? 
-      // User said "initialize queue... from library", so usually it's already there.
+    } else if (s.repeatMode === 'ALL' && s.currentSongId) {
+      // Special case: Queue empty but looping ALL (usually 1 song context)
+      nextId = s.currentSongId
+      console.log('[Player] Skip Next: Loop ALL active with empty queue (single song).')
+    } else {
       console.log('[Player] Skip Next: Queue empty and Repeat OFF. Stopping.')
     }
 
@@ -283,8 +287,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const nextState: PlayerState = {
       ...s,
       currentSongId: nextId,
-      historyIds: s.currentSongId
-        ? [...s.historyIds, s.currentSongId].slice(-32) // Keep last 32 history items
+      historyIds: s.currentSongId && s.repeatMode !== 'ONE'
+        ? [...s.historyIds, s.currentSongId].slice(-32)
         : [...s.historyIds],
     }
 
@@ -329,16 +333,25 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         ? pushToHistory(stateRef.current.currentSongId)
         : stateRef.current.historyIds
 
-      // Full rotation for playlist: [6, 7, 8, 9, 10, 1, 2, 3, 4, 5] if 5 is selected
-      let rotatedIds = [...songIds.slice(startIndex + 1), ...songIds.slice(0, startIndex)]
+      // Based on __MOBILE_playback_modes.md:
+      let upcomingIds: string[] = []
 
-      logRotationDebug(songIds, startIndex, rotatedIds)
-
-      if (stateRef.current.isShuffle) {
-        rotatedIds = shuffleArray(rotatedIds)
+      if (stateRef.current.repeatMode === 'ALL') {
+        // Loop All: Full rotation starting from next song
+        upcomingIds = [...songIds.slice(startIndex + 1), ...songIds.slice(0, startIndex)]
+      } else if (stateRef.current.repeatMode === 'ONE') {
+        // Loop One: Empty queue (just play current)
+        upcomingIds = []
+      } else {
+        // No Loop (OFF): Truncated list
+        upcomingIds = songIds.slice(startIndex + 1)
       }
 
-      const nextQueueItems = rotatedIds.map(id => ({ uid: generateUid(), id }))
+      if (stateRef.current.isShuffle) {
+        upcomingIds = shuffleArray(upcomingIds)
+      }
+
+      const nextQueueItems = upcomingIds.map(id => ({ uid: generateUid(), id }))
       const nextState: PlayerState = {
         ...stateRef.current,
         currentSongId: startSongId,
@@ -413,9 +426,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (currentId && s.originalContextIds.length > 0) {
         const idx = s.originalContextIds.findIndex((id) => id === currentId)
         if (idx !== -1) {
-          // Full rotation to match relative order of original context
-          const rotatedIds = [...s.originalContextIds.slice(idx + 1), ...s.originalContextIds.slice(0, idx)]
-          nextQueueItems = rotatedIds.map((id) => ({ uid: generateUid(), id }))
+          // Restore relative order based on original context
+          const upcomingIds = s.originalContextIds.slice(idx + 1)
+          nextQueueItems = upcomingIds.map((id) => ({ uid: generateUid(), id }))
         }
       }
     }
@@ -447,6 +460,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, [service, playSongId])
 
   const prev = useCallback(async () => {
+    if (stateRef.current.repeatMode === 'ONE') {
+      await service.seekTo(0)
+      return
+    }
+
     if (progressRef.current.positionMs > 3000) {
       await service.seekTo(0)
     } else {

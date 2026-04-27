@@ -50,6 +50,8 @@ export default function NowPlayingScreen() {
         ? 'repeat'
         : 'repeat'
 
+  const isLoopOne = state.repeatMode === 'ONE'
+
   return (
     <View
       style={[
@@ -160,79 +162,53 @@ export default function NowPlayingScreen() {
       {/* Main controls */}
       <View style={styles.controls}>
         <Pressable
-          onPress={() => void toggleShuffle()}
-          style={styles.sideBtn}
+          onPress={() => !isLoopOne && void toggleShuffle()}
+          style={[styles.sideBtn, isLoopOne && { opacity: 0.3 }]}
           hitSlop={10}
+          disabled={isLoopOne}
         >
-          {/* <Text
-            style={[
-              styles.sideIcon,
-              {
-                color: state.isShuffle
-                  ? theme.colors.primary
-                  : theme.colors.mutedText,
-              },
-            ]}
-          >
-            🔀
-          </Text> */}
-
-          <MaterialIcons name="shuffle" size={24} color={
-            state.isShuffle
-              ? theme.colors.primary
-              : theme.colors.mutedText} />
+          <MaterialIcons
+            name="shuffle"
+            size={24}
+            color={
+              state.isShuffle ? theme.colors.primary : theme.colors.mutedText
+            }
+          />
         </Pressable>
 
-        <Pressable
-          onPress={() => void prev()}
-          style={styles.controlBtn}
-          hitSlop={10}
-        >
-          {/* <Text style={[styles.controlIcon, { color: theme.colors.text }]}>⏮</Text> */}
-
-          <MaterialIcons name="skip-previous" size={24} color={theme.colors.text} />
+        <Pressable onPress={() => void prev()} style={styles.controlBtn} hitSlop={10}>
+          <MaterialIcons
+            name="skip-previous"
+            size={24}
+            color={theme.colors.text}
+          />
         </Pressable>
 
         <Pressable
           onPress={() => void togglePlayPause()}
           style={[styles.playBtn, { backgroundColor: theme.colors.text }]}
         >
-          {/* <Text style={[styles.playIcon, { color: theme.colors.background }]}>
-            {progress.isPlaying ? '⏸' : '▶'}
-          </Text> */}
-
-          <MaterialIcons name={progress.isPlaying ? "pause" : "play-arrow"} size={24} color={theme.colors.background} />
+          <MaterialIcons
+            name={progress.isPlaying ? 'pause' : 'play-arrow'}
+            size={24}
+            color={theme.colors.background}
+          />
         </Pressable>
 
-        <Pressable
-          onPress={() => void next()}
-          style={styles.controlBtn}
-          hitSlop={10}
-        >
-          {/* <Text style={[styles.controlIcon, { color: theme.colors.text }]}>⏭</Text> */}
-
+        <Pressable onPress={() => void next()} style={styles.controlBtn} hitSlop={10}>
           <MaterialIcons name="skip-next" size={24} color={theme.colors.text} />
         </Pressable>
 
         <Pressable onPress={cycleRepeat} style={styles.sideBtn} hitSlop={10}>
-          {/* <Text
-            style={[
-              styles.sideIcon,
-              {
-                color:
-                  state.repeatMode !== 'OFF'
-                    ? theme.colors.primary
-                    : theme.colors.mutedText,
-              },
-            ]}
-          >
-            {repeatLabel}
-          </Text> */}
-
-          <MaterialIcons name={repeatLabel} size={24} color={
-            state.repeatMode !== 'OFF'
-              ? theme.colors.primary
-              : theme.colors.mutedText} />
+          <MaterialIcons
+            name={repeatLabel}
+            size={24}
+            color={
+              state.repeatMode !== 'OFF'
+                ? theme.colors.primary
+                : theme.colors.mutedText
+            }
+          />
         </Pressable>
       </View>
 

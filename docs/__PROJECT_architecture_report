@@ -1,10 +1,3 @@
-Viewed MobileStorageAdapter.ts:1-151
-Viewed ElectronLibraryRepository.ts:1-118
-
-This report provides a detailed overview of the layered architecture implemented in the Melovista project, highlighting how each layer is structured and where they reside in the desktop and mobile applications.
-
----
-
 # Architecture Report: Melovista Layered Design
 
 Melovista follows a **Clean Architecture** (or Hexagonal Architecture) approach. This decouples the core business logic from technical implementation details (like Electron or React Native), allowing for high code reusability across platforms.
