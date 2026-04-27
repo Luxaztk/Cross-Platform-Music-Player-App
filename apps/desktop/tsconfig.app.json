@@ -47,6 +47,8 @@
       "@music/brand": ["../../packages/brand"],
       "@components": ["./src/presentations/components"],
       "@components/*": ["./src/presentations/components/*"],
+      "@application": ["./src/application"],
+      "@application/*": ["./src/application/*"],
       "@hooks": ["./src/application/hooks"],
       "@hooks/*": ["./src/application/hooks/*"],
       "@infrastructure": ["./src/infrastructure"],

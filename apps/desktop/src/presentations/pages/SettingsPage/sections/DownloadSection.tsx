@@ -1,38 +1,36 @@
 import React, { useState } from 'react';
 import { useSettings, useLanguage, useLibrary, useDownload } from '@hooks';
 import { ICON_SIZES } from '@constants';
-import { Download, FolderOpen, Plus, Trash2, RefreshCcw, Search, Clipboard, Loader2, CheckCircle2, AlertCircle, History } from 'lucide-react';
-import { CustomDropdown, DownloadPreviewCard, DuplicateWarningBanner, DownloadProgressBar, SyncHistoryModal } from '@components';
-
-interface DownloadSectionProps {
-    searchQuery?: string;
-}
+import { Download, FolderOpen, Plus, Trash2, RefreshCcw, Search, Clipboard, Loader2, CheckCircle2, AlertCircle, History, Edit2 } from 'lucide-react';
+import { CustomDropdown, DownloadPreviewCard, DuplicateWarningBanner, DownloadProgressBar, SyncHistoryModal, EditModal } from '@components';
+import { 
+    YOUTUBE_URL_REGEX, 
+    BITRATE_OPTIONS, 
+    getSyncIntervalOptions, 
+    type DownloadSectionProps,
+    matchesSearch
+} from '../utils';
 
 export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery }) => {
     const { settings, updateSettings, selectDirectory, isSaving } = useSettings();
     const [showHistory, setShowHistory] = useState(false);
     const { t } = useLanguage();
+    const [showEditMetadata, setShowEditMetadata] = useState(false);
 
-    // Gọi Global Hook
+    // Global Hook
     const manager = useDownload();
     const isBusy = manager.downloadState === 'fetching' || manager.downloadState === 'downloading';
-
 
     const { 
         isSyncing,
         handleSyncLibrary
     } = useLibrary();
 
-    const matchesSearch = (text: string) => {
-        if (!searchQuery) return true;
-        return text.toLowerCase().includes(searchQuery.toLowerCase());
-    };
-
-    const showsPath = matchesSearch(t('settings.downloads.path')) || matchesSearch(t('settings.downloads.pathDesc'));
-    const showsQuality = matchesSearch(t('settings.downloads.quality')) || matchesSearch(t('settings.downloads.qualityDesc'));
-    const showsAutoImport = matchesSearch(t('settings.downloads.autoImport')) || matchesSearch(t('settings.downloads.autoImportDesc'));
-    const showsMaintenance = matchesSearch(t('settings.downloads.maintenance')) || matchesSearch(t('settings.downloads.maintenanceDesc'));
-    const showsDownloader = matchesSearch(t('downloader.title')) || matchesSearch(t('downloader.urlPlaceholder'));
+    const showsPath = matchesSearch(t('settings.downloads.path'), searchQuery) || matchesSearch(t('settings.downloads.pathDesc'), searchQuery);
+    const showsQuality = matchesSearch(t('settings.downloads.quality'), searchQuery) || matchesSearch(t('settings.downloads.qualityDesc'), searchQuery);
+    const showsAutoImport = matchesSearch(t('settings.downloads.autoImport'), searchQuery) || matchesSearch(t('settings.downloads.autoImportDesc'), searchQuery);
+    const showsMaintenance = matchesSearch(t('settings.downloads.maintenance'), searchQuery) || matchesSearch(t('settings.downloads.maintenanceDesc'), searchQuery);
+    const showsDownloader = matchesSearch(t('downloader.title'), searchQuery) || matchesSearch(t('downloader.urlPlaceholder'), searchQuery);
 
     if (searchQuery && !showsPath && !showsQuality && !showsAutoImport && !showsMaintenance && !showsDownloader) return null;
 
@@ -41,9 +39,8 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
         if (path) {
             updateSettings({
                 downloads: {
+                    ...settings.downloads,
                     downloadPath: path,
-                    autoImportPaths: settings.downloads.autoImportPaths,
-                    bitrate: settings.downloads.bitrate
                 }
             });
         }
@@ -54,9 +51,8 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
         if (path && !settings.downloads.autoImportPaths.includes(path)) {
             updateSettings({
                 downloads: {
+                    ...settings.downloads,
                     autoImportPaths: [...settings.downloads.autoImportPaths, path],
-                    downloadPath: settings.downloads.downloadPath,
-                    bitrate: settings.downloads.bitrate
                 }
             });
         }
@@ -65,21 +61,17 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
     const handleRemoveImportPath = (path: string) => {
         updateSettings({
             downloads: {
+                ...settings.downloads,
                 autoImportPaths: settings.downloads.autoImportPaths.filter((p: string) => p !== path),
-                downloadPath: settings.downloads.downloadPath,
-                bitrate: settings.downloads.bitrate
             }
         });
     };
 
-    // LUỒNG 1-CLICK AN TOÀN (SAFE QUICK DOWNLOAD)
     const handleFetchAndDownload = async () => {
         if (!manager.url.trim()) return;
 
-        // Bước 1: Lấy thông tin & Check trùng lặp
         const result = await manager.fetchInfo(manager.url, 'section');
 
-        // Bước 2: Nếu thành công và KHÔNG có cảnh báo trùng -> Tự động tải tiếp
         if (result && result.success && !result.hasWarning) {
             await manager.executeDownload(false);
         }
@@ -88,14 +80,13 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
     const handlePaste = async () => {
         try {
             const text = (await navigator.clipboard.readText()).trim();
-            if (text && /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(text)) {
+            if (text && YOUTUBE_URL_REGEX.test(text)) {
                 manager.setUrl(text);
             }
         } catch (err) {
             console.error('Paste failed', err);
         }
     };
-
 
     return (
         <div className="settings-section">
@@ -123,7 +114,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                     </div>
                 )}
 
-                {/* Online Downloader Quick Action (V4 PREMIUM) */}
+                {/* Online Downloader Quick Action */}
                 {showsDownloader && (
                     <div className="setting-item vertical online-downloader-item">
                         <div className="setting-info">
@@ -139,7 +130,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                                     type="text"
                                     value={manager.url}
                                     onChange={(e) => manager.setUrl(e.target.value)}
-                                    placeholder="https://www.youtube.com/watch?v=..."
+                                    placeholder={t('downloader.urlPlaceholder')}
                                     disabled={manager.downloadState === 'downloading'}
                                     onKeyDown={(e) => e.key === 'Enter' && handleFetchAndDownload()}
                                 />
@@ -172,17 +163,26 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                             </button>
                         </div>
 
-                        {/* VISIBILITY PERSISTENCE AREA: Giữ Card bài hát không bị flash */}
                         {manager.videoInfo && (
                             <div className="downloader-result-area">
-                                <DownloadPreviewCard info={manager.videoInfo} />
+                                <div 
+                                    className="preview-with-actions clickable" 
+                                    onClick={() => manager.downloadState === 'preview' && setShowEditMetadata(true)}
+                                    title={t('common.edit')}
+                                >
+                                    <DownloadPreviewCard info={manager.videoInfo} />
+                                    <div className="edit-overlay">
+                                        <div className="edit-pill">
+                                            <Edit2 size={ICON_SIZES.TINY} />
+                                            <span>{t('common.edit')}</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                {/* Cảnh báo trùng lặp (Chỉ hiện ở trạng thái preview) */}
                                 {manager.downloadState === 'preview' && (
                                     <DuplicateWarningBanner duplicateInfo={manager.duplicateInfo} />
                                 )}
 
-                                {/* Nếu có trùng lặp ở state preview, hiện thêm nút xác nhận thủ công */}
                                 {manager.downloadState === 'preview' && manager.duplicateInfo.warning && (
                                     <div className="action-buttons horizontal">
                                         <button type="button" className="secondary-btn" onClick={() => manager.resetDownload()}>
@@ -194,12 +194,10 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                                     </div>
                                 )}
 
-                                {/* Progress Bar (Chỉ hiện ở trạng thái downloading) */}
                                 {manager.downloadState === 'downloading' && (
                                     <DownloadProgressBar progress={manager.downloadProgress} />
                                 )}
 
-                                {/* Rich Success State (Thiết kế Inline nằm ngang) */}
                                 {manager.downloadState === 'success' && (
                                     <div className="inline-success-banner">
                                         <div className="success-info">
@@ -229,7 +227,6 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                                     </div>
                                 )}
 
-                                {/* Error State */}
                                 {manager.downloadState === 'error' && (
                                     <div className="download-feedback error">
                                         <AlertCircle size={16} />
@@ -256,17 +253,11 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                                 value={settings.downloads.bitrate}
                                 onChange={(val) => updateSettings({
                                     downloads: {
+                                        ...settings.downloads,
                                         bitrate: String(val),
-                                        downloadPath: settings.downloads.downloadPath,
-                                        autoImportPaths: settings.downloads.autoImportPaths
                                     }
                                 })}
-                                options={[
-                                    { value: '128', label: '128kbps (Standard)' },
-                                    { value: '192', label: '192kbps (Medium)' },
-                                    { value: '256', label: '256kbps (High)' },
-                                    { value: '320', label: '320kbps (Best)' },
-                                ]}
+                                options={BITRATE_OPTIONS}
                                 title={t('settings.downloads.qualitySelect')}
                             />
                         </div>
@@ -313,14 +304,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                                         backgroundSync: Number(val)
                                     }
                                 })}
-                                options={[
-                                    { value: 0, label: t('settings.downloads.syncInterval.never') },
-                                    { value: 30, label: t('settings.downloads.syncInterval.min30') },
-                                    { value: 60, label: t('settings.downloads.syncInterval.hour1') },
-                                    { value: 120, label: t('settings.downloads.syncInterval.hour2') },
-                                    { value: 360, label: t('settings.downloads.syncInterval.hour6') },
-                                    { value: 1440, label: t('settings.downloads.syncInterval.day1') },
-                                ]}
+                                options={getSyncIntervalOptions(t)}
                                 title={t('settings.downloads.backgroundSync')}
                                 disabled={isSaving}
                             />
@@ -362,6 +346,24 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                 isOpen={showHistory} 
                 onClose={() => setShowHistory(false)} 
             />
+
+            {showEditMetadata && manager.videoInfo && (
+                <EditModal
+                    isOpen={true}
+                    type="song"
+                    data={{
+                        title: manager.videoInfo.title,
+                        artist: manager.videoInfo.artist,
+                        album: manager.videoInfo.album,
+                        coverArt: manager.videoInfo.thumbnail,
+                    } as any}
+                    onClose={() => setShowEditMetadata(false)}
+                    onSave={(data) => {
+                        manager.updateMetadata(data);
+                        setShowEditMetadata(false);
+                    }}
+                />
+            )}
         </div>
     );
 };

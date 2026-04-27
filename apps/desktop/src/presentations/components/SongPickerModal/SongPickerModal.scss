@@ -97,10 +97,37 @@
       flex-grow: 1;
       overflow-y: auto;
 
-      .no-results {
-        padding: 40px;
+      .no-results,
+      .searching-state {
+        padding: 60px 40px;
         text-align: center;
         color: var(--color-text-dim);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+
+        svg {
+          color: var(--color-primary);
+        }
+
+        p {
+          margin: 0;
+          font-size: 0.9rem;
+        }
+      }
+
+      .clustered-results {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .search-cluster-divider {
+          height: 1px;
+          background-color: var(--border-color);
+          margin: 12px 12px;
+          opacity: 0.4;
+        }
       }
 
       .song-list {

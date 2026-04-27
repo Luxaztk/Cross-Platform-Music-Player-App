@@ -104,7 +104,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
               <button
                 type="button"
                 className="fetch-btn"
-                onClick={() => manager.fetchInfo(undefined, 'modal')}
+                onClick={() => manager.fetchInfo(manager.url, 'modal')}
                 disabled={!manager.url.trim()}
               >
                 {t('downloader.fetchInfo')}

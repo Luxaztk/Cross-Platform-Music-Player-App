@@ -1,5 +1,9 @@
-fix(core): resolve TypeScript compilation errors for unused variables
+feat(search): implement Smart Intent Search & hardening system (V5)
 
-- Remove unused import 'getErrorMessage' in LibraryService.ts
-- Prefix unused 'filePath' parameter with underscore in LibraryService.test.ts
-- Fix build pipeline failure caused by strict TS6133 checks
+- Core Logic: Triển khai "Smart Intent Detection" trong searchUtils để xử lý chính xác tiếng Việt có dấu (ngăn chặn lỗi gõ "nơi" ra "nói").
+- Fuse.js: Cập nhật cấu hình ignoreLocation: true và threshold: 0.3 để hỗ trợ tiêu đề bài hát dài và triệt tiêu location penalty.
+- UX/UI: Tích hợp trạng thái isSearching vào useDebounce để xử lý triệt để Race Condition trong lúc người dùng gõ phím.
+- UI Hardening: Sửa lỗi Empty State ("Không tìm thấy") không hiển thị khi kết quả phân cụm (Clustered) rỗng.
+- Stability: Khắc phục React Key Collision trong SearchOverlay bằng cách chuẩn hóa logic tạo ID thực thể (Album/Artist).
+- Quality: Bổ sung bộ Unit Test (Vitest) cho Search Utils và SearchOverlay Component, đạt 100% Green.
+- Polish: Thêm hiệu ứng Blur Backdrop cho Edit Modal và tinh chỉnh layout Search Overlay.

@@ -4,10 +4,13 @@ import { ICON_SIZES } from '@constants';
 import { useAudioDevices, usePlayer } from '@music/hooks';
 import { Volume2, Play, HelpCircle } from 'lucide-react';
 import { CustomDropdown, SmartTooltip } from '@components';
-
-interface AudioSectionProps {
-    searchQuery?: string;
-}
+import { 
+    type AudioSectionProps, 
+    PEAK_METER_MIN_DB, 
+    PEAK_METER_MAX_DB, 
+    PEAK_METER_CLIPPING_THRESHOLD,
+    matchesSearch
+} from '../utils';
 
 export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
     const { settings, updateSettings } = useSettings();
@@ -18,13 +21,8 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
     const meterFillRef = useRef<HTMLDivElement>(null);
     const animationRef = useRef<number | null>(null);
 
-    const matchesSearch = (text: string) => {
-        if (!searchQuery) return true;
-        return text.toLowerCase().includes(searchQuery.toLowerCase());
-    };
-
-    const showsDevice = matchesSearch(t('settings.audio.device')) || matchesSearch(t('settings.audio.deviceDesc'));
-    const showsTest = matchesSearch(t('settings.audio.test')) || matchesSearch(t('settings.audio.testDesc'));
+    const showsDevice = matchesSearch(t('settings.audio.device'), searchQuery) || matchesSearch(t('settings.audio.deviceDesc'), searchQuery);
+    const showsTest = matchesSearch(t('settings.audio.test'), searchQuery) || matchesSearch(t('settings.audio.testDesc'), searchQuery);
 
     useEffect(() => {
         return () => {
@@ -52,7 +50,7 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
             let isClipping = false;
 
             if (isPlaying && analyser) {
-                // Task 1: Use Float data (-1.0 to 1.0)
+                // Use Float data (-1.0 to 1.0)
                 analyser.getFloatTimeDomainData(dataArray);
 
                 let maxAmplitude = 0;
@@ -67,15 +65,12 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
                     db = 20 * Math.log10(maxAmplitude);
                 }
 
-                // Map dB to Percentage (Floor: -60dB, Ceiling: 0dB)
-                const MIN_DB = -60;
-                const MAX_DB = 0;
-                
-                if (db > MIN_DB) {
-                    level = ((db - MIN_DB) / (MAX_DB - MIN_DB)) * 100;
+                // Map dB to Percentage (Floor: MIN_DB, Ceiling: MAX_DB)
+                if (db > PEAK_METER_MIN_DB) {
+                    level = ((db - PEAK_METER_MIN_DB) / (PEAK_METER_MAX_DB - PEAK_METER_MIN_DB)) * 100;
                 }
                 level = Math.max(0, Math.min(100, level));
-                isClipping = level >= 98;
+                isClipping = level >= PEAK_METER_CLIPPING_THRESHOLD;
             } else if (isPlayingTest) {
                 // MOCK DATA for Test Sound (Scaled to look like dBFS)
                 const elapsed = Date.now() - start;
@@ -89,12 +84,11 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
                 }
             }
 
-            // DIRECT DOM MUTATION
+            // DIRECT DOM MUTATION for performance
             if (meterFillRef.current) {
                 const fill = meterFillRef.current;
                 fill.style.width = `${Math.max(0, level)}%`;
                 
-                // Task 1.3: Dynamic color styling
                 if (isClipping) {
                     fill.style.background = '#ff0000'; // Clipping warning
                     fill.style.boxShadow = '0 0 15px #ff0000';
@@ -187,6 +181,7 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
                                 <p>{t('settings.audio.testDesc')}</p>
                             </div>
                             <button 
+                                type="button"
                                 className={`test-btn-mini ${isPlayingTest ? 'active' : ''}`}
                                 onClick={handleTestSound}
                                 disabled={isPlayingTest || isPlaying}

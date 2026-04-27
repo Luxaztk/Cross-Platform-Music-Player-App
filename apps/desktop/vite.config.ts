@@ -19,6 +19,7 @@ export default defineConfig({
       '@music/hooks': path.resolve(__dirname, '../../packages/hooks/src'),
       '@music/ui': path.resolve(__dirname, '../../packages/ui/src'),
       '@components': path.resolve(__dirname, 'src/presentations/components'),
+      '@application': path.resolve(__dirname, 'src/application'),
       '@hooks': path.resolve(__dirname, 'src/application/hooks'),
       '@infrastructure': path.resolve(__dirname, 'src/infrastructure'),
       '@utils': path.resolve(__dirname, 'src/infrastructure/utils'),

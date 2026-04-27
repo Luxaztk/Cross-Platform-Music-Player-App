@@ -86,6 +86,12 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [X] **Notification System Refactoring (AppNotification)**: Chuyển đổi sang kiến trúc `AppNotification` để triệt tiêu xung đột với Browser API, tích hợp cơ chế cập nhật thông báo theo ID và hỗ trợ Actionable Toasts (Click-to-action).
 - [X] **Delayed Library Sync (Silent Startup)**: Tự động quét và sửa lỗi thư viện sau 60 giây khởi động (Startup Delay) thông qua thông báo tương tác, không gây gián đoạn trải nghiệm người dùng ban đầu.
 - [X] **Theme System Hardening (Zero-Ghost Architecture)**: Loại bỏ hoàn toàn 62+ biến CSS "ma" (Ghost Variables), chuẩn hóa hệ thống biến RGB cho tất cả 6 chủ đề, đảm bảo tính nhất quán tuyệt đối cho các hiệu ứng Glassmorphism.
+- [X] **Smart Intent Search Engine (V5 Hardening)**:
+    - [X] Triển khai **Smart Intent Detection**: Tự động phân biệt tìm kiếm có dấu (nghiêm ngặt) và không dấu (mờ), giải quyết triệt để lỗi gõ "nơi" ra "nói".
+    - [X] **Fuse.js Location-Agnostic Scoring**: Tắt hình phạt vị trí (ignoreLocation) giúp tìm kiếm chính xác các bài hát có tiêu đề dài từ YouTube.
+    - [X] **React Key Collision Guard**: Chuẩn hóa logic tạo ID thực thể (Album/Artist) dựa trên cặp Name-Artist, triệt tiêu lỗi trùng lặp key trong Search Overlay.
+    - [X] **Search Observability**: Tiêm hệ thống Trace Logs (`[DEBUG-SEARCH]`) giúp theo dõi luồng dữ liệu tìm kiếm thời gian thực.
+    - [X] **UX Search Hardening**: Tích hợp trạng thái `isSearching` vào `useDebounce` để xử lý Race Condition, hiển thị Spinner và Empty State ("Không tìm thấy") một cách minh bạch.
 
 ---
 
@@ -191,6 +197,10 @@ Mục tiêu: Bảo vệ logic dự án bằng Unit Test toàn diện (Full Cover
 - [X] **CustomDropdown Component**: Thay thế toàn bộ `<select>` nguyên bản bằng kiến trúc Portal + ARIA accessibility (100% Coverage).
 - [X] **Settings Page Ecosystem**: Chuẩn hóa toàn bộ logic và giao diện các mục General, Appearance, Audio, Downloads.
 - [X] **Centralized Testing Architecture**: Di chuyển toàn bộ Unit Test sang thư mục `src/tests/` tập trung, gương mẫu kiến trúc production.
+- [X] **Search System TDD**:
+  - [X] `searchUtils.test.ts`: Kiểm thử Smart Intent (Dấu tiếng Việt) và phân cụm bài hát.
+  - [X] `SearchOverlay.test.tsx`: Kiểm thử giao diện hiển thị kết quả và trạng thái Empty State.
+  - [X] `SongPickerModal.test.tsx` (Drafted): Đảm bảo logic lọc bài hát trong Modal.
 
 ---
 
