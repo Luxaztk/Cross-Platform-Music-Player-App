@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import { PlayerProvider, LibraryProvider, useLibraryContext } from '@music/hooks';
+import { PlayerProvider, SharedLibraryProvider, useLibraryContext } from '@music/hooks';
 import { MobileStorageAdapter } from '../infrastructure/services/MobileStorageAdapter';
 import { MobileLibraryRepository } from '../infrastructure/repositories/MobileLibraryRepository';
 
@@ -18,10 +18,10 @@ function PlayerWrapper({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <LibraryProvider repository={repo}>
+    <SharedLibraryProvider repository={repo}>
       <PlayerWrapper>
         <Stack screenOptions={{ headerShown: false }} />
       </PlayerWrapper>
-    </LibraryProvider>
+    </SharedLibraryProvider>
   );
 }

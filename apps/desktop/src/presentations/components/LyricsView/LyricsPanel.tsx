@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLyrics, usePlayer } from '@music/hooks';
 import { useLanguage } from '@hooks';
 import { MessageSquareOff, Search, Loader2, RotateCcw } from 'lucide-react';
-import { formatLyricsSearchQuery } from '@music/utils';
+import { formatLyricsSearchQuery } from '@music/core';
 import type { LyricSearchResult } from '@music/types';
 import './LyricsPanel.scss';
 

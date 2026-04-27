@@ -5,16 +5,19 @@ import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
 import { MainMetadataService } from '../infrastructure/MainMetadataService';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
 import type { Song, Playlist } from '@music/types';
-import { LibraryService, type IMetadataService } from '@music/core';
-import { extractYoutubeId, getCanonicalYoutubeUrl, getErrorMessage, normalizeString, logger } from '@music/utils';
+import { LibraryService, type IMetadataService, extractYoutubeId, getCanonicalYoutubeUrl } from '@music/core';
+import { getErrorMessage, normalizeString, logger } from '@music/utils';
 import { LyricsManager } from '../modules/lyrics/LyricsManager';
+import { SyncHistoryService } from '../infrastructure/SyncHistoryService';
 
 const storageAdapter = new MainStorageAdapter();
 const metadataService: IMetadataService = {
-  extract: (filePath, sourceUrl, originId) => MainMetadataService.extractMetadata(filePath, sourceUrl, originId)
+  extract: (filePath, sourceUrl, originId) => MainMetadataService.extractMetadata(filePath, sourceUrl, originId),
+  exists: (filePath) => MainMetadataService.exists(filePath)
 };
 const libraryService = new LibraryService(storageAdapter, metadataService);
 const lyricsManager = new LyricsManager();
+const syncHistoryService = new SyncHistoryService();
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.aac', '.wav', '.m4a', '.ogg'];
 
@@ -140,6 +143,22 @@ export function setupLibraryIPC() {
     });
 
     return updated;
+  });
+
+  ipcMain.handle('library:patchSong', async (_, songId: string, updates: Partial<Song>) => {
+    return await libraryService.patchSong(songId, updates);
+  });
+
+  ipcMain.handle('library:getSyncHistory', async () => {
+    return await syncHistoryService.getHistory();
+  });
+
+  ipcMain.handle('library:clearSyncHistory', async () => {
+    await syncHistoryService.clearHistory();
+  });
+
+  ipcMain.handle('library:logSyncEvent', async (_, stats: any, details: string[]) => {
+    await syncHistoryService.logEvent(stats, details);
   });
 
   ipcMain.handle('library:deleteSong', async (_event, songId: string) => {
@@ -426,6 +445,74 @@ export function setupLibraryIPC() {
     } catch (err) {
       console.error('IPC library:scanMissingFiles error:', err);
       return [];
+    }
+  });
+
+  ipcMain.handle('library:runAutoImportScan', async (_event, paths: string[]) => {
+    try {
+      logger.info('[Library] Starting Auto-import Scan', { paths });
+
+      // 1. Discovery
+      const allFiles: string[] = [];
+      for (const dir of paths) {
+        try {
+          const files = await scanDirectory(dir);
+          allFiles.push(...files);
+        } catch (dirErr) {
+          logger.error(`[Library] Failed to scan directory: ${dir}`, dirErr);
+        }
+      }
+
+      // 2. Optimization: Filter files already in DB by Path (case-insensitive)
+      const currentSongs = await storageAdapter.getSongs();
+      const existingPaths = new Set(
+        Object.values(currentSongs).map(s => path.normalize(s.filePath).toLowerCase())
+      );
+
+      const newFiles = allFiles.filter(f => !existingPaths.has(path.normalize(f).toLowerCase()));
+
+      logger.info('[Library] Discovery Complete', { 
+        totalFilesFound: allFiles.length, 
+        alreadyInDb: allFiles.length - newFiles.length,
+        potentialNewOrMoved: newFiles.length 
+      });
+
+      if (newFiles.length === 0) {
+        return { added: 0, migrated: 0, totalScanned: allFiles.length };
+      }
+
+      // 3. Metadata & Hashing (for new/moved files)
+      const songsToProcess: Song[] = [];
+      for (const filePath of newFiles) {
+        try {
+          // extractMetadata đã gọi calculateAudioHash bên trong
+          const songData = await MainMetadataService.extractMetadata(filePath);
+          if (songData) {
+            songsToProcess.push(songData);
+          }
+        } catch (err) {
+          logger.error(`[Library] Failed to extract metadata for ${filePath}`, err);
+        }
+      }
+
+      // 4. Ingestion & Relink (Path Migration)
+      const result = await libraryService.processAndAddSongs(songsToProcess);
+
+      logger.info('[Library] Auto-import Complete', { 
+        added: result.addedCount - result.migratedCount, 
+        migrated: result.migratedCount,
+        duplicates: result.duplicatePaths.length
+      });
+
+      return {
+        added: result.addedCount - result.migratedCount,
+        migrated: result.migratedCount,
+        totalScanned: allFiles.length,
+        details: result.details
+      };
+    } catch (err) {
+      logger.error('[Library] Auto-import Scan failed', err);
+      return { added: 0, migrated: 0, totalScanned: 0, error: String(err) };
     }
   });
 

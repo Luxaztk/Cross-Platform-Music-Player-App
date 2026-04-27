@@ -1,11 +1,14 @@
 import React from 'react';
 import { act, renderHook } from '@testing-library/react';
-import { LibraryProvider, useLibraryContext } from '../LibraryProvider';
+import { SharedLibraryProvider } from '../providers/LibraryProvider';
+import { useLibraryContext } from '../useLibrary';
+
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ILibraryRepository } from '@music/core';
 import type { Song, Playlist, DuplicateSongInfo } from '@music/types';
 
-describe('LibraryProvider', () => {
+describe('SharedLibraryProvider', () => {
   let mockRepository: ILibraryRepository;
   const mockSongs: Song[] = [
     { id: '1', title: 'Song 1', artist: 'Artist 1', artists: ['Artist 1'], filePath: '/path/1', duration: 100, album: 'Album 1', genre: '', year: 2021, coverArt: null, hash: 'h1', fileSize: 1000 },
@@ -33,19 +36,18 @@ describe('LibraryProvider', () => {
       addSongsToPlaylist: vi.fn().mockResolvedValue(true),
       deletePlaylist: vi.fn().mockResolvedValue(true),
       addSongs: vi.fn().mockResolvedValue({ success: true, count: 0 }),
+      patchSong: vi.fn().mockResolvedValue(mockSongs[0]),
+      runAutoImportScan: vi.fn().mockResolvedValue({ added: 0, migrated: 0, totalScanned: 0, details: [] }),
+      scanMissingFiles: vi.fn().mockResolvedValue([]),
+      getSettings: vi.fn().mockResolvedValue({ downloads: { autoImportPaths: [] } }),
+      getSyncHistory: vi.fn().mockResolvedValue([]),
+      clearSyncHistory: vi.fn().mockResolvedValue(undefined),
+      logSyncEvent: vi.fn().mockResolvedValue(undefined),
     } as unknown as ILibraryRepository;
-
-    // Mock electronAPI
-    vi.stubGlobal('window', {
-      ...window,
-      electronAPI: {
-        scanMissingFiles: vi.fn().mockResolvedValue([]),
-      }
-    });
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <LibraryProvider repository={mockRepository}>{children}</LibraryProvider>
+    <SharedLibraryProvider repository={mockRepository}>{children}</SharedLibraryProvider>
   );
 
   it('should fetch library and playlists on mount', async () => {
@@ -106,7 +108,7 @@ describe('LibraryProvider', () => {
     expect(mockRepository.getLibrary).toHaveBeenCalledTimes(2);
   });
 
-  it('should handle scan missing files via Electron API', async () => {
+  it('should handle scan missing files', async () => {
     const { result } = renderHook(() => useLibraryContext(), { wrapper });
     
     // Wait for hydration
@@ -122,7 +124,7 @@ describe('LibraryProvider', () => {
       await result.current.handleScanMissingFiles();
     });
 
-    expect(window.electronAPI.scanMissingFiles).toHaveBeenCalled();
+    expect(mockRepository.scanMissingFiles).toHaveBeenCalled();
   });
 
   it('should handle deleting a song', async () => {
@@ -238,8 +240,86 @@ describe('LibraryProvider', () => {
     // Suppress console.error for this expected error
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
-    expect(() => renderHook(() => useLibraryContext())).toThrow('useLibraryContext must be used within a LibraryProvider');
+    expect(() => renderHook(() => useLibraryContext())).toThrow('useLibrary must be used within a SharedLibraryProvider');
     
     spy.mockRestore();
+  });
+
+  describe('Sync System Orchestration', () => {
+    it('should run auto-import scan before missing files scan in handleSyncLibrary', async () => {
+      const { result } = renderHook(() => useLibraryContext(), { wrapper });
+      
+      const callOrder: string[] = [];
+      vi.mocked(mockRepository.runAutoImportScan).mockImplementation(async () => {
+        callOrder.push('auto-import');
+        return { added: 1, migrated: 0, totalScanned: 1, details: ['Added 1'] };
+      });
+      vi.mocked(mockRepository.scanMissingFiles).mockImplementation(async () => {
+        callOrder.push('scan-missing');
+        return [];
+      });
+
+      await act(async () => {
+        await result.current.handleSyncLibrary();
+      });
+
+      expect(callOrder).toEqual(['auto-import', 'scan-missing']);
+      expect(mockRepository.logSyncEvent).toHaveBeenCalledWith(
+        { added: 1, migrated: 0, deleted: 0 },
+        ['Added 1']
+      );
+    });
+
+    it('should update missingSongs and showCleanupModal if missing files are found', async () => {
+      const { result } = renderHook(() => useLibraryContext(), { wrapper });
+      
+      const missing = [mockSongs[0]];
+      vi.mocked(mockRepository.scanMissingFiles).mockResolvedValue(missing);
+
+      await act(async () => {
+        await result.current.handleSyncLibrary();
+      });
+
+      expect(result.current.missingSongs).toEqual(missing);
+      expect(result.current.showCleanupModal).toBe(true);
+    });
+
+    it('should NOT show cleanup modal if isSilent is true', async () => {
+      const { result } = renderHook(() => useLibraryContext(), { wrapper });
+      
+      vi.mocked(mockRepository.scanMissingFiles).mockResolvedValue([mockSongs[0]]);
+
+      await act(async () => {
+        await result.current.handleSyncLibrary({ isSilent: true });
+      });
+
+
+      expect(result.current.showCleanupModal).toBe(false);
+    });
+
+    it('should handle confirm cleanup and log deleted songs', async () => {
+      const { result } = renderHook(() => useLibraryContext(), { wrapper });
+      
+      // Setup missing songs state first
+      vi.mocked(mockRepository.scanMissingFiles).mockResolvedValue([mockSongs[0]]);
+      await act(async () => {
+        await result.current.handleSyncLibrary();
+      });
+
+      vi.mocked(mockRepository.deleteSongs).mockResolvedValue(true);
+
+      await act(async () => {
+        const success = await result.current.handleConfirmCleanup([mockSongs[0].id]);
+        expect(success).toBe(true);
+      });
+
+      expect(mockRepository.deleteSongs).toHaveBeenCalledWith([mockSongs[0].id]);
+      expect(mockRepository.logSyncEvent).toHaveBeenCalledWith(
+        { added: 0, migrated: 0, deleted: 1 },
+        [`[Deleted] ${mockSongs[0].title}`]
+      );
+      expect(result.current.missingSongs).toHaveLength(0);
+      expect(result.current.showCleanupModal).toBe(false);
+    });
   });
 });

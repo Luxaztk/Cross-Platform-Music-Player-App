@@ -105,8 +105,8 @@ export class ExpoAudioEngine implements PlayerEngine {
     }
 
     if (!this.player) {
-      this.player = createAudioPlayer({ uri }, { updateInterval: 250 })
-      this.player.addListener('playbackStatusUpdate', this.onStatus)
+      this.player = createAudioPlayer({ uri }, { updateInterval: 250 });
+      (this.player as any).addListener('playbackStatusUpdate', this.onStatus);
     } else {
       this.player.replace({ uri })
     }

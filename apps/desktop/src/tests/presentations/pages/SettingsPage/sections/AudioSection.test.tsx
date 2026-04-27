@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AudioSection } from '../../../../../presentations/pages/SettingsPage/sections/AudioSection';
 import { useSettings, useLanguage } from '@hooks';
-import { useAudioDevices } from '@music/hooks';
+import { useAudioDevices, usePlayer } from '@music/hooks';
 
 // Mock hooks
 vi.mock('@hooks', () => ({
@@ -12,6 +12,7 @@ vi.mock('@hooks', () => ({
 
 vi.mock('@music/hooks', () => ({
     useAudioDevices: vi.fn(),
+    usePlayer: vi.fn(),
 }));
 
 describe('AudioSection', () => {
@@ -33,6 +34,10 @@ describe('AudioSection', () => {
             ],
             currentDeviceId: 'default',
             setAudioDevice: mockSetAudioDevice
+        });
+        (usePlayer as any).mockReturnValue({
+            isPlaying: false,
+            getAnalyser: vi.fn()
         });
     });
 

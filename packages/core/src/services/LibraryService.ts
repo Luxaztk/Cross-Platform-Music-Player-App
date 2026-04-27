@@ -1,5 +1,6 @@
 import type { Song, Playlist, PlaylistDetail, DuplicateSongInfo, DuplicateReason } from '@music/types';
-import { isSamePath, normalizeString, logger, getCanonicalYoutubeUrl } from '@music/utils';
+import { isSamePath, normalizeString, getErrorMessage, logger } from '@music/utils';
+import { getCanonicalYoutubeUrl } from '../utils/youtube';
 import type { IStorageAdapter } from '../interfaces/IStorageAdapter';
 import type { IMetadataService } from '../interfaces/IMetadataService';
 import { Mutex } from '../utils/Mutex';
@@ -58,7 +59,11 @@ export class LibraryService {
         return { success: false, count: 0, duplicates: [], duplicateSongs: [], reason: 'METADATA_ERROR' };
       }
 
-      const { addedCount, duplicatePaths, duplicateSongs } = await this.processAndAddSongs([songData]);
+      const { addedCount, migratedCount, duplicatePaths, duplicateSongs } = await this.processAndAddSongs([songData]);
+      
+      if (migratedCount > 0) {
+        logger.info(`[Library] importFromPath: Relinked ${migratedCount} moved files`);
+      }
       
       return {
         success: true,
@@ -84,7 +89,13 @@ export class LibraryService {
    * Priority 2: File Content Hash match
    * Priority 3: Title + Artist match
    */
-  public async processAndAddSongs(newSongs: Song[]): Promise<{ addedCount: number; duplicatePaths: string[]; duplicateSongs: DuplicateSongInfo[] }> {
+  public async processAndAddSongs(newSongs: Song[]): Promise<{
+    addedCount: number;
+    migratedCount: number;
+    duplicatePaths: string[];
+    duplicateSongs: DuplicateSongInfo[];
+    details: string[];
+  }> {
     return await this.mutex.runExclusive(async () => {
       const currentSongs = await this.storageAdapter.getSongs();
       const currentLibrary = await this.storageAdapter.getLibrary();
@@ -120,11 +131,15 @@ export class LibraryService {
       const duplicatePaths: string[] = [];
       const duplicateSongs: DuplicateSongInfo[] = [];
       let addedCount = 0;
+      let migratedCount = 0;
+      const details: string[] = [];
+      const newSongTitles: string[] = [];
 
       logger.info('[Library] Starting processAndAddSongs', { newSongCount: newSongs.length });
 
       for (const song of newSongs) {
-        logger.debug('[Library] Processing song hash / metadata', { filePath: song.filePath, hash: song.hash, title: song.title, artist: song.artist });
+        try {
+          logger.debug('[Library] Processing song hash / metadata', { filePath: song.filePath, hash: song.hash, title: song.title, artist: song.artist });
 
         const normTitle = normalizeString(song.title);
         const normArtist = normalizeString(song.artist);
@@ -166,6 +181,7 @@ export class LibraryService {
 
         // Check Prioritized mức độ (Priority levels)
         const isDuplicateUrl = song.sourceUrl && existingSourceUrls.has(song.sourceUrl);
+
         // 🛡️ GUARD 2: Đối chiếu Vân tay âm thanh (Audio Hash) - BẢN TỐI ƯU HIỆU NĂNG CAO
         let isDuplicateHash = false;
         const isErrorHash = song.hash?.startsWith('error-fallback');
@@ -249,19 +265,52 @@ export class LibraryService {
           collidingSong = existingSongs.find(s => `${normalizeString(s.title)}|${normalizeString(s.artist)}` === nameArtistKey);
         }
 
-        if (duplicateReason) {
+        if (duplicateReason && collidingSong) {
+          // [RELINK LOGIC] Critical Fix: If any collision is detected (URL, Hash, or Metadata),
+          // we check if the original file still exists. If the old file is MISSING, 
+          // we MIGRATE the record to the new path instead of skipping.
+          const exists = await this.metadataService.exists(collidingSong.filePath);
+          
+          if (!exists) {
+            logger.info('[Library] Path Migration Triggered', { 
+              reason: duplicateReason,
+              oldPath: collidingSong.filePath, 
+              newPath: song.filePath,
+              songId: collidingSong.id
+            });
+            
+            // Merge new metadata into existing record while preserving ID and core fields
+            songs[collidingSong.id] = {
+              ...collidingSong,
+              ...song,
+              id: collidingSong.id,
+              filePath: song.filePath,
+              updatedAt: new Date().toISOString()
+            };
+            
+            addedCount++;
+            migratedCount++;
+            details.push(`[Migrated] ${collidingSong.title} (Reason: ${duplicateReason})`);
+            
+            // Update temporary sets so subsequent files in this batch don't collide with the old path
+            existingPaths.delete(collidingSong.filePath);
+            existingPaths.add(song.filePath);
+            
+            continue;
+          }
+
+          // If the old file DOES exist, then it's a true duplicate.
           console.error('\x1b[41m%s\x1b[0m', `❌ [GUARD 3] COLLISION! Reason: ${duplicateReason}`);
           console.error('New:', { path: song.filePath, hash: song.hash, title: song.title, artist: song.artist });
           console.error('Existing:', { 
-            id: collidingSong?.id,
-            path: collidingSong?.filePath, 
-            hash: collidingSong?.hash,
-            title: collidingSong?.title, 
-            artist: collidingSong?.artist 
+            id: collidingSong.id,
+            path: collidingSong.filePath, 
+            hash: collidingSong.hash,
+            title: collidingSong.title, 
+            artist: collidingSong.artist 
           });
 
           duplicatePaths.push(song.filePath);
-          // Return only essential info to avoid IPC overhead (exclude heavy fields like coverArt)
           duplicateSongs.push({
             ...song,
             duplicateReason
@@ -283,9 +332,15 @@ export class LibraryService {
         };
         songs[newSongData.id] = newSongData;
         libraryUpdate.songIds.push(newSongData.id);
+        newSongTitles.push(newSongData.title);
         addedCount++;
         logger.info('[Library] Final Action: ADDED', { path: song.filePath });
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        logger.error(`[Library] Failed to process song: ${song.filePath}`, err);
+        details.push(`[Error] ${song.title || path.basename(song.filePath)}: ${errorMsg}`);
       }
+    }
 
       // Save back using the adapter
       if (addedCount > 0) {
@@ -293,13 +348,20 @@ export class LibraryService {
         await this.storageAdapter.saveLibrary(libraryUpdate);
       }
 
-      return { addedCount, duplicatePaths, duplicateSongs };
+      // Summarize additions
+      const freshAdded = addedCount - migratedCount;
+      if (freshAdded > 0) {
+        if (freshAdded <= 5) {
+          newSongTitles.forEach(t => details.push(`[Added] ${t}`));
+        } else {
+          details.push(`[Added] ${freshAdded} new songs`);
+        }
+      }
+
+      return { addedCount, migratedCount, duplicatePaths, duplicateSongs, details };
     });
   }
 
-  /**
-   * Simple similarity check for fingerprints (0 to 1)
-   */
   /**
    * Calculates similarity between two audio fingerprints using Fuzzy Matching and a Sliding Window approach.
    * Tolerates audio compression artifacts by awarding partial scores for characters with minor ASCII distances.
@@ -631,6 +693,13 @@ export class LibraryService {
       songs,
       songCount: songs.length
     };
+  }
+
+  /**
+   * Patches a song with new data.
+   */
+  public async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
+    return await this.storageAdapter.patchSong(songId, updates);
   }
 
   /**

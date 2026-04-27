@@ -17,6 +17,8 @@ export interface Song {
   originId?: string; // YouTube Video ID or similar
   lyricId?: number; // LRCLIB lyric ID
   lyricSearchParam?: string; // Persistent search parameter for lyrics
+  createdAt?: string; // ISO string
+  updatedAt?: string; // ISO string
 }
 
 export type DuplicateReason = 'URL' | 'HASH' | 'PATH' | 'METADATA';
@@ -87,4 +89,17 @@ export interface YoutubeInfo {
   album: string;
   thumbnail: string;
   duration?: number;
+}
+
+export interface SyncStats {
+  added: number;
+  migrated: number;
+  deleted: number;
+}
+
+export interface SyncHistoryEntry {
+  id: string;
+  timestamp: string;
+  stats: SyncStats;
+  details: string[]; // List of detailed actions
 }

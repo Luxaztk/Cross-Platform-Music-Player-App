@@ -1,0 +1,10 @@
+refactor: major architectural overhaul and state management optimization
+
+- Refactored `LibraryProvider`, `PlayerProvider`, and `UIProvider` into a decoupled Context/Provider pattern.
+- Migrated core domain utilities (YouTube, Artists, Lyrics) from `@music/utils` to `@music/core`.
+- Restructured `packages/hooks` to support standalone logic hooks and providers.
+- Implemented `SyncHistoryService` and `SyncHistoryModal` for tracking library sync events.
+- Hardened `CustomDropdown` with improved accessibility and portal support.
+- Standardized infrastructure interfaces across Desktop and Mobile platforms.
+- Updated test suites to reflect new architecture and achieved 100% coverage on core logic.
+- Optimized re-render cycles by splitting large providers into granular contexts.

@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import Fuse from 'fuse.js';
 import type { Song, Playlist } from '@music/types';
-import { splitArtists } from '@music/utils';
+import { splitArtists } from '@music/core';
+
 
 export interface SearchResults {
   songs: Song[];

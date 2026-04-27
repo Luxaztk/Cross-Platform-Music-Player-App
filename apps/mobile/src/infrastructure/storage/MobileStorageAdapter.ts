@@ -135,7 +135,19 @@ export class MobileStorageAdapter implements IStorageAdapter {
     await AsyncStorage.setItem('melovista_lyric_usage', JSON.stringify(usage));
   }
 
+  async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
+    await this.hydrateIfNeeded();
+    const songs = await this.getSongs();
+    if (songs[songId]) {
+      songs[songId] = { ...songs[songId], ...updates };
+      await this.saveSongs(songs);
+      return songs[songId];
+    }
+    return null;
+  }
+
   async clear(): Promise<void> {
+
     await AsyncStorage.multiRemove([
       LIBRARY_PLAYLIST_KEY,
       SONGS_BY_ID_KEY,

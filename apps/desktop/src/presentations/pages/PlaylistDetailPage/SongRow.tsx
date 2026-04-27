@@ -2,7 +2,9 @@ import React, { useCallback, useMemo } from 'react';
 import { CheckSquare, Play, MoreVertical } from 'lucide-react';
 import type { Song, Playlist } from '@music/types';
 import { ICON_SIZES } from '@constants';
-import { formatTime, splitArtists } from '@music/utils';
+import { formatTime } from '@music/utils';
+import { splitArtists } from '@music/core';
+
 
 interface SongRowProps {
   song: Song;

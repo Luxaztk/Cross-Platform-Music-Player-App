@@ -73,6 +73,16 @@ export class MobileStorageAdapter implements IStorageAdapter {
     await AsyncStorage.setItem(STORAGE_KEYS.LYRIC_USAGE, JSON.stringify(usage));
   }
 
+  async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
+    const songs = await this.getSongs();
+    if (!songs[songId]) return null;
+    
+    const updatedSong = { ...songs[songId], ...updates };
+    songs[songId] = updatedSong;
+    await this.saveSongs(songs);
+    return updatedSong;
+  }
+
   async clear(): Promise<void> {
     await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
   }

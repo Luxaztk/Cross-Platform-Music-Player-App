@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { AudioDevice } from './types/index';
 
-export interface AudioDevice {
-  deviceId: string;
-  label: string;
-  kind: string;
-}
+
+
+
 
 export const useAudioDevices = () => {
   const [devices, setDevices] = useState<AudioDevice[]>([]);

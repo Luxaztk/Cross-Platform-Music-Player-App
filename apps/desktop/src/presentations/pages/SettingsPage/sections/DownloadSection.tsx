@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { useSettings, useLanguage, useNotification, useLibrary, useDownload } from '@hooks';
+import { useSettings, useLanguage, useLibrary, useDownload } from '@hooks';
 import { ICON_SIZES } from '@constants';
-import { Download, FolderOpen, Plus, Trash2, RefreshCcw, Search, Clipboard, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
-import { CustomDropdown, CleanupResolutionModal } from '@components';
-import { getErrorMessage } from '@music/utils';
-import type { Song } from '@music/types';
+import { Download, FolderOpen, Plus, Trash2, RefreshCcw, Search, Clipboard, Loader2, CheckCircle2, AlertCircle, History } from 'lucide-react';
+import { CustomDropdown, DownloadPreviewCard, DuplicateWarningBanner, DownloadProgressBar, SyncHistoryModal } from '@components';
 
 interface DownloadSectionProps {
     searchQuery?: string;
@@ -12,15 +10,18 @@ interface DownloadSectionProps {
 
 export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery }) => {
     const { settings, updateSettings, selectDirectory, isSaving } = useSettings();
+    const [showHistory, setShowHistory] = useState(false);
     const { t } = useLanguage();
-    const { showNotification } = useNotification();
-    const { refreshLibrary } = useLibrary();
-    const {
-        url, setUrl, isFetching, downloadState, downloadProgress, downloadError, startDownload
-    } = useDownload();
 
-    const [isScanning, setIsScanning] = useState(false);
-    const [missingSongs, setMissingSongs] = useState<Song[] | null>(null);
+    // Gọi Global Hook
+    const manager = useDownload();
+    const isBusy = manager.downloadState === 'fetching' || manager.downloadState === 'downloading';
+
+
+    const { 
+        isSyncing,
+        handleSyncLibrary
+    } = useLibrary();
 
     const matchesSearch = (text: string) => {
         if (!searchQuery) return true;
@@ -71,61 +72,33 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
         });
     };
 
-    const handleScanLibrary = async () => {
-        setIsScanning(true);
-        try {
-            const missing = await window.electronAPI.scanMissingFiles();
-            if (missing.length === 0) {
-                showNotification('info', t('libraryCleanup.noMissing'));
-            } else {
-                setMissingSongs(missing);
-            }
-        } catch (err) {
-            showNotification('error', getErrorMessage(err));
-        } finally {
-            setIsScanning(false);
-        }
-    };
-
-    const handleConfirmCleanup = async (selectedIds: string[]) => {
-        if (!selectedIds.length) return;
-        const count = selectedIds.length;
-        try {
-            const success = await window.electronAPI.deleteSongs(selectedIds);
-            if (success) {
-                showNotification('success', t('libraryCleanup.success').replace('{count}', count.toString()));
-                await refreshLibrary();
-            }
-        } catch (err) {
-            showNotification('error', getErrorMessage(err));
-        } finally {
-            setMissingSongs(null);
-        }
-    };
-
+    // LUỒNG 1-CLICK AN TOÀN (SAFE QUICK DOWNLOAD)
     const handleFetchAndDownload = async () => {
-        await startDownload();
+        if (!manager.url.trim()) return;
+
+        // Bước 1: Lấy thông tin & Check trùng lặp
+        const result = await manager.fetchInfo(manager.url, 'section');
+
+        // Bước 2: Nếu thành công và KHÔNG có cảnh báo trùng -> Tự động tải tiếp
+        if (result && result.success && !result.hasWarning) {
+            await manager.executeDownload(false);
+        }
     };
 
     const handlePaste = async () => {
         try {
             const text = (await navigator.clipboard.readText()).trim();
             if (text && /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(text)) {
-                setUrl(text);
+                manager.setUrl(text);
             }
         } catch (err) {
             console.error('Paste failed', err);
         }
     };
 
+
     return (
         <div className="settings-section">
-            <CleanupResolutionModal
-                isOpen={!!missingSongs}
-                missingSongs={missingSongs || []}
-                onClose={() => setMissingSongs(null)}
-                onConfirm={handleConfirmCleanup}
-            />
             <div className="section-header">
                 <Download size={ICON_SIZES.MEDIUM} />
                 <h2>{t('settings.downloads.title')}</h2>
@@ -142,7 +115,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                             </p>
                         </div>
                         <div className="setting-control">
-                            <button className="browse-btn" onClick={handleSelectPath} disabled={isSaving}>
+                            <button type="button" className="browse-btn" onClick={handleSelectPath} disabled={isSaving}>
                                 <FolderOpen size={ICON_SIZES.XSMALL} />
                                 <span>{t('settings.downloads.browse')}</span>
                             </button>
@@ -150,60 +123,122 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                     </div>
                 )}
 
-                {/* Online Downloader Quick Action */}
+                {/* Online Downloader Quick Action (V4 PREMIUM) */}
                 {showsDownloader && (
                     <div className="setting-item vertical online-downloader-item">
                         <div className="setting-info">
                             <div className="with-badge">
                                 <h3>{t('downloader.title')}</h3>
-                                <span className="badge-new">NEW</span>
                             </div>
-                            <p>{t('downloader.urlPlaceholder')}</p>
                         </div>
+
                         <div className="downloader-quick-input">
                             <div className="input-wrapper">
                                 <Search size={16} className="search-icon" />
                                 <input
                                     type="text"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    placeholder="Paste YouTube link here..."
-                                    disabled={isFetching}
+                                    value={manager.url}
+                                    onChange={(e) => manager.setUrl(e.target.value)}
+                                    placeholder="https://www.youtube.com/watch?v=..."
+                                    disabled={manager.downloadState === 'downloading'}
                                     onKeyDown={(e) => e.key === 'Enter' && handleFetchAndDownload()}
                                 />
-                                <button className="paste-icon-btn" onClick={handlePaste} title="Paste from clipboard">
+                                <button type="button" className="paste-icon-btn" onClick={handlePaste} title="Paste from clipboard">
                                     <Clipboard size={14} />
                                 </button>
                             </div>
                             <button
-                                className={`fetch-download-btn ${isFetching ? 'loading' : ''}`}
+                                type="button"
+                                className={`fetch-download-btn ${isBusy ? 'loading' : ''}`}
                                 onClick={handleFetchAndDownload}
-                                disabled={isFetching || !url.trim()}
+                                disabled={isBusy || !manager.url.trim()}
                             >
-                                {isFetching ? (
+                                {isBusy ? (
                                     <Loader2 size={16} className="spinning" />
-                                ) : (
+                                ) : manager.downloadState === 'preview' ? (
                                     <Download size={16} />
+                                ) : (
+                                    <Search size={16} />
                                 )}
-                                <span>{isFetching ? t('downloader.downloading') : t('downloader.downloadNow')}</span>
+                                <span>
+                                    {manager.downloadState === 'fetching'
+                                        ? t('downloader.searching')
+                                        : manager.downloadState === 'downloading'
+                                            ? t('downloader.downloading')
+                                            : manager.downloadState === 'preview'
+                                                ? t('downloader.downloadNow')
+                                                : t('downloader.fetchInfo')}
+                                </span>
                             </button>
                         </div>
-                        {downloadState === 'downloading' && (
-                            <div className="mini-progress-bar">
-                                <div className="fill" style={{ width: `${downloadProgress}%` }} />
-                                <span className="percent">{Math.round(downloadProgress)}%</span>
-                            </div>
-                        )}
-                        {downloadState === 'success' && (
-                            <div className="download-feedback success">
-                                <CheckCircle2 size={14} />
-                                <span>{t('downloader.success')}</span>
-                            </div>
-                        )}
-                        {downloadState === 'error' && (
-                            <div className="download-feedback error">
-                                <AlertCircle size={14} />
-                                <span>{downloadError}</span>
+
+                        {/* VISIBILITY PERSISTENCE AREA: Giữ Card bài hát không bị flash */}
+                        {manager.videoInfo && (
+                            <div className="downloader-result-area">
+                                <DownloadPreviewCard info={manager.videoInfo} />
+
+                                {/* Cảnh báo trùng lặp (Chỉ hiện ở trạng thái preview) */}
+                                {manager.downloadState === 'preview' && (
+                                    <DuplicateWarningBanner duplicateInfo={manager.duplicateInfo} />
+                                )}
+
+                                {/* Nếu có trùng lặp ở state preview, hiện thêm nút xác nhận thủ công */}
+                                {manager.downloadState === 'preview' && manager.duplicateInfo.warning && (
+                                    <div className="action-buttons horizontal">
+                                        <button type="button" className="secondary-btn" onClick={() => manager.resetDownload()}>
+                                            {t('common.cancel')}
+                                        </button>
+                                        <button type="button" className="primary-btn warning-btn" onClick={() => manager.executeDownload(true)}>
+                                            {t('downloader.downloadAnyway')}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Progress Bar (Chỉ hiện ở trạng thái downloading) */}
+                                {manager.downloadState === 'downloading' && (
+                                    <DownloadProgressBar progress={manager.downloadProgress} />
+                                )}
+
+                                {/* Rich Success State (Thiết kế Inline nằm ngang) */}
+                                {manager.downloadState === 'success' && (
+                                    <div className="inline-success-banner">
+                                        <div className="success-info">
+                                            <CheckCircle2 size={18} className="success-icon" />
+                                            <div className="text-details">
+                                                <span className="status-title">{t('downloader.success')}</span>
+                                                {manager.downloadedPath && (
+                                                    <span className="file-path">{manager.downloadedPath}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="action-group">
+                                            {manager.downloadedPath && (
+                                                <button
+                                                    type="button"
+                                                    className="folder-btn"
+                                                    onClick={() => window.electronAPI.openItemPath(manager.downloadedPath!)}
+                                                    title={t('downloader.openFolder')}
+                                                >
+                                                    <FolderOpen size={18} />
+                                                </button>
+                                            )}
+                                            <button type="button" className="done-btn" onClick={() => manager.resetDownload()}>
+                                                {t('common.success')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Error State */}
+                                {manager.downloadState === 'error' && (
+                                    <div className="download-feedback error">
+                                        <AlertCircle size={16} />
+                                        <span>{manager.downloadError}</span>
+                                        <button type="button" className="reset-link" onClick={() => manager.resetDownload()}>
+                                            {t('common.cancel')}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -249,15 +284,46 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                             {settings.downloads.autoImportPaths.map((path: string) => (
                                 <div key={path} className="import-path-item">
                                     <span title={path}>{path}</span>
-                                    <button onClick={() => handleRemoveImportPath(path)} title={t('settings.downloads.removeFolder')}>
+                                    <button type="button" onClick={() => handleRemoveImportPath(path)} title={t('settings.downloads.removeFolder')}>
                                         <Trash2 size={ICON_SIZES.TINY} />
                                     </button>
                                 </div>
                             ))}
-                            <button className="add-path-btn" onClick={handleAddImportPath} title={t('settings.downloads.addFolder')}>
+                            <button type="button" className="add-path-btn" onClick={handleAddImportPath} title={t('settings.downloads.addFolder')}>
                                 <Plus size={ICON_SIZES.XSMALL} />
                                 <span>{t('settings.downloads.addFolder')}</span>
                             </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Background Sync Toggle */}
+                {showsAutoImport && (
+                    <div className="setting-item">
+                        <div className="setting-info">
+                            <h3>{t('settings.downloads.backgroundSync')}</h3>
+                            <p>{t('settings.downloads.backgroundSyncDesc')}</p>
+                        </div>
+                        <div className="setting-control">
+                            <CustomDropdown
+                                value={settings.downloads.backgroundSync}
+                                onChange={(val) => updateSettings({
+                                    downloads: {
+                                        ...settings.downloads,
+                                        backgroundSync: Number(val)
+                                    }
+                                })}
+                                options={[
+                                    { value: 0, label: t('settings.downloads.syncInterval.never') },
+                                    { value: 30, label: t('settings.downloads.syncInterval.min30') },
+                                    { value: 60, label: t('settings.downloads.syncInterval.hour1') },
+                                    { value: 120, label: t('settings.downloads.syncInterval.hour2') },
+                                    { value: 360, label: t('settings.downloads.syncInterval.hour6') },
+                                    { value: 1440, label: t('settings.downloads.syncInterval.day1') },
+                                ]}
+                                title={t('settings.downloads.backgroundSync')}
+                                disabled={isSaving}
+                            />
                         </div>
                     </div>
                 )}
@@ -266,25 +332,36 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                 {showsMaintenance && (
                     <div className="setting-item">
                         <div className="setting-info">
-                            <div className="with-badge">
-                                <h3>{t('settings.downloads.maintenance')}</h3>
-                                <span className="badge-system">{t('common.system')}</span>
-                            </div>
+                            <h3>{t('settings.downloads.maintenance')}</h3>
                             <p>{t('settings.downloads.maintenanceDesc')}</p>
                         </div>
-                        <div className="setting-control">
-                            <button
-                                className={`scan-btn ${isScanning ? 'busy' : ''}`}
-                                onClick={handleScanLibrary}
-                                disabled={isScanning}
+                        <div className="setting-control maintenance-actions">
+                            <button 
+                                type="button"
+                                className="history-btn" 
+                                onClick={() => setShowHistory(true)} 
+                                title={t('libraryCleanup.viewHistory')}
                             >
-                                <RefreshCcw size={ICON_SIZES.XSMALL} className={isScanning ? 'spinning' : ''} />
-                                <span>{isScanning ? t('settings.downloads.scanning') : t('settings.downloads.scanNow')}</span>
+                                <History size={ICON_SIZES.XSMALL} />
+                            </button>
+                            <button
+                                type="button"
+                                className={`scan-btn ${isSyncing ? 'busy' : ''}`}
+                                onClick={() => handleSyncLibrary()}
+                                disabled={isSyncing}
+                            >
+                                <RefreshCcw size={ICON_SIZES.XSMALL} className={isSyncing ? 'spinning' : ''} />
+                                <span>{isSyncing ? t('libraryCleanup.scanning') : t('libraryCleanup.scanNow')}</span>
                             </button>
                         </div>
                     </div>
                 )}
             </div>
+
+            <SyncHistoryModal 
+                isOpen={showHistory} 
+                onClose={() => setShowHistory(false)} 
+            />
         </div>
     );
 };

@@ -3,7 +3,9 @@ import type {
   Playlist,
   PlaylistDetail,
   ImportResult,
-  LyricSearchResult
+  LyricSearchResult,
+  SyncHistoryEntry,
+  SyncStats
 } from '@music/types';
 import type { ILibraryRepository } from '@music/core';
 
@@ -99,6 +101,10 @@ export class ElectronLibraryRepository implements ILibraryRepository {
     return window.electronAPI.scanMissingFiles();
   }
 
+  async runAutoImportScan(paths: string[]): Promise<{ added: number; migrated: number; totalScanned: number; details: string[] }> {
+    return window.electronAPI.runAutoImportScan(paths);
+  }
+
   async getLyrics(songId: string): Promise<string | null> {
     return window.electronAPI.getLyrics(songId);
   }
@@ -114,5 +120,21 @@ export class ElectronLibraryRepository implements ILibraryRepository {
 
   async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
     return window.electronAPI.patchSong(songId, updates);
+  }
+
+  async getSettings(): Promise<any> {
+    return window.electronAPI.getSettings();
+  }
+
+  async getSyncHistory(): Promise<SyncHistoryEntry[]> {
+    return window.electronAPI.getSyncHistory();
+  }
+
+  async clearSyncHistory(): Promise<void> {
+    return window.electronAPI.clearSyncHistory();
+  }
+
+  async logSyncEvent(stats: SyncStats, details: string[]): Promise<void> {
+    return window.electronAPI.logSyncEvent(stats, details);
   }
 }

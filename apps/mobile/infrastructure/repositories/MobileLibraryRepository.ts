@@ -1,4 +1,4 @@
-import { Song, Playlist, PlaylistDetail, ImportResult } from '@music/types';
+import { Song, Playlist, PlaylistDetail, ImportResult, SyncHistoryEntry, SyncStats } from '@music/types';
 import { ILibraryRepository, LibraryService } from '@music/core';
 import { MobileStorageAdapter } from '../services/MobileStorageAdapter';
 
@@ -7,7 +7,11 @@ export class MobileLibraryRepository implements ILibraryRepository {
 
   constructor() {
     const storage = new MobileStorageAdapter();
-    this.service = new LibraryService(storage);
+    const mockMetadataService = {
+      extract: async () => null,
+      exists: async () => true,
+    };
+    this.service = new LibraryService(storage, mockMetadataService as any);
   }
 
   async getLibrary(): Promise<{ songs: Song[], library: Playlist }> {
@@ -70,9 +74,21 @@ export class MobileLibraryRepository implements ILibraryRepository {
     return await this.service.addSongs(songs);
   }
 
-  async scanMissingFiles(): Promise<string[]> {
+  async scanMissingFiles(): Promise<Song[]> {
     // Not applicable on mobile in this simple version
     return [];
+  }
+
+  async runAutoImportScan(_paths: string[]): Promise<{ added: number; migrated: number; totalScanned: number; details: string[] }> {
+    return { added: 0, migrated: 0, totalScanned: 0, details: [] };
+  }
+
+  async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
+    return await this.service.patchSong(songId, updates);
+  }
+
+  async getSettings(): Promise<any> {
+    return {};
   }
 
   async getLyrics(songId: string): Promise<string | null> {
@@ -86,5 +102,17 @@ export class MobileLibraryRepository implements ILibraryRepository {
 
   async searchLyrics(_query: string): Promise<any[]> {
     return []; // Not implemented on mobile yet
+  }
+
+  async getSyncHistory(): Promise<SyncHistoryEntry[]> {
+    return [];
+  }
+
+  async clearSyncHistory(): Promise<void> {
+    // No-op
+  }
+
+  async logSyncEvent(_stats: SyncStats, _details: string[]): Promise<void> {
+    // No-op
   }
 }

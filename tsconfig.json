@@ -1,0 +1,43 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "baseUrl": ".",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@music/core": ["packages/core/src"],
+      "@music/core/*": ["packages/core/src/*"],
+      "@music/player": ["packages/player/src"],
+      "@music/player/*": ["packages/player/src/*"],
+      "@music/types": ["packages/types"],
+      "@music/types/*": ["packages/types/*"],
+      "@music/hooks": ["packages/hooks"],
+      "@music/hooks/*": ["packages/hooks/*"],
+      "@music/hooks/types": ["packages/hooks/src/types"],
+      "@music/hooks/constants": ["packages/hooks/src/constants"],
+      
+      "@components": ["apps/desktop/src/presentations/components"],
+      "@components/*": ["apps/desktop/src/presentations/components/*"],
+      "@hooks": ["apps/desktop/src/application/hooks"],
+      "@hooks/*": ["apps/desktop/src/application/hooks/*"],
+      "@infrastructure": ["apps/desktop/src/infrastructure"],
+      "@infrastructure/*": ["apps/desktop/src/infrastructure/*"],
+      "@utils": ["apps/desktop/src/infrastructure/utils"],
+      "@utils/*": ["apps/desktop/src/infrastructure/utils/*"],
+      "@constants": ["apps/desktop/src/presentations/constants"]
+    }
+  },
+  "include": [
+    "apps/**/*",
+    "packages/**/*"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**"
+  ]
+}

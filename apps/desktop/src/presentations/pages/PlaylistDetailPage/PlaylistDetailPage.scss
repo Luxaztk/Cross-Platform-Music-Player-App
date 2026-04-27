@@ -252,7 +252,7 @@
 
         &:hover {
           background: var(--bg-overlay);
-          color: var(--color-text);
+          color: var(--color-text-main);
         }
 
         .text-primary {
@@ -290,7 +290,7 @@
 
       &:hover {
         background: var(--bg-surface-dim);
-        color: var(--color-text);
+        color: var(--color-text-main);
 
         .col-idx {
           .checkbox-cell {
@@ -307,7 +307,7 @@
       &.selected {
         background: rgba(var(--color-primary-rgb), 0.15);
         border-color: rgba(var(--color-primary-rgb), 0.3);
-        color: var(--color-text);
+        color: var(--color-text-main);
 
         .col-idx {
           .checkbox-cell {
@@ -669,7 +669,7 @@
         transition: all 0.2s ease;
 
         &:hover {
-          background: var(--color-danger, #ff4d4f);
+          background: var(--color-error);
           color: white;
         }
 

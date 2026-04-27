@@ -7,3 +7,7 @@ export * from './useTheme';
 export * from './useGlobalHotkeys';
 export * from './useSettings';
 export * from './useDownload';
+
+export * from './DownloadContext';
+export * from './SettingsContext';
+

@@ -13,5 +13,6 @@ export interface IStorageAdapter {
   saveRecentSearches(searches: RecentSearch[]): Promise<void>;
   getLyricUsage(): Promise<Record<string, number>>;
   saveLyricUsage(usage: Record<string, number>): Promise<void>;
+  patchSong(songId: string, updates: Partial<Song>): Promise<Song | null>;
   clear(): Promise<void>;
 }

@@ -1,85 +1,94 @@
-// @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, act } from '@testing-library/react';
+import { LibraryProvider } from '../../../../presentations/components/Library/LibraryProvider';
+import { useLibrary } from '@music/hooks';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { LibraryProvider } from '@components/Library/LibraryProvider';
-import { useLibrary } from '@hooks'; // Assuming useLibrary is exported from @hooks or @music/hooks
 
-// Mock electronAPI for ElectronLibraryRepository
-window.electronAPI = {
-  getLibrary: vi.fn().mockResolvedValue({ songs: [{ id: 's1', title: 'Test Song' }], playlists: [] }),
-  getPlaylists: vi.fn().mockResolvedValue([{ id: 'p1', name: 'Test Playlist' }]),
-  scanMissingFiles: vi.fn().mockResolvedValue(['missing1']),
-  addSongs: vi.fn(),
-  updateSong: vi.fn(),
-  deleteSongs: vi.fn(),
-  createPlaylist: vi.fn(),
-  updatePlaylist: vi.fn(),
-  deletePlaylist: vi.fn(),
-  addSongsToPlaylist: vi.fn(),
-  removeSongsFromPlaylist: vi.fn(),
-  updateLibraryFilter: vi.fn(),
-  getLibraryFilter: vi.fn().mockResolvedValue(null),
-  onLibraryUpdate: vi.fn(() => vi.fn()),
-  onImportProgress: vi.fn(() => vi.fn()),
-  onScanProgress: vi.fn(() => vi.fn()),
-} as any;
+// Mock dependencies
+vi.mock('@music/hooks', async () => {
+  const actual = await vi.importActual('@music/hooks');
+  return {
+    ...actual as any,
+    SharedLibraryProvider: vi.fn(({ children, onSyncComplete, onSyncStart }) => (
+      <div 
+        data-testid="shared-provider" 
+        onClick={() => {
+          if (onSyncStart) onSyncStart({ isSilent: true });
+          onSyncComplete({ added: 1, migrated: 1, missingCount: 0 }, { setShowCleanupModal: vi.fn() });
+        }}
+      >
+        {children}
+      </div>
+    )),
+    useLibrary: vi.fn(),
+  };
+});
 
-// A test component to consume the provided Context
-const TestConsumer = () => {
-  const { songs, handleScanMissingFiles } = useLibrary();
+vi.mock('../../../../infrastructure/repositories', () => ({
+  ElectronLibraryRepository: vi.fn(),
+}));
 
-  return (
-    <div>
-      <div data-testid="songs-count">{songs.length}</div>
-      <button onClick={() => handleScanMissingFiles()}>Scan Missing</button>
-    </div>
-  );
-};
+const mockShowNotification = vi.fn();
+const mockUpdateNotification = vi.fn();
+const mockRemoveNotification = vi.fn();
 
-describe('LibraryProvider', () => {
+vi.mock('@hooks', () => ({
+  useNotification: vi.fn(() => ({ 
+    showNotification: mockShowNotification,
+    updateNotification: mockUpdateNotification,
+    removeNotification: mockRemoveNotification
+  })),
+  useLanguage: vi.fn(() => ({ t: (key: string) => key })),
+}));
+
+// Mock components to avoid deep rendering issues
+vi.mock('@components', () => ({
+  CleanupResolutionModal: vi.fn(() => <div data-testid="cleanup-modal" />),
+}));
+
+describe('LibraryProvider (Desktop)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('renders children and provides library context using ElectronRepository', async () => {
-    render(
-      <LibraryProvider>
-        <TestConsumer />
-      </LibraryProvider>
-    );
-
-    // Initial load fetches library via ElectronLibraryRepository
-    await waitFor(() => {
-      expect(window.electronAPI.getLibrary).toHaveBeenCalled();
-    });
-
-    // The mock returns 1 song, so the consumer should render 1
-    await waitFor(() => {
-      expect(screen.getByTestId('songs-count')).toHaveTextContent('1');
+    (useLibrary as any).mockReturnValue({
+      showCleanupModal: false,
+      missingSongs: [],
+      setShowCleanupModal: vi.fn(),
+      handleDeleteSongs: vi.fn().mockResolvedValue(true),
     });
   });
 
-  it('allows consumers to trigger repository actions', async () => {
-    const user = userEvent.setup();
-
+  it('should render SharedLibraryProvider with children', () => {
     render(
       <LibraryProvider>
-        <TestConsumer />
+        <div data-testid="child">Test Child</div>
       </LibraryProvider>
     );
 
-    // Wait for initial load
-    await waitFor(() => {
-      expect(screen.getByTestId('songs-count')).toHaveTextContent('1');
+    expect(screen.getByTestId('shared-provider')).toBeInTheDocument();
+    expect(screen.getByTestId('child')).toBeInTheDocument();
+  });
+
+  it('should show notification when sync completes with zero missing songs', async () => {
+    render(<LibraryProvider>Children</LibraryProvider>);
+
+    // Trigger the onSyncComplete via mock click
+    const provider = screen.getByTestId('shared-provider');
+    await act(async () => {
+      provider.click();
     });
 
-    const scanBtn = screen.getByRole('button', { name: 'Scan Missing' });
-    await user.click(scanBtn);
+    expect(mockShowNotification).toHaveBeenCalledWith('info', expect.any(String), expect.any(Object));
+    expect(mockUpdateNotification).toHaveBeenCalledWith('sync-toast', expect.objectContaining({ type: 'success' }));
+  });
 
-    // This should trigger window.electronAPI.scanMissingFiles
-    await waitFor(() => {
-      expect(window.electronAPI.scanMissingFiles).toHaveBeenCalled();
+  it('should render CleanupResolutionModal within the provider', () => {
+    (useLibrary as any).mockReturnValue({
+      showCleanupModal: true,
+      missingSongs: [{ id: '1', title: 'Missing' }],
+      setShowCleanupModal: vi.fn(),
+      handleDeleteSongs: vi.fn().mockResolvedValue(true),
     });
+
+    render(<LibraryProvider>Children</LibraryProvider>);
+    expect(screen.getByTestId('cleanup-modal')).toBeInTheDocument();
   });
 });

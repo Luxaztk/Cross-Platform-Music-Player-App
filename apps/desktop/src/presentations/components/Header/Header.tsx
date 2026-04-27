@@ -18,12 +18,11 @@ import {
   Loader2,
 } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
-import { DownloaderModal, CleanupResolutionModal, type ThemeType } from '@components';
+import { DownloaderModal, type ThemeType } from '@components';
 import {
   useSearch,
   useLibrary,
   useRecentSearches,
-  useNotification,
   useLanguage,
   useTheme,
   type SearchResults,
@@ -51,9 +50,14 @@ interface MenuItem {
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
-  const { songs, playlists, setLibraryFilter, handleScanMissingFiles, handleDeleteSongs } = useLibrary();
+  const { 
+    songs, 
+    playlists, 
+    setLibraryFilter, 
+    isSyncing,
+    handleSyncLibrary
+  } = useLibrary();
   const { playList, playNext, addToQueue } = usePlayer();
-  const { showNotification } = useNotification();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
@@ -66,8 +70,6 @@ const Header: React.FC = () => {
   const { devices, currentDeviceId, setAudioDevice } = useAudioDevices();
   const { recentSearches, addSearch, removeSearch, clearAll } = useRecentSearches();
   const [showDownloader, setShowDownloader] = React.useState(false);
-  const [isScanning, setIsScanning] = React.useState(false);
-  const [missingSongs, setMissingSongs] = React.useState<Song[] | null>(null);
 
   const searchResults = useSearch(songs, playlists, searchQuery);
   const profileRef = React.useRef<HTMLDivElement>(null);
@@ -209,32 +211,6 @@ const Header: React.FC = () => {
     osc.stop(ctx.currentTime + 0.5);
   };
 
-  const onScanMissing = async () => {
-    setIsScanning(true);
-    setShowProfileMenu(false);
-    try {
-      const missing = await handleScanMissingFiles();
-      if (missing.length === 0) {
-        showNotification('info', t('libraryCleanup.noMissing'));
-      } else {
-        setMissingSongs(missing);
-      }
-    } catch (err) {
-      console.error('Scan missing files error:', err);
-    } finally {
-      setIsScanning(false);
-    }
-  };
-
-  const confirmCleanup = async (selectedIds: string[]) => {
-    if (!selectedIds.length) return;
-    const count = selectedIds.length;
-    const success = await handleDeleteSongs(selectedIds);
-    if (success) {
-      showNotification('success', t('libraryCleanup.success').replace('{count}', count.toString()));
-    }
-    setMissingSongs(null);
-  };
 
   React.useEffect(() => {
     if (!showProfileMenu) {
@@ -376,8 +352,11 @@ const Header: React.FC = () => {
     {
       id: 'scan',
       label: t('libraryCleanup.title'),
-      icon: isScanning ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />,
-      action: onScanMissing,
+      icon: isSyncing ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />,
+      action: () => {
+        handleSyncLibrary();
+        setShowProfileMenu(false);
+      },
     },
     {
       id: 'downloader',
@@ -435,7 +414,7 @@ const Header: React.FC = () => {
 
         <div className="header-center">
           <button className="icon-button nav-controls" onClick={() => navigate('/playlist/0')} title={t('header.home')}>
-            <Home size={ICON_SIZES.LARGE} />
+            <Home size={ICON_SIZES.XLARGE} />
           </button>
           <div className="search-bar" ref={searchRef}>
             <Search className="search-icon" size={ICON_SIZES.SMALL} />
@@ -562,14 +541,12 @@ const Header: React.FC = () => {
         </div>
       </header>
 
-      <DownloaderModal isOpen={showDownloader} onClose={() => setShowDownloader(false)} />
-
-      <CleanupResolutionModal
-        isOpen={!!missingSongs}
-        missingSongs={missingSongs || []}
-        onClose={() => setMissingSongs(null)}
-        onConfirm={confirmCleanup}
+      <DownloaderModal 
+        key={showDownloader ? 'open' : 'closed'} 
+        isOpen={showDownloader} 
+        onClose={() => setShowDownloader(false)} 
       />
+
     </>
   );
 };

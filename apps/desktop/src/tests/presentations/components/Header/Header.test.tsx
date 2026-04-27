@@ -17,7 +17,7 @@ vi.mock('react-router-dom', async () => {
 const mockSetLanguage = vi.fn();
 const mockSetTheme = vi.fn();
 const mockSetLibraryFilter = vi.fn();
-const mockHandleScanMissingFiles = vi.fn().mockResolvedValue([]);
+const mockHandleSyncLibrary = vi.fn().mockResolvedValue([]);
 const mockHandleDeleteSongs = vi.fn().mockResolvedValue(true);
 const mockShowNotification = vi.fn();
 const mockPlayList = vi.fn();
@@ -30,12 +30,20 @@ vi.mock('@hooks', () => ({
   useLibrary: () => ({ 
     songs: [], playlists: [], 
     setLibraryFilter: mockSetLibraryFilter, 
-    handleScanMissingFiles: mockHandleScanMissingFiles, 
+    isSyncing: false,
+    handleSyncLibrary: mockHandleSyncLibrary, 
     handleDeleteSongs: mockHandleDeleteSongs 
   }),
   useNotification: () => ({ showNotification: mockShowNotification }),
   useSearch: () => ({ songs: [], artists: [], albums: [] }),
-  useRecentSearches: () => ({ recentSearches: [], addSearch: mockAddSearch, removeSearch: vi.fn(), clearAll: vi.fn() })
+  useRecentSearches: () => ({ recentSearches: [], addSearch: mockAddSearch, removeSearch: vi.fn(), clearAll: vi.fn() }),
+  useDownload: vi.fn(() => ({
+    url: '',
+    setUrl: vi.fn(),
+    downloadState: 'idle',
+    fetchInfo: vi.fn(),
+    executeDownload: vi.fn(),
+  })),
 }));
 
 vi.mock('@music/hooks', () => ({
@@ -148,7 +156,7 @@ describe('Header', () => {
     const scanBtn = screen.getByText('libraryCleanup.title').closest('button');
     await user.click(scanBtn!);
     
-    expect(mockHandleScanMissingFiles).toHaveBeenCalled();
+    expect(mockHandleSyncLibrary).toHaveBeenCalled();
   });
 
   it('handles search input change and shows overlay', async () => {

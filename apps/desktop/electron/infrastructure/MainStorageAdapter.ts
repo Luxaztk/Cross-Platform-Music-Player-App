@@ -23,7 +23,7 @@ export class MainStorageAdapter implements IStorageAdapter {
     let defaultDownloadPath = '';
     try {
       defaultDownloadPath = path.join(app.getPath('music'), 'Melovista Downloads');
-    } catch (e) {
+    } catch (_e) {
       console.warn('[Storage] Failed to get music path, using empty default');
     }
 
@@ -106,7 +106,7 @@ export class MainStorageAdapter implements IStorageAdapter {
   async saveRecentSearches(searches: RecentSearch[]): Promise<void> {
     this.store.set('recentSearches', searches);
   }
-  
+
   async getLyricUsage(): Promise<Record<string, number>> {
     return this.store.get('lyricUsage') || {};
   }
@@ -124,7 +124,7 @@ export class MainStorageAdapter implements IStorageAdapter {
   async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
     const songs = await this.getSongs();
     if (!songs[songId]) return null;
-    
+
     const updatedSong = { ...songs[songId], ...updates };
     songs[songId] = updatedSong;
     await this.saveSongs(songs);
@@ -132,16 +132,16 @@ export class MainStorageAdapter implements IStorageAdapter {
   }
   async getSettings(): Promise<AppSettings> {
     const settings = this.store.get('settings') || { ...DEFAULT_SETTINGS };
-    
+
     // Ensure downloadPath is never empty when sent to UI
     if (!settings.downloads.downloadPath) {
       try {
         settings.downloads.downloadPath = path.join(app.getPath('music'), 'Melovista Downloads');
-      } catch (e) {
+      } catch (_e) {
         console.warn('[Storage] Failed to resolve default download path in getSettings');
       }
     }
-    
+
     return settings;
   }
 
@@ -149,7 +149,7 @@ export class MainStorageAdapter implements IStorageAdapter {
     const current = await this.getSettings();
     this.store.set('settings', { ...current, ...settings });
   }
-  
+
   async clear(): Promise<void> {
     this.store.clear();
     console.warn('\x1b[41m%s\x1b[0m', '🚨 [Storage] ADAPTER MEMORY WIPED');

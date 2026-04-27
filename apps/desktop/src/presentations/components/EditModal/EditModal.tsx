@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import type { Song, Playlist } from '@music/types';
 import { ICON_SIZES } from '@constants';
 import { useLanguage, useTheme } from '@hooks';
-import { splitArtists } from '@music/utils';
+import { splitArtists } from '@music/core';
 import './EditModal.scss';
 
 interface EditModalProps {

@@ -7,7 +7,8 @@ import { getFixedFfmpegPath } from '../utils/ffmpegPath';
 import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import type { Song } from '@music/types';
-import { splitArtists } from '@music/utils';
+import { splitArtists } from '@music/core';
+
 import { MetadataManager } from '../modules/metadata/MetadataManager';
 import { logFileTrace } from './FileTraceLogger';
 
@@ -36,7 +37,7 @@ export class MainMetadataService {
     // 1. Verify File Existence
     try {
       await fs.access(filePath);
-    } catch (err) {
+    } catch (_err) {
       console.error('\x1b[31m%s\x1b[0m', `[FFmpeg Hash] CRITICAL: File does not exist: ${filePath}`);
       return `error-fallback-v2-missing-${randomUUID()}`;
     }
@@ -47,7 +48,7 @@ export class MainMetadataService {
 
     try {
       await fs.access(resolvedPath);
-    } catch (err) {
+    } catch (_err) {
       console.error('\x1b[31m%s\x1b[0m', `[FFmpeg Hash] CRITICAL: FFmpeg binary not found at: ${resolvedPath}`);
       return `error-fallback-v2-no-binary-${randomUUID()}`;
     }
@@ -238,6 +239,18 @@ export class MainMetadataService {
       logFileTrace('extractMetadata', filePath, 'FAIL', message);
       console.error(`Error extracting metadata for ${filePath}:`, error);
       return null;
+    }
+  }
+
+  /**
+   * Checks if a file exists on disk.
+   */
+  public static async exists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath, fs.constants.F_OK);
+      return true;
+    } catch {
+      return false;
     }
   }
 

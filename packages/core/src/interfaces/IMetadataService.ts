@@ -14,4 +14,10 @@ export interface IMetadataService {
    * @param originId Optional origin ID (e.g. YouTube Video ID)
    */
   extract(filePath: string, sourceUrl?: string, originId?: string): Promise<Song | null>;
+
+  /**
+   * Checks if a file exists and is accessible.
+   */
+  exists(filePath: string): Promise<boolean>;
 }
+
