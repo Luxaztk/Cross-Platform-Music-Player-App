@@ -7,6 +7,8 @@ import { useTheme } from '../../presentations/components/Theme'
 import { usePlayerState, usePlayerProgress } from '../../application/player'
 import { formatTime } from './format'
 
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+
 export function PlayerBar() {
   const { theme } = useTheme()
   const { currentSong, togglePlayPause, next, prev } = usePlayerState()
@@ -75,7 +77,11 @@ export function PlayerBar() {
             hitSlop={10}
             style={styles.iconBtn}
           >
-            <Text style={[styles.controlText, { color: theme.colors.text }]}>⏮</Text>
+            <FontAwesome5
+              name="step-backward"
+              size={17}
+              color={theme.colors.text}
+            />
           </Pressable>
 
           <Pressable
@@ -86,9 +92,11 @@ export function PlayerBar() {
             hitSlop={10}
             style={[styles.playBtn, { backgroundColor: theme.colors.text }]}
           >
-            <Text style={[styles.playBtnText, { color: theme.colors.background }]}>
-              {progress.isPlaying ? '⏸' : '▶'}
-            </Text>
+            <FontAwesome5
+              name={progress.isPlaying ? 'pause' : 'play'}
+              size={17}
+              color={theme.colors.background}
+            />
           </Pressable>
 
           <Pressable
@@ -99,7 +107,11 @@ export function PlayerBar() {
             hitSlop={10}
             style={styles.iconBtn}
           >
-            <Text style={[styles.controlText, { color: theme.colors.text }]}>⏭</Text>
+            <FontAwesome5
+              name="step-forward"
+              size={17}
+              color={theme.colors.text}
+            />
           </Pressable>
         </View>
       </View>
@@ -175,20 +187,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  controlText: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
   playBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  playBtnText: {
-    fontSize: 17,
-    fontWeight: '800',
   },
   bottomRow: {
     gap: 8,

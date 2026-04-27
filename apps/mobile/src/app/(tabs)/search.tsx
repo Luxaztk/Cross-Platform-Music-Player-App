@@ -126,18 +126,30 @@ export default function SearchScreen() {
 
   // ── Handlers ────────────────────────────────────
 
+  const filteredSongs = useMemo(() => {
+    if (!trimmedQuery) return []
+    return Object.values(songsById).filter(
+      (s) =>
+        s.title.toLowerCase().includes(trimmedQuery) ||
+        s.artist.toLowerCase().includes(trimmedQuery) ||
+        (s.album && s.album.toLowerCase().includes(trimmedQuery)),
+    )
+  }, [trimmedQuery, songsById])
+
   const onPlaySong = useCallback(
     async (songId: string) => {
       if (query.trim()) {
         void addRecentSearch(query)
       }
       try {
-        await playList([songId], 0)
+        const songIds = filteredSongs.map(s => s.id)
+        const idx = songIds.indexOf(songId)
+        await playList(songIds, idx >= 0 ? idx : 0)
       } catch {
         notify({ message: t.library.playbackFailed, kind: 'error' })
       }
     },
-    [playList, notify, t, query, addRecentSearch],
+    [playList, notify, t, query, addRecentSearch, filteredSongs],
   )
 
   const onOpenPlaylist = useCallback((id: string) => {
@@ -160,13 +172,6 @@ export default function SearchScreen() {
   const results = useMemo(() => {
     if (!trimmedQuery) return []
 
-    const filteredSongs = Object.values(songsById).filter(
-      (s) =>
-        s.title.toLowerCase().includes(trimmedQuery) ||
-        s.artist.toLowerCase().includes(trimmedQuery) ||
-        (s.album && s.album.toLowerCase().includes(trimmedQuery)),
-    )
-
     const filteredPlaylists = Object.values(playlistsById).filter(
       (p) => p.name.toLowerCase().includes(trimmedQuery) && p.id !== '0',
     )
@@ -180,7 +185,7 @@ export default function SearchScreen() {
     }
 
     return sections
-  }, [trimmedQuery, songsById, playlistsById, t])
+  }, [trimmedQuery, filteredSongs, playlistsById, t])
 
   // ── Render ──────────────────────────────────────
 

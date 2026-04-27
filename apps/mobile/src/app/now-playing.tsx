@@ -7,6 +7,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '../presentations/components/Theme'
 import { usePlayerState, usePlayerProgress } from '../application/player'
 import { formatTime } from '../presentations/player/format'
+import { QueueModal } from '../presentations/player/QueueModal'
+
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function NowPlayingScreen() {
   const { theme } = useTheme()
@@ -28,6 +31,7 @@ export default function NowPlayingScreen() {
 
   const [isSeeking, setIsSeeking] = useState(false)
   const [seekValue, setSeekValue] = useState(0)
+  const [isQueueVisible, setIsQueueVisible] = useState(false)
 
   const durationMs = progress.durationMs || 1
   const positionMs = isSeeking ? seekValue : progress.positionMs
@@ -41,10 +45,10 @@ export default function NowPlayingScreen() {
 
   const repeatLabel =
     state.repeatMode === 'ONE'
-      ? '🔂'
+      ? 'repeat-one'
       : state.repeatMode === 'ALL'
-        ? '🔁'
-        : '➡️'
+        ? 'repeat'
+        : 'repeat'
 
   return (
     <View
@@ -67,7 +71,13 @@ export default function NowPlayingScreen() {
           Đang phát
         </Text>
 
-        <View style={styles.headerRight} />
+        <Pressable
+          onPress={() => setIsQueueVisible(true)}
+          hitSlop={12}
+          style={styles.headerRight}
+        >
+          <Text style={[styles.queueIcon, { color: theme.colors.text }]}>≡</Text>
+        </Pressable>
       </View>
 
       {/* Album art */}
@@ -154,7 +164,7 @@ export default function NowPlayingScreen() {
           style={styles.sideBtn}
           hitSlop={10}
         >
-          <Text
+          {/* <Text
             style={[
               styles.sideIcon,
               {
@@ -165,7 +175,12 @@ export default function NowPlayingScreen() {
             ]}
           >
             🔀
-          </Text>
+          </Text> */}
+
+          <MaterialIcons name="shuffle" size={24} color={
+            state.isShuffle
+              ? theme.colors.primary
+              : theme.colors.mutedText} />
         </Pressable>
 
         <Pressable
@@ -173,16 +188,20 @@ export default function NowPlayingScreen() {
           style={styles.controlBtn}
           hitSlop={10}
         >
-          <Text style={[styles.controlIcon, { color: theme.colors.text }]}>⏮</Text>
+          {/* <Text style={[styles.controlIcon, { color: theme.colors.text }]}>⏮</Text> */}
+
+          <MaterialIcons name="skip-previous" size={24} color={theme.colors.text} />
         </Pressable>
 
         <Pressable
           onPress={() => void togglePlayPause()}
           style={[styles.playBtn, { backgroundColor: theme.colors.text }]}
         >
-          <Text style={[styles.playIcon, { color: theme.colors.background }]}>
+          {/* <Text style={[styles.playIcon, { color: theme.colors.background }]}>
             {progress.isPlaying ? '⏸' : '▶'}
-          </Text>
+          </Text> */}
+
+          <MaterialIcons name={progress.isPlaying ? "pause" : "play-arrow"} size={24} color={theme.colors.background} />
         </Pressable>
 
         <Pressable
@@ -190,11 +209,13 @@ export default function NowPlayingScreen() {
           style={styles.controlBtn}
           hitSlop={10}
         >
-          <Text style={[styles.controlIcon, { color: theme.colors.text }]}>⏭</Text>
+          {/* <Text style={[styles.controlIcon, { color: theme.colors.text }]}>⏭</Text> */}
+
+          <MaterialIcons name="skip-next" size={24} color={theme.colors.text} />
         </Pressable>
 
         <Pressable onPress={cycleRepeat} style={styles.sideBtn} hitSlop={10}>
-          <Text
+          {/* <Text
             style={[
               styles.sideIcon,
               {
@@ -206,7 +227,12 @@ export default function NowPlayingScreen() {
             ]}
           >
             {repeatLabel}
-          </Text>
+          </Text> */}
+
+          <MaterialIcons name={repeatLabel} size={24} color={
+            state.repeatMode !== 'OFF'
+              ? theme.colors.primary
+              : theme.colors.mutedText} />
         </Pressable>
       </View>
 
@@ -235,6 +261,11 @@ export default function NowPlayingScreen() {
 
         <Text style={[styles.volumeIcon, { color: theme.colors.mutedText }]}>🔊</Text>
       </View>
+
+      <QueueModal
+        visible={isQueueVisible}
+        onClose={() => setIsQueueVisible(false)}
+      />
     </View>
   )
 }
@@ -268,6 +299,12 @@ const styles = StyleSheet.create({
   headerRight: {
     width: 44,
     height: 44,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  queueIcon: {
+    fontSize: 24,
+    fontWeight: '600',
   },
   artContainer: {
     width: '100%',

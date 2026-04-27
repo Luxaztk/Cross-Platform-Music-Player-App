@@ -66,6 +66,10 @@ export class PlayerService {
     await this.engine.setVolume(volume01)
   }
 
+  async setLoop(loop: boolean) {
+    await this.engine.setLoop(loop)
+  }
+
   async setActiveForLockScreen(active: boolean, metadata?: LockScreenMetadata) {
     await this.engine.setActiveForLockScreen(active, metadata)
   }

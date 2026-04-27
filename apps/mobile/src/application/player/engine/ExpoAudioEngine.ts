@@ -29,6 +29,12 @@ function toMessage(err: unknown) {
 export class ExpoAudioEngine implements PlayerEngine {
   private player: ReturnType<typeof createAudioPlayer> | null = null
   private listeners = new Set<ProgressListener>()
+  private isConfigured = false
+
+  constructor() {
+    // Background initialization
+    void this.configure()
+  }
 
   private emit(p: EngineProgress) {
     for (const l of this.listeners) l(p)
@@ -51,6 +57,7 @@ export class ExpoAudioEngine implements PlayerEngine {
         shouldPlayInBackground: true,
         interruptionMode: 'doNotMix',
       })
+      this.isConfigured = true
     } catch (err: unknown) {
       const message = toMessage(err)
       if (message.includes('requireNativeModule')) {
@@ -89,7 +96,10 @@ export class ExpoAudioEngine implements PlayerEngine {
   }
 
   async load(uri: string, opts?: { shouldPlay?: boolean }) {
-    await this.configure()
+    if (!this.isConfigured) {
+      await this.configure()
+      this.isConfigured = true
+    }
 
     const file = new File(uri)
     const exists = file.exists || file.info().exists
@@ -110,6 +120,8 @@ export class ExpoAudioEngine implements PlayerEngine {
       // @ts-ignore: addListener exists at runtime on SharedObject but may have type mismatch in this env
       this.player.addListener('playbackStatusUpdate', this.onStatus)
     } else {
+      console.log(`[engine] Replacing source: ${uri}`)
+      this.player.pause() // Ensure it's paused before replacing to avoid glitches
       this.player.replace({ uri })
     }
 
@@ -147,6 +159,11 @@ export class ExpoAudioEngine implements PlayerEngine {
   async setVolume(volume01: number) {
     if (!this.player) return
     this.player.volume = clamp01(volume01)
+  }
+
+  async setLoop(loop: boolean) {
+    if (!this.player) return
+    this.player.loop = loop
   }
 
   async setActiveForLockScreen(active: boolean, metadata?: LockScreenMetadata) {

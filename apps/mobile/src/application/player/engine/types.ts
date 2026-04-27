@@ -30,6 +30,7 @@ export interface PlayerEngine {
 
   seekTo(positionMs: number): Promise<void>
   setVolume(volume01: number): Promise<void>
+  setLoop(loop: boolean): Promise<void>
 
   subscribe(listener: ProgressListener): () => void
 

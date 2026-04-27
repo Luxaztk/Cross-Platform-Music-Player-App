@@ -82,6 +82,7 @@ export async function importPickedAudioAssets(
         coverArt: null,
         fileSize: destFile.size,
         sourceUrl: asset.uri,
+        dateAdded: new Date().toISOString(),
       })
     } catch (err) {
       console.error(`[import] Failed to import ${asset.uri}:`, err)

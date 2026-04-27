@@ -35,6 +35,7 @@ type PlayerStateContextValue = {
   setVolume: (volume01: number) => Promise<void>
   setRepeatMode: (mode: PlayerState['repeatMode']) => Promise<void>
   toggleShuffle: () => Promise<void>
+  clearQueue: () => Promise<void>
 }
 
 type PlayerProgressContextValue = PlayerProgress
@@ -64,19 +65,20 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   const newArr = [...array]
   for (let i = newArr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[newArr[i], newArr[j]] = [newArr[j], newArr[i]]
+      ;[newArr[i], newArr[j]] = [newArr[j], newArr[i]]
   }
   return newArr
 }
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
-  const { songsById, deleteSongs } = useLibrary()
+  const { songsById, library, isHydrated: isLibraryHydrated, deleteSongs } = useLibrary()
   const { t } = useLanguage()
   const [service] = useState(() => new PlayerService())
 
   const [state, setState] = useState<PlayerState>(defaultPlayerState())
   const [queueItems, setQueueItems] = useState<QueueItem[]>([])
-  
+  const [isPlayerHydrated, setIsPlayerHydrated] = useState(false)
+
   const [progress, setProgress] = useState<PlayerProgress>({
     isLoaded: false,
     isPlaying: false,
@@ -92,7 +94,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const stateRef = useRef(state)
   const queueItemsRef = useRef(queueItems)
   const progressRef = useRef(progress)
-  
+
   useLayoutEffect(() => {
     stateRef.current = state
     queueItemsRef.current = queueItems
@@ -106,80 +108,107 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     await storage.savePlayerState(stateToSave)
   }, [])
 
+  const logQueueDebug = useCallback((items: QueueItem[]) => {
+    const debug = items.map(q => {
+      const title = (songsById[q.id]?.title ?? 'Unknown').substring(0, 10)
+      return `${q.id} (${title})`
+    }).join(' -> ')
+    console.log(`[QUEUE DEBUG] ${debug || 'Queue is empty'}`)
+  }, [songsById])
+
+  const logRotationDebug = useCallback((songIds: string[], startIndex: number, rotatedIds: string[]) => {
+    console.log('[Player] Rotation Debug:')
+    console.log(`  - Input length: ${songIds.length}`)
+    console.log(`  - Start Index: ${startIndex} (Song: ${songIds[startIndex]})`)
+    console.log(`  - Rotated length: ${rotatedIds.length}`)
+    console.log(`  - First 3 in rotated: ${rotatedIds.slice(0, 3).join(', ')}`)
+    console.log(`  - Last 3 in rotated: ${rotatedIds.slice(-3).join(', ')}`)
+  }, [])
+
   // Hydrate persisted player state (AsyncStorage)
+  // "Hydrate" here means "restore the in-memory player state from the persisted storage." Concretely: read the saved state from AsyncStorage and merge or replace the app's current player state so the app resumes with the stored values (e.g., track, position, volume, playlist).
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       const saved = await storage.getPlayerState()
       if (saved) {
         const initialQueueItems = saved.queueIds.map(id => ({ uid: generateUid(), id }))
         setState(saved)
         setQueueItems(initialQueueItems)
         await service.setVolume(clamp01(saved.volume))
+        // Log the restored queue
+        logQueueDebug(initialQueueItems)
       }
+      setIsPlayerHydrated(true)
     })()
-  }, [service, generateUid])
+  }, [service, generateUid, logQueueDebug])
 
-  const next = useCallback(async () => {
-    const s = stateRef.current
-    const items = queueItemsRef.current
+  const hasInitializedRef = useRef(false)
 
-    let nextId: string | null = null
-    let nextQueueItems = [...items]
-
-    if (s.repeatMode === 'ONE' && s.currentSongId) {
-      // Repeat ONE just plays the same song again, queue doesn't shift
-      nextId = s.currentSongId
-    } else if (items.length > 0) {
-      // Standard queue pop
-      nextId = items[0].id
-      nextQueueItems.shift()
-    } else if (s.repeatMode === 'ALL' && s.originalContextIds.length > 0) {
-      // Repeat ALL loops back to start
-      let newIds = [...s.originalContextIds]
-      if (s.isShuffle) {
-        newIds = shuffleArray(newIds)
-      }
-      nextId = newIds[0]
-      nextQueueItems = newIds.slice(1).map(id => ({ uid: generateUid(), id }))
-    }
-
-    if (!nextId) {
-      await service.pause()
-      await service.seekTo(0)
-      return
-    }
-
-    const nextState: PlayerState = {
-      ...s,
-      currentSongId: nextId,
-      historyIds: s.currentSongId
-        ? [...s.historyIds, s.currentSongId].slice(-32) // Keep last 32 history items
-        : [...s.historyIds],
-    }
-
-    await persist(nextState, nextQueueItems)
-    try {
-      // Wait a tick so state resolves before playing, avoiding race conditions in UI.
-      setTimeout(() => { playSongId(nextId!) }, 0)
-    } catch {
-      // swallow
-    }
-  }, [persist, generateUid, service])
-
-  // Subscribe to playback progress updates + simulate onEnd
+  // Initialize queue from library if empty on first open
+  /*
   useEffect(() => {
-    const unsub = service.subscribe((p) => {
-      setProgress(p)
-      
-      // Auto-play next track logic
-      if (p.isLoaded && p.didJustFinish) {
-        void next()
-      }
+    if (!isPlayerHydrated || !isLibraryHydrated || hasInitializedRef.current) return
+    if (queueItemsRef.current.length > 0) return
+
+    const allSongs = library.songIds.map(id => songsById[id]).filter(Boolean) as Song[]
+    if (allSongs.length === 0) return
+
+    hasInitializedRef.current = true
+
+    // Sort by title
+    let sortedSongs = [...allSongs].sort((a, b) => {
+      const aVal = a.title.toLowerCase()
+      const bVal = b.title.toLowerCase()
+      return aVal < bVal ? -1 : aVal > bVal ? 1 : 0
     })
-    return () => {
-      unsub?.()
+
+    const originalIds = sortedSongs.map(s => s.id)
+    let finalIds = [...originalIds]
+    let initialSongId = stateRef.current.currentSongId
+
+    if (initialSongId && finalIds.includes(initialSongId)) {
+      const idx = finalIds.indexOf(initialSongId)
+      if (idx !== -1) {
+        // Full Rotation: [A, B, C, D] -> [D, A, B] if C is current
+        const rotated = [...finalIds.slice(idx + 1), ...finalIds.slice(0, idx)]
+        finalIds = rotated
+      }
+    } else {
+      initialSongId = finalIds[0]
+      finalIds = finalIds.slice(1)
     }
-  }, [service, next])
+
+    // Apply shuffle if enabled in saved state
+    if (stateRef.current.isShuffle) {
+      finalIds = shuffleArray(finalIds)
+    }
+
+    const items = finalIds.map(id => ({ uid: generateUid(), id }))
+    const nextState = { 
+      ...stateRef.current, 
+      currentSongId: initialSongId, 
+      queueIds: finalIds,
+      originalContextIds: originalIds 
+    }
+    
+    setState(nextState)
+    setQueueItems(items)
+    stateRef.current = nextState
+    queueItemsRef.current = items
+    
+    void storage.savePlayerState(nextState)
+    
+    console.log(`[Player] Initialized queue with ${finalIds.length} songs from library. Initial song: ${initialSongId}`)
+    logQueueDebug(items)
+  }, [isPlayerHydrated, isLibraryHydrated, library.songIds, songsById, generateUid, logQueueDebug])
+  */
+
+  // Monitor for unexpected queue clearing
+  useEffect(() => {
+    if (isPlayerHydrated && queueItems.length === 0) {
+      console.log('[Player] MONITOR: Queue is now empty.')
+    }
+  }, [queueItems.length, isPlayerHydrated])
 
   const playSongId = useCallback(
     async (songId: string) => {
@@ -188,6 +217,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       try {
         await service.load(song.filePath, { shouldPlay: true })
         await service.setVolume(clamp01(stateRef.current.volume))
+        await service.setLoop(stateRef.current.repeatMode === 'ONE')
         await service.setActiveForLockScreen(true, {
           title: song.title,
           artist: song.artist,
@@ -216,19 +246,99 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return [...stateRef.current.historyIds, songId].slice(-32)
   }, [])
 
+  const next = useCallback(async () => {
+    const s = stateRef.current
+    const items = queueItemsRef.current
+
+    let nextId: string | null = null
+    let nextQueueItems = [...items]
+
+    if (items.length > 0) {
+      // Standard queue pop
+      nextId = items[0].id
+      nextQueueItems.shift()
+      console.log(`[Player] Skip Next: Popped from queue. New queue length: ${nextQueueItems.length}`)
+    } else if (s.repeatMode === 'ALL' && s.originalContextIds.length > 0) {
+      // Repeat ALL loops back to start
+      let newIds = [...s.originalContextIds]
+      if (s.isShuffle) {
+        newIds = shuffleArray(newIds)
+      }
+      nextId = newIds[0]
+      nextQueueItems = newIds.slice(1).map(id => ({ uid: generateUid(), id }))
+      console.log(`[Player] Skip Next: Looping library (Repeat ALL). New queue length: ${nextQueueItems.length}`)
+    } else if (s.repeatMode === 'OFF' && s.originalContextIds.length > 0) {
+      // Optional: if the queue is empty but we have a context, should we loop? 
+      // User said "initialize queue... from library", so usually it's already there.
+      console.log('[Player] Skip Next: Queue empty and Repeat OFF. Stopping.')
+    }
+
+    if (!nextId) {
+      console.log('[Player] Skip Next: No next song found.')
+      await service.pause()
+      await service.seekTo(0)
+      return
+    }
+
+    const nextState: PlayerState = {
+      ...s,
+      currentSongId: nextId,
+      historyIds: s.currentSongId
+        ? [...s.historyIds, s.currentSongId].slice(-32) // Keep last 32 history items
+        : [...s.historyIds],
+    }
+
+    console.log(`[PlayerProvider] Skipping to next: ${nextId}. Remaining in queue: ${nextQueueItems.length}`)
+
+    // Update local state and refs immediately to prevent race conditions
+    setState(nextState)
+    setQueueItems(nextQueueItems)
+    stateRef.current = nextState
+    queueItemsRef.current = nextQueueItems
+
+    // Fire and forget storage save
+    void storage.savePlayerState({ ...nextState, queueIds: nextQueueItems.map(q => q.id) })
+
+    logQueueDebug(nextQueueItems)
+    try {
+      await playSongId(nextId!)
+    } catch (err) {
+      console.error(`[PlayerProvider] Failed to skip to next:`, err)
+    }
+  }, [generateUid, service, playSongId, logQueueDebug])
+
+  // Subscribe to playback progress updates + simulate onEnd
+  useEffect(() => {
+    const unsub = service.subscribe((p) => {
+      setProgress(p)
+
+      // Auto-play next track logic
+      if (p.isLoaded && p.didJustFinish) {
+        void next()
+      }
+    })
+    return () => {
+      unsub?.()
+    }
+  }, [service, next])
+
   const playList = useCallback(
     async (songIds: string[], startIndex: number) => {
       const startSongId = songIds[startIndex]
-      const nextHistory = stateRef.current.currentSongId 
-        ? pushToHistory(stateRef.current.currentSongId) 
+      const nextHistory = stateRef.current.currentSongId
+        ? pushToHistory(stateRef.current.currentSongId)
         : stateRef.current.historyIds
 
-      let upcomingIds = songIds.slice(startIndex + 1)
+      // Full rotation for playlist: [6, 7, 8, 9, 10, 1, 2, 3, 4, 5] if 5 is selected
+      let rotatedIds = [...songIds.slice(startIndex + 1), ...songIds.slice(0, startIndex)]
+
+      logRotationDebug(songIds, startIndex, rotatedIds)
+
       if (stateRef.current.isShuffle) {
-        upcomingIds = shuffleArray(upcomingIds)
+        rotatedIds = shuffleArray(rotatedIds)
       }
 
-      const nextQueueItems = upcomingIds.map(id => ({ uid: generateUid(), id }))
+      const nextQueueItems = rotatedIds.map(id => ({ uid: generateUid(), id }))
       const nextState: PlayerState = {
         ...stateRef.current,
         currentSongId: startSongId,
@@ -237,17 +347,23 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       }
 
       await persist(nextState, nextQueueItems)
+      logQueueDebug(nextQueueItems)
       await playSongId(startSongId)
     },
-    [persist, playSongId, generateUid, pushToHistory],
+    [persist, playSongId, generateUid, pushToHistory, logQueueDebug],
   )
 
   const playNow = useCallback(async (songId: string) => {
-    const nextHistory = stateRef.current.currentSongId 
-      ? pushToHistory(stateRef.current.currentSongId) 
+    const nextHistory = stateRef.current.currentSongId
+      ? pushToHistory(stateRef.current.currentSongId)
       : stateRef.current.historyIds
 
-    const nextState = { ...stateRef.current, currentSongId: songId, historyIds: nextHistory }
+    const nextState = {
+      ...stateRef.current,
+      currentSongId: songId,
+      historyIds: nextHistory,
+      originalContextIds: [songId] // Reset context to this single song
+    }
     await persist(nextState, queueItemsRef.current)
     await playSongId(songId)
   }, [persist, playSongId, pushToHistory])
@@ -280,10 +396,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     await persist(stateRef.current, result)
   }, [persist])
 
+  const clearQueue = useCallback(async () => {
+    await persist(stateRef.current, [])
+  }, [persist])
+
   const toggleShuffle = useCallback(async () => {
     const s = stateRef.current
     const isShuffle = !s.isShuffle
-    
+
     let nextQueueItems = [...queueItemsRef.current]
 
     if (isShuffle) {
@@ -293,15 +413,18 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (currentId && s.originalContextIds.length > 0) {
         const idx = s.originalContextIds.findIndex((id) => id === currentId)
         if (idx !== -1) {
-          const remainingIds = s.originalContextIds.slice(idx + 1)
-          nextQueueItems = remainingIds.map((id) => ({ uid: generateUid(), id }))
+          // Full rotation to match relative order of original context
+          const rotatedIds = [...s.originalContextIds.slice(idx + 1), ...s.originalContextIds.slice(0, idx)]
+          nextQueueItems = rotatedIds.map((id) => ({ uid: generateUid(), id }))
         }
       }
     }
 
     const nextState: PlayerState = { ...s, isShuffle }
     await persist(nextState, nextQueueItems)
-  }, [persist, generateUid])
+    console.log(`[Player] Shuffle toggled to: ${isShuffle}`)
+    logQueueDebug(nextQueueItems)
+  }, [persist, generateUid, logQueueDebug])
 
   const play = useCallback(async () => {
     if (stateRef.current.currentSongId && !progressRef.current.isLoaded) {
@@ -342,13 +465,28 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           currentSongId: prevId,
           historyIds: nextHistory,
         }
-        await persist(nextState, nextItems)
-        await playSongId(prevId)
+        console.log(`[PlayerProvider] Skipping to prev: ${prevId}. Queue length after push back: ${nextItems.length}`)
+
+        // Update local state and refs immediately
+        setState(nextState)
+        setQueueItems(nextItems)
+        stateRef.current = nextState
+        queueItemsRef.current = nextItems
+
+        // Fire and forget storage save
+        void storage.savePlayerState({ ...nextState, queueIds: nextItems.map(q => q.id) })
+
+        logQueueDebug(nextItems)
+        try {
+          await playSongId(prevId)
+        } catch (err) {
+          console.error(`[PlayerProvider] Failed to skip to prev:`, err)
+        }
       } else {
         await service.seekTo(0)
       }
     }
-  }, [persist, playSongId, generateUid, service])
+  }, [generateUid, service, playSongId, logQueueDebug])
 
   const seekTo = useCallback(async (positionMs: number) => {
     await service.seekTo(positionMs)
@@ -364,7 +502,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const setRepeatMode = useCallback(async (mode: PlayerState['repeatMode']) => {
     const nextState: PlayerState = { ...stateRef.current, repeatMode: mode }
     await persist(nextState, queueItemsRef.current)
-  }, [persist])
+    await service.setLoop(mode === 'ONE')
+    console.log(`[Player] Repeat mode changed to: ${mode}`)
+    logQueueDebug(queueItemsRef.current)
+  }, [persist, service, logQueueDebug])
 
   const stateValue = useMemo<PlayerStateContextValue>(
     () => ({
@@ -387,6 +528,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setVolume,
       setRepeatMode,
       toggleShuffle,
+      clearQueue,
     }),
     [
       state,
@@ -408,6 +550,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setVolume,
       setRepeatMode,
       toggleShuffle,
+      clearQueue,
     ],
   )
 

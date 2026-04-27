@@ -12,12 +12,12 @@ import { usePlayerState } from '../../application/player'
 
 // ── Sort helpers ────────────────────────────────────────────────
 
-type SortField = 'title' | 'artist' | 'album'
+type SortField = 'title' | 'artist' | 'album' | 'dateAdded'
 type SortDir = 'asc' | 'desc'
 
 function compareSongs(a: Song, b: Song, field: SortField, dir: SortDir): number {
-  const aVal = (a[field] ?? '').toLowerCase()
-  const bVal = (b[field] ?? '').toLowerCase()
+  const aVal = (a[field] ?? '').toString().toLowerCase()
+  const bVal = (b[field] ?? '').toString().toLowerCase()
   const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
   return dir === 'asc' ? cmp : -cmp
 }
@@ -81,13 +81,14 @@ export default function LibraryScreen() {
   const { isHydrated, songsById, library, importPickedAudio, deleteSongs } = useLibrary()
   const { playList, state: playerState } = usePlayerState()
 
-  const [sortField, setSortField] = useState<SortField>('title')
+  const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
   // Build sorted song list (memoised so FlatList doesn't re-render on unrelated changes)
   const songs = useMemo(() => {
     const list = library.songIds.map((id) => songsById[id]).filter(Boolean) as Song[]
-    return list.sort((a, b) => compareSongs(a, b, sortField, sortDir))
+    if (!sortField) return list
+    return [...list].sort((a, b) => compareSongs(a, b, sortField, sortDir))
   }, [library.songIds, songsById, sortField, sortDir])
 
   // Pre-compute sorted IDs so queue order matches what's on screen
@@ -166,13 +167,18 @@ export default function LibraryScreen() {
   const toggleSort = useCallback(
     (field: SortField) => {
       if (sortField === field) {
-        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+        if (sortDir === 'asc') {
+          setSortDir('desc')
+        } else {
+          setSortField(null)
+          setSortDir('asc')
+        }
       } else {
         setSortField(field)
         setSortDir('asc')
       }
     },
-    [sortField],
+    [sortField, sortDir],
   )
 
   const sortArrow = sortDir === 'asc' ? ' ↑' : ' ↓'
@@ -214,11 +220,32 @@ export default function LibraryScreen() {
         </Pressable>
       </View>
 
-      {/* Sort chips */}
       <View style={styles.sortRow}>
         <Text style={[styles.sortLabel, { color: theme.colors.mutedText }]}>Sort:</Text>
-        {(['title', 'artist', 'album'] as const).map((field) => {
+        
+        <Pressable
+          onPress={() => setSortField(null)}
+          style={[
+            styles.sortChip,
+            {
+              backgroundColor: !sortField ? theme.colors.primary + '20' : theme.colors.surface,
+              borderColor: !sortField ? theme.colors.primary : theme.colors.border,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.sortChipText,
+              { color: !sortField ? theme.colors.primary : theme.colors.mutedText },
+            ]}
+          >
+            Default
+          </Text>
+        </Pressable>
+
+        {(['title', 'artist', 'album', 'dateAdded'] as const).map((field) => {
           const active = sortField === field
+          const label = field === 'dateAdded' ? 'Date Added' : field.charAt(0).toUpperCase() + field.slice(1)
           return (
             <Pressable
               key={field}
@@ -237,7 +264,7 @@ export default function LibraryScreen() {
                   { color: active ? theme.colors.primary : theme.colors.mutedText },
                 ]}
               >
-                {field.charAt(0).toUpperCase() + field.slice(1)}
+                {label}
                 {active ? sortArrow : ''}
               </Text>
             </Pressable>
@@ -317,6 +344,7 @@ const styles = StyleSheet.create({
   sortRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
     marginTop: 14,
   },

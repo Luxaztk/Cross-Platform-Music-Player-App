@@ -279,7 +279,7 @@ export class LibraryService {
         const newSongData = {
           ...song,
           id: generateId(),
-          createdAt: new Date().toISOString()
+          dateAdded: new Date().toISOString()
         };
         songs[newSongData.id] = newSongData;
         libraryUpdate.songIds.push(newSongData.id);
