@@ -18,7 +18,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { usePlayer, useLibraryContext } from '@music/hooks';
-import { splitArtists } from '@music/utils';
+import { splitArtists } from '@music/core';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { ICON_SIZES } from '@constants';
 import { EditModal, DeleteConfirmationModal, SongPickerModal } from '@components';
@@ -285,7 +285,7 @@ export const PlaylistDetailPage: React.FC = () => {
       return next;
     });
   };
-  
+
   const onBulkAddToQueue = () => {
     // MAINTAIN VISUAL ORDERING: Map selection against the ordered filteredSongs list
     const selectedSongs = filteredSongs.filter((song) => selectedIds.has(song.id));
@@ -325,21 +325,21 @@ export const PlaylistDetailPage: React.FC = () => {
     const sorted = [
       ...(libraryFilter.type !== 'none' && libraryFilter.values.length > 0
         ? localSongs.filter((song) => {
-            if (libraryFilter.type === 'artist') {
-              const queries = libraryFilter.values.flatMap((v) => splitArtists(v)).map((v) => v.toLowerCase().trim());
+          if (libraryFilter.type === 'artist') {
+            const queries = libraryFilter.values.flatMap((v) => splitArtists(v)).map((v) => v.toLowerCase().trim());
 
-              const allArtists = (song.artists || [song.artist])
-                .flatMap((a) => splitArtists(a))
-                .map((a) => a.toLowerCase().trim());
+            const allArtists = (song.artists || [song.artist])
+              .flatMap((a) => splitArtists(a))
+              .map((a) => a.toLowerCase().trim());
 
-              return queries.every((q) => allArtists.includes(q));
-            }
-            if (libraryFilter.type === 'album') {
-              const queries = libraryFilter.values.map((v) => v.toLowerCase().trim());
-              return queries.includes(song.album?.toLowerCase().trim() || '');
-            }
-            return true;
-          })
+            return queries.every((q) => allArtists.includes(q));
+          }
+          if (libraryFilter.type === 'album') {
+            const queries = libraryFilter.values.map((v) => v.toLowerCase().trim());
+            return queries.includes(song.album?.toLowerCase().trim() || '');
+          }
+          return true;
+        })
         : localSongs),
     ];
 
@@ -768,10 +768,10 @@ export const PlaylistDetailPage: React.FC = () => {
         message={
           bulkDeleteMode === 'library'
             ? t('modal.bulkDeleteLibraryMessage', { count: selectedIds.size }) ||
-              `Bạn có chắc muốn xóa vĩnh viễn ${selectedIds.size} bài hát đã chọn khỏi thư viện?`
+            `Bạn có chắc muốn xóa vĩnh viễn ${selectedIds.size} bài hát đã chọn khỏi thư viện?`
             : bulkDeleteMode === 'playlist'
               ? t('modal.bulkRemovePlaylistMessage', { count: selectedIds.size }) ||
-                `Bạn có chắc muốn gỡ ${selectedIds.size} bài hát khỏi playlist này?`
+              `Bạn có chắc muốn gỡ ${selectedIds.size} bài hát khỏi playlist này?`
               : t('modal.deleteSongQuestion')
         }
         itemName={deletingSong?.title}

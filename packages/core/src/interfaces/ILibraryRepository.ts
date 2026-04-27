@@ -1,4 +1,4 @@
-import type { Song, Playlist, PlaylistDetail, ImportResult, LyricSearchResult } from '@music/types';
+import type { Song, Playlist, PlaylistDetail, ImportResult, LyricSearchResult, SyncHistoryEntry, SyncStats } from '@music/types';
 
 export interface ILibraryRepository {
   getLibrary(): Promise<{ songs: Song[]; library: Playlist }>;
@@ -16,8 +16,13 @@ export interface ILibraryRepository {
   importFolder(): Promise<ImportResult>;
   addSongs(songs: Song[]): Promise<{ success: boolean; count: number }>;
   scanMissingFiles(): Promise<Song[]>;
+  runAutoImportScan(paths: string[]): Promise<{ added: number; migrated: number; totalScanned: number; details: string[] }>;
   getLyrics(songId: string): Promise<string | null>;
   saveLyrics(songId: string, lyrics: string, lyricId?: number): Promise<boolean>;
   searchLyrics(query: string): Promise<LyricSearchResult[]>;
   patchSong(songId: string, updates: Partial<Song>): Promise<Song | null>;
+  getSettings(): Promise<any>;
+  getSyncHistory(): Promise<SyncHistoryEntry[]>;
+  clearSyncHistory(): Promise<void>;
+  logSyncEvent(stats: SyncStats, details: string[]): Promise<void>;
 }

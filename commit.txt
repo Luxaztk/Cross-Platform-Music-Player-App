@@ -1,0 +1,5 @@
+fix(core): resolve TypeScript compilation errors for unused variables
+
+- Remove unused import 'getErrorMessage' in LibraryService.ts
+- Prefix unused 'filePath' parameter with underscore in LibraryService.test.ts
+- Fix build pipeline failure caused by strict TS6133 checks

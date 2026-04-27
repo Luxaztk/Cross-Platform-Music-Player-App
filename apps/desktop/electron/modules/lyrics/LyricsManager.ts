@@ -1,7 +1,9 @@
 import axios from 'axios';
 import type { Song, LyricSearchResult } from '@music/types';
 import { MetadataManager } from '../metadata/MetadataManager';
-import { cleanLyricsTitle, normalizeNFC, getPrimaryArtist } from '@music/utils';
+import { normalizeNFC } from '@music/utils';
+import { cleanLyricsTitle, getPrimaryArtist } from '@music/core';
+
 
 interface LrclibRawItem {
   id: number;

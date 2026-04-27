@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS = {
     bitrate: '320' as '128' | '192' | '320',
     maxConcurrentDownloads: 3,
     folderOrganization: '{Artist}/{Album}',
+    backgroundSync: 0,
   }
 };
 

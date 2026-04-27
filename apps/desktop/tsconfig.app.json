@@ -6,7 +6,7 @@
     "useDefineForClassFields": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client", "node", "@testing-library/jest-dom"],
+    "types": ["vite/client", "node", "@testing-library/jest-dom/vitest"],
 
     "skipLibCheck": true,
 
@@ -35,7 +35,11 @@
       "@music/types": ["../../packages/types"],
       "@music/types/*": ["../../packages/types/*"],
       "@music/hooks": ["../../packages/hooks"],
+      "@music/hooks/types": ["../../packages/hooks/src/types"],
+      "@music/hooks/constants": ["../../packages/hooks/src/constants"],
       "@music/hooks/*": ["../../packages/hooks/*"],
+
+
       "@music/utils": ["../../packages/utils/src"],
       "@music/utils/*": ["../../packages/utils/src/*"],
       "@music/ui": ["../../packages/ui"],

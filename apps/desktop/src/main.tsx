@@ -12,7 +12,8 @@ import {
 import { PlayerProvider, UIProvider, useLibraryContext } from '@music/hooks'
 import { ElectronStorageAdapter } from './infrastructure/services/ElectronStorageAdapter'
 import { useNotification, useLanguage } from '@hooks'
-import { SettingsProvider, DownloadProvider } from './application/hooks'
+import { SettingsProvider, DownloadProvider } from './application/providers'
+
 const storage = new ElectronStorageAdapter()
 
 const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) => {

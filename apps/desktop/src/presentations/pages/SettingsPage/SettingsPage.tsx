@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useLanguage, useSettings } from '@hooks';
+import { useLanguage, useSettings, useDownload } from '@hooks';
 import { ICON_SIZES } from '@constants';
 import { SettingsSearch } from './components/SettingsSearch';
 import { GeneralSection, AppearanceSection, DownloadSection, AudioSection } from './sections';
@@ -10,8 +10,17 @@ import './SettingsPage.scss';
 export const SettingsPage: React.FC = () => {
     const { t } = useLanguage();
     const { isSaving } = useSettings();
+    const manager = useDownload();
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Cleanup abandoned download state when user leaves settings
+    useEffect(() => {
+        return () => {
+            manager.clearAbandoned();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const activeTab = searchParams.get('tab') || 'general';
 

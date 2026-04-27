@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { cleanLyricsTitle, getPrimaryArtist, formatLyricsSearchQuery, normalizeNFC } from '../lyrics';
+import { normalizeNFC } from '@music/utils';
+import { cleanLyricsTitle, getPrimaryArtist, formatLyricsSearchQuery } from '../lyrics';
+
 
 describe('Lyrics Utils', () => {
   describe('normalizeNFC', () => {

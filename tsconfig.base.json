@@ -5,7 +5,9 @@
     "moduleResolution": "Node",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "allowSyntheticDefaultImports": true,
     "paths": {
+
       "@music/core": ["packages/core/src/index.ts"],
       "@music/core/*": ["packages/core/src/*"],
       "@music/player": ["packages/player/src/index.ts"],
@@ -13,7 +15,11 @@
       "@music/types": ["packages/types/index.ts"],
       "@music/types/*": ["packages/types/*"],
       "@music/hooks": ["packages/hooks/index.ts"],
+      "@music/hooks/types": ["packages/hooks/src/types/index.ts"],
+      "@music/hooks/constants": ["packages/hooks/src/constants/index.ts"],
       "@music/hooks/*": ["packages/hooks/*"],
+
+
       "@music/utils": ["packages/utils/src/index.ts"],
       "@music/utils/*": ["packages/utils/src/*"],
       "@music/ui": ["packages/ui/index.ts"],

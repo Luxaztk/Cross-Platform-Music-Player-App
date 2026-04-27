@@ -5,7 +5,9 @@ import type {
   PlayerState,
   RecentSearch,
   LyricSearchResult,
-  YoutubeInfo, // Đảm bảo đã export từ Downloader hoặc types
+  YoutubeInfo,
+  SyncHistoryEntry,
+  SyncStats,
 } from '@music/types'
 
 declare global {
@@ -41,6 +43,9 @@ declare global {
         existingSong: { id: string; title: string; artist: string } | null
       }>
       scanMissingFiles: () => Promise<Song[]>
+      runAutoImportScan: (
+        paths: string[],
+      ) => Promise<{ added: number; migrated: number; totalScanned: number; details: string[] }>
       getLyrics: (songId: string) => Promise<string | null>
       saveLyrics: (songId: string, lyrics: string, lyricId?: number) => Promise<boolean>
       searchLyrics: (query: string) => Promise<LyricSearchResult[]>
@@ -85,6 +90,9 @@ declare global {
       onUpdateDownloaded: (callback: () => void) => () => void
       restartApp: () => Promise<void>
       resetCache: () => Promise<{ success: boolean; message?: string }>
+      getSyncHistory: () => Promise<SyncHistoryEntry[]>
+      clearSyncHistory: () => Promise<void>
+      logSyncEvent: (stats: SyncStats, details: string[]) => Promise<void>
     }
   }
 

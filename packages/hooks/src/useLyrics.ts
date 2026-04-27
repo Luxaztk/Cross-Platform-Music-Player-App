@@ -1,7 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { usePlayer } from './PlayerProvider';
-import { useLibrary } from './LibraryProvider';
+import { usePlayer } from './usePlayer';
+import { useLibrary } from './useLibrary';
+
 import { LyricsParser } from '@music/core';
+import { LYRIC_OFFSET } from './constants/index';
+
+
+
 
 export const useLyrics = () => {
   const { currentSong, progress, updateCurrentSongMetadata } = usePlayer();
@@ -21,10 +26,8 @@ export const useLyrics = () => {
   const currentLineIndex = useMemo(() => {
     if (lyricLines.length === 0) return -1;
     
-    // Thêm một khoảng trễ nhỏ (offset) để lời bài hát nhảy muộn hơn một chút
-    // Giúp khớp với cảm nhận thực tế của người dùng
-    const LYRIC_OFFSET = 0.2; // 200ms delay
     const adjustedProgress = progress - LYRIC_OFFSET;
+
 
     let index = -1;
     for (let i = 0; i < lyricLines.length; i++) {

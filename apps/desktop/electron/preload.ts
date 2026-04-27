@@ -7,6 +7,8 @@ import type {
   RecentSearch,
   LyricSearchResult,
   ImportResult,
+  SyncHistoryEntry,
+  SyncStats,
 } from '@music/types'
 import type { YoutubeInfo } from './modules/downloader/YoutubeDownloader'
 
@@ -39,6 +41,7 @@ export interface ElectronAPI {
     id?: string,
   ) => Promise<DuplicateCheckResult>
   scanMissingFiles: () => Promise<void>
+  runAutoImportScan: (paths: string[]) => Promise<{ added: number; migrated: number; totalScanned: number; details: string[] }>
   getLyrics: (songId: string) => Promise<string | null>
   saveLyrics: (songId: string, lyrics: string, lyricId?: number) => Promise<void>
   searchLyrics: (query: string) => Promise<LyricSearchResult[]>
@@ -76,6 +79,9 @@ export interface ElectronAPI {
   onUpdateDownloaded: (callback: () => void) => () => void
   restartApp: () => Promise<void>
   log: (level: string, message: string) => void
+  getSyncHistory: () => Promise<SyncHistoryEntry[]>
+  clearSyncHistory: () => Promise<void>
+  logSyncEvent: (stats: SyncStats, details: string[]) => Promise<void>
 }
 
 // Expose safe APIs to the renderer process
@@ -102,6 +108,7 @@ const electronAPI: ElectronAPI = {
   checkDuplicate: (title: string, artist: string, url?: string, id?: string) =>
     ipcRenderer.invoke('library:checkDuplicate', title, artist, url, id),
   scanMissingFiles: () => ipcRenderer.invoke('library:scanMissingFiles'),
+  runAutoImportScan: (paths: string[]) => ipcRenderer.invoke('library:runAutoImportScan', paths),
   getLyrics: (songId: string) => ipcRenderer.invoke('library:getLyrics', songId),
   saveLyrics: (songId: string, lyrics: string, lyricId?: number) =>
     ipcRenderer.invoke('library:saveLyrics', songId, lyrics, lyricId),
@@ -165,6 +172,9 @@ const electronAPI: ElectronAPI = {
   restartApp: () => ipcRenderer.invoke('restart-app'),
   log: (level, message) => ipcRenderer.send('electron-log-message', { level, message }),
   resetCache: () => ipcRenderer.invoke('library:reset-cache'),
+  getSyncHistory: () => ipcRenderer.invoke('library:getSyncHistory'),
+  clearSyncHistory: () => ipcRenderer.invoke('library:clearSyncHistory'),
+  logSyncEvent: (stats: any, details: string[]) => ipcRenderer.invoke('library:logSyncEvent', stats, details),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

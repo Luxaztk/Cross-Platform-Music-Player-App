@@ -12,10 +12,12 @@ export const ICON_SIZES = {
   SMALL: 18,
   /** Medium icons, used for collapsed sidebar items, placeholders, and player controls */
   MEDIUM: 20,
-  /** Large icons, used for primary playback markers or main feature icons */
-  LARGE: 28,
-  /** Extra large icons, used for section headers or empty state illustrations */
-  XLARGE: 32,
+  /** Large icons, used for modal headers and section titles */
+  LARGE: 24,
+  /** Extra large icons, used for primary playback markers or main feature icons */
+  XLARGE: 28,
+  /** Extra extra large icons, used for section headers or empty state illustrations */
+  XXLARGE: 32,
 } as const;
 
 export type IconSize = (typeof ICON_SIZES)[keyof typeof ICON_SIZES];

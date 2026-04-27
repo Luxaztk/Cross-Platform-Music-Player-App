@@ -30,6 +30,13 @@
       box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
     }
 
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+      filter: grayscale(1);
+    }
+
     .trigger-left {
       display: flex;
       align-items: center;

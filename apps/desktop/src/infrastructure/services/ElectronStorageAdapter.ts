@@ -59,7 +59,12 @@ export class ElectronStorageAdapter implements IStorageAdapter {
     await window.electronAPI.incrementLyricUsage(id);
   }
 
+  async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
+    return window.electronAPI.patchSong(songId, updates);
+  }
+
   async clear(): Promise<void> {
+
     await window.electronAPI.resetCache();
   }
 }

@@ -61,6 +61,9 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
   - [X] Hợp nhất thư mục log vào chung thư mục dữ liệu hệ thống (`%AppData%/melovista-desktop/logs/main.log`).
   - [X] Kích hoạt ghi log file trong Production (`info` level) và cơ chế tự động bắt lỗi toàn cục (`log.errorHandler`).
   - [X] Cơ chế **Production Log Stripping**: Sử dụng Oxc/Rolldown để loại bỏ hoàn toàn `console.log` trong bản build chính thức.
+- [X] **Architectural Refactor (V2)**: Chuyển đổi sang kiến trúc Context/Provider tách biệt, bóc tách logic vào các hooks chuyên biệt và tối ưu hóa vòng đời state.
+- [X] **Hợp nhất Utility (Core Consolidation)**: Tập trung hóa các logic nghiệp vụ lõi (YouTube, Artists, Lyrics) vào `@music/core` và chuẩn hóa export cho toàn bộ monorepo.
+- [X] **Theo dõi lịch sử đồng bộ (Sync History)**: Triển khai `SyncHistoryService` và giao diện Modal tra cứu lịch sử giúp minh bạch hóa các sự kiện và lỗi khi quét thư viện.
 - [X] **Production-Ready Downloader (V3 Architecture)**:
   - [X] Loại bỏ hoàn toàn wrapper `youtube-dl-exec` để sử dụng `spawn` thuần túy, triệt tiêu lỗi treo bộ đệm (deadlock).
   - [X] Triển khai **Kill Switch (20s Timeout)** cho tiến trình trích xuất thông tin nhạc.
@@ -80,6 +83,9 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
     - [X] Nâng cấp **Library Cleanup**: Tích hợp API `scanMissingFiles` chuyên dụng, hỗ trợ quét file lỗi nhanh và giao diện dọn dẹp hàng loạt chuyên nghiệp qua `CleanupResolutionModal`.
     - [X] Khắc phục xung đột CSS: Loại bỏ các định dạng trùng lặp, đảm bảo giao diện "pixel-perfect" cho mục Online Downloader trong Settings.
     - [X] Sửa lỗi TypeScript nghiêm trọng liên quan đến kiểu dữ liệu `duration` (number | undefined) trong `DownloaderModal`.
+- [X] **Notification System Refactoring (AppNotification)**: Chuyển đổi sang kiến trúc `AppNotification` để triệt tiêu xung đột với Browser API, tích hợp cơ chế cập nhật thông báo theo ID và hỗ trợ Actionable Toasts (Click-to-action).
+- [X] **Delayed Library Sync (Silent Startup)**: Tự động quét và sửa lỗi thư viện sau 60 giây khởi động (Startup Delay) thông qua thông báo tương tác, không gây gián đoạn trải nghiệm người dùng ban đầu.
+- [X] **Theme System Hardening (Zero-Ghost Architecture)**: Loại bỏ hoàn toàn 62+ biến CSS "ma" (Ghost Variables), chuẩn hóa hệ thống biến RGB cho tất cả 6 chủ đề, đảm bảo tính nhất quán tuyệt đối cho các hiệu ứng Glassmorphism.
 
 ---
 

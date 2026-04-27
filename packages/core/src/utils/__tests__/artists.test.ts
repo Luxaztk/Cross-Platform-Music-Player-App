@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitArtists } from '../splitArtists';
+import { splitArtists } from '../artists';
 
 describe('splitArtists', () => {
   it('should return Unknown Artist for empty or unknown input', () => {

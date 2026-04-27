@@ -6,7 +6,9 @@ import { randomUUID, createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { getFixedFfmpegPath } from '../utils/ffmpegPath';
 import fs from 'node:fs/promises';
-import { splitArtists, normalizePathForHash } from '@music/utils';
+import { normalizePathForHash } from '@music/utils';
+import { splitArtists } from '@music/core';
+
 
 // Re-using the logic from MainMetadataService
 interface NodeID3Lyric {

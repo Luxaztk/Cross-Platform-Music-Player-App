@@ -17,6 +17,7 @@ interface CustomDropdownProps {
   className?: string;
   icon?: React.ReactNode;
   title?: string;
+  disabled?: boolean;
 }
 
 export const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -27,6 +28,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   className = '',
   icon,
   title,
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -83,7 +85,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
     };
   }, [isOpen]);
 
-  const handleToggle = () => setIsOpen(!isOpen);
+  const handleToggle = () => !disabled && setIsOpen(!isOpen);
 
   const handleSelect = (optionValue: string | number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -103,8 +105,9 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
     <div className={`custom-dropdown-container ${className}`} ref={containerRef} title={title}>
       <button
         type="button"
-        className={`dropdown-trigger ${isOpen ? 'active' : ''}`}
+        className={`dropdown-trigger ${isOpen ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
         onClick={handleToggle}
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >

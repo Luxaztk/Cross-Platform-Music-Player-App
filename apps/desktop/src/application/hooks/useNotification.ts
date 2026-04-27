@@ -2,14 +2,17 @@ import { createContext, useContext } from 'react';
 
 export type NotificationType = 'success' | 'error' | 'info' | 'warning';
 
-export interface Notification {
+export interface AppNotification {
   id: string;
   type: NotificationType;
   message: string;
+  duration?: number; // 0 for persistent
+  onClick?: () => void;
 }
 
 interface NotificationContextType {
-  showNotification: (type: NotificationType, message: string) => void;
+  showNotification: (type: NotificationType, message: string, options?: Partial<AppNotification>) => string;
+  updateNotification: (id: string, updates: Partial<AppNotification>) => void;
   removeNotification: (id: string) => void;
 }
 

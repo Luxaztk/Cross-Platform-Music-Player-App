@@ -33,7 +33,7 @@
 
 .hotkeys-modal-header h2 {
   margin: 0;
-  color: var(--text-primary);
+  color: var(--color-text-main);
   font-size: 18px;
   font-weight: 600;
 }
@@ -42,7 +42,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--color-text-muted);
   padding: 8px;
   border-radius: 6px;
   transition: all 0.2s ease;
@@ -52,8 +52,8 @@
 }
 
 .close-button:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
+  background-color: var(--bg-surface-hover);
+  color: var(--color-text-main);
 }
 
 .hotkeys-modal-body {
@@ -76,7 +76,7 @@
 
 .hotkeys-group-title {
   margin: 0 0 20px 0;
-  color: var(--text-primary);
+  color: var(--color-text-main);
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
@@ -98,18 +98,18 @@
 }
 
 .hotkey-key {
-  background: var(--bg-secondary);
+  background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 4px 8px;
   font-family: monospace;
   font-size: 14px;
-  color: var(--text-primary);
+  color: var(--color-text-main);
   min-width: 80px;
   text-align: center;
 }
 
 .hotkey-description {
-  color: var(--text-secondary);
+  color: var(--color-text-muted);
   flex: 1;
 }

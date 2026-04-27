@@ -29,7 +29,16 @@ class MockStorageAdapter implements IStorageAdapter {
     return {}; // Trả về object rỗng vì test này không dùng đến lyrics
   }
 
+  async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
+    if (this.songs[songId]) {
+      this.songs[songId] = { ...this.songs[songId], ...updates };
+      return this.songs[songId];
+    }
+    return null;
+  }
+
   async saveLyricUsage(_usage: Record<string, number>): Promise<void> {
+
     // Không làm gì cả
   }
 
@@ -60,7 +69,11 @@ class MockMetadataService {
       coverArt: null
     };
   }
+  async exists(_filePath: string): Promise<boolean> {
+    return true; // Giả định file luôn tồn tại trong test
+  }
 }
+
 
 describe('LibraryService', () => {
   let adapter: MockStorageAdapter;

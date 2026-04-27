@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Search, Download, Edit2, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Clipboard, ClipboardCheck } from 'lucide-react';
-import type { Song, Playlist } from '@music/types';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Search, Download, Edit2, Loader2, CheckCircle2, AlertCircle, Clipboard, ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
-import { EditModal } from '@components'
-import { useLibrary, useNotification, useLanguage } from '@hooks'
-import { getErrorMessage } from '@music/utils';
+import { EditModal } from '@components';
+import { useLanguage, useDownload } from '@hooks';
+
+// Import các UI Component vừa tách
+import { DownloadPreviewCard, DownloadProgressBar, DuplicateWarningBanner } from '@components';
+
 import './DownloaderModal.scss';
 
 interface DownloaderModalProps {
@@ -12,203 +14,58 @@ interface DownloaderModalProps {
   onClose: () => void;
 }
 
-type ModalState = 'input' | 'fetching' | 'preview' | 'downloading' | 'success' | 'error';
-
-interface YouTubeVideoInfo {
-  id: string;
-  title: string;
-  artist: string;
-  album: string;
-  thumbnail: string;
-  duration?: number;
-}
-
 export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
-  const { refreshLibrary, refreshPlaylists } = useLibrary();
-  const { showNotification } = useNotification();
 
-  // Gom nhóm các state liên quan đến Duplicate để quản lý tập trung
-  const [state, setState] = useState<ModalState>('input');
-  const [url, setUrl] = useState('');
-  const [videoInfo, setVideoInfo] = useState<YouTubeVideoInfo | null>(null);
-  const [progress, setProgress] = useState(0);
+  // Gọi "Bộ não" (Global Hook)
+  const manager = useDownload();
+
+  // Local UI State (Chỉ phục vụ tương tác trên Modal này)
   const [isPasted, setIsPasted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showEditMetadata, setShowEditMetadata] = useState(false);
-  const [downloadedPath, setDownloadedPath] = useState<string | null>(null);
-
-  const [duplicateInfo, setDuplicateInfo] = useState<{
-    warning: { title: string; artist: string; reason?: string } | null;
-    isAfterDownload: boolean;
-    reasonAfterDownload: string | null;
-  }>({ warning: null, isAfterDownload: false, reasonAfterDownload: null });
-
   const urlInputRef = useRef<HTMLInputElement>(null);
 
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-  if (isOpen !== prevIsOpen) {
-    setPrevIsOpen(isOpen);
+  // Smart Guard Effect: Tự động reset trạng thái cũ nếu modal được mở lại ở trạng thái rác
+  useEffect(() => {
     if (isOpen) {
-      setState('input');
-      setUrl('');
-      setError(null);
-      setProgress(0);
-      setVideoInfo(null);
-      setDownloadedPath(null);
-      setDuplicateInfo({ warning: null, isAfterDownload: false, reasonAfterDownload: null });
+      const isStaleState = ['preview', 'success', 'error'].includes(manager.downloadState);
+      const isModalInitiated = manager.initiator === 'modal';
+
+      if (isStaleState && isModalInitiated) {
+        // Sử dụng setTimeout để tránh "cascading render" đồng bộ
+        const timer = setTimeout(() => {
+          manager.resetDownload();
+        }, 0);
+        return () => clearTimeout(timer);
+      }
     }
-  }
+  }, [isOpen, manager.downloadState, manager.initiator]);
+
 
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => urlInputRef.current?.focus());
     }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (state !== 'downloading') return;
-
-    const unsubscribe = window.electronAPI.onDownloadProgress((data) => {
-      if (data.url === url) setProgress(data.percent);
-    });
-
-    return () => unsubscribe();
-  }, [state, url]);
-
-  const handleError = useCallback((err: unknown) => {
-    const msg = getErrorMessage(err);
-    setError(msg);
-    setState('error');
-    console.error('[Downloader] Fatal:', msg);
-  }, [t]);
+  }, [isOpen, manager]);
 
   if (!isOpen) return null;
 
-  const isBusy = state === 'fetching' || state === 'downloading';
+  // Đã sửa: dùng downloadState thay cho status
+  const isBusy = manager.downloadState === 'fetching' || manager.downloadState === 'downloading';
 
   const handleClose = () => {
     if (isBusy) return;
     onClose();
   };
 
-  const handleFetchInfo = async () => {
-    if (!url.trim()) return;
-
-    setState('fetching');
-    setError(null);
-
-    try {
-      const result = await window.electronAPI.fetchYtInfo(url);
-      if (!result.success || !result.info) {
-        throw new Error(result.error || t('downloader.error'));
-      }
-
-      setVideoInfo(result.info);
-
-      // Tách logic check trùng
-      const dupCheck = await window.electronAPI.checkDuplicate(
-        result.info.title,
-        result.info.artist,
-        url.trim(),
-        result.info.id
-      );
-
-      if (dupCheck.isDuplicate && dupCheck.existingSong) {
-        setDuplicateInfo(prev => ({
-          ...prev,
-          warning: {
-            title: dupCheck.existingSong!.title,
-            artist: dupCheck.existingSong!.artist,
-            reason: dupCheck.reason as string,
-          }
-        }));
-      }
-
-      setState('preview');
-    } catch (err) {
-      handleError(err);
-    }
-  };
-
-  const handleDownload = async (forceDownload = false) => {
-    if (!videoInfo || (duplicateInfo.warning && !forceDownload)) return;
-
-    setState('downloading');
-    setProgress(0);
-
-    try {
-      const result = await window.electronAPI.downloadYtAudio(url, videoInfo.title);
-      if (!result.success || !result.filePath) {
-        throw new Error(result.error || t('downloader.error'));
-      }
-
-      // Ghi metadata (Sử dụng interface Partial<Song> an toàn chúng ta đã làm ở global.d.ts)
-      await window.electronAPI.writeAudioMetadata(result.filePath, {
-        title: videoInfo.title,
-        artist: videoInfo.artist,
-        album: videoInfo.album,
-        coverArt: videoInfo.thumbnail, // Lưu ý: dùng đúng tên field trong Song
-        originId: videoInfo.id,
-        sourceUrl: url,
-      });
-
-      // Import và check trùng chốt hạ
-      const importResult = await window.electronAPI.importFromPath(result.filePath, url, videoInfo.id);
-
-      if (importResult.success && importResult.count === 0) {
-        setDuplicateInfo(prev => ({
-          ...prev,
-          isAfterDownload: true,
-          reasonAfterDownload: importResult.reason || null
-        }));
-      }
-
-      await Promise.all([refreshLibrary(), refreshPlaylists()]);
-      setDownloadedPath(result.filePath);
-      setState('success');
-    } catch (err) {
-      handleError(err);
-    }
-  };
-
-  const handleUpdateMetadata = (updatedData: Song | Playlist) => {
-    if (!videoInfo) return;
-    const updated = { ...videoInfo, ...updatedData };
-    setVideoInfo(updated as YouTubeVideoInfo);
-    setShowEditMetadata(false);
-
-    // Re-check duplicate if title/artist changed
-    window.electronAPI.checkDuplicate(updated.title, updated.artist, url, videoInfo.id).then((dupCheck) => {
-      if (dupCheck.isDuplicate && dupCheck.existingSong) {
-        setDuplicateInfo(prev => ({
-          ...prev,
-          warning: {
-            title: dupCheck.existingSong!.title,
-            artist: dupCheck.existingSong!.artist,
-            reason: dupCheck.reason as string,
-          }
-        }));
-      } else {
-        setDuplicateInfo(prev => ({ ...prev, warning: null }));
-      }
-    });
-  };
-
   const handlePaste = async () => {
     try {
       const text = (await navigator.clipboard.readText()).trim();
-      if (!text) return;
-
-      const isYouTube = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(text);
-
-      if (isYouTube) {
-        setUrl(text);
-        urlInputRef.current?.focus();
+      if (text && /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(text)) {
+        manager.setUrl(text);
         setIsPasted(true);
+        // Tự động tắt feedback sau 2s
         setTimeout(() => setIsPasted(false), 2000);
-      } else {
-        showNotification('error', t('downloader.invalidUrl'));
       }
     } catch (err) {
       console.error('Failed to paste from clipboard:', err);
@@ -216,12 +73,13 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
   };
 
   const renderContent = () => {
-    switch (state) {
-      case 'input':
+    // Đã sửa: dùng downloadState
+    switch (manager.downloadState) {
+      case 'idle':
         return (
           <div className="downloader-input-state">
             <div className="input-header">
-              <Search size={ICON_SIZES.XLARGE * 1.5} className="placeholder-icon" />
+              <Search size={ICON_SIZES.XXLARGE * 1.5} className="placeholder-icon" />
               <p>{t('downloader.urlPlaceholder')}</p>
             </div>
             <div className="input-group">
@@ -229,12 +87,13 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
                 <input
                   ref={urlInputRef}
                   type="text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  value={manager.url}
+                  onChange={(e) => manager.setUrl(e.target.value)}
                   placeholder="https://www.youtube.com/watch?v=..."
-                  onKeyDown={(e) => e.key === 'Enter' && handleFetchInfo()}
+                  onKeyDown={(e) => e.key === 'Enter' && manager.fetchInfo(manager.url, 'modal')}
                 />
                 <button
+                  type="button"
                   className={`paste-btn ${isPasted ? 'success' : ''}`}
                   onClick={handlePaste}
                   title={t('downloader.paste')}
@@ -243,9 +102,10 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
                 </button>
               </div>
               <button
+                type="button"
                 className="fetch-btn"
-                onClick={handleFetchInfo}
-                disabled={!url.trim()}
+                onClick={() => manager.fetchInfo(undefined, 'modal')}
+                disabled={!manager.url.trim()}
               >
                 {t('downloader.fetchInfo')}
               </button>
@@ -256,7 +116,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
       case 'fetching':
         return (
           <div className="downloader-loading-state">
-            <Loader2 size={ICON_SIZES.XLARGE * 1.5} className="spinning-icon" />
+            <Loader2 size={ICON_SIZES.XXLARGE * 1.5} className="spinning-icon" />
             <p>{t('downloader.searching')}</p>
           </div>
         );
@@ -264,46 +124,21 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
       case 'preview':
         return (
           <div className="downloader-preview-state">
-            <div className="video-card">
-              <div className="thumbnail-container">
-                <img src={videoInfo?.thumbnail} alt={videoInfo?.title} />
-              </div>
-              <div className="video-details">
-                <h3>{videoInfo?.title}</h3>
-                <p>{videoInfo?.artist}</p>
-                <span className="album-tag">{videoInfo?.album}</span>
-              </div>
-            </div>
-
-            {/* === HIỂN THỊ CẢNH BÁO TRÙNG LẶP (Chốt 1) === */}
-            {duplicateInfo.warning && (
-              <div className="duplicate-warning">
-                <AlertTriangle size={ICON_SIZES.XSMALL} />
-                <div>
-                  <strong>{t('downloader.duplicateWarning')}</strong>
-                  <p>
-                    {duplicateInfo.warning.reason === 'URL'
-                      ? t('downloader.duplicateSourceFound')
-                      : t('downloader.duplicateFound')
-                        .replace('{title}', duplicateInfo.warning.title)
-                        .replace('{artist}', duplicateInfo.warning.artist)}
-                  </p>
-                </div>
-              </div>
-            )}
+            {/* LẮP CƠ BẮP VÀO ĐÂY */}
+            <DownloadPreviewCard info={manager.videoInfo} />
+            <DuplicateWarningBanner duplicateInfo={manager.duplicateInfo} />
 
             <div className="action-buttons">
-              <button className="secondary-btn" onClick={() => setShowEditMetadata(true)}>
+              <button type="button" className="edit-btn" onClick={() => setShowEditMetadata(true)} title={t('common.edit')}>
                 <Edit2 size={ICON_SIZES.TINY} />
-                <span>{t('downloader.editMetadata')}</span>
               </button>
-              {duplicateInfo.warning ? (
-                <button className="primary-btn warning-btn" onClick={() => handleDownload(true)}>
+              {manager.duplicateInfo.warning ? (
+                <button type="button" className="primary-btn warning-btn" onClick={() => manager.executeDownload(true)}>
                   <Download size={ICON_SIZES.TINY} />
                   <span>{t('downloader.downloadAnyway')}</span>
                 </button>
               ) : (
-                <button className="primary-btn" onClick={() => handleDownload(false)}>
+                <button type="button" className="primary-btn" onClick={() => manager.executeDownload(false)}>
                   <Download size={ICON_SIZES.TINY} />
                   <span>{t('downloader.downloadNow')}</span>
                 </button>
@@ -312,24 +147,13 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
           </div>
         );
 
-      case 'downloading': {
-        const isConverting = progress >= 99.9;
+      case 'downloading':
         return (
-          <div className="downloader-progress-state">
-            <div className="progress-info">
-              <p>{isConverting ? t('downloader.converting') : t('downloader.downloading')}</p>
-              <span className="percent">{Math.round(progress)}%</span>
-            </div>
-            <div className="progress-bar-container">
-              <div
-                className="progress-bar-fill"
-                style={{ width: `${progress}%`, transition: isConverting ? 'none' : 'width 0.3s ease' }}
-              />
-            </div>
-            <p className="song-title-scrolling">{videoInfo?.title}</p>
-          </div>
+          <DownloadProgressBar
+            progress={manager.downloadProgress} // Đã sửa
+            title={manager.videoInfo?.title}
+          />
         );
-      }
 
       case 'success':
         return (
@@ -337,31 +161,31 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
             <CheckCircle2 size={64} className="status-icon" />
             <h3>{t('downloader.success')}</h3>
 
-            {/* Thông báo nếu bị trùng sau khi tải (Chốt 2) */}
-            {duplicateInfo.isAfterDownload && (
+            {/* Banner báo trùng lặp sau tải */}
+            {manager.duplicateInfo.isAfterDownload && (
               <div className="duplicate-info-banner">
                 <AlertTriangle size={ICON_SIZES.TINY} />
                 <span>
-                  {duplicateInfo.reasonAfterDownload === 'HASH'
+                  {manager.duplicateInfo.reasonAfterDownload === 'HASH'
                     ? t('downloader.duplicateHashFound')
                     : t('downloader.duplicateSourceFound')}
                 </span>
               </div>
             )}
 
-            {downloadedPath && (
+            {manager.downloadedPath && (
               <div className="file-path-info">
                 <span className="path-label">{t('downloader.savedTo')}</span>
-                <span className="path-value">{downloadedPath}</span>
+                <span className="path-value">{manager.downloadedPath}</span>
               </div>
             )}
             <div className="action-buttons horizontal">
-              {downloadedPath && (
-                <button className="secondary-btn" onClick={() => window.electronAPI.openItemPath(downloadedPath)}>
+              {manager.downloadedPath && (
+                <button type="button" className="secondary-btn" onClick={() => window.electronAPI.openItemPath(manager.downloadedPath!)}>
                   {t('downloader.openFolder')}
                 </button>
               )}
-              <button className="primary-btn" onClick={onClose}>
+              <button type="button" className="primary-btn" onClick={onClose}>
                 {t('common.success')}
               </button>
             </div>
@@ -373,9 +197,12 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
           <div className="downloader-status-state error">
             <AlertCircle size={64} className="status-icon" />
             <h3>{t('downloader.error')}</h3>
-            <p className="error-message">{error}</p>
-            <button className="primary-btn" onClick={() => setState('input')}>
+            <p className="error-message">{manager.downloadError}</p>
+            <button type="button" className="secondary-btn" onClick={() => manager.resetDownload()}>
               {t('common.cancel')}
+            </button>
+            <button type="button" className="primary-btn" onClick={() => manager.executeDownload()}>
+              {t('downloader.downloadNow')}
             </button>
           </div>
         );
@@ -392,7 +219,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
               <h2>{t('downloader.title')}</h2>
             </div>
             {!isBusy && (
-              <button className="close-btn" onClick={onClose} title={t('common.close')}>
+              <button type="button" className="close-btn" onClick={onClose} title={t('common.close')}>
                 <X size={ICON_SIZES.MEDIUM} />
               </button>
             )}
@@ -404,18 +231,21 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
         </div>
       </div>
 
-      {showEditMetadata && videoInfo && (
+      {showEditMetadata && manager.videoInfo && (
         <EditModal
           isOpen={true}
           type="song"
           data={{
-            title: videoInfo.title,
-            artist: videoInfo.artist,
-            album: videoInfo.album,
-            coverArt: videoInfo.thumbnail,
+            title: manager.videoInfo.title,
+            artist: manager.videoInfo.artist,
+            album: manager.videoInfo.album,
+            coverArt: manager.videoInfo.thumbnail,
           } as any}
           onClose={() => setShowEditMetadata(false)}
-          onSave={handleUpdateMetadata}
+          onSave={(data) => {
+            manager.updateMetadata(data);
+            setShowEditMetadata(false);
+          }}
         />
       )}
     </>

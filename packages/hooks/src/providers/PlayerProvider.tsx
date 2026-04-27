@@ -1,70 +1,34 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Song, PlayerState } from '@music/types';
-import type { IStorageAdapter } from '@music/core';
 import { AudioEngine } from '@music/player';
-import { useAudioDevices } from './useAudioDevices';
+import { shuffleArray } from '@music/utils';
 
-export type RepeatMode = 'OFF' | 'ALL' | 'ONE';
+import { useAudioDevices } from '../useAudioDevices';
+import { PlayerContext } from '../PlayerContext';
 
-export interface QueueItem {
-  uid: string;
-  song: Song;
-}
 
-export interface PlayerContextProps {
-  currentSong: Song | null;
-  isPlaying: boolean;
-  progress: number;
-  duration: number;
-  volume: number;
-  queue: QueueItem[];
-  history: Song[];
+import type { 
+  RepeatMode, 
+  QueueItem, 
+  PlayerProviderProps 
+} from '../types/index';
 
-  repeatMode: RepeatMode;
-  isShuffle: boolean;
 
-  playNow: (song: Song) => void;
-  playNext: (song: Song) => void;
-  addToQueue: (song: Song) => void;
-  addSongsToQueue: (songs: Song[]) => void;
-  playList: (songs: Song[], startIndex: number) => void;
-  removeFromQueue: (index: number) => void;
-  reorderQueue: (startIndex: number, endIndex: number) => void;
 
-  play: () => void;
-  pause: () => void;
-  next: () => void;
-  prev: () => void;
-  seek: (time: number) => void;
-  setVolume: (vol: number) => void;
-  setRepeatMode: (mode: RepeatMode) => void;
-  toggleShuffle: () => void;
-  getAnalyser: () => AnalyserNode | null;
-  updateCurrentSongMetadata: (partial: Partial<Song>) => void;
-}
 
-export const PlayerContext = createContext<PlayerContextProps | undefined>(undefined);
 
-// Helper for shuffling array (Fisher-Yates)
-const shuffleArray = <T,>(array: T[]): T[] => {
-  const newArr = [...array];
-  for (let i = newArr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
-  }
-  return newArr;
-};
 
-interface PlayerProviderProps {
-  children: React.ReactNode;
-  storage?: IStorageAdapter;
-  allSongs?: Song[];
-  onFileError?: (song: Song) => void;
-}
+export const PlayerProvider: React.FC<PlayerProviderProps> = ({ 
+  children, 
+  storage, 
+  allSongs = [] as Song[], 
+  onFileError 
+}) => {
 
-export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storage, allSongs = [], onFileError }) => {
+
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(1);
@@ -235,7 +199,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
       try {
         const savedState = await storage.getPlayerState();
         if (savedState) {
-          const findSong = (id: string | null) => allSongs.find(s => s.id === id) || null;
+          const findSong = (id: string | null): Song | null => allSongs.find((s: Song) => s.id === id) || null;
 
           if (savedState.currentSongId) {
             const song = findSong(savedState.currentSongId);
@@ -245,9 +209,10 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
             }
           }
 
-          setQueue(savedState.queueIds.map(findSong).filter((s): s is Song => s !== null).map(song => ({ uid: generateUid(), song })));
+          setQueue(savedState.queueIds.map(findSong).filter((s): s is Song => s !== null).map((song: Song) => ({ uid: generateUid(), song })));
           setHistory(savedState.historyIds.map(findSong).filter((s): s is Song => s !== null));
           setOriginalContext(savedState.originalContextIds.map(findSong).filter((s): s is Song => s !== null));
+
           setVolumeState(savedState.volume);
           setRepeatMode(savedState.repeatMode);
           setIsShuffle(savedState.isShuffle);
@@ -286,7 +251,8 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children, storag
 }, [storage, isHydrated, currentSong, queue, history, originalContext, volume, repeatMode, isShuffle]);
 
 const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
-  setCurrentSong(prev => prev ? { ...prev, ...partial } : null);
+  setCurrentSong((prev: Song | null) => prev ? { ...prev, ...partial } : null);
+
   
   // Also update in queue
   setQueue(prevQueue => prevQueue.map(item => {
@@ -464,10 +430,3 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
   );
 };
 
-export const usePlayer = () => {
-  const context = useContext(PlayerContext);
-  if (context === undefined) {
-    throw new Error('usePlayer must be used within a PlayerProvider');
-  }
-  return context;
-};
