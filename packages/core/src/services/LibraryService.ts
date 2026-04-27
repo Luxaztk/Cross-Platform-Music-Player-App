@@ -1,5 +1,5 @@
 import type { Song, Playlist, PlaylistDetail, DuplicateSongInfo, DuplicateReason } from '@music/types';
-import { isSamePath, normalizeString, getErrorMessage, logger } from '@music/utils';
+import { isSamePath, normalizeString, logger } from '@music/utils';
 import { getCanonicalYoutubeUrl } from '../utils/youtube';
 import type { IStorageAdapter } from '../interfaces/IStorageAdapter';
 import type { IMetadataService } from '../interfaces/IMetadataService';

@@ -69,7 +69,7 @@ class MockMetadataService {
       coverArt: null
     };
   }
-  async exists(filePath: string): Promise<boolean> {
+  async exists(_filePath: string): Promise<boolean> {
     return true; // Giả định file luôn tồn tại trong test
   }
 }
