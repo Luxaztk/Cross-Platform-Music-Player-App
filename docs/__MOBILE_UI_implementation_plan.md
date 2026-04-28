@@ -93,6 +93,37 @@ Finalize secondary screens.
 
 ---
 
+## Task checklist
+# Mobile UI Overhaul Tasks
+
+- [X] **Phase 1: Core Layout & Global Components**
+    - [X] Create `TopBar.tsx` component
+    - [X] Create `SidebarMenu.tsx` component
+    - [X] Create `AppShellProvider` context (sidebar state + import handler)
+    - [X] Update `_layout.tsx` to integrate `TopBar` and `SidebarMenu`
+    - [X] Update `(tabs)/_layout.tsx` to hide default headers and tab bar
+    - [X] Update `PlayerBar.tsx` layout and progress bar
+    - [X] Add translation strings for new UI elements
+    - [ ] Install `lucide-react-native` and replace existing icons to use Lucide icons
+- [ ] **Phase 2: Home & Playlist Management**
+    - [ ] Ensure "All songs" default playlist
+    - [ ] Update `library.tsx` playlist row design
+    - [ ] Create `PlaylistActions.tsx` modal
+- [ ] **Phase 3: Playlist Details & Songs**
+    - [ ] Update `[id].tsx` header and song list design
+    - [ ] Create `SongActions.tsx` modal
+- [ ] **Phase 4: Now Playing & Queue**
+    - [ ] Refine `now-playing.tsx` layout
+    - [ ] Implement swipe-up behavior in `QueueModal.tsx`
+    - [ ] Add "Clear queue" and drag-and-drop to `QueueModal.tsx`
+- [ ] **Phase 5: Search & Settings**
+    - [ ] Update `search.tsx` with filter/sort bar
+    - [ ] Implement Theme/Language selectors in `settings.tsx`
+    - [ ] Hide `PlayerBar` on Settings screen
+
+
+---
+
 ## Verification Plan
 
 ### Automated Tests

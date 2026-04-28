@@ -9,7 +9,7 @@ This roadmap is for building a **mobile version of the desktop app** using:
 - **Play audio with Expo’s new Audio API (`expo-audio`)**
 - **Background playback is required** (so plan for an EAS dev build / config work)
 
-Use this file as a checklist. Each item has **acceptance criteria (AC)** so “done” is unambiguous.
+Use this file as a checklist. Each item has **acceptance criteria (AC)** so "done" is unambiguous.
 
 ---
 
