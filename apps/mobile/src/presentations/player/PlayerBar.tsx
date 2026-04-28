@@ -2,20 +2,30 @@ import { router, usePathname } from 'expo-router'
 import React, { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Feather from '@expo/vector-icons/Feather'
 
 import { useTheme } from '../../presentations/components/Theme'
 import { usePlayerState, usePlayerProgress } from '../../application/player'
-import { formatTime } from './format'
 
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-
+/**
+ * Persistent mini-player bar shown at the bottom of most screens.
+ *
+ * Layout (per spec):
+ *   ┌─ progress bar (thin, non-seekable) ──────────────────┐
+ *   │  [cover]  Title / Artist       [▶/❚❚]  [⏭]          │
+ *   └──────────────────────────────────────────────────────┘
+ *
+ * When no song is loaded, shows a blank cover + "No song is being played".
+ * Tapping the bar navigates to the Now Playing screen.
+ */
 export function PlayerBar() {
   const { theme } = useTheme()
-  const { currentSong, togglePlayPause, next, prev } = usePlayerState()
+  const { currentSong, togglePlayPause, next } = usePlayerState()
   const progress = usePlayerProgress()
   const pathname = usePathname()
   const insets = useSafeAreaInsets()
 
+  // Position: sit above the gesture bar / bottom edge
   const isInTabs =
     pathname.includes('(tabs)') ||
     pathname === '/' ||
@@ -24,66 +34,73 @@ export function PlayerBar() {
     pathname === '/playlists' ||
     pathname === '/settings'
 
-  const marginBottom = isInTabs ? 90 : insets.bottom + 12
+  const bottomOffset = isInTabs ? 12 : insets.bottom + 12
 
-  const title = currentSong?.title ?? 'Nothing playing'
-  const subtitle = currentSong ? currentSong.artist : 'Tap a song to start'
+  const hasSong = !!currentSong
+  const title = currentSong?.title ?? ''
+  const artist = currentSong?.artist ?? ''
 
-  const canShow = !!currentSong
-
-  const timeLabel = useMemo(() => {
-    return `${formatTime(progress.positionMs)} / ${formatTime(progress.durationMs)}`
-  }, [progress.positionMs, progress.durationMs])
-
-  const progressPercent =
-    progress.durationMs > 0
-      ? Math.min((progress.positionMs / progress.durationMs) * 100, 100)
-      : 0
-
-  if (!canShow) return null
+  const progressPercent = useMemo(() => {
+    if (!hasSong || progress.durationMs <= 0) return 0
+    return Math.min((progress.positionMs / progress.durationMs) * 100, 100)
+  }, [hasSong, progress.positionMs, progress.durationMs])
 
   return (
     <Pressable
-      onPress={() => router.push('/now-playing')}
+      onPress={() => hasSong && router.push('/now-playing')}
       style={[
         styles.container,
         {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
-          bottom: marginBottom,
+          bottom: bottomOffset,
         },
       ]}
     >
-      <View style={styles.topRow}>
+      {/* ── Progress bar (top edge, non-seekable) ── */}
+      <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}>
+        <View
+          style={[
+            styles.progressFill,
+            {
+              backgroundColor: theme.colors.primary,
+              width: `${progressPercent}%` as any,
+            },
+          ]}
+        />
+      </View>
+
+      {/* ── Main content row ── */}
+      <View style={styles.row}>
+        {/* Cover placeholder */}
         <View style={[styles.cover, { backgroundColor: theme.colors.primary + '18' }]}>
-          <Text style={[styles.coverText, { color: theme.colors.primary }]}>M</Text>
+          {hasSong ? (
+            <Text style={[styles.coverText, { color: theme.colors.primary }]}>♪</Text>
+          ) : (
+            <View style={styles.coverBlank} />
+          )}
         </View>
 
+        {/* Song info or empty state */}
         <View style={styles.textWrap}>
-          <Text numberOfLines={1} style={[styles.title, { color: theme.colors.text }]}>
-            {title}
-          </Text>
-          <Text numberOfLines={1} style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-            {subtitle}
-          </Text>
+          {hasSong ? (
+            <>
+              <Text numberOfLines={1} style={[styles.title, { color: theme.colors.text }]}>
+                {title}
+              </Text>
+              <Text numberOfLines={1} style={[styles.subtitle, { color: theme.colors.mutedText }]}>
+                {artist || 'Unknown Artist'}
+              </Text>
+            </>
+          ) : (
+            <Text numberOfLines={1} style={[styles.noSong, { color: theme.colors.mutedText }]}>
+              No song is being played
+            </Text>
+          )}
         </View>
 
+        {/* Controls */}
         <View style={styles.controls}>
-          <Pressable
-            onPress={(e) => {
-              e.stopPropagation()
-              void prev()
-            }}
-            hitSlop={10}
-            style={styles.iconBtn}
-          >
-            <FontAwesome5
-              name="step-backward"
-              size={17}
-              color={theme.colors.text}
-            />
-          </Pressable>
-
           <Pressable
             onPress={(e) => {
               e.stopPropagation()
@@ -91,10 +108,11 @@ export function PlayerBar() {
             }}
             hitSlop={10}
             style={[styles.playBtn, { backgroundColor: theme.colors.text }]}
+            disabled={!hasSong}
           >
-            <FontAwesome5
+            <Feather
               name={progress.isPlaying ? 'pause' : 'play'}
-              size={17}
+              size={18}
               color={theme.colors.background}
             />
           </Pressable>
@@ -106,35 +124,11 @@ export function PlayerBar() {
             }}
             hitSlop={10}
             style={styles.iconBtn}
+            disabled={!hasSong}
           >
-            <FontAwesome5
-              name="step-forward"
-              size={17}
-              color={theme.colors.text}
-            />
+            <Feather name="skip-forward" size={20} color={theme.colors.text} />
           </Pressable>
         </View>
-      </View>
-
-      <View style={styles.bottomRow}>
-        <View
-          style={[
-            styles.progressTrack,
-            { backgroundColor: theme.colors.border },
-          ]}
-        >
-          <View
-            style={[
-              styles.progressFill,
-              {
-                backgroundColor: theme.colors.primary,
-                width: `${progressPercent}%` as any,
-              },
-            ]}
-          />
-        </View>
-
-        <Text style={[styles.time, { color: theme.colors.mutedText }]}>{timeLabel}</Text>
       </View>
     </Pressable>
   )
@@ -147,68 +141,70 @@ const styles = StyleSheet.create({
     right: 12,
     borderWidth: 1,
     borderRadius: 18,
-    padding: 14,
-    gap: 12,
+    overflow: 'hidden',
   },
-  topRow: {
+  progressTrack: {
+    width: '100%',
+    height: 3,
+  },
+  progressFill: {
+    height: 3,
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
   },
   cover: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   coverText: {
     fontSize: 20,
-    fontWeight: '800',
+  },
+  coverBlank: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    opacity: 0.2,
   },
   textWrap: {
     flex: 1,
-    gap: 3,
+    justifyContent: 'center',
+    gap: 2,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '700',
   },
   subtitle: {
     fontSize: 12,
   },
+  noSong: {
+    fontSize: 13,
+    fontStyle: 'italic',
+  },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   iconBtn: {
-    width: 30,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
   playBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  bottomRow: {
-    gap: 8,
-  },
-  progressTrack: {
-    width: '100%',
-    height: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: 4,
-    borderRadius: 999,
-  },
-  time: {
-    fontSize: 11,
-    textAlign: 'right',
   },
 })

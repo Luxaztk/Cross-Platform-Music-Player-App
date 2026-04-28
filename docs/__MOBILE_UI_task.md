@@ -1,10 +1,13 @@
 # Mobile UI Overhaul Tasks
 
-- [ ] **Phase 1: Core Layout & Global Components**
-    - [ ] Create `TopBar.tsx` component
+- [/] **Phase 1: Core Layout & Global Components**
+    - [/] Create `TopBar.tsx` component
     - [ ] Create `SidebarMenu.tsx` component
+    - [ ] Create `AppShellProvider` context (sidebar state + import handler)
     - [ ] Update `_layout.tsx` to integrate `TopBar` and `SidebarMenu`
+    - [ ] Update `(tabs)/_layout.tsx` to hide default headers and tab bar
     - [ ] Update `PlayerBar.tsx` layout and progress bar
+    - [ ] Add translation strings for new UI elements
 - [ ] **Phase 2: Home & Playlist Management**
     - [ ] Ensure "All songs" default playlist
     - [ ] Update `library.tsx` playlist row design

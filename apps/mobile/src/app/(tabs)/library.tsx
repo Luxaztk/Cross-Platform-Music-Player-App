@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
 
@@ -9,6 +9,7 @@ import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
 import { useLibrary } from '../../application'
 import { usePlayerState } from '../../application/player'
+import { useAppShell } from '../../presentations/components/AppShell'
 
 // ── Sort helpers ────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ export default function LibraryScreen() {
   const { notify } = useNotifications()
   const { isHydrated, songsById, library, importPickedAudio, deleteSongs } = useLibrary()
   const { playList, state: playerState } = usePlayerState()
+  const { registerImportHandler } = useAppShell()
 
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
@@ -123,6 +125,12 @@ export default function LibraryScreen() {
       notify({ message: t.library.importFailed, kind: 'error' })
     }
   }, [importPickedAudio, notify, t])
+
+  // Register the import handler so the TopBar can trigger it
+  useEffect(() => {
+    registerImportHandler(pickAudioFiles)
+    return () => registerImportHandler(null)
+  }, [registerImportHandler, pickAudioFiles])
 
   const onLongPressSong = useCallback(
     (songId: string, title: string) => {
@@ -210,15 +218,7 @@ export default function LibraryScreen() {
         {isHydrated ? `${songCount} songs` : t.common.loadingPreference}
       </Text>
 
-      {/* Actions row */}
-      <View style={styles.actionsRow}>
-        <Pressable
-          onPress={pickAudioFiles}
-          style={[styles.importBtn, { backgroundColor: theme.colors.primary }]}
-        >
-          <Text style={styles.importBtnText}>{t.library.importSongs}</Text>
-        </Pressable>
-      </View>
+
 
       <View style={styles.sortRow}>
         <Text style={[styles.sortLabel, { color: theme.colors.mutedText }]}>Sort:</Text>
