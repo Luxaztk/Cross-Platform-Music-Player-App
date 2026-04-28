@@ -34,11 +34,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
 
   useEffect(() => {
     if (isOpen) {
-      // Sử dụng setTimeout để tránh "cascading render" đồng bộ khi gọi setIsLoading
-      const timer = setTimeout(() => {
-        fetchHistory();
-      }, 0);
-      return () => clearTimeout(timer);
+      fetchHistory();
     }
   }, [isOpen, fetchHistory]);
 

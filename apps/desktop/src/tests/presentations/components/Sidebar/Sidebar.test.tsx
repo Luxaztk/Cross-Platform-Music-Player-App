@@ -24,6 +24,12 @@ vi.mock('@music/hooks', () => ({
 vi.mock('@hooks', () => ({
   useLanguage: vi.fn(),
   useTheme: vi.fn(),
+  useLocalFilter: vi.fn((items, query) => {
+    if (!query) return items;
+    return items.filter((item: any) => 
+      item.name.toLowerCase().includes(query.toLowerCase())
+    );
+  }),
 }));
 
 vi.mock('@components', () => ({

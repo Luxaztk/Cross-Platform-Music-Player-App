@@ -102,13 +102,31 @@ class MockHowl {
 
 vi.mock('howler', () => {
   let mockHowlerVolume = 1;
+  
+  // Trả về một object chứa Class MockHowl trực tiếp
   return {
-    Howl: vi.fn().mockImplementation((options) => new MockHowl(options)),
+    // Sử dụng chính class MockHowl (đã được định nghĩa ở trên) làm constructor
+    Howl: vi.fn().mockImplementation(function(this: any, options: any) {
+       return new MockHowl(options);
+    }),
     Howler: {
       volume: vi.fn((val?: number) => {
         if (typeof val === 'number') mockHowlerVolume = val;
         return mockHowlerVolume;
       }),
+      ctx: {
+        state: 'running',
+        resume: vi.fn().mockResolvedValue(undefined),
+        createAnalyser: vi.fn().mockReturnValue({
+          fftSize: 0,
+          smoothingTimeConstant: 0,
+          disconnect: vi.fn(),
+        }),
+        setSinkId: vi.fn().mockResolvedValue(undefined),
+      },
+      masterGain: {
+        connect: vi.fn(),
+      }
     }
   };
 });

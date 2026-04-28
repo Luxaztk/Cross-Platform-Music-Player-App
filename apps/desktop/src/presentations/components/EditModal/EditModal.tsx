@@ -121,7 +121,10 @@ export const EditModal: React.FC<EditModalProps> = ({
           <div className="image-edit-section">
             <div className="playlist-image-large" onClick={handleChooseImage}>
               {currentImage ? (
-                <img src={currentImage} alt="Cover" />
+                <div className="image-container">
+                  <img src={currentImage} alt="" className="image-blur-bg" />
+                  <img src={currentImage} alt="Cover" className="image-main" />
+                </div>
               ) : (
                 <img src={appIcon} alt="Default Cover" className="placeholder-brand-icon" />
               )}

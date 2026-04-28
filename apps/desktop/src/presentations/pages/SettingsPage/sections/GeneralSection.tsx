@@ -3,10 +3,7 @@ import { useSettings, useLanguage } from '@hooks';
 import { ICON_SIZES } from '@constants';
 import { RotateCcw, Languages } from 'lucide-react';
 import { CustomDropdown } from '@components';
-
-interface GeneralSectionProps {
-  searchQuery?: string;
-}
+import { LANGUAGE_OPTIONS, type GeneralSectionProps, matchesSearch } from '../utils';
 
 export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) => {
   const { t, setLanguage } = useLanguage();
@@ -18,14 +15,13 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
     }
   };
 
-  const matchesSearch = (text: string) => {
-    if (!searchQuery) return true;
-    return text.toLowerCase().includes(searchQuery.toLowerCase());
-  };
-
   const showsLanguage =
-    matchesSearch(t('settings.general.language')) || matchesSearch(t('settings.general.languageDesc'));
-  const showsReset = matchesSearch(t('settings.general.reset')) || matchesSearch(t('settings.general.resetDesc'));
+    matchesSearch(t('settings.general.language'), searchQuery) || 
+    matchesSearch(t('settings.general.languageDesc'), searchQuery);
+    
+  const showsReset = 
+    matchesSearch(t('settings.general.reset'), searchQuery) || 
+    matchesSearch(t('settings.general.resetDesc'), searchQuery);
 
   if (searchQuery && !showsLanguage && !showsReset) return null;
 
@@ -50,10 +46,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
                   setLanguage(val as any);
                   updateSettings({ general: { language: val } });
                 }}
-                options={[
-                  { value: 'vi', label: 'Tiếng Việt' },
-                  { value: 'en', label: 'English' },
-                ]}
+                options={LANGUAGE_OPTIONS}
                 title={t('settings.general.languageSelect')}
               />
             </div>
@@ -67,7 +60,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
               <p>{t('settings.general.resetDesc')}</p>
             </div>
             <div className="setting-control">
-              <button className="reset-btn" onClick={handleReset} disabled={isSaving}>
+              <button type="button" className="reset-btn" onClick={handleReset} disabled={isSaving}>
                 <RotateCcw size={ICON_SIZES.XSMALL} />
                 <span>{t('settings.general.resetBtn')}</span>
               </button>

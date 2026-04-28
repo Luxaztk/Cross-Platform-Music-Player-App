@@ -22,7 +22,7 @@ import { splitArtists } from '@music/core';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { ICON_SIZES } from '@constants';
 import { EditModal, DeleteConfirmationModal, SongPickerModal } from '@components';
-import { useNotification, useLanguage, useTheme } from '@hooks';
+import { useNotification, useLanguage, useTheme, useLocalFilter, type SearchKey } from '@hooks';
 import { SongRow } from './SongRow';
 import './PlaylistDetailPage.scss';
 
@@ -320,31 +320,29 @@ export const PlaylistDetailPage: React.FC = () => {
     }
   };
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+  // Centralized filtering logic using useLocalFilter
+  const filterKeys = React.useMemo<SearchKey<Song>[]>(() => [
+    (song) => {
+      if (libraryFilter.type === 'artist') {
+        return (song.artists || [song.artist]).flatMap(a => splitArtists(a));
+      }
+      if (libraryFilter.type === 'album') {
+        return song.album;
+      }
+      return null;
+    }
+  ], [libraryFilter.type]);
+
+  const [filteredByLibrary, isDebouncing] = useLocalFilter(
+    localSongs,
+    libraryFilter.values,
+    filterKeys,
+    { matchMode: libraryFilter.type === 'artist' ? 'all' : 'any' }
+  );
+
   const filteredSongs = React.useMemo(() => {
-    const sorted = [
-      ...(libraryFilter.type !== 'none' && libraryFilter.values.length > 0
-        ? localSongs.filter((song) => {
-          if (libraryFilter.type === 'artist') {
-            const queries = libraryFilter.values.flatMap((v) => splitArtists(v)).map((v) => v.toLowerCase().trim());
-
-            const allArtists = (song.artists || [song.artist])
-              .flatMap((a) => splitArtists(a))
-              .map((a) => a.toLowerCase().trim());
-
-            return queries.every((q) => allArtists.includes(q));
-          }
-          if (libraryFilter.type === 'album') {
-            const queries = libraryFilter.values.map((v) => v.toLowerCase().trim());
-            return queries.includes(song.album?.toLowerCase().trim() || '');
-          }
-          return true;
-        })
-        : localSongs),
-    ];
-
-    return sorted.sort((a, b) => a.title.localeCompare(b.title));
-  }, [localSongs, libraryFilter]);
+    return [...filteredByLibrary].sort((a, b) => a.title.localeCompare(b.title));
+  }, [filteredByLibrary]);
 
   const totalDuration = filteredSongs.reduce((acc, song) => acc + (song.duration || 0), 0);
 
@@ -540,12 +538,16 @@ export const PlaylistDetailPage: React.FC = () => {
             <>
               <div className="playlist-infor">
                 <h1
-                  className={`playlist-name ${!playlist?.description ? 'large' : ''}`}
+                  className={`playlist-name ${(!playlist?.description && !isLibrary) ? 'large' : ''}`}
                   onClick={() => !isLibrary && setIsEditModalOpen(true)}
                 >
-                  {playlist?.name || (isLibrary ? t('playlist.libraryTitle') : '')}
+                  {isLibrary ? t('playlist.libraryTitle') : (playlist?.name || '')}
                 </h1>
-                {playlist?.description && <p className="playlist-description">{playlist.description}</p>}
+                {(isLibrary || playlist?.description) && (
+                  <p className="playlist-description">
+                    {isLibrary ? t('playlist.libraryDescription') : playlist?.description}
+                  </p>
+                )}
               </div>
               <div className="playlist-metadata">
                 <div>
@@ -647,7 +649,11 @@ export const PlaylistDetailPage: React.FC = () => {
 
         <div className="virtual-list-viewport" style={{ height: totalHeight, position: 'relative' }}>
           <div className="virtual-list-content" style={{ transform: `translateY(${paddingOffset}px)` }}>
-            {filteredSongs.length === 0 ? (
+            {isDebouncing ? (
+              <div className="searching-state-inline">
+                <Loader2 size={24} className="animate-spin" />
+              </div>
+            ) : filteredSongs.length === 0 ? (
               <p className="no-songs">{t('playlist.noSongs')}</p>
             ) : (
               visibleSongs.map((song, i) => (

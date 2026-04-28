@@ -2,66 +2,118 @@ import { useMemo } from 'react';
 import Fuse from 'fuse.js';
 import type { Song, Playlist } from '@music/types';
 import { splitArtists } from '@music/core';
-
+import { normalizeText, textMatches } from '../utils/searchUtils';
+import { useDebounce } from './useDebounce';
 
 export interface SearchResults {
   songs: Song[];
   playlists: Playlist[];
   albums: { id: string; name: string; artist: string; coverArt?: string | null }[];
   artists: { id: string; name: string; avatar?: string }[];
+  isSearching: boolean;
 }
 
+/**
+ * Helper to safely get value from object by path (string or array).
+ */
+const getObjectValue = (obj: any, path: string | string[]): any => {
+  if (Array.isArray(path)) {
+    return path.reduce((acc, key) => acc?.[key], obj);
+  }
+  return obj[path];
+};
+
 export const useSearch = (songs: Song[], playlists: Playlist[], query: string): SearchResults => {
-  // 1. Khởi tạo Fuse cho Songs (Giữ nguyên)
+  const [debouncedQuery, isSearching] = useDebounce(query, 250);
+
+  // 1. Khởi tạo Fuse cho Songs với logic chuẩn hóa tiếng Việt
   const songFuse = useMemo(() => new Fuse(songs, {
-    keys: ['title', 'artist', 'album'],
+    keys: ['title', 'name', 'artist', 'album'],
     threshold: 0.3,
+    ignoreLocation: true, // TẮT phạt vị trí, từ khóa ở đâu cũng tính điểm bằng nhau
+    // Normalize data before Fuse indexes it
+    getFn: (item, path) => {
+      const value = getObjectValue(item, path);
+      return normalizeText(Array.isArray(value) ? value.join(' ') : value as string);
+    }
   }), [songs]);
 
   // 2. Khởi tạo Fuse cho Playlists
   const playlistFuse = useMemo(() => new Fuse(playlists, {
     keys: ['name'],
-    threshold: 0.4,
+    threshold: 0.3,
+    ignoreLocation: true,
+    getFn: (item, path) => {
+      const value = getObjectValue(item, path);
+      return normalizeText(value as string);
+    }
   }), [playlists]);
 
   return useMemo(() => {
-    // Trả về dữ liệu trống ngay lập tức nếu không có query
-    const trimmedQuery = query.trim();
-    if (!trimmedQuery) return { songs: [], playlists: [], albums: [], artists: [] };
+    // 0. Nếu query rỗng, trả về kết quả rỗng ngay lập tức
+    if (!query.trim()) {
+      return {
+        songs: [],
+        playlists: [],
+        albums: [],
+        artists: [],
+        isSearching: false,
+      };
+    }
 
-    // Thực hiện tìm kiếm chính
-    const matchedSongs = songFuse.search(trimmedQuery);
-    const matchedPlaylists = playlistFuse.search(trimmedQuery);
+    const trimmedQuery = debouncedQuery.trim();
+    if (!trimmedQuery) {
+      return {
+        songs: [],
+        playlists: [],
+        albums: [],
+        artists: [],
+        isSearching
+      };
+    }
 
-    // 3. Dùng mảng kết quả của Fuse để suy ra Album và Artist
-    // Cách này đảm bảo tính Fuzzy (gõ gần đúng vẫn ra Album/Artist)
-    const albumMap = new Map<string, SearchResults['albums'][number]>();
-    const artistMap = new Map<string, SearchResults['artists'][number]>();
+    // Normalize query to match normalized data for Fuse
+    const normalizedQuery = normalizeText(trimmedQuery);
+    
+    // Thực hiện tìm kiếm + Hậu kiểm Smart Intent để cưỡng chế tính nhất quán và triệt tiêu Fuzzy Overreach
+    const matchedSongs = songFuse.search(normalizedQuery)
+      .filter(({ item }) => {
+        const songTitle = (item as any).title || (item as any).name;
+        const artists = splitArtists(item.artist);
+        
+        return textMatches(songTitle, debouncedQuery) || 
+               textMatches(item.artist, debouncedQuery) || 
+               artists.some(a => textMatches(a, debouncedQuery)) ||
+               textMatches(item.album, debouncedQuery);
+      });
+
+    const matchedPlaylists = playlistFuse.search(normalizedQuery)
+      .filter(({ item }) => textMatches(item.name, debouncedQuery));
+
+    // 2. Phân loại kết quả từ Songs (Albums/Artists)
+    const albumMap = new Map<string, any>();
+    const artistMap = new Map<string, any>();
 
     matchedSongs.forEach(({ item }) => {
-      // Xử lý Album
-      if (item.album && !albumMap.has(item.album)) {
-        albumMap.set(item.album, {
-          id: `album-${item.album}`,
-          name: item.album,
-          artist: item.artist,
-          coverArt: item.coverArt
-        });
+      // Collect albums
+      if (item.album) {
+        const albumKey = `${item.album}-${item.artist}`;
+        if (!albumMap.has(albumKey)) {
+          albumMap.set(albumKey, {
+            id: `album-${item.album}-${item.artist}`,
+            name: item.album,
+            artist: item.artist,
+            coverArt: item.coverArt
+          });
+        }
       }
 
-      // Xử lý Artist
-      const individualArtists = (item.artists && item.artists.length > 0)
-        ? item.artists.flatMap(a => splitArtists(a))
-        : splitArtists(item.artist);
-
-      individualArtists.forEach(name => {
-        const lowerName = name.toLowerCase();
-        const lowerQuery = trimmedQuery.toLowerCase();
-
-        // Kiểm tra xem artist này có khớp với query không 
-        // (Hoặc đơn giản là lấy artist từ các bài hát đã match)
-        if (lowerName.includes(lowerQuery) && !artistMap.has(lowerName)) {
-          artistMap.set(lowerName, {
+      // Collect artists
+      const artists = splitArtists(item.artist);
+      artists.forEach(name => {
+        const normalizedArtistName = name.toLowerCase().trim();
+        if (!artistMap.has(normalizedArtistName)) {
+          artistMap.set(normalizedArtistName, {
             id: `artist-${name}`,
             name: name
           });
@@ -74,7 +126,7 @@ export const useSearch = (songs: Song[], playlists: Playlist[], query: string): 
       playlists: matchedPlaylists.map(res => res.item).slice(0, 10),
       albums: Array.from(albumMap.values()).slice(0, 5),
       artists: Array.from(artistMap.values()).slice(0, 5),
+      isSearching
     };
-  }, [songFuse, playlistFuse, query]);
-  // Loại bỏ 'songs' khỏi dependency vì songFuse đã bao hàm nó
+  }, [songFuse, playlistFuse, query, debouncedQuery, isSearching]);
 };

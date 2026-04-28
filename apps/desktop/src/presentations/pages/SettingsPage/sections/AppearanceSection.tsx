@@ -1,39 +1,23 @@
 import React from 'react';
-import { type ThemeType } from '@components';
 import { useTheme, useLanguage } from '@hooks';
 import { ICON_SIZES } from '@constants';
 import { Palette, Check } from 'lucide-react';
-
-const THEMES: { id: ThemeType; colorVar: string; nameKey: string }[] = [
-  { id: 'midnight', colorVar: '--color-primary', nameKey: 'settings.appearance.themeMidnight' },
-  { id: 'amoled', colorVar: '--color-primary', nameKey: 'settings.appearance.themeAmoled' },
-  { id: 'nord', colorVar: '--color-primary', nameKey: 'settings.appearance.themeNord' },
-  { id: 'rose', colorVar: '--color-primary', nameKey: 'settings.appearance.themeRose' },
-  { id: 'ocean', colorVar: '--color-primary', nameKey: 'settings.appearance.themeOcean' },
-  { id: 'snow', colorVar: '--color-primary', nameKey: 'settings.appearance.themeSnow' },
-];
-
-interface AppearanceSectionProps {
-  searchQuery?: string;
-}
+import { type AppearanceSectionProps, matchesSearch, THEMES } from '../utils';
 
 export const AppearanceSection: React.FC<AppearanceSectionProps> = ({ searchQuery }) => {
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
 
-  const matchesSearch = (text: string) => {
-    if (!searchQuery) return true;
-    return text.toLowerCase().includes(searchQuery.toLowerCase());
-  };
-
   const showsTheme =
-    matchesSearch(t('settings.appearance.theme')) ||
-    matchesSearch(t('settings.appearance.themeDesc')) ||
-    THEMES.some((tItem) => matchesSearch(t(tItem.nameKey)));
+    matchesSearch(t('settings.appearance.theme'), searchQuery) ||
+    matchesSearch(t('settings.appearance.themeDesc'), searchQuery) ||
+    THEMES.some((tItem) => matchesSearch(t(tItem.nameKey), searchQuery));
 
   if (searchQuery && !showsTheme) return null;
 
-  const filteredThemes = searchQuery ? THEMES.filter((tItem) => matchesSearch(t(tItem.nameKey))) : THEMES;
+  const filteredThemes = searchQuery 
+    ? THEMES.filter((tItem) => matchesSearch(t(tItem.nameKey), searchQuery)) 
+    : THEMES;
 
   return (
     <div className="settings-section">

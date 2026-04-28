@@ -10,12 +10,13 @@ import {
   Trash2,
   Search,
   ArrowUpDown,
+  Loader2,
 } from 'lucide-react';
 
 import type { Playlist } from '@music/types';
 import { useLibraryContext } from '@music/hooks';
 import { ICON_SIZES } from '@constants';
-import { useTheme, useLanguage } from '@hooks';
+import { useTheme, useLanguage, useLocalFilter } from '@hooks';
 import { EditModal, DeleteConfirmationModal } from '@components';
 import './Sidebar.scss';
 
@@ -150,20 +151,24 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
     }
   };
 
-  // Filter out library playlist (id=0) and apply search query
+  // Filter out library playlist (id=0)
+  const nonLibraryPlaylists = React.useMemo(() => 
+    playlists.filter((p: Playlist) => String(p.id) !== '0'), 
+    [playlists]
+  );
+
+  // Apply search query using centralized hook
+  const [filteredPlaylists, isDebouncing] = useLocalFilter(nonLibraryPlaylists, playlistQuery, ['name']);
+
+  // Handle sorting
   const customPlaylists = React.useMemo(() => {
-    let filtered = playlists
-      .filter((p: Playlist) => String(p.id) !== '0')
-      .filter((p: Playlist) => p.name.toLowerCase().includes(playlistQuery.toLowerCase()));
+    if (sortMode === 'default') return filteredPlaylists;
 
-    if (sortMode === 'az') {
-      filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortMode === 'za') {
-      filtered = [...filtered].sort((a, b) => b.name.localeCompare(a.name));
-    }
-
-    return filtered;
-  }, [playlists, playlistQuery, sortMode]);
+    return [...filteredPlaylists].sort((a, b) => {
+      if (sortMode === 'az') return a.name.localeCompare(b.name);
+      return b.name.localeCompare(a.name);
+    });
+  }, [filteredPlaylists, sortMode]);
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -289,7 +294,12 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                 </div>
               </div>
             </div>
-            {customPlaylists.length === 0 ? (
+            {isDebouncing && playlistQuery ? (
+              <div className="searching-sidebar">
+                <Loader2 size={16} className="animate-spin" />
+                <span>{t('downloader.searching') || 'Searching...'}</span>
+              </div>
+            ) : customPlaylists.length === 0 ? (
               <div className="empty-playlists">
                 {playlistQuery ? (
                   <p>{t('sidebar.noResults') || 'No results found.'}</p>

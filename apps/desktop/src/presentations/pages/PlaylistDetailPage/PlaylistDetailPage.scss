@@ -482,6 +482,14 @@
       }
     }
 
+    .searching-state-inline {
+      padding: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--color-primary);
+    }
+
     .no-songs {
       padding: 40px;
       text-align: center;

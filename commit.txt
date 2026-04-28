@@ -1,5 +1,5 @@
-fix(core): resolve TypeScript compilation errors for unused variables
+Refactor deploy pipeline and enable auto-publishing.
 
-- Remove unused import 'getErrorMessage' in LibraryService.ts
-- Prefix unused 'filePath' parameter with underscore in LibraryService.test.ts
-- Fix build pipeline failure caused by strict TS6133 checks
+- Fix: Use 'releaseType: release' in electron-builder config to resolve schema errors and enable automatic publishing.
+- Fix: Handle UTF-8 BOM and encoding issues when reading commit.txt on Windows.
+- Chore: Shift execution context to apps/desktop and use temporary files for robust git commits.
