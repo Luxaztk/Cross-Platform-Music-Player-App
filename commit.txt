@@ -1,6 +1,5 @@
-Refactor deploy script and enable auto-publishing.
+Refactor deploy pipeline and enable auto-publishing.
 
-- Fix UTF-8 BOM and character encoding issues when reading commit.txt on Windows.
-- Use temporary file for git commit to prevent shell escaping errors.
-- Shift electron-builder execution context to apps/desktop directory.
-- Set 'draft: false' to automatically publish releases to GitHub.
+- Fix: Use 'releaseType: release' in electron-builder config to resolve schema errors and enable automatic publishing.
+- Fix: Handle UTF-8 BOM and encoding issues when reading commit.txt on Windows.
+- Chore: Shift execution context to apps/desktop and use temporary files for robust git commits.
