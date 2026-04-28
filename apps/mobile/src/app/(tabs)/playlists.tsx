@@ -18,8 +18,6 @@ import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
 import { useLibrary } from '../../application'
 
-// ── Playlist row ────────────────────────────────────────────────
-
 const PlaylistRow = React.memo(function PlaylistRow({
   item,
   onPress,
@@ -27,56 +25,96 @@ const PlaylistRow = React.memo(function PlaylistRow({
   onDelete,
   colors,
   strings,
+  isMenuOpen,
+  onToggleMenu,
+  onCloseMenu,
 }: {
   item: Playlist
   onPress: (id: string) => void
   onRename: (id: string, currentName: string) => void
   onDelete: (id: string, name: string) => void
-  colors: { surface: string; border: string; text: string; mutedText: string; primary: string }
+  colors: { surface: string; border: string; text: string; mutedText: string; primary: string; background: string }
   strings: { rename: string; delete: string; songCount: (n: number) => string }
+  isMenuOpen: boolean
+  onToggleMenu: (id: string) => void
+  onCloseMenu: () => void
 }) {
   return (
-    <Pressable
-      onPress={() => onPress(item.id)}
-      style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}
-    >
-      {/* Icon */}
-      <View style={[styles.rowIcon, { backgroundColor: colors.primary + '18' }]}>
-        <Text style={styles.rowIconText}>🎶</Text>
-      </View>
+    <View style={styles.rowWrap}>
+      <Pressable
+        onPress={() => {
+          if (isMenuOpen) {
+            onCloseMenu()
+            return
+          }
+          onPress(item.id)
+        }}
+        style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      >
+        <View style={[styles.rowIcon, { backgroundColor: colors.primary + '18' }]}>
+          <Text style={styles.rowIconText}>🎶</Text>
+        </View>
 
-      {/* Info */}
-      <View style={styles.rowInfo}>
-        <Text numberOfLines={1} style={[styles.rowTitle, { color: colors.text }]}>
-          {item.name}
-        </Text>
-        <Text style={[styles.rowSub, { color: colors.mutedText }]}>
-          {strings.songCount(item.songIds.length)}
-        </Text>
-      </View>
+        <View style={styles.rowInfo}>
+          <Text numberOfLines={1} style={[styles.rowTitle, { color: colors.text }]}>
+            {item.name}
+          </Text>
+          <Text style={[styles.rowSub, { color: colors.mutedText }]}>
+            {strings.songCount(item.songIds.length)}
+          </Text>
+        </View>
 
-      {/* Actions */}
-      <View style={styles.rowActions}>
         <Pressable
-          onPress={() => onRename(item.id, item.name)}
+          onPress={(e) => {
+            e.stopPropagation()
+            onToggleMenu(item.id)
+          }}
           hitSlop={8}
-          style={styles.actionBtn}
+          style={styles.moreBtn}
         >
-          <Text style={[styles.actionText, { color: colors.mutedText }]}>✏️</Text>
+          <Text style={[styles.moreText, { color: colors.mutedText }]}>⋯</Text>
         </Pressable>
-        <Pressable
-          onPress={() => onDelete(item.id, item.name)}
-          hitSlop={8}
-          style={styles.actionBtn}
-        >
-          <Text style={[styles.actionText, { color: colors.mutedText }]}>🗑️</Text>
-        </Pressable>
-      </View>
-    </Pressable>
+      </Pressable>
+
+      {isMenuOpen && (
+        <>
+          <Pressable style={styles.menuBackdrop} onPress={onCloseMenu} />
+          <View
+            style={[
+              styles.menu,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                onCloseMenu()
+                onRename(item.id, item.name)
+              }}
+            >
+              <Text style={[styles.menuText, { color: colors.text }]}>{strings.rename}</Text>
+            </Pressable>
+
+            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
+
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                onCloseMenu()
+                onDelete(item.id, item.name)
+              }}
+            >
+              <Text style={[styles.menuText, { color: '#FF5A5F' }]}>{strings.delete}</Text>
+            </Pressable>
+          </View>
+        </>
+      )}
+    </View>
   )
 })
-
-// ── Name input modal ────────────────────────────────────────────
 
 function NameModal({
   visible,
@@ -97,10 +135,16 @@ function NameModal({
   confirmLabel: string
   onCancel: () => void
   onConfirm: (value: string) => void
-  colors: { background: string; surface: string; text: string; mutedText: string; border: string; primary: string }
+  colors: {
+    background: string
+    surface: string
+    text: string
+    mutedText: string
+    border: string
+    primary: string
+  }
 }) {
   const [value, setValue] = useState(initialValue)
-
   const [prevVisible, setPrevVisible] = useState(visible)
   const [prevInitialValue, setPrevInitialValue] = useState(initialValue)
 
@@ -123,7 +167,11 @@ function NameModal({
           <TextInput
             style={[
               styles.input,
-              { color: colors.text, borderColor: colors.border, backgroundColor: colors.background },
+              {
+                color: colors.text,
+                borderColor: colors.border,
+                backgroundColor: colors.background,
+              },
             ]}
             value={value}
             onChangeText={setValue}
@@ -138,6 +186,7 @@ function NameModal({
             <Pressable onPress={onCancel} style={[styles.modalBtn, { borderColor: colors.border }]}>
               <Text style={[styles.modalBtnText, { color: colors.mutedText }]}>{cancelLabel}</Text>
             </Pressable>
+
             <Pressable
               onPress={() => trimmed && onConfirm(trimmed)}
               disabled={!trimmed}
@@ -155,19 +204,16 @@ function NameModal({
   )
 }
 
-// ── Main screen ─────────────────────────────────────────────────
-
 export default function PlaylistsScreen() {
   const { theme } = useTheme()
   const { t } = useLanguage()
   const { notify } = useNotifications()
   const { isHydrated, playlistsById, createPlaylist, renamePlaylist, deletePlaylist } = useLibrary()
 
-  // Modal state
   const [modalMode, setModalMode] = useState<'create' | 'rename' | null>(null)
   const [renameTarget, setRenameTarget] = useState<{ id: string; name: string } | null>(null)
+  const [openedMenuId, setOpenedMenuId] = useState<string | null>(null)
 
-  // Build sorted playlist list (exclude Library id=0)
   const playlists = useMemo(() => {
     return Object.values(playlistsById)
       .filter((p) => p.id !== '0')
@@ -176,9 +222,8 @@ export default function PlaylistsScreen() {
 
   const playlistCount = playlists.length
 
-  // ── Handlers ────────────────────────────
-
   const onPressCreate = useCallback(() => {
+    setOpenedMenuId(null)
     setModalMode('create')
     setRenameTarget(null)
   }, [])
@@ -231,7 +276,13 @@ export default function PlaylistsScreen() {
     setRenameTarget(null)
   }, [])
 
-  // ── Render ──────────────────────────────
+  const onToggleMenu = useCallback((id: string) => {
+    setOpenedMenuId((prev) => (prev === id ? null : id))
+  }, [])
+
+  const onCloseMenu = useCallback(() => {
+    setOpenedMenuId(null)
+  }, [])
 
   const colors = theme.colors
 
@@ -243,24 +294,33 @@ export default function PlaylistsScreen() {
         onRename={onPressRename}
         onDelete={onPressDelete}
         colors={colors}
-        strings={{ rename: t.playlists.rename, delete: t.playlists.delete, songCount: t.playlists.songCount }}
+        strings={{
+          rename: 'Sửa tên playlist',
+          delete: 'Xóa playlist',
+          songCount: t.playlists.songCount,
+        }}
+        isMenuOpen={openedMenuId === item.id}
+        onToggleMenu={onToggleMenu}
+        onCloseMenu={onCloseMenu}
       />
     ),
-    [onPressPlaylist, onPressRename, onPressDelete, colors, t],
+    [onPressPlaylist, onPressRename, onPressDelete, colors, t, openedMenuId, onToggleMenu, onCloseMenu],
   )
 
   const keyExtractor = useCallback((item: Playlist) => item.id, [])
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={[styles.title, { color: theme.colors.text }]}>{t.playlists.title}</Text>
           <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-            {isHydrated ? `${playlistCount} playlist${playlistCount !== 1 ? 's' : ''}` : t.common.loadingPreference}
+            {isHydrated
+              ? `${playlistCount} playlist${playlistCount !== 1 ? 's' : ''}`
+              : t.common.loadingPreference}
           </Text>
         </View>
+
         <Pressable
           onPress={onPressCreate}
           style={[styles.createBtn, { backgroundColor: theme.colors.primary }]}
@@ -269,7 +329,6 @@ export default function PlaylistsScreen() {
         </Pressable>
       </View>
 
-      {/* List */}
       <FlatList
         style={styles.list}
         data={playlists}
@@ -288,7 +347,6 @@ export default function PlaylistsScreen() {
         }
       />
 
-      {/* Create / Rename modal */}
       <NameModal
         visible={modalMode !== null}
         title={modalMode === 'create' ? t.playlists.create : t.playlists.rename}
@@ -303,8 +361,6 @@ export default function PlaylistsScreen() {
     </View>
   )
 }
-
-// ── Styles ──────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -347,6 +403,9 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingBottom: 24,
   },
+  rowWrap: {
+    position: 'relative',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -376,15 +435,41 @@ const styles = StyleSheet.create({
   rowSub: {
     fontSize: 12,
   },
-  rowActions: {
-    flexDirection: 'row',
-    gap: 6,
+  moreBtn: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  actionBtn: {
-    padding: 6,
+  moreText: {
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 22,
   },
-  actionText: {
-    fontSize: 16,
+  menuBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 5,
+  },
+  menu: {
+    position: 'absolute',
+    top: 58,
+    right: 8,
+    minWidth: 170,
+    borderRadius: 14,
+    borderWidth: 1,
+    zIndex: 10,
+    overflow: 'hidden',
+  },
+  menuItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+  },
+  menuText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  menuDivider: {
+    height: StyleSheet.hairlineWidth,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -398,7 +483,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
-  // Modal
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
