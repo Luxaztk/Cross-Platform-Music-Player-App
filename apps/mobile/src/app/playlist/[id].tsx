@@ -1,5 +1,5 @@
 import Slider from '@react-native-community/slider'
-import { router, useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams } from 'expo-router'
 import React, { useCallback, useMemo, useState } from 'react'
 import {
   FlatList,
@@ -184,17 +184,16 @@ export default function PlaylistDetailScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={15}>
-          <Text style={[styles.backIcon, { color: theme.colors.text }]}>←</Text>
-        </Pressable>
-        <View style={styles.headerInfo}>
-          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>{playlist.name}</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-            {t.playlists.songCount(playlistSongs.length)}
-          </Text>
-        </View>
+    <View style={styles.header}>
+      <View style={styles.headerInfo}>
+        <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
+          {playlist.name}
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
+          {t.playlists.songCount(playlistSongs.length)}
+        </Text>
       </View>
+    </View>
 
       {/* Primary Actions */}
       <View style={styles.actions}>
@@ -289,13 +288,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 16,
   },
-  backBtn: {
-    padding: 4,
-  },
-  backIcon: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
+
   headerInfo: {
     flex: 1,
   },
