@@ -56,6 +56,16 @@ export type Translations = {
     songsAdded: (count: number) => string
     songsRemoved: (count: number) => string
     playlistCount: (count: number) => string
+
+    addToOtherPlaylist: string
+    moveToOtherPlaylist: string
+    removeFromThisPlaylist: string
+    songLabel: string
+    noOtherPlaylists: string
+    songAddedToOtherPlaylist: (title: string) => string
+    songMovedToOtherPlaylist: (title: string) => string
+    close: string
+    choose: string
   }
   search: {
     placeholder: string
@@ -126,6 +136,16 @@ export const translations: Record<LanguageCode, Translations> = {
       songsAdded: (count) => `Added ${count} song(s)`,
       songsRemoved: (count) => `Removed ${count} song(s)`,
       playlistCount: (count) => `${count} playlist${count !== 1 ? 's' : ''}`,
+
+      addToOtherPlaylist: 'Add to another playlist',
+      moveToOtherPlaylist: 'Move to another playlist',
+      removeFromThisPlaylist: 'Remove from this playlist',
+      songLabel: 'Song',
+      noOtherPlaylists: 'There are no other playlists to choose from.',
+      songAddedToOtherPlaylist: (title) => `Added "${title}" to another playlist`,
+      songMovedToOtherPlaylist: (title) => `Moved "${title}" to another playlist`,
+      close: 'Close',
+      choose: 'Choose',
     },
     search: {
       placeholder: 'Songs, artists, or playlists',
@@ -194,6 +214,16 @@ export const translations: Record<LanguageCode, Translations> = {
       songsAdded: (count) => `Đã thêm ${count} bài`,
       songsRemoved: (count) => `Đã xóa ${count} bài`,
       playlistCount: (count) => `${count} danh sách phát`,
+
+      addToOtherPlaylist: 'Thêm vào playlist khác',
+      moveToOtherPlaylist: 'Di chuyển sang playlist khác',
+      removeFromThisPlaylist: 'Xóa khỏi playlist này',
+      songLabel: 'Bài hát',
+      noOtherPlaylists: 'Không có playlist nào khác để chọn.',
+      songAddedToOtherPlaylist: (title) => `Đã thêm "${title}" vào playlist khác`,
+      songMovedToOtherPlaylist: (title) => `Đã chuyển "${title}" sang playlist khác`,
+      close: 'Đóng',
+      choose: 'Chọn',
     },
     search: {
       placeholder: 'Bài hát, nghệ sĩ hoặc playlist',
