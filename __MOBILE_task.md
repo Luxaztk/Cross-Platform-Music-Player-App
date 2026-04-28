@@ -1,0 +1,22 @@
+# Mobile UI Overhaul Tasks
+
+- [ ] **Phase 1: Core Layout & Global Components**
+    - [ ] Create `TopBar.tsx` component
+    - [ ] Create `SidebarMenu.tsx` component
+    - [ ] Update `_layout.tsx` to integrate `TopBar` and `SidebarMenu`
+    - [ ] Update `PlayerBar.tsx` layout and progress bar
+- [ ] **Phase 2: Home & Playlist Management**
+    - [ ] Ensure "All songs" default playlist
+    - [ ] Update `library.tsx` playlist row design
+    - [ ] Create `PlaylistActions.tsx` modal
+- [ ] **Phase 3: Playlist Details & Songs**
+    - [ ] Update `[id].tsx` header and song list design
+    - [ ] Create `SongActions.tsx` modal
+- [ ] **Phase 4: Now Playing & Queue**
+    - [ ] Refine `now-playing.tsx` layout
+    - [ ] Implement swipe-up behavior in `QueueModal.tsx`
+    - [ ] Add "Clear queue" and drag-and-drop to `QueueModal.tsx`
+- [ ] **Phase 5: Search & Settings**
+    - [ ] Update `search.tsx` with filter/sort bar
+    - [ ] Implement Theme/Language selectors in `settings.tsx`
+    - [ ] Hide `PlayerBar` on Settings screen
