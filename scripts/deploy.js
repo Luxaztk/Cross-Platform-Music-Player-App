@@ -40,10 +40,14 @@ const COLORS = {
 const log = (msg, color = COLORS.reset) => console.log(`${color}${msg}${COLORS.reset}`);
 const error = (msg) => { log(`\n❌ ERROR: ${msg}`, COLORS.red); process.exit(1); };
 
-const run = (cmd, title) => {
+const run = (cmd, title, options = {}) => {
     log(`\n[${title}] > ${cmd}`, COLORS.blue);
     try {
-        execSync(cmd, { stdio: 'inherit' });
+        execSync(cmd, { 
+            stdio: 'inherit', 
+            cwd: options.cwd || process.cwd(),
+            env: { ...process.env, ...options.env }
+        });
     } catch (e) {
         error(`Lệnh thất bại: ${title}`);
     }
@@ -51,6 +55,11 @@ const run = (cmd, title) => {
 
 // --- PHASE 0: FATAL CHECK ---
 log('🛡️  PHASE 0: KIỂM TRA SINH TỬ...', COLORS.yellow);
+
+// Đảm bảo GITHUB_TOKEN cũng được thiết lập cho electron-builder
+if (process.env.GH_TOKEN && !process.env.GITHUB_TOKEN) {
+    process.env.GITHUB_TOKEN = process.env.GH_TOKEN;
+}
 
 if (!process.env.GH_TOKEN) {
     error('THIẾU GITHUB TOKEN (process.env.GH_TOKEN). Auto-publish sẽ crash nếu không có token!');
@@ -60,7 +69,15 @@ if (!fs.existsSync(COMMIT_MSG_PATH)) {
     error('Không tìm thấy file commit.txt!');
 }
 
-const commitBody = fs.readFileSync(COMMIT_MSG_PATH, 'utf8').trim();
+// Xử lý mã hóa và BOM cho commit.txt
+let commitBody = fs.readFileSync(COMMIT_MSG_PATH, 'utf8');
+// Loại bỏ UTF-8 BOM nếu có (thường gặp trên Windows)
+if (commitBody.startsWith('\uFEFF')) {
+    commitBody = commitBody.slice(1);
+}
+// Loại bỏ các ký tự rác do mã hóa sai (nếu file là UTF-16)
+commitBody = commitBody.replace(/\0/g, '').trim();
+
 if (!commitBody) {
     error('Nội dung commit.txt đang trống!');
 }
@@ -71,7 +88,7 @@ log('\n🔍 PHASE 1: FAST DRY-RUN (Validation)...', COLORS.yellow);
 // Kiểm tra TypeScript toàn dự án
 run('npx tsc --noEmit', 'TypeScript Check');
 
-// Build thử UI của Desktop
+// Build thử UI của Desktop (Lần 1 để kiểm tra lỗi sớm)
 run('npm run build --workspace=apps/desktop', 'UI Build Check');
 
 // --- PHASE 2: SEMVER VERSIONING ---
@@ -104,7 +121,16 @@ fs.writeFileSync(DESKTOP_PKG_PATH, JSON.stringify(desktopPkg, null, 2) + '\n');
 log('\n📝 PHASE 3: GIT TAGGING & PUSH...', COLORS.yellow);
 
 run('git add .', 'Git Add');
-run(`git commit -m "release: v${newVersion}\n\n${commitBody}"`, 'Git Commit');
+
+// Sử dụng file tạm cho commit message để tránh lỗi shell escaping trên Windows
+const tempCommitMsgPath = path.resolve('.temp_commit_msg');
+fs.writeFileSync(tempCommitMsgPath, `release: v${newVersion}\n\n${commitBody}`, 'utf8');
+try {
+    run(`git commit -F "${tempCommitMsgPath}"`, 'Git Commit');
+} finally {
+    if (fs.existsSync(tempCommitMsgPath)) fs.unlinkSync(tempCommitMsgPath);
+}
+
 run(`git tag v${newVersion}`, 'Git Tag');
 run('git push origin HEAD', 'Git Push Origin');
 run('git push origin --tags', 'Git Push Tags');
@@ -112,10 +138,23 @@ run('git push origin --tags', 'Git Push Tags');
 // --- PHASE 4: REAL BUILD & AUTO-PUBLISH ---
 log(`\n🏗️  PHASE 4: REAL BUILD & AUTO-PUBLISH (${TARGET.toUpperCase()})...`, COLORS.yellow);
 
-// Dọn dẹp commit.txt trước khi build
+// Dọn dẹp commit.txt sau khi đã dùng
 fs.writeFileSync(COMMIT_MSG_PATH, '');
 
-const buildCmd = `npm run build:${TARGET} --workspace=apps/desktop -- --publish always`;
-run(buildCmd, 'Electron Build & Publish');
+// 1. Build frontend assets (Đảm bảo có bản build mới nhất)
+log('\n📦 Building frontend assets...', COLORS.blue);
+run('npm run build', 'Vite Build', { cwd: path.resolve('apps/desktop') });
+
+// 2. Build & Publish Electron app
+log('\n📦 Packaging & Publishing Electron app...', COLORS.blue);
+// Chạy trực tiếp trong apps/desktop để electron-builder nhận diện đúng ngữ cảnh
+const buildCmd = `npx electron-builder build --${TARGET} --publish always`;
+run(buildCmd, 'Electron Build & Publish', { 
+    cwd: path.resolve('apps/desktop'),
+    env: {
+        GH_TOKEN: process.env.GH_TOKEN,
+        GITHUB_TOKEN: process.env.GH_TOKEN
+    }
+});
 
 log(`\n✅ THÀNH CÔNG! Bản v${newVersion} đã được phát hành lên GitHub Releases.`, COLORS.green);
