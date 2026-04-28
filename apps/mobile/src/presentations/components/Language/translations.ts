@@ -55,6 +55,7 @@ export type Translations = {
     emptyPlaylist: string
     songsAdded: (count: number) => string
     songsRemoved: (count: number) => string
+    playlistCount: (count: number) => string
   }
   search: {
     placeholder: string
@@ -124,6 +125,7 @@ export const translations: Record<LanguageCode, Translations> = {
       emptyPlaylist: 'This playlist is empty. Add some songs!',
       songsAdded: (count) => `Added ${count} song(s)`,
       songsRemoved: (count) => `Removed ${count} song(s)`,
+      playlistCount: (count) => `${count} playlist${count !== 1 ? 's' : ''}`,
     },
     search: {
       placeholder: 'Songs, artists, or playlists',
@@ -139,7 +141,7 @@ export const translations: Record<LanguageCode, Translations> = {
     tabs: {
       library: 'Thư viện',
       search: 'Tìm kiếm',
-      playlists: 'Playlist',
+      playlists: 'Danh sách phát',
       settings: 'Cài đặt',
     },
     common: {
@@ -173,8 +175,8 @@ export const translations: Record<LanguageCode, Translations> = {
       removeFromLibrary: 'Xóa khỏi thư viện',
     },
     playlists: {
-      title: 'Playlist',
-      create: 'Tạo playlist',
+      title: 'Danh sách phát',
+      create: 'Tạo danh sách phát',
       rename: 'Đổi tên',
       delete: 'Xóa',
       emptyState: 'Chưa có playlist — nhấn + để tạo',
@@ -191,12 +193,13 @@ export const translations: Record<LanguageCode, Translations> = {
       emptyPlaylist: 'Playlist này chưa có bài hát nào. Thêm ngay!',
       songsAdded: (count) => `Đã thêm ${count} bài`,
       songsRemoved: (count) => `Đã xóa ${count} bài`,
+      playlistCount: (count) => `${count} danh sách phát`,
     },
     search: {
       placeholder: 'Bài hát, nghệ sĩ hoặc playlist',
       noResults: 'Không tìm thấy kết quả',
       songs: 'Bài hát',
-      playlists: 'Playlist',
+      playlists: 'Danh sách phát',
       clear: 'Xóa',
       recentSearches: 'Tìm kiếm gần đây',
       clearAll: 'Xóa tất cả lịch sử',

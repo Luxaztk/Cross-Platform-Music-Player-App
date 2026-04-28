@@ -315,9 +315,7 @@ export default function PlaylistsScreen() {
         <View>
           <Text style={[styles.title, { color: theme.colors.text }]}>{t.playlists.title}</Text>
           <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-            {isHydrated
-              ? `${playlistCount} playlist${playlistCount !== 1 ? 's' : ''}`
-              : t.common.loadingPreference}
+            {isHydrated ? t.playlists.playlistCount(playlistCount) : t.common.loadingPreference}
           </Text>
         </View>
 
