@@ -34,7 +34,7 @@ export function PlayerBar() {
     pathname === '/playlists' ||
     pathname === '/settings'
 
-  const bottomOffset = isInTabs ? 12 : insets.bottom + 12
+  const bottomOffset = isInTabs ? insets.bottom + 12 : 12
 
   const hasSong = !!currentSong
   const title = currentSong?.title ?? ''
@@ -53,10 +53,11 @@ export function PlayerBar() {
         {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
-          bottom: bottomOffset,
+          bottom: bottomOffset
         },
       ]}
     >
+
       {/* ── Progress bar (top edge, non-seekable) ── */}
       <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}>
         <View
