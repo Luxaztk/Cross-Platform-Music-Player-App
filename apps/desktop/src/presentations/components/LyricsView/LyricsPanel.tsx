@@ -1,8 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLyrics, usePlayer } from '@music/hooks';
 import { useLanguage } from '@hooks';
-import { MessageSquareOff, Search, Loader2, RotateCcw } from 'lucide-react';
+import { 
+  MessageSquareOff, 
+  Search, 
+  Loader2, 
+  RotateCcw, 
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronsLeft, 
+  ChevronsRight,
+  Anchor
+} from 'lucide-react';
 import { formatLyricsSearchQuery } from '@music/core';
+import { LYRIC_OFFSET } from '@music/hooks';
 import type { LyricSearchResult } from '@music/types';
 import './LyricsPanel.scss';
 
@@ -10,19 +21,25 @@ import './LyricsPanel.scss';
 
 export const LyricsPanel: React.FC = () => {
   const { t } = useLanguage();
-  const { currentSong, seek } = usePlayer();
+  const { currentSong, seek, progress } = usePlayer();
   const {
     lyricLines,
     currentLineIndex,
     isLoading,
     searchLyrics,
     saveLyrics,
-    patchLyricSearchParam
+    patchLyricSearchParam,
+    offset,
+    adjustOffset,
+    setOffset,
+    resetOffset
   } = useLyrics();
 
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<LyricSearchResult[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => 
+    currentSong?.lyricSearchParam || (currentSong ? formatLyricsSearchQuery(currentSong.title, currentSong.artist) : '')
+  );
   const [lastQueryUsed, setLastQueryUsed] = useState('');
   const [showHint, setShowHint] = useState(true);
 
@@ -39,15 +56,18 @@ export const LyricsPanel: React.FC = () => {
     }
   }, [currentLineIndex]);
 
-  const [prevSongId, setPrevSongId] = useState(currentSong?.id);
-  const [prevSearchParam, setPrevSearchParam] = useState(currentSong?.lyricSearchParam);
+  const [prevSongId, setPrevSongId] = useState<string | undefined>(undefined);
+  const [prevSearchParam, setPrevSearchParam] = useState<string | undefined>(undefined);
 
   if (currentSong?.id !== prevSongId || currentSong?.lyricSearchParam !== prevSearchParam) {
     setPrevSongId(currentSong?.id);
     setPrevSearchParam(currentSong?.lyricSearchParam);
     setSearchResults([]);
     setIsSearching(false);
-    setSearchQuery(currentSong?.lyricSearchParam || (currentSong ? formatLyricsSearchQuery(currentSong.title, currentSong.artist) : ''));
+    
+    // Đồng bộ lại searchQuery khi đổi bài hoặc đổi tham số tìm kiếm
+    const newQuery = currentSong?.lyricSearchParam || (currentSong ? formatLyricsSearchQuery(currentSong.title, currentSong.artist) : '');
+    setSearchQuery(newQuery);
   }
 
   // Ephemeral Hint: Briefly show hidden buttons when panel opens
@@ -114,14 +134,37 @@ export const LyricsPanel: React.FC = () => {
   return (
     <div className="lyrics-sidebar-container">
       <div className="lyrics-header">
+        <div className="header-left">
+          {lyricLines.length > 0 && searchResults.length === 0 && (
+            <button 
+              className={`change-lyrics-btn ${showHint ? 'hint-active' : ''}`} 
+              onClick={handleSearch} 
+              title={t('lyrics.changeLyrics')}
+            >
+              <RotateCcw size={16} />
+            </button>
+          )}
+        </div>
+
         {lyricLines.length > 0 && searchResults.length === 0 && (
-          <button 
-            className={`change-lyrics-btn ${showHint ? 'hint-active' : ''}`} 
-            onClick={handleSearch} 
-            title={t('lyrics.changeLyrics')}
-          >
-            <RotateCcw size={16} />
-          </button>
+          <div className="sync-toolbar">
+            <div className="sync-buttons">
+              <button onClick={() => adjustOffset(-5)} title={`${t('lyrics.adjustBackward')} 5s`}><ChevronsLeft size={14} /></button>
+              <button onClick={() => adjustOffset(-1)} title={`${t('lyrics.adjustBackward')} 1s`}><ChevronLeft size={14} /></button>
+              <button className="reset-btn" onClick={resetOffset} title={t('lyrics.resetOffset')}><RotateCcw size={12} /></button>
+              <button onClick={() => adjustOffset(1)} title={`${t('lyrics.adjustForward')} 1s`}><ChevronRight size={14} /></button>
+              <button onClick={() => adjustOffset(5)} title={`${t('lyrics.adjustForward')} 5s`}><ChevronsRight size={14} /></button>
+            </div>
+            <div className="sync-input">
+              <input 
+                type="number" 
+                step="0.1"
+                value={Math.round(offset * 10) / 10}
+                onChange={(e) => setOffset(parseFloat(e.target.value) || 0)}
+              />
+              <span>s</span>
+            </div>
+          </div>
         )}
       </div>
 
@@ -177,10 +220,18 @@ export const LyricsPanel: React.FC = () => {
               <div
                 key={index}
                 ref={index === currentLineIndex ? activeLineRef : null}
-                className={`lyric-line ${index === currentLineIndex ? 'active' : ''} ${index < currentLineIndex ? 'passed' : ''}`}
-                onClick={() => handleLineClick(line.time)}
+                className={`lyric-line-wrapper ${index === currentLineIndex ? 'active' : ''} ${index < currentLineIndex ? 'passed' : ''}`}
               >
-                {line.text}
+                <div className="lyric-line" onClick={() => handleLineClick(line.time)}>
+                  {line.text}
+                </div>
+                <button 
+                  className="sync-now-btn" 
+                  onClick={() => setOffset(progress - line.time - LYRIC_OFFSET)}
+                  title={t('lyrics.syncNow')}
+                >
+                  <Anchor size={12} />
+                </button>
               </div>
             ))}
           </div>

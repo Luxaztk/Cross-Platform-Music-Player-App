@@ -92,6 +92,14 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
     - [X] **React Key Collision Guard**: Chuẩn hóa logic tạo ID thực thể (Album/Artist) dựa trên cặp Name-Artist, triệt tiêu lỗi trùng lặp key trong Search Overlay.
     - [X] **Search Observability**: Tiêm hệ thống Trace Logs (`[DEBUG-SEARCH]`) giúp theo dõi luồng dữ liệu tìm kiếm thời gian thực.
     - [X] **UX Search Hardening**: Tích hợp trạng thái `isSearching` vào `useDebounce` để xử lý Race Condition, hiển thị Spinner và Empty State ("Không tìm thấy") một cách minh bạch.
+- [X] **Lyric Synchronization & Precision Control**:
+    - [X] Hệ thống điều chỉnh offset đa cấp (±1s, ±5s) với giao diện Soft UI toolbar.
+    - [X] Tính năng **Sync Now (One-click Alignment)**: Tự động tính toán và khớp tức thì câu hát được chọn với thời điểm bài hát đang phát.
+    - [X] Cơ chế **Persistent Lyric Offset**: Tự động lưu và khôi phục độ lệch lời bài hát theo `youtubeId` (`originId`) thông qua `localStorage`.
+    - [X] Tối ưu hiển thị: Ẩn bảng điều khiển khi không tương tác (Hover-only) và cơ chế Slide-in giúp không chiếm dụng không gian hiển thị của lời bài hát.
+- [X] **Downloader Modal UX Hardening**:
+    - [X] Khắc phục lỗi "Premature Reset": Sử dụng `useRef` (`prevIsOpen`) để đảm bảo modal chỉ làm mới dữ liệu khi thực sự được mở lại bởi người dùng.
+    - [X] Cơ chế **Auto-Cleanup on Edit**: Tự động dọn dẹp trạng thái lỗi/cũ ngay khi người dùng chỉnh sửa URL trong ô nhập liệu.
 
 ---
 

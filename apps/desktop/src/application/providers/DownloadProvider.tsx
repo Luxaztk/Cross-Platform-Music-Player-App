@@ -18,8 +18,20 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const setUrl = (newUrl: string) => {
         _setUrl(newUrl);
+        
         if (!newUrl.trim()) {
             resetDownload();
+            return;
+        }
+
+        // Nếu URL thay đổi khi đang ở các trạng thái đã có kết quả (tránh xung đột dữ liệu cũ)
+        if (['preview', 'success', 'error'].includes(downloadState)) {
+            setDownloadState('idle');
+            setVideoInfo(null);
+            setDownloadError(null);
+            setDownloadedPath(null);
+            setDuplicateInfo(initialDuplicateInfo);
+            setInitiator(null);
         }
     };
 

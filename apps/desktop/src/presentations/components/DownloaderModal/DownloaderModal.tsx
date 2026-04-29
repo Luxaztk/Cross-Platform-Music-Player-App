@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Search, Download, Edit2, Loader2, CheckCircle2, AlertCircle, Clipboard, ClipboardCheck, AlertTriangle } from 'lucide-react';
-import { ICON_SIZES } from '@constants';
+import { ICON_SIZES, STALE_DOWNLOAD_STATES } from '@constants';
 import { EditModal } from '@components';
 import { useLanguage, useDownload } from '@hooks';
 
@@ -24,22 +24,26 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
   const [isPasted, setIsPasted] = useState(false);
   const [showEditMetadata, setShowEditMetadata] = useState(false);
   const urlInputRef = useRef<HTMLInputElement>(null);
+  const prevIsOpen = useRef(false);
 
-  // Smart Guard Effect: Tự động reset trạng thái cũ nếu modal được mở lại ở trạng thái rác
+  // Smart Guard Effect: Tự động reset trạng thái cũ nếu modal được MỞ LẠI ở trạng thái rác (success/error)
   useEffect(() => {
-    if (isOpen) {
-      const isStaleState = ['preview', 'success', 'error'].includes(manager.downloadState);
+    const isJustOpened = isOpen && !prevIsOpen.current;
+
+    if (isJustOpened) {
+      const isStaleState = STALE_DOWNLOAD_STATES.includes(manager.downloadState);
       const isModalInitiated = manager.initiator === 'modal';
 
       if (isStaleState && isModalInitiated) {
-        // Sử dụng setTimeout để tránh "cascading render" đồng bộ
-        const timer = setTimeout(() => {
-          manager.resetDownload();
-        }, 0);
-        return () => clearTimeout(timer);
+        manager.resetDownload();
       }
     }
   }, [isOpen, manager.downloadState, manager.initiator]);
+
+  // Cập nhật ref sau mỗi lần thay đổi isOpen để nhận diện lần mở sau
+  useEffect(() => {
+    prevIsOpen.current = isOpen;
+  }, [isOpen]);
 
 
   useEffect(() => {

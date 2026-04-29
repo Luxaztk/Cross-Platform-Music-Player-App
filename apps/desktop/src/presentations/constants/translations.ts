@@ -253,6 +253,10 @@ export const translations = {
       noLyrics: 'Không có lời bài hát',
       searchPlaceholder: 'Nhập tên bài hát - ca sĩ...',
       searchOnline: 'Tìm kiếm trực tuyến',
+      syncNow: 'Khớp ngay',
+      resetOffset: 'Đặt lại',
+      adjustForward: 'Nhanh hơn',
+      adjustBackward: 'Chậm hơn',
     },
     update: {
       ready: 'Cập nhật sẵn sàng!',
@@ -517,6 +521,10 @@ export const translations = {
       noLyrics: 'No lyrics found',
       searchPlaceholder: 'Enter song name - artist...',
       searchOnline: 'Search online',
+      syncNow: 'Sync now',
+      resetOffset: 'Reset offset',
+      adjustForward: 'Forward',
+      adjustBackward: 'Backward',
     },
     update: {
       ready: 'Update ready!',

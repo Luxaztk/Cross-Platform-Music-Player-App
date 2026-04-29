@@ -1,5 +1,10 @@
-Refactor deploy pipeline and enable auto-publishing.
+feat(lyrics): implement precision sync system & fix downloader state management
 
-- Fix: Use 'releaseType: release' in electron-builder config to resolve schema errors and enable automatic publishing.
-- Fix: Handle UTF-8 BOM and encoding issues when reading commit.txt on Windows.
-- Chore: Shift execution context to apps/desktop and use temporary files for robust git commits.
+- Implement multi-step lyric offset controls (±1s, ±5s, Reset) with Soft UI toolbar.
+- Add 'Sync Now' feature per lyric line for one-click alignment with playback.
+- Implement persistent lyric offset via localStorage keyed by YouTube ID (originId).
+- Optimize LyricsPanel UI with hover-only visibility for sync controls and slide-in buttons.
+- Fix DownloaderModal 'Premature Reset' using useRef to track opening state.
+- Implement auto-cleanup for stale download states when editing URL.
+- Fix LyricsPanel search query initialization on mount and song change.
+- Standardize i18n support for all new synchronization features.
