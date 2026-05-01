@@ -100,6 +100,13 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [X] **Downloader Modal UX Hardening**:
     - [X] Khắc phục lỗi "Premature Reset": Sử dụng `useRef` (`prevIsOpen`) để đảm bảo modal chỉ làm mới dữ liệu khi thực sự được mở lại bởi người dùng.
     - [X] Cơ chế **Auto-Cleanup on Edit**: Tự động dọn dẹp trạng thái lỗi/cũ ngay khi người dùng chỉnh sửa URL trong ô nhập liệu.
+- [X] **Downloader UI Standardization (V5)**:
+    - [X] Đồng bộ hóa giao diện thẻ xem trước (`DownloadPreviewCard`) trên toàn bộ ứng dụng, bổ sung thanh tiến trình và các chỉ báo trạng thái trực quan (Check, Spinner, Clock).
+    - [X] Triển khai chế độ **Bulk Metadata Edit**: Hỗ trợ chỉnh sửa đồng loạt Nghệ sĩ và Album cho danh sách phát, tự động điền dữ liệu thông minh và tối ưu hóa diện tích hiển thị.
+    - [X] Khóa tương tác chỉnh sửa khi đang tải để đảm bảo an toàn dữ liệu và tính nhất quán của ID3 Tags.
+- [X] **i18n & Developer Experience Hardening**:
+    - [X] Loại bỏ hoàn toàn các **Ghost i18n Keys** (enqueued, viewHistory...) và đạt trạng thái "Zero Ghost Key" cho toàn bộ Renderer Process.
+    - [X] Xây dựng bộ công cụ Diagnostic: Viết mới `check-i18n-keys.js` và nâng cấp `ghost-css-variables.js` với giao diện báo cáo chuyên nghiệp, hỗ trợ phát hiện tài nguyên dư thừa (Unused detection).
 
 ---
 

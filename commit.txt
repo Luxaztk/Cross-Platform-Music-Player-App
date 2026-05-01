@@ -1,10 +1,11 @@
-feat(lyrics): implement precision sync system & fix downloader state management
+feat(downloader): standardize downloader UI and implement bulk metadata editing
 
-- Implement multi-step lyric offset controls (±1s, ±5s, Reset) with Soft UI toolbar.
-- Add 'Sync Now' feature per lyric line for one-click alignment with playback.
-- Implement persistent lyric offset via localStorage keyed by YouTube ID (originId).
-- Optimize LyricsPanel UI with hover-only visibility for sync controls and slide-in buttons.
-- Fix DownloaderModal 'Premature Reset' using useRef to track opening state.
-- Implement auto-cleanup for stale download states when editing URL.
-- Fix LyricsPanel search query initialization on mount and song change.
-- Standardize i18n support for all new synchronization features.
+- Refactor `DownloaderModal` and `DownloadSection` to use `DownloadPreviewCard` consistently.
+- Add visual status indicators (Success, Pending, Downloading) with icons and progress bars.
+- Implement `isBulk` mode in `EditModal` to allow batch updating Artist and Album for playlists.
+- Disable song editing during the download process to ensure data integrity.
+- Fix UI layout issues including vertical alignment and height management in downloader components.
+- Resolve multiple TypeScript errors in `DownloadProvider`, `DownloaderUI`, and tests.
+- Achieve "Zero Ghost Key" status by adding missing i18n keys and creating `check-i18n-keys.js`.
+- Upgrade `ghost-css-variables.js` with professional reporting and unused variable detection.
+- Update `____ROADMAP.md` to reflect V5 Downloader and DX improvements.

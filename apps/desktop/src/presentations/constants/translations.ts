@@ -77,6 +77,7 @@ export const translations = {
       filteringBy: 'Lọc theo:',
       upNext: 'Tiếp theo',
       queueEmpty: 'Hàng đợi đang trống',
+      addedToQueueSuccess: 'Đã thêm {count} bài hát vào hàng đợi',
     },
     modal: {
       editDetails: 'Chỉnh sửa chi tiết',
@@ -201,6 +202,15 @@ export const translations = {
       about: {
         desc: 'Melovista là một trình phát nhạc đa nền tảng tập trung vào trải nghiệm người dùng hiện đại và hiệu suất cao.',
       },
+      youtube: {
+        title: 'Tài khoản YouTube',
+        loggedInDesc: 'Đã liên kết tài khoản. Bạn có thể tải nhạc bị giới hạn độ tuổi hoặc video riêng tư.',
+        loggedOutDesc: 'Đăng nhập để tránh bị chặn (Bot detection) và tải được nhiều video hơn.',
+        login: 'Đăng nhập',
+        logout: 'Đăng xuất',
+        loginSuccess: 'Đăng nhập YouTube thành công!',
+        logoutSuccess: 'Đã đăng xuất tài khoản YouTube.',
+      },
     },
     player: {
       fileNotFound: 'Không tìm thấy file: "{title}". Đã chuyển bài tiếp theo.',
@@ -226,6 +236,22 @@ export const translations = {
       duplicateSourceFound: 'Link này đã được tải về và có trong thư viện (Chốt 1).',
       duplicateHashFound: 'Nội dung âm thanh này đã có trong thư viện (Chốt 3). Máy đã xóa bản tải trùng lặp.',
       downloadAnyway: 'Vẫn tải xuống',
+      authRequiredTitle: 'Yêu cầu xác thực',
+      authRequiredDesc: 'YouTube yêu cầu bạn đăng nhập để xác minh không phải là robot hoặc để xem nội dung này.',
+      loginNow: 'Đăng nhập ngay',
+      authRequired: 'Vui lòng đăng nhập để tiếp tục',
+      downloadAll: 'Tải xuống tất cả ({count})',
+      editAll: 'Sửa toàn bộ ({count})',
+      bulkEditTitle: 'Chỉnh sửa hàng loạt',
+      downloadingCount: 'Đang tải {count} bài hát...',
+      playlistCompleted: 'Hoàn thành Playlist',
+      status: {
+        pending: 'Đang chờ...',
+        processing: 'Đang xử lý...',
+        completed: 'Đã xong',
+        error: 'Lỗi',
+      },
+      enqueued: 'Đã thêm {count} bài hát vào hàng đợi tải xuống',
     },
     libraryCleanup: {
       title: 'Dọn dẹp thư viện',
@@ -242,6 +268,7 @@ export const translations = {
       clearHistory: 'Xóa lịch sử',
       clearHistoryConfirm: 'Bạn có chắc chắn muốn xóa toàn bộ lịch sử đồng bộ?',
       noHistory: 'Chưa có hoạt động đồng bộ nào được ghi lại.',
+      viewHistory: 'Xem lịch sử đồng bộ',
     },
     lyrics: {
       changeLyrics: 'Đổi lời bài hát',
@@ -344,6 +371,7 @@ export const translations = {
       filteringBy: 'Filter:',
       upNext: 'Up Next',
       queueEmpty: 'Queue is empty',
+      addedToQueueSuccess: 'Added {count} songs to queue',
     },
     modal: {
       editDetails: 'Edit details',
@@ -468,6 +496,15 @@ export const translations = {
       about: {
         desc: 'Melovista is a cross-platform music player focused on delivering a modern, high-performance experience.',
       },
+      youtube: {
+        title: 'YouTube Account',
+        loggedInDesc: 'Account linked. You can now download age-restricted or private videos.',
+        loggedOutDesc: 'Sign in to bypass bot detection and access more content.',
+        login: 'Sign In',
+        logout: 'Sign Out',
+        loginSuccess: 'YouTube login successful!',
+        logoutSuccess: 'Logged out of YouTube.',
+      },
     },
     player: {
       fileNotFound: 'File not found: "{title}". Skipping to next song.',
@@ -494,6 +531,22 @@ export const translations = {
       duplicateHashFound:
         'This audio content is already in your library (Guard 3). The duplicate download has been deleted.',
       downloadAnyway: 'Download Anyway',
+      authRequiredTitle: 'Authentication Required',
+      authRequiredDesc: 'YouTube requires you to sign in to confirm you are not a bot or to access this content.',
+      loginNow: 'Sign In Now',
+      authRequired: 'Please sign in to continue',
+      downloadAll: 'Download all ({count})',
+      editAll: 'Edit all ({count})',
+      bulkEditTitle: 'Bulk Metadata Edit',
+      downloadingCount: 'Downloading {count} songs...',
+      enqueued: 'Added {count} songs to download queue',
+      playlistCompleted: 'Playlist Completed',
+      status: {
+        pending: 'Pending...',
+        processing: 'Processing...',
+        completed: 'Completed',
+        error: 'Error',
+      },
     },
     libraryCleanup: {
       title: 'Clean Up Library',
@@ -510,6 +563,7 @@ export const translations = {
       clearHistory: 'Clear History',
       clearHistoryConfirm: 'Are you sure you want to clear all sync history?',
       noHistory: 'No sync activity recorded yet.',
+      viewHistory: 'View Sync History',
     },
     lyrics: {
       changeLyrics: 'Change lyrics',

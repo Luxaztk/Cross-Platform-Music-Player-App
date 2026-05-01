@@ -1,15 +1,5 @@
 import { createContext } from 'react';
-
-export type DownloadState = 'idle' | 'fetching' | 'preview' | 'downloading' | 'success' | 'error';
-
-export interface YouTubeVideoInfo {
-    id: string;
-    title: string;
-    artist: string;
-    album: string;
-    thumbnail: string;
-    duration?: number;
-}
+import type { DownloadItem, DownloadStatus } from '@music/types';
 
 export interface DuplicateInfo {
     warning: { title: string; artist: string; reason?: string } | null;
@@ -26,21 +16,35 @@ export const initialDuplicateInfo: DuplicateInfo = {
 export interface DownloadContextType {
     url: string;
     setUrl: (url: string) => void;
-    downloadState: DownloadState;
-    setDownloadState: (state: DownloadState) => void;
-    downloadProgress: number;
+    downloadState: DownloadStatus; // Phản ánh trạng thái của luồng preview hiện tại
+    
+    // Danh sách các bài hát trong Queue và Preview
+    downloads: Map<string, DownloadItem>;
+    previewItems: DownloadItem[];
+    
     downloadError: string | null;
-    videoInfo: YouTubeVideoInfo | null;
     duplicateInfo: DuplicateInfo;
-    downloadedPath: string | null;
     initiator: 'modal' | 'section' | null;
+    playlistTitle: string | null;
 
     // Actions
     fetchInfo: (targetUrl?: string, source?: 'modal' | 'section') => Promise<{ success: boolean; hasWarning: boolean }>;
     executeDownload: (forceDownload?: boolean) => Promise<boolean>;
-    updateMetadata: (updatedData: Partial<YouTubeVideoInfo>) => void;
+    updateMetadata: (id: string, updatedData: Partial<DownloadItem>) => void;
+    bulkUpdateMetadata: (updatedData: Partial<DownloadItem>) => void;
     resetDownload: () => void;
+    cancelDownload: (id: string) => void;
     clearAbandoned: () => void;
+    
+    // Computed properties
+    totalProgress: number;
+    activeCount: number;
+
+    // Authentication
+    authRequired: boolean;
+    isLoggedIn: boolean;
+    handleLogin: () => Promise<boolean>;
+    logout: () => Promise<void>;
 }
 
 export const DownloadContext = createContext<DownloadContextType | undefined>(undefined);

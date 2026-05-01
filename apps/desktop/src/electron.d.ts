@@ -68,15 +68,20 @@ declare global {
       fetchYtInfo: (
         url: string,
       ) => Promise<{ success: boolean; info?: YoutubeInfo; error?: string }>
+      fetchPlaylistInfo: (
+        url: string,
+      ) => Promise<{ success: boolean; title?: string; items?: YoutubeInfo[]; error?: string }>
       downloadYtAudio: (
+        id: string,
         url: string,
         title: string,
       ) => Promise<{ success: boolean; filePath?: string; error?: string }>
+      cancelDownload: (id: string) => Promise<void>
       writeAudioMetadata: (
         filePath: string,
         metadata: Partial<Song>,
       ) => Promise<{ success: boolean; error?: string }>
-      onDownloadProgress: (callback: (data: { url: string; percent: number }) => void) => () => void
+      onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => () => void
       openItemPath: (filePath: string) => Promise<void>
       deleteFile: (filePath: string) => Promise<{ success: boolean }>
       getSettings: () => Promise<any>
@@ -93,6 +98,12 @@ declare global {
       getSyncHistory: () => Promise<SyncHistoryEntry[]>
       clearSyncHistory: () => Promise<void>
       logSyncEvent: (stats: SyncStats, details: string[]) => Promise<void>
+
+      // YouTube Authentication
+      openYoutubeAuth: () => Promise<boolean>
+      logoutYoutube: () => Promise<void>
+      getYoutubeAuthStatus: () => Promise<boolean>
+      onYoutubeAuthRequired: (callback: (data: { url: string; id?: string }) => void) => () => void
     }
   }
 

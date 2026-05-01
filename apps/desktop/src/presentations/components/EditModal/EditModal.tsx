@@ -12,6 +12,7 @@ interface EditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedData: Song | Playlist) => void;
+  isBulk?: boolean;
 }
 
 export const EditModal: React.FC<EditModalProps> = ({
@@ -20,6 +21,7 @@ export const EditModal: React.FC<EditModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  isBulk = false,
 }) => {
   const { t } = useLanguage();
   const { appIcon } = useTheme();
@@ -91,7 +93,7 @@ export const EditModal: React.FC<EditModalProps> = ({
         thumbnail,
       });
     } else {
-      if (!title.trim()) return;
+      if (!isBulk && !title.trim()) return;
       onSave({
         ...data,
         title: title.trim(),
@@ -104,12 +106,12 @@ export const EditModal: React.FC<EditModalProps> = ({
     onClose();
   };
 
-  const modalTitle = type === 'playlist' ? t('modal.editPlaylist') : t('modal.editSong');
+  const modalTitle = isBulk ? t('downloader.bulkEditTitle') : (type === 'playlist' ? t('modal.editPlaylist') : t('modal.editSong'));
   const currentImage = type === 'playlist' ? thumbnail : coverArt;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`edit-modal ${isBulk ? 'bulk' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{modalTitle}</h2>
           <button className="close-btn" onClick={onClose} title={t('common.close')}>
@@ -118,21 +120,23 @@ export const EditModal: React.FC<EditModalProps> = ({
         </div>
 
         <div className="modal-body">
-          <div className="image-edit-section">
-            <div className="playlist-image-large" onClick={handleChooseImage}>
-              {currentImage ? (
-                <div className="image-container">
-                  <img src={currentImage} alt="" className="image-blur-bg" />
-                  <img src={currentImage} alt="Cover" className="image-main" />
+          {!isBulk && (
+            <div className="image-edit-section">
+              <div className="playlist-image-large" onClick={handleChooseImage}>
+                {currentImage ? (
+                  <div className="image-container">
+                    <img src={currentImage} alt="" className="image-blur-bg" />
+                    <img src={currentImage} alt="Cover" className="image-main" />
+                  </div>
+                ) : (
+                  <img src={appIcon} alt="Default Cover" className="placeholder-brand-icon" />
+                )}
+                <div className="image-overlay">
+                  <span>{t('modal.choosePhoto')}</span>
                 </div>
-              ) : (
-                <img src={appIcon} alt="Default Cover" className="placeholder-brand-icon" />
-              )}
-              <div className="image-overlay">
-                <span>{t('modal.choosePhoto')}</span>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="info-edit-section">
             {type === 'playlist' ? (
@@ -157,16 +161,18 @@ export const EditModal: React.FC<EditModalProps> = ({
               </>
             ) : (
               <>
-                <div className="input-group">
-                  <label className="input-label">{t('modal.songTitle')}</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder={t('modal.songTitle')}
-                    className="modal-input"
-                  />
-                </div>
+                {!isBulk && (
+                  <div className="input-group">
+                    <label className="input-label">{t('modal.songTitle')}</label>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder={t('modal.songTitle')}
+                      className="modal-input"
+                    />
+                  </div>
+                )}
                 <div className="input-group">
                   <label className="input-label">{t('modal.songArtist')}</label>
                   <input
@@ -193,11 +199,11 @@ export const EditModal: React.FC<EditModalProps> = ({
         </div>
 
         <div className="modal-footer">
-          <p className="disclaimer">{t('modal.disclaimer')}</p>
+          {!isBulk && <p className="disclaimer">{t('modal.disclaimer')}</p>}
           <button
             className="save-btn"
             onClick={handleSave}
-            disabled={type === 'playlist' ? !name.trim() : !title.trim()}
+            disabled={type === 'playlist' ? !name.trim() : (!isBulk && !title.trim())}
           >
             {t('common.save')}
           </button>

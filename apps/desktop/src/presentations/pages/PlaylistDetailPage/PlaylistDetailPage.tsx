@@ -126,11 +126,13 @@ export const PlaylistDetailPage: React.FC = () => {
           setIsLoading(false);
         });
     }
+  }, [id, libraryVersion, handleGetPlaylistDetail]);
 
+  React.useEffect(() => {
     return () => {
       setLibraryFilter({ type: 'none', values: [] });
     };
-  }, [id, libraryVersion, handleGetPlaylistDetail, setLibraryFilter]);
+  }, [id, setLibraryFilter]);
 
   // Handle scroll for manual virtualization: driven by .main-area scroll
   React.useEffect(() => {

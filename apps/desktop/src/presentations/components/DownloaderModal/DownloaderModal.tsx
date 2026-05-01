@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Search, Download, Edit2, Loader2, CheckCircle2, AlertCircle, Clipboard, ClipboardCheck, AlertTriangle } from 'lucide-react';
-import { ICON_SIZES, STALE_DOWNLOAD_STATES } from '@constants';
+import { X, Search, Download, Edit2, Loader2, CheckCircle2, AlertCircle, Clipboard, ClipboardCheck } from 'lucide-react';
+import { ICON_SIZES } from '@constants';
 import { EditModal } from '@components';
 import { useLanguage, useDownload } from '@hooks';
+import { DOWNLOAD_STATUS, type DownloadItem } from '@music/types';
 
 // Import các UI Component vừa tách
-import { DownloadPreviewCard, DownloadProgressBar, DuplicateWarningBanner } from '@components';
+import { DownloadPreviewCard, DuplicateWarningBanner } from '@components';
 
 import './DownloaderModal.scss';
 
@@ -16,49 +17,66 @@ interface DownloaderModalProps {
 
 export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
+  let manager = useDownload();
 
-  // Gọi "Bộ não" (Global Hook)
-  const manager = useDownload();
+  // ==========================================
+  // 🛠 DEBUG UI MODE (Dành cho việc căn chỉnh CSS)
+  // Đổi `isDebugUI = true` để khóa cứng giao diện ở trạng thái DOWNLOADING
+  // ==========================================
+  const isDebugUI = false;
+  if (isDebugUI) {
+    manager = {
+      ...manager,
+      downloadState: DOWNLOAD_STATUS.DOWNLOADING,
+      playlistTitle: 'Playlist Nhạc Đen Vâu Mockup',
+      activeCount: 2,
+      totalProgress: 35,
+      previewItems: [
+        { id: '1', title: 'Mơ ft. Hậu Vi (Official Audio)', artist: 'Đen', album: 'KOBUKOVU', status: 'completed', progress: 100, thumbnail: 'https://i.ytimg.com/vi/mock1/hqdefault.jpg' },
+        { id: '2', title: 'Cô Gái Bàn Bên ft Lynk Lee', artist: 'Đen', album: 'KOBUKOVU', status: 'downloading', progress: 45, thumbnail: 'https://i.ytimg.com/vi/mock2/hqdefault.jpg' },
+        { id: '3', title: 'Mưa Trên Những Mái Tôn', artist: 'Đen', album: 'KOBUKOVU', status: 'pending', progress: 0, thumbnail: 'https://i.ytimg.com/vi/mock3/hqdefault.jpg' },
+      ],
+      downloads: new Map([
+        ['1', { id: '1', title: 'Mơ ft. Hậu Vi (Official Audio)', artist: 'Đen', album: 'KOBUKOVU', status: 'completed', progress: 100, thumbnail: 'https://i.ytimg.com/vi/mock1/hqdefault.jpg' }],
+        ['2', { id: '2', title: 'Cô Gái Bàn Bên ft Lynk Lee', artist: 'Đen', album: 'KOBUKOVU', status: 'downloading', progress: 45, thumbnail: 'https://i.ytimg.com/vi/mock2/hqdefault.jpg' }],
+        ['3', { id: '3', title: 'Mưa Trên Những Mái Tôn', artist: 'Đen', album: 'KOBUKOVU', status: 'pending', progress: 0, thumbnail: 'https://i.ytimg.com/vi/mock3/hqdefault.jpg' }],
+        ['4', { id: '4', title: 'Ghé Thăm ft JGKID, Kimmese', artist: 'Đen', album: 'KOBUKOVU', status: 'pending', progress: 0, thumbnail: 'https://i.ytimg.com/vi/mock4/hqdefault.jpg' }],
+      ])
+    } as any;
+  }
+  // ==========================================
 
-  // Local UI State (Chỉ phục vụ tương tác trên Modal này)
   const [isPasted, setIsPasted] = useState(false);
-  const [showEditMetadata, setShowEditMetadata] = useState(false);
+  const [editingItem, setEditingItem] = useState<DownloadItem | null>(null);
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
+
   const urlInputRef = useRef<HTMLInputElement>(null);
   const prevIsOpen = useRef(false);
 
-  // Smart Guard Effect: Tự động reset trạng thái cũ nếu modal được MỞ LẠI ở trạng thái rác (success/error)
   useEffect(() => {
-    const isJustOpened = isOpen && !prevIsOpen.current;
-
-    if (isJustOpened) {
-      const isStaleState = STALE_DOWNLOAD_STATES.includes(manager.downloadState);
-      const isModalInitiated = manager.initiator === 'modal';
-
-      if (isStaleState && isModalInitiated) {
-        manager.resetDownload();
+    if (isOpen && !prevIsOpen.current) {
+      if (manager.downloadState === DOWNLOAD_STATUS.SUCCESS || manager.downloadState === DOWNLOAD_STATUS.ERROR) {
+        if (manager.initiator === 'modal') manager.resetDownload();
       }
     }
-  }, [isOpen, manager.downloadState, manager.initiator]);
-
-  // Cập nhật ref sau mỗi lần thay đổi isOpen để nhận diện lần mở sau
-  useEffect(() => {
     prevIsOpen.current = isOpen;
-  }, [isOpen]);
-
+  }, [isOpen, manager.downloadState]);
 
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => urlInputRef.current?.focus());
     }
-  }, [isOpen, manager]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  // Đã sửa: dùng downloadState thay cho status
-  const isBusy = manager.downloadState === 'fetching' || manager.downloadState === 'downloading';
+  const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING;
 
   const handleClose = () => {
     if (isBusy) return;
+    if (manager.initiator !== 'section') {
+      manager.clearAbandoned();
+    }
     onClose();
   };
 
@@ -68,7 +86,6 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
       if (text && /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(text)) {
         manager.setUrl(text);
         setIsPasted(true);
-        // Tự động tắt feedback sau 2s
         setTimeout(() => setIsPasted(false), 2000);
       }
     } catch (err) {
@@ -77,9 +94,8 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
   };
 
   const renderContent = () => {
-    // Đã sửa: dùng downloadState
     switch (manager.downloadState) {
-      case 'idle':
+      case DOWNLOAD_STATUS.IDLE:
         return (
           <div className="downloader-input-state">
             <div className="input-header">
@@ -100,7 +116,6 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
                   type="button"
                   className={`paste-btn ${isPasted ? 'success' : ''}`}
                   onClick={handlePaste}
-                  title={t('downloader.paste')}
                 >
                   {isPasted ? <ClipboardCheck size={ICON_SIZES.XSMALL} /> : <Clipboard size={ICON_SIZES.XSMALL} />}
                 </button>
@@ -117,7 +132,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
           </div>
         );
 
-      case 'fetching':
+      case DOWNLOAD_STATUS.FETCHING:
         return (
           <div className="downloader-loading-state">
             <Loader2 size={ICON_SIZES.XXLARGE * 1.5} className="spinning-icon" />
@@ -125,91 +140,153 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
           </div>
         );
 
-      case 'preview':
+      case DOWNLOAD_STATUS.PREVIEW:
         return (
           <div className="downloader-preview-state">
-            {/* LẮP CƠ BẮP VÀO ĐÂY */}
-            <DownloadPreviewCard info={manager.videoInfo} />
+            <div className="preview-items-list">
+              {manager.previewItems.map((item) => (
+                <DownloadPreviewCard
+                  key={item.id}
+                  info={item}
+                  onClick={() => setEditingItem(item)}
+                />
+              ))}
+            </div>
+
             <DuplicateWarningBanner duplicateInfo={manager.duplicateInfo} />
+          </div>
+        );
 
-            <div className="action-buttons">
-              <button type="button" className="edit-btn" onClick={() => setShowEditMetadata(true)} title={t('common.edit')}>
-                <Edit2 size={ICON_SIZES.TINY} />
-              </button>
-              {manager.duplicateInfo.warning ? (
-                <button type="button" className="primary-btn warning-btn" onClick={() => manager.executeDownload(true)}>
-                  <Download size={ICON_SIZES.TINY} />
-                  <span>{t('downloader.downloadAnyway')}</span>
-                </button>
-              ) : (
-                <button type="button" className="primary-btn" onClick={() => manager.executeDownload(false)}>
-                  <Download size={ICON_SIZES.TINY} />
-                  <span>{t('downloader.downloadNow')}</span>
-                </button>
+      case DOWNLOAD_STATUS.DOWNLOADING:
+      case DOWNLOAD_STATUS.SUCCESS:
+      case DOWNLOAD_STATUS.ERROR:
+        if (manager.authRequired) {
+          return (
+            <div className="downloader-auth-state">
+              <AlertCircle size={ICON_SIZES.XXLARGE * 1.5} className="warning-icon" />
+              <h3>{t('downloader.authRequiredTitle')}</h3>
+              <p>{t('downloader.authRequiredDesc')}</p>
+            </div>
+          );
+        }
+
+        if (manager.downloads.size === 1) {
+          const singleItem = Array.from(manager.downloads.values())[0];
+          return (
+            <div className="downloader-preview-state">
+              <div className="preview-items-list">
+                <DownloadPreviewCard info={singleItem} />
+              </div>
+
+              {manager.downloadState === DOWNLOAD_STATUS.SUCCESS && (
+                <div className="downloader-status-state success" style={{ marginTop: '24px' }}>
+                  <CheckCircle2 size={48} className="status-icon" />
+                  <h3>{t('downloader.success')}</h3>
+                </div>
               )}
+              {manager.downloadState === DOWNLOAD_STATUS.ERROR && (
+                <div className="downloader-status-state error" style={{ marginTop: '24px' }}>
+                  <AlertCircle size={48} className="status-icon" />
+                  <h3>{t('downloader.error')}</h3>
+                  <p className="error-message">{manager.downloadError}</p>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        return (
+          <div className="downloader-preview-state">
+            <div className="preview-items-list">
+              {Array.from(manager.downloads.values()).map((item) => (
+                <DownloadPreviewCard key={item.id} info={item} />
+              ))}
             </div>
           </div>
         );
 
-      case 'downloading':
-        return (
-          <DownloadProgressBar
-            progress={manager.downloadProgress} // Đã sửa
-            title={manager.videoInfo?.title}
-          />
-        );
+      default:
+        return null;
+    }
+  };
 
-      case 'success':
-        return (
-          <div className="downloader-status-state success">
-            <CheckCircle2 size={64} className="status-icon" />
-            <h3>{t('downloader.success')}</h3>
-
-            {/* Banner báo trùng lặp sau tải */}
-            {manager.duplicateInfo.isAfterDownload && (
-              <div className="duplicate-info-banner">
-                <AlertTriangle size={ICON_SIZES.TINY} />
-                <span>
-                  {manager.duplicateInfo.reasonAfterDownload === 'HASH'
-                    ? t('downloader.duplicateHashFound')
-                    : t('downloader.duplicateSourceFound')}
-                </span>
-              </div>
-            )}
-
-            {manager.downloadedPath && (
-              <div className="file-path-info">
-                <span className="path-label">{t('downloader.savedTo')}</span>
-                <span className="path-value">{manager.downloadedPath}</span>
-              </div>
-            )}
-            <div className="action-buttons horizontal">
-              {manager.downloadedPath && (
-                <button type="button" className="secondary-btn" onClick={() => window.electronAPI.openItemPath(manager.downloadedPath!)}>
-                  {t('downloader.openFolder')}
-                </button>
-              )}
-              <button type="button" className="primary-btn" onClick={onClose}>
-                {t('common.success')}
-              </button>
-            </div>
-          </div>
-        );
-
-      case 'error':
-        return (
-          <div className="downloader-status-state error">
-            <AlertCircle size={64} className="status-icon" />
-            <h3>{t('downloader.error')}</h3>
-            <p className="error-message">{manager.downloadError}</p>
+  const renderFooter = () => {
+    if (manager.authRequired) {
+      return (
+        <div className="modal-footer">
+          <div className="action-buttons horizontal">
             <button type="button" className="secondary-btn" onClick={() => manager.resetDownload()}>
               {t('common.cancel')}
             </button>
-            <button type="button" className="primary-btn" onClick={() => manager.executeDownload()}>
-              {t('downloader.downloadNow')}
+            <button type="button" className="primary-btn" onClick={manager.handleLogin}>
+              {t('downloader.loginNow')}
             </button>
           </div>
+        </div>
+      );
+    }
+
+    switch (manager.downloadState) {
+      case DOWNLOAD_STATUS.PREVIEW:
+        return (
+          <div className="modal-footer">
+            <div className="action-buttons">
+              {manager.previewItems.length === 1 ? (
+                <button
+                  type="button"
+                  className="edit-btn"
+                  onClick={() => setEditingItem(manager.previewItems[0])}
+                  title={t('common.edit')}
+                >
+                  <Edit2 size={ICON_SIZES.TINY} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="edit-btn bulk"
+                  onClick={() => setShowBulkEdit(true)}
+                  title={t('downloader.editAll', { count: manager.previewItems.length })}
+                >
+                  <Edit2 size={ICON_SIZES.TINY} />
+                  <span>{t('downloader.editAll', { count: manager.previewItems.length })}</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                className={`primary-btn ${manager.duplicateInfo.warning ? 'warning-btn' : ''}`}
+                onClick={() => manager.executeDownload(!!manager.duplicateInfo.warning)}
+              >
+                <Download size={ICON_SIZES.TINY} />
+                <span>{manager.previewItems.length > 1 ? t('downloader.downloadAll', { count: manager.previewItems.length }) : t('downloader.downloadNow')}</span>
+              </button>
+            </div>
+          </div>
         );
+      case DOWNLOAD_STATUS.SUCCESS:
+        return (
+          <div className="modal-footer">
+            <div className="action-buttons horizontal">
+              <button type="button" className="primary-btn" onClick={handleClose}>
+                {t('common.close')}
+              </button>
+            </div>
+          </div>
+        );
+
+      case DOWNLOAD_STATUS.ERROR:
+        return (
+          <div className="modal-footer">
+            <div className="action-buttons horizontal">
+              <button type="button" className="secondary-btn" onClick={() => manager.resetDownload()}>
+                {t('common.cancel')}
+              </button>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -220,10 +297,10 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
           <div className="modal-header">
             <div className="header-title">
               <Download size={ICON_SIZES.MEDIUM} />
-              <h2>{t('downloader.title')}</h2>
+              <h2>{manager.playlistTitle || t('downloader.title')}</h2>
             </div>
             {!isBusy && (
-              <button type="button" className="close-btn" onClick={onClose} title={t('common.close')}>
+              <button type="button" className="close-btn" onClick={handleClose} title={t('common.close')}>
                 <X size={ICON_SIZES.MEDIUM} />
               </button>
             )}
@@ -232,23 +309,48 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
           <div className="modal-body">
             {renderContent()}
           </div>
+
+          {renderFooter()}
         </div>
       </div>
 
-      {showEditMetadata && manager.videoInfo && (
+      {editingItem && (
         <EditModal
           isOpen={true}
           type="song"
           data={{
-            title: manager.videoInfo.title,
-            artist: manager.videoInfo.artist,
-            album: manager.videoInfo.album,
-            coverArt: manager.videoInfo.thumbnail,
+            title: editingItem.title,
+            artist: editingItem.artist,
+            album: editingItem.album,
+            coverArt: editingItem.thumbnail,
           } as any}
-          onClose={() => setShowEditMetadata(false)}
-          onSave={(data) => {
-            manager.updateMetadata(data);
-            setShowEditMetadata(false);
+          onClose={() => setEditingItem(null)}
+          onSave={(data: any) => {
+            manager.updateMetadata(editingItem.id, data);
+            setEditingItem(null);
+          }}
+        />
+      )}
+
+      {showBulkEdit && (
+        <EditModal
+          isOpen={true}
+          isBulk={true}
+          type="song"
+          data={{
+            title: t('downloader.bulkEditTitle'),
+            artist: manager.previewItems[0]?.artist || '',
+            album: manager.playlistTitle || manager.previewItems[0]?.album || '',
+            coverArt: '',
+          } as any}
+          onClose={() => setShowBulkEdit(false)}
+          onSave={(data: any) => {
+            // Chỉ lấy Artist và Album để áp dụng cho tất cả
+            const bulkData: Partial<DownloadItem> = {};
+            if (data.artist) bulkData.artist = data.artist;
+            if (data.album) bulkData.album = data.album;
+            manager.bulkUpdateMetadata(bulkData);
+            setShowBulkEdit(false);
           }}
         />
       )}

@@ -80,10 +80,10 @@ describe('YoutubeDownloader', () => {
     const progressSpy = vi.fn();
     downloader.on('progress', progressSpy);
 
-    const downloadPromise = downloader.downloadAudio('url', 'out.mp3');
+    const downloadPromise = downloader.downloadAudio('mock-id', 'url', 'out.mp3');
 
     mockProcess.stdout.emit('data', Buffer.from('[download]  10.5% of 5.00MiB'));
-    expect(progressSpy).toHaveBeenCalledWith(10.5);
+    expect(progressSpy).toHaveBeenCalledWith({ id: 'mock-id', percent: 10.5 });
 
     mockProcess.emit('close', 0);
     const result = await downloadPromise;
@@ -104,7 +104,7 @@ describe('YoutubeDownloader', () => {
     const mockProcess = createMockProcess();
     mockedSpawn.mockReturnValue(mockProcess as any);
 
-    const promise = downloader.downloadAudio('url', 'out.mp3');
+    const promise = downloader.downloadAudio('mock-id', 'url', 'out.mp3');
     mockProcess.emit('error', new Error('Spawn failed'));
 
     await expect(promise).rejects.toThrow('Spawn failed');
@@ -115,7 +115,7 @@ describe('YoutubeDownloader', () => {
     const mockProcess = createMockProcess();
     mockedSpawn.mockReturnValue(mockProcess as any);
 
-    const promise = downloader.downloadAudio('url', 'out.mp3');
+    const promise = downloader.downloadAudio('mock-id', 'url', 'out.mp3');
     mockProcess.emit('close', 1);
 
     await expect(promise).rejects.toThrow('yt-dlp exited with code 1');

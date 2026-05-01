@@ -28,6 +28,8 @@ export const DEFAULT_SETTINGS = {
     maxConcurrentDownloads: 3,
     folderOrganization: '{Artist}/{Album}',
     backgroundSync: 0,
+    cookiesPath: '',
+    browserSource: 'edge' as 'chrome' | 'edge' | 'brave' | 'firefox',
   }
 };
 

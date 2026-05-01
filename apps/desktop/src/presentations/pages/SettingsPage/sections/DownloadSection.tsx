@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useSettings, useLanguage, useLibrary, useDownload } from '@hooks';
 import { ICON_SIZES } from '@constants';
-import { Download, FolderOpen, Plus, Trash2, RefreshCcw, Search, Clipboard, Loader2, CheckCircle2, AlertCircle, History, Edit2 } from 'lucide-react';
-import { CustomDropdown, DownloadPreviewCard, DuplicateWarningBanner, DownloadProgressBar, SyncHistoryModal, EditModal } from '@components';
-import { 
-    YOUTUBE_URL_REGEX, 
-    BITRATE_OPTIONS, 
-    getSyncIntervalOptions, 
+import { DOWNLOAD_STATUS, type DownloadItem } from '@music/types';
+import { Download, FolderOpen, Plus, Trash2, RefreshCcw, Search, Clipboard, Loader2, History, Edit2, X, Video, LogOut, LogIn } from 'lucide-react';
+import { CustomDropdown, DownloadPreviewCard, DuplicateWarningBanner, SyncHistoryModal, EditModal } from '@components';
+import {
+    YOUTUBE_URL_REGEX,
+    BITRATE_OPTIONS,
+    getSyncIntervalOptions,
     type DownloadSectionProps,
     matchesSearch
 } from '../utils';
@@ -16,12 +17,40 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
     const [showHistory, setShowHistory] = useState(false);
     const { t } = useLanguage();
     const [showEditMetadata, setShowEditMetadata] = useState(false);
+    const [editingItem, setEditingItem] = useState<DownloadItem | null>(null);
+    const [showBulkEdit, setShowBulkEdit] = useState(false);
 
     // Global Hook
-    const manager = useDownload();
-    const isBusy = manager.downloadState === 'fetching' || manager.downloadState === 'downloading';
+    let manager = useDownload();
 
-    const { 
+    // ==========================================
+    // 🛠 DEBUG UI MODE
+    // ==========================================
+    const isDebugUI = false;
+    if (isDebugUI) {
+        manager = {
+            ...manager,
+            downloadState: DOWNLOAD_STATUS.DOWNLOADING,
+            playlistTitle: 'Playlist Nhạc Đen Vâu Mockup',
+            activeCount: 2,
+            totalProgress: 35,
+            previewItems: [
+                { id: '1', title: 'Mơ ft. Hậu Vi (Official Audio)', artist: 'Đen', album: 'KOBUKOVU', status: 'completed', progress: 100, thumbnail: 'https://i.ytimg.com/vi/mock1/hqdefault.jpg' },
+                { id: '2', title: 'Cô Gái Bàn Bên ft Lynk Lee', artist: 'Đen', album: 'KOBUKOVU', status: 'downloading', progress: 45, thumbnail: 'https://i.ytimg.com/vi/mock2/hqdefault.jpg' },
+                { id: '3', title: 'Mưa Trên Những Mái Tôn', artist: 'Đen', album: 'KOBUKOVU', status: 'pending', progress: 0, thumbnail: 'https://i.ytimg.com/vi/mock3/hqdefault.jpg' },
+            ],
+            downloads: new Map([
+                ['1', { id: '1', title: 'Mơ ft. Hậu Vi (Official Audio)', artist: 'Đen', album: 'KOBUKOVU', status: 'completed', progress: 100, thumbnail: 'https://i.ytimg.com/vi/mock1/hqdefault.jpg' }],
+                ['2', { id: '2', title: 'Cô Gái Bàn Bên ft Lynk Lee', artist: 'Đen', album: 'KOBUKOVU', status: 'downloading', progress: 45, thumbnail: 'https://i.ytimg.com/vi/mock2/hqdefault.jpg' }],
+                ['3', { id: '3', title: 'Mưa Trên Những Mái Tôn', artist: 'Đen', album: 'KOBUKOVU', status: 'pending', progress: 0, thumbnail: 'https://i.ytimg.com/vi/mock3/hqdefault.jpg' }],
+            ])
+        } as any;
+    }
+    // ==========================================
+
+    const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING;
+
+    const {
         isSyncing,
         handleSyncLibrary
     } = useLibrary();
@@ -69,6 +98,11 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
 
     const handleFetchAndDownload = async () => {
         if (!manager.url.trim()) return;
+
+        if (manager.downloadState === DOWNLOAD_STATUS.PREVIEW) {
+            await manager.executeDownload(false);
+            return;
+        }
 
         const result = await manager.fetchInfo(manager.url, 'section');
 
@@ -131,7 +165,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                                     value={manager.url}
                                     onChange={(e) => manager.setUrl(e.target.value)}
                                     placeholder={t('downloader.urlPlaceholder')}
-                                    disabled={manager.downloadState === 'downloading'}
+                                    disabled={manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING}
                                     onKeyDown={(e) => e.key === 'Enter' && handleFetchAndDownload()}
                                 />
                                 <button type="button" className="paste-icon-btn" onClick={handlePaste} title="Paste from clipboard">
@@ -146,44 +180,54 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                             >
                                 {isBusy ? (
                                     <Loader2 size={16} className="spinning" />
-                                ) : manager.downloadState === 'preview' ? (
+                                ) : manager.downloadState === DOWNLOAD_STATUS.PREVIEW ? (
                                     <Download size={16} />
                                 ) : (
                                     <Search size={16} />
                                 )}
                                 <span>
-                                    {manager.downloadState === 'fetching'
+                                    {manager.downloadState === DOWNLOAD_STATUS.FETCHING
                                         ? t('downloader.searching')
-                                        : manager.downloadState === 'downloading'
+                                        : manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING
                                             ? t('downloader.downloading')
-                                            : manager.downloadState === 'preview'
+                                            : manager.downloadState === DOWNLOAD_STATUS.PREVIEW
                                                 ? t('downloader.downloadNow')
                                                 : t('downloader.fetchInfo')}
                                 </span>
                             </button>
                         </div>
 
-                        {manager.videoInfo && (
+                        {manager.previewItems.length > 0 && (
                             <div className="downloader-result-area">
-                                <div 
-                                    className="preview-with-actions clickable" 
-                                    onClick={() => manager.downloadState === 'preview' && setShowEditMetadata(true)}
-                                    title={t('common.edit')}
-                                >
-                                    <DownloadPreviewCard info={manager.videoInfo} />
-                                    <div className="edit-overlay">
-                                        <div className="edit-pill">
-                                            <Edit2 size={ICON_SIZES.TINY} />
-                                            <span>{t('common.edit')}</span>
-                                        </div>
-                                    </div>
+                                <div className="preview-items-list" style={{ maxHeight: '600px', overflowY: 'auto', marginBottom: '12px' }}>
+                                    {manager.previewItems.map((item) => (
+                                        <DownloadPreviewCard
+                                            key={item.id}
+                                            info={item}
+                                            onClick={manager.downloadState === DOWNLOAD_STATUS.PREVIEW ? () => setEditingItem(item) : undefined}
+                                            badgeCount={0}
+                                        />
+                                    ))}
                                 </div>
 
-                                {manager.downloadState === 'preview' && (
+                                {manager.downloadState === DOWNLOAD_STATUS.PREVIEW && manager.previewItems.length > 1 && (
+                                    <div className="action-buttons horizontal" style={{ marginBottom: '12px' }}>
+                                        <button
+                                            type="button"
+                                            className="edit-btn bulk"
+                                            onClick={() => setShowBulkEdit(true)}
+                                        >
+                                            <Edit2 size={ICON_SIZES.TINY} />
+                                            <span>{t('downloader.editAll', { count: manager.previewItems.length })}</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {manager.downloadState === DOWNLOAD_STATUS.PREVIEW && (
                                     <DuplicateWarningBanner duplicateInfo={manager.duplicateInfo} />
                                 )}
 
-                                {manager.downloadState === 'preview' && manager.duplicateInfo.warning && (
+                                {manager.downloadState === DOWNLOAD_STATUS.PREVIEW && manager.duplicateInfo.warning && (
                                     <div className="action-buttons horizontal">
                                         <button type="button" className="secondary-btn" onClick={() => manager.resetDownload()}>
                                             {t('common.cancel')}
@@ -193,51 +237,64 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                                         </button>
                                     </div>
                                 )}
-
-                                {manager.downloadState === 'downloading' && (
-                                    <DownloadProgressBar progress={manager.downloadProgress} />
-                                )}
-
-                                {manager.downloadState === 'success' && (
-                                    <div className="inline-success-banner">
-                                        <div className="success-info">
-                                            <CheckCircle2 size={18} className="success-icon" />
-                                            <div className="text-details">
-                                                <span className="status-title">{t('downloader.success')}</span>
-                                                {manager.downloadedPath && (
-                                                    <span className="file-path">{manager.downloadedPath}</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="action-group">
-                                            {manager.downloadedPath && (
-                                                <button
-                                                    type="button"
-                                                    className="folder-btn"
-                                                    onClick={() => window.electronAPI.openItemPath(manager.downloadedPath!)}
-                                                    title={t('downloader.openFolder')}
-                                                >
-                                                    <FolderOpen size={18} />
-                                                </button>
-                                            )}
-                                            <button type="button" className="done-btn" onClick={() => manager.resetDownload()}>
-                                                {t('common.success')}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {manager.downloadState === 'error' && (
-                                    <div className="download-feedback error">
-                                        <AlertCircle size={16} />
-                                        <span>{manager.downloadError}</span>
-                                        <button type="button" className="reset-link" onClick={() => manager.resetDownload()}>
-                                            {t('common.cancel')}
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                         )}
+
+                        {manager.downloads.size > 0 && (
+                            <div className="downloader-result-area">
+                                <div className="queue-mini-monitor">
+                                    <div className="monitor-header">
+                                        <span
+                                            className="monitor-title"
+                                            title={manager.downloads.size === 1 ? Array.from(manager.downloads.values())[0].title : ''}
+                                            style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: '16px' }}
+                                        >
+                                            {manager.downloads.size === 1
+                                                ? Array.from(manager.downloads.values())[0].title
+                                                : t('downloader.downloadingCount', { count: manager.activeCount })}
+                                        </span>
+                                        <span>{Math.round(manager.totalProgress)}%</span>
+                                    </div>
+                                    <div className="monitor-bar">
+                                        <div className="fill" style={{ width: `${manager.totalProgress}%` }} />
+                                    </div>
+                                    {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
+                                        <div className="monitor-actions">
+                                            <button className="reset-link" onClick={() => manager.resetDownload()}>
+                                                <X size={14} />
+                                                <span>{t('common.clear')}</span>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* YouTube Account Authentication */}
+                {showsDownloader && (
+                    <div className="setting-item youtube-auth-item">
+                        <div className="setting-info">
+                            <div className="title-with-icon">
+                                <Video size={ICON_SIZES.SMALL} color="#FF0000" />
+                                <h3>{t('settings.youtube.title')}</h3>
+                            </div>
+                            <p>{manager.isLoggedIn ? t('settings.youtube.loggedInDesc') : t('settings.youtube.loggedOutDesc')}</p>
+                        </div>
+                        <div className="setting-control">
+                            {manager.isLoggedIn ? (
+                                <button type="button" className="secondary-btn logout-btn" onClick={manager.logout}>
+                                    <LogOut size={ICON_SIZES.TINY} />
+                                    <span>{t('settings.youtube.logout')}</span>
+                                </button>
+                            ) : (
+                                <button type="button" className="primary-btn login-btn" onClick={manager.handleLogin}>
+                                    <LogIn size={ICON_SIZES.TINY} />
+                                    <span>{t('settings.youtube.login')}</span>
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -320,10 +377,10 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                             <p>{t('settings.downloads.maintenanceDesc')}</p>
                         </div>
                         <div className="setting-control maintenance-actions">
-                            <button 
+                            <button
                                 type="button"
-                                className="history-btn" 
-                                onClick={() => setShowHistory(true)} 
+                                className="history-btn"
+                                onClick={() => setShowHistory(true)}
                                 title={t('libraryCleanup.viewHistory')}
                             >
                                 <History size={ICON_SIZES.XSMALL} />
@@ -342,24 +399,59 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery })
                 )}
             </div>
 
-            <SyncHistoryModal 
-                isOpen={showHistory} 
-                onClose={() => setShowHistory(false)} 
+            <SyncHistoryModal
+                isOpen={showHistory}
+                onClose={() => setShowHistory(false)}
             />
 
-            {showEditMetadata && manager.videoInfo && (
+            {editingItem && (
                 <EditModal
                     isOpen={true}
                     type="song"
                     data={{
-                        title: manager.videoInfo.title,
-                        artist: manager.videoInfo.artist,
-                        album: manager.videoInfo.album,
-                        coverArt: manager.videoInfo.thumbnail,
+                        title: editingItem.title,
+                        artist: editingItem.artist,
+                        album: editingItem.album,
+                        coverArt: editingItem.thumbnail,
                     } as any}
-                    onClose={() => setShowEditMetadata(false)}
-                    onSave={(data) => {
-                        manager.updateMetadata(data);
+                    onClose={() => setEditingItem(null)}
+                    onSave={(data: any) => {
+                        manager.updateMetadata(editingItem.id, data);
+                        setEditingItem(null);
+                    }}
+                />
+            )}
+
+            {(showBulkEdit || (showEditMetadata && manager.previewItems.length === 1)) && (
+                <EditModal
+                    isOpen={true}
+                    isBulk={manager.previewItems.length > 1}
+                    type="song"
+                    data={manager.previewItems.length === 1 ? {
+                        title: manager.previewItems[0].title,
+                        artist: manager.previewItems[0].artist,
+                        album: manager.previewItems[0].album,
+                        coverArt: manager.previewItems[0].thumbnail,
+                    } as any : {
+                        title: t('downloader.bulkEditTitle'),
+                        artist: manager.previewItems[0]?.artist || '',
+                        album: manager.playlistTitle || manager.previewItems[0]?.album || '',
+                        coverArt: '',
+                    } as any}
+                    onClose={() => {
+                        setShowBulkEdit(false);
+                        setShowEditMetadata(false);
+                    }}
+                    onSave={(data: any) => {
+                        if (manager.previewItems.length === 1) {
+                            manager.updateMetadata(manager.previewItems[0].id, data);
+                        } else {
+                            const bulkData: Partial<DownloadItem> = {};
+                            if (data.artist) bulkData.artist = data.artist;
+                            if (data.album) bulkData.album = data.album;
+                            manager.bulkUpdateMetadata(bulkData);
+                        }
+                        setShowBulkEdit(false);
                         setShowEditMetadata(false);
                     }}
                 />
