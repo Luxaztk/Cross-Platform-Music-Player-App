@@ -107,6 +107,12 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [X] **i18n & Developer Experience Hardening**:
     - [X] Loại bỏ hoàn toàn các **Ghost i18n Keys** (enqueued, viewHistory...) và đạt trạng thái "Zero Ghost Key" cho toàn bộ Renderer Process.
     - [X] Xây dựng bộ công cụ Diagnostic: Viết mới `check-i18n-keys.js` và nâng cấp `ghost-css-variables.js` với giao diện báo cáo chuyên nghiệp, hỗ trợ phát hiện tài nguyên dư thừa (Unused detection).
+- [X] **UI/UX Polish & Stability (Zero-Flash Architecture)**:
+    - [X] Triệt tiêu lỗi **UI Flash** tại `LyricsPanel`: Thay thế animation `fadeIn` bằng `transition` mượt mà và mặc định ẩn các phím chức năng khi mount.
+    - [X] Tối ưu khởi động: Loại bỏ dòng chữ "Loading Settings..." gây chớp màn hình, mang lại trải nghiệm mở app tức thì.
+    - [X] **Download UI Polishing**: Tự động mở rộng tag album khi không có badge trạng thái, rút gọn tiêu đề modal quá dài và chuẩn hóa vị trí các mục cài đặt.
+    - [X] **i18n Coverage Audit**: Rà soát và chuyển đổi 100% các đoạn text thuần sang hàm `t()`, đảm bảo tính đa ngôn ngữ tuyệt đối.
+    - [X] **Full Test & Build Stabilization**: Khắc phục triệt để lỗi logic trong bộ test Sidebar/PlayerBar và giải quyết các lỗi biên dịch TS nghiêm trọng, đảm bảo dự án luôn trong trạng thái "Build-Ready".
 
 ---
 

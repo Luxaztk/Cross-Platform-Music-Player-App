@@ -39,11 +39,21 @@ export const DownloadPreviewCard: React.FC<DownloadPreviewCardProps> = ({ info, 
             </div>
             <div className="video-details">
                 <h3>{info.title}</h3>
-                <p>{info.artist}</p>
+                <div className="video-artist">
+                    {info.artist?.split(/(\s(?:ft\.?|x|&|and)\s|,\s?)/i).map((part, i) => {
+                        const isSeparator = /(\s(?:ft\.?|x|&|and)\s|,\s?)/i.test(part);
+                        return (
+                            <span key={i} className={isSeparator ? 'artist-separator' : 'artist-name'}>
+                                {part}
+                            </span>
+                        );
+                    })}
+                </div>
+
                 <div className="metadata-row">
                     <div className="left-meta">
                         <span className="album-tag">{info.album}</span>
-                        {info.status !== DOWNLOAD_STATUS.IDLE && (
+                        {info.status !== DOWNLOAD_STATUS.IDLE && info.status !== DOWNLOAD_STATUS.PREVIEW && (
                             <span className={`status-badge ${info.status}`}>
                                 {t(`downloader.status.${info.status}`)}
                             </span>
@@ -61,7 +71,7 @@ export const DownloadPreviewCard: React.FC<DownloadPreviewCardProps> = ({ info, 
                 </div>
             )}
 
-            {onClick && info.status === DOWNLOAD_STATUS.IDLE && (
+            {onClick && (info.status === DOWNLOAD_STATUS.IDLE || info.status === DOWNLOAD_STATUS.PREVIEW) && (
                 <div className="edit-overlay">
                     <div className="edit-pill">
                         <Edit2 size={ICON_SIZES.TINY} />

@@ -1,407 +1,25 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Home,
-  Search,
-  User,
-  Languages,
-  Settings,
-  X,
-  SlidersHorizontal,
-  Headphones,
-  Check,
-  ChevronRight,
-  ChevronLeft,
-  Palette,
-  Download,
-  ShieldCheck,
-  Loader2,
-} from 'lucide-react';
+import { Home } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
-import { DownloaderModal, type ThemeType } from '@components';
-import {
-  useSearch,
-  useLibrary,
-  useRecentSearches,
-  useLanguage,
-  useTheme,
-  type SearchResults,
-} from '@hooks';
-import { usePlayer, useAudioDevices } from '@music/hooks';
-import type { Song, RecentSearch } from '@music/types';
-
-import { SearchOverlay, type SearchResultItem } from './SearchOverlay';
+import { DownloaderModal } from '@components';
+import { SearchOverlay } from './SearchOverlay';
+import { useHeader } from './useHeader';
+import { SearchInput } from './components/SearchInput';
+import { ProfileMenu } from './components/ProfileMenu';
 import logo from '@music/brand/logos/icon_only_gradient.png';
 import './Header.scss';
 
-interface MenuItem {
-  id: string;
-  label: string;
-  icon?: React.ReactNode;
-  rightElement?: React.ReactNode;
-  action?: () => void;
-  children?: MenuItem[];
-  isDivider?: boolean;
-  isSelected?: boolean;
-  className?: string;
-  themeId?: ThemeType;
-}
-
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  const { t, language, setLanguage } = useLanguage();
-  const { 
-    songs, 
-    playlists, 
-    setLibraryFilter, 
-    isSyncing,
-    handleSyncLibrary
-  } = useLibrary();
-  const { playList, playNext, addToQueue } = usePlayer();
-  const [showProfileMenu, setShowProfileMenu] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [isSearchFocused, setIsSearchFocused] = React.useState(false);
-  const [selectedIndex, setSelectedIndex] = React.useState(0);
-  const [activeMenuStack, setActiveMenuStack] = React.useState<string[]>(['root']);
-  const [renderStack, setRenderStack] = React.useState<string[]>(['root']);
-  const [menuHeight, setMenuHeight] = React.useState<number | undefined>(undefined);
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
-  const { theme, setTheme } = useTheme();
-  const { devices, currentDeviceId, setAudioDevice } = useAudioDevices();
-  const { recentSearches, addSearch, removeSearch, clearAll } = useRecentSearches();
-  const [showDownloader, setShowDownloader] = React.useState(false);
+  const {
+    state,
+    refs,
+    actions,
+    utils
+  } = useHeader();
 
-  const searchResults = useSearch(songs, playlists, searchQuery);
-  const profileRef = React.useRef<HTMLDivElement>(null);
-  const searchRef = React.useRef<HTMLDivElement>(null);
-
-  const flatResults: SearchResultItem[] = [
-    ...searchResults.songs.map((s: Song) => ({ type: 'song' as const, item: s })),
-    ...searchResults.artists.map((a: SearchResults['artists'][number]) => ({
-      type: 'artist' as const,
-      item: a,
-    })),
-    ...searchResults.albums.map((al: SearchResults['albums'][number]) => ({
-      type: 'album' as const,
-      item: al,
-    })),
-  ];
-
-  const handleSelectResult = React.useCallback((result: SearchResultItem) => {
-    if (result.type === 'song') {
-      const songIdx = songs.findIndex((s: Song) => s.id === result.item.id);
-
-      if (songIdx !== -1) playList(songs, songIdx);
-    } else if (result.type === 'artist') {
-      setLibraryFilter({ type: 'artist', values: [result.item.name] });
-      navigate('/playlist/0');
-    } else if (result.type === 'album') {
-      setLibraryFilter({ type: 'album', values: [result.item.name] });
-      navigate('/playlist/0');
-    }
-    setIsSearchFocused(false);
-    setSearchQuery('');
-
-    // Add to recent searches
-    if (result.type === 'song') {
-      addSearch({ type: 'query', text: result.item.title });
-    } else if (result.type === 'artist' || result.type === 'album') {
-      addSearch({
-        type: 'entity',
-        entityType: result.type,
-        id: result.item.id,
-        name: result.item.name,
-      });
-    }
-  }, [songs, playList, setLibraryFilter, navigate, addSearch]);
-
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setShowProfileMenu(false);
-      }
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsSearchFocused(false);
-      }
-    };
-
-    const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setShowProfileMenu(false);
-        setIsSearchFocused(false);
-      }
-
-      if (isSearchFocused && searchQuery) {
-        if (event.key === 'ArrowDown') {
-          event.preventDefault();
-          setSelectedIndex((prev) => Math.min(prev + 1, flatResults.length - 1));
-        } else if (event.key === 'ArrowUp') {
-          event.preventDefault();
-          setSelectedIndex((prev) => Math.max(prev - 1, 0));
-        } else if (event.key === 'Enter') {
-          const selected = flatResults[selectedIndex];
-          if (selected) handleSelectResult(selected);
-        }
-      }
-    };
-
-    if (showProfileMenu || isSearchFocused) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeydown);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeydown);
-    };
-  }, [showProfileMenu, isSearchFocused, selectedIndex, flatResults, searchQuery, handleSelectResult]);
-
-  const handleSelectRecent = (recent: RecentSearch) => {
-    if (recent.type === 'query') {
-      setSearchQuery(recent.text);
-    } else if (recent.type === 'entity') {
-      if (recent.entityType === 'artist') {
-        handleSelectResult({
-          type: 'artist',
-          item: { id: recent.id!, name: recent.name! },
-        });
-      } else if (recent.entityType === 'album') {
-        // Find the album in results or just pass a reconstructed object
-        // Since handleSelectResult only uses id and name for navigation, this is safe
-        handleSelectResult({
-          type: 'album',
-          item: { id: recent.id!, name: recent.name!, artist: '' }, // artist is required by type
-        });
-      }
-    }
-  };
-
-  const handleTestSound = () => {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    const ctx = new AudioContextClass();
-
-    // Check if setSinkId is supported (Experimental)
-    if ('setSinkId' in ctx && typeof (ctx as any).setSinkId === 'function') {
-      (ctx as any)
-        .setSinkId(currentDeviceId)
-        .then(() => {
-          playBeep(ctx);
-        })
-        .catch((e: Error) => {
-          console.error('Failed to set sinkId on audio context', e);
-          playBeep(ctx);
-        });
-    } else {
-      playBeep(ctx);
-    }
-  };
-
-  const playBeep = (ctx: AudioContext) => {
-    const osc = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    osc.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, ctx.currentTime);
-    gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-
-    osc.start();
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
-    osc.stop(ctx.currentTime + 0.5);
-  };
-
-
-  React.useEffect(() => {
-    if (!showProfileMenu) {
-      const timer = setTimeout(() => {
-        setActiveMenuStack(['root']);
-        setRenderStack(['root']);
-        setMenuHeight(undefined);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [showProfileMenu]);
-
-  const handlePushMenu = React.useCallback((id: string) => {
-    setActiveMenuStack((prev) => [...prev, id]);
-    setRenderStack((prev) => [...prev, id]);
-  }, []);
-
-  const handlePopMenu = React.useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveMenuStack((prev) => prev.slice(0, -1));
-    setTimeout(() => {
-      setRenderStack((prev) => prev.slice(0, -1));
-    }, 300);
-  }, []);
-
-  const getMenuItemById = (id: string, items: MenuItem[]): MenuItem | null => {
-    for (const item of items) {
-      if (item.id === id) return item;
-      if (item.children) {
-        const found = getMenuItemById(id, item.children);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
-
-  const rootMenuItems: MenuItem[] = [
-    {
-      id: 'language',
-      label: t('header.language'),
-      icon: <Languages size={16} />,
-      rightElement: (
-        <div className={`lang-toggle ${language}`}>
-          <span className="lang-label vi">VI</span>
-          <div className="toggle-handle"></div>
-          <span className="lang-label en">EN</span>
-        </div>
-      ),
-      action: () => setLanguage(language === 'vi' ? 'en' : 'vi'),
-    },
-    { id: 'div1', label: '', isDivider: true },
-    {
-      id: 'themes',
-      label: t('header.theme') || 'Chủ đề',
-      icon: <Palette size={16} />,
-      children: [
-        {
-          id: 'midnight',
-          label: 'Midnight',
-          themeId: 'midnight',
-          action: () => setTheme('midnight'),
-          isSelected: theme === 'midnight',
-          rightElement: theme === 'midnight' ? <Check size={14} className="check-icon" /> : undefined,
-        },
-        {
-          id: 'amoled',
-          label: 'Amoled',
-          themeId: 'amoled',
-          action: () => setTheme('amoled'),
-          isSelected: theme === 'amoled',
-          rightElement: theme === 'amoled' ? <Check size={14} className="check-icon" /> : undefined,
-        },
-        {
-          id: 'nord',
-          label: 'Nord',
-          themeId: 'nord',
-          action: () => setTheme('nord'),
-          isSelected: theme === 'nord',
-          rightElement: theme === 'nord' ? <Check size={14} className="check-icon" /> : undefined,
-        },
-        {
-          id: 'rose',
-          label: 'Rose',
-          themeId: 'rose',
-          action: () => setTheme('rose'),
-          isSelected: theme === 'rose',
-          rightElement: theme === 'rose' ? <Check size={14} className="check-icon" /> : undefined,
-        },
-        {
-          id: 'ocean',
-          label: 'Ocean',
-          themeId: 'ocean',
-          action: () => setTheme('ocean'),
-          isSelected: theme === 'ocean',
-          rightElement: theme === 'ocean' ? <Check size={14} className="check-icon" /> : undefined,
-        },
-        {
-          id: 'snow',
-          label: 'Snow',
-          themeId: 'snow',
-          action: () => setTheme('snow'),
-          isSelected: theme === 'snow',
-          rightElement: theme === 'snow' ? <Check size={14} className="check-icon" /> : undefined,
-        },
-      ],
-    },
-    { id: 'div2', label: '', isDivider: true },
-    {
-      id: 'audioOut',
-      label: t('settings.audioOutput') || 'Đầu ra âm thanh',
-      icon: <Headphones size={16} />,
-      children: [
-        {
-          id: 'default',
-          label: t('settings.defaultDevice') || 'Mặc định',
-          action: () => setAudioDevice('default'),
-          isSelected: currentDeviceId === 'default',
-          rightElement: currentDeviceId === 'default' ? <Check size={14} className="check-icon" /> : undefined,
-        },
-        ...devices
-          .filter((d) => d.deviceId !== 'default' && d.deviceId !== 'communications')
-          .map((d) => ({
-            id: d.deviceId,
-            label: d.label,
-            action: () => setAudioDevice(d.deviceId),
-            isSelected: currentDeviceId === d.deviceId,
-            rightElement: currentDeviceId === d.deviceId ? <Check size={14} className="check-icon" /> : undefined,
-          })),
-        { id: 'div3', label: '', isDivider: true },
-        {
-          id: 'test',
-          label: t('settings.testSound') || 'Kiểm tra âm thanh',
-          action: handleTestSound,
-          className: 'test-sound-btn',
-        },
-      ],
-    },
-    { id: 'div4', label: '', isDivider: true },
-    {
-      id: 'scan',
-      label: t('libraryCleanup.title'),
-      icon: isSyncing ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />,
-      action: () => {
-        handleSyncLibrary();
-        setShowProfileMenu(false);
-      },
-    },
-    {
-      id: 'downloader',
-      label: t('downloader.title'),
-      icon: <Download size={16} />,
-      action: () => {
-        setShowDownloader(true);
-        setShowProfileMenu(false);
-      },
-    },
-    {
-      id: 'settings',
-      label: t('header.settings'),
-      icon: <Settings size={16} />,
-      action: () => {
-        navigate('/settingsPage');
-        setShowProfileMenu(false);
-      },
-    },
-  ];
-
-  const menusToRender = renderStack.map((id) => {
-    let menu = null;
-    if (id === 'root') {
-      menu = { id: 'root', title: '', items: rootMenuItems };
-    } else {
-      const item = getMenuItemById(id, rootMenuItems);
-      if (item && item.children) {
-        menu = { id: item.id, title: item.label, items: item.children };
-      }
-    }
-    return menu;
-  });
-
-  React.useEffect(() => {
-    if (showProfileMenu && dropdownRef.current) {
-      const activeIndex = activeMenuStack.length - 1;
-      const slider = dropdownRef.current.querySelector('.drilldown-slider');
-      if (slider && slider.children[activeIndex]) {
-        const activePage = slider.children[activeIndex] as HTMLElement;
-        // The container has 1px top/bottom border
-        setMenuHeight(activePage.offsetHeight + 2);
-      }
-    }
-  }, [showProfileMenu, activeMenuStack, menusToRender]);
+  const { t } = utils;
 
   return (
     <>
@@ -416,137 +34,60 @@ const Header: React.FC = () => {
           <button className="icon-button nav-controls" onClick={() => navigate('/playlist/0')} title={t('header.home')}>
             <Home size={ICON_SIZES.XLARGE} />
           </button>
-          <div className="search-bar" ref={searchRef}>
-            <Search className="search-icon" size={ICON_SIZES.SMALL} />
-            <input
-              type="text"
-              placeholder={t('header.searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setSelectedIndex(0);
-                setIsSearchFocused(true);
-              }}
-              onFocus={() => setIsSearchFocused(true)}
+          
+          <div className="search-bar-wrapper">
+            <SearchInput
+                searchQuery={state.searchQuery}
+                isSearchFocused={state.isSearchFocused}
+                onSearchChange={(val) => {
+                    actions.setSearchQuery(val);
+                    actions.setSelectedIndex(0);
+                    actions.setIsSearchFocused(true);
+                }}
+                onFocus={() => actions.setIsSearchFocused(true)}
+                onClear={() => actions.setSearchQuery('')}
+                searchRef={refs.searchRef}
+                t={t}
             />
-            {searchQuery && (
-              <button className="clear-search" onClick={() => setSearchQuery('')} title={t('common.clear')}>
-                <X size={14} />
-              </button>
-            )}
-            <div className="search-divider" />
-            <button className="filter-options-btn" title={t('header.filterOptions')}>
-              <SlidersHorizontal size={14} />
-            </button>
 
-            {isSearchFocused && (
+            {state.isSearchFocused && (
               <SearchOverlay
-                query={searchQuery}
-                results={searchResults}
-                recentSearches={recentSearches}
-                selectedIndex={selectedIndex}
-                onSelect={handleSelectResult}
-                onSelectRecent={handleSelectRecent}
-                onRemoveRecent={removeSearch}
-                onClearRecent={clearAll}
-                onPlayNext={playNext}
-                onAddToQueue={addToQueue}
-                onClose={() => setIsSearchFocused(false)}
+                query={state.searchQuery}
+                results={state.searchResults}
+                recentSearches={state.recentSearches}
+                selectedIndex={state.selectedIndex}
+                onSelect={actions.handleSelectResult}
+                onSelectRecent={actions.handleSelectRecent}
+                onRemoveRecent={actions.removeRecentSearch}
+                onClearRecent={actions.clearRecentSearches}
+                onPlayNext={actions.playNext}
+                onAddToQueue={actions.addToQueue}
               />
             )}
           </div>
         </div>
 
         <div className="header-right">
-          <div className="profile-container" ref={profileRef}>
-            <button
-              className={`user-profile-btn ${showProfileMenu ? 'active' : ''}`}
-              title={t('header.profile')}
-              onClick={() => {
-                if (showProfileMenu) {
-                  setShowProfileMenu(false);
-                } else {
-                  setShowProfileMenu(true);
-                }
-              }}
-            >
-              <div className="avatar">
-                <User size={ICON_SIZES.MEDIUM} />
-              </div>
-            </button>
-
-            {showProfileMenu && (
-              <div
-                className="profile-dropdown"
-                onClick={(e) => e.stopPropagation()}
-                ref={dropdownRef}
-                style={{
-                  height: menuHeight ? `${menuHeight}px` : undefined,
-                  transition: 'height 0.3s ease',
-                }}
-              >
-                <div
-                  className="drilldown-slider"
-                  style={{
-                    transform: `translateX(-${activeMenuStack.length - 1}00%)`,
-                  }}
-                >
-                  {menusToRender.map((menu, index) => {
-                    if (!menu) return null;
-                    return (
-                      <div key={menu.id} className="drilldown-page">
-                        {index > 0 && (
-                          <div className="dropdown-header" onClick={handlePopMenu}>
-                            <ChevronLeft size={16} className="back-icon" />
-                            <span>{menu.title}</span>
-                          </div>
-                        )}
-                        <div className="dropdown-items">
-                          {menu.items.map((item) =>
-                            item.isDivider ? (
-                              <div key={item.id} className="dropdown-divider" />
-                            ) : (
-                              <button
-                                key={item.id}
-                                className={`dropdown-item ${item.isSelected ? 'selected' : ''} ${item.className || ''}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (item.children) {
-                                    handlePushMenu(item.id);
-                                  } else if (item.action) {
-                                    item.action();
-                                  }
-                                }}
-                              >
-                                <div className="item-left">
-                                  {item.themeId && <div className="theme-dot" data-theme={item.themeId} />}
-                                  {item.icon && <div className="item-icon">{item.icon}</div>}
-                                  <span className="item-label">{item.label}</span>
-                                </div>
-                                <div className="item-right">
-                                  {item.rightElement}
-                                  {item.children && <ChevronRight size={16} className="item-chevron" />}
-                                </div>
-                              </button>
-                            ),
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+          <ProfileMenu
+            isOpen={state.showProfileMenu}
+            activeMenuStack={state.activeMenuStack}
+            menusToRender={utils.menusToRender}
+            menuHeight={state.menuHeight}
+            dropdownRef={refs.dropdownRef}
+            profileRef={refs.profileRef}
+            onToggle={() => actions.setShowProfileMenu(!state.showProfileMenu)}
+            onPushMenu={actions.handlePushMenu}
+            onPopMenu={actions.handlePopMenu}
+            t={t}
+          />
         </div>
       </header>
 
       <DownloaderModal 
-        key={showDownloader ? 'open' : 'closed'} 
-        isOpen={showDownloader} 
-        onClose={() => setShowDownloader(false)} 
+        key={state.showDownloader ? 'open' : 'closed'} 
+        isOpen={state.showDownloader} 
+        onClose={() => actions.setShowDownloader(false)} 
       />
-
     </>
   );
 };

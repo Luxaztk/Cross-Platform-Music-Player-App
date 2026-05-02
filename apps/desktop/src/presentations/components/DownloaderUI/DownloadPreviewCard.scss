@@ -57,9 +57,10 @@
     img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain; // Prevent clipping
       transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
 
     .status-overlay-icon {
       position: absolute;
@@ -148,14 +149,19 @@
       text-overflow: ellipsis;
     }
 
-    p {
+    .video-artist {
       margin: 0 0 8px 0;
       font-size: var(--font-size-xs);
       color: var(--color-text-muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+
+      .artist-separator {
+        opacity: 0.6;
+      }
     }
+
 
     .metadata-row {
       display: flex;
@@ -176,6 +182,7 @@
         padding: 1px 4px;
         border-radius: 2px;
         letter-spacing: 0.5px;
+        flex-shrink: 0;
 
         &.completed {
           background: rgba(34, 197, 94, 0.1);
@@ -202,7 +209,8 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 120px;
+        flex: 1;
+        min-width: 0;
       }
 
       .progress-text {

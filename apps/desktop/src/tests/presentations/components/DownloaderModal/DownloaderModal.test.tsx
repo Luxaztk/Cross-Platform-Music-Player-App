@@ -36,9 +36,18 @@ describe('DownloaderModal', () => {
       url: '',
       setUrl: mockSetUrl,
       downloadState: 'idle',
+      previewItems: [],
+      downloads: new Map(),
+      duplicateInfo: { warning: null },
       fetchInfo: mockFetchInfo,
       resetDownload: mockResetDownload,
-      initiator: 'modal'
+      initiator: 'modal',
+      authRequired: false,
+      playlistTitle: null,
+      isLoggedIn: false,
+      handleLogin: vi.fn(),
+      updateMetadata: vi.fn(),
+      bulkUpdateMetadata: vi.fn(),
     });
   });
 
@@ -67,6 +76,9 @@ describe('DownloaderModal', () => {
       url: 'https://youtube.com/watch?v=123',
       setUrl: mockSetUrl,
       downloadState: 'idle',
+      previewItems: [],
+      downloads: new Map(),
+      duplicateInfo: { warning: null },
       fetchInfo: mockFetchInfo,
       resetDownload: mockResetDownload,
     });
@@ -84,6 +96,8 @@ describe('DownloaderModal', () => {
     (useDownload as any).mockReturnValue({
       url: 'https://youtube.com/watch?v=123',
       downloadState: 'fetching',
+      previewItems: [],
+      downloads: new Map(),
       fetchInfo: mockFetchInfo,
     });
 
@@ -95,6 +109,8 @@ describe('DownloaderModal', () => {
     (useDownload as any).mockReturnValue({
       downloadState: 'error',
       downloadError: 'Failed to fetch',
+      previewItems: [{ id: '123', title: 'Test' }],
+      downloads: new Map(),
       fetchInfo: mockFetchInfo,
     });
 
@@ -106,8 +122,9 @@ describe('DownloaderModal', () => {
   it('shows preview state when info is fetched', () => {
     (useDownload as any).mockReturnValue({
       downloadState: 'preview',
-      videoInfo: { id: '123', title: 'Song Title', artist: 'Artist', album: 'Album', thumbnail: 'thumb.jpg', duration: 100 },
-      duplicateInfo: { isDuplicate: false },
+      previewItems: [{ id: '123', title: 'Song Title', artist: 'Artist', album: 'Album', thumbnail: 'thumb.jpg', duration: 100 }],
+      downloads: new Map(),
+      duplicateInfo: { warning: null },
       fetchInfo: mockFetchInfo,
     });
 
@@ -118,6 +135,8 @@ describe('DownloaderModal', () => {
   it('prevents closing while busy', async () => {
     (useDownload as any).mockReturnValue({
       downloadState: 'downloading',
+      previewItems: [],
+      downloads: new Map(),
       fetchInfo: mockFetchInfo,
     });
     

@@ -2,7 +2,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import PlayerBar from '../../../../presentations/components/PlayerBar/PlayerBar';
+import { PlayerBar } from '../../../../presentations/components/PlayerBar';
 import { usePlayer, useUI } from '@music/hooks';
 import { useTheme } from '@hooks';
 
@@ -25,8 +25,10 @@ vi.mock('../../../../presentations/components/PlayerBar/QueuePanel', () => ({
 
 vi.mock('@constants', () => ({
   ICON_SIZES: {
+    XSMALL: 14,
     SMALL: 16,
     MEDIUM: 24,
+    LARGE: 32,
   },
 }));
 
@@ -90,7 +92,7 @@ describe('PlayerBar', () => {
     const user = userEvent.setup();
     const { rerender } = render(<PlayerBar />);
     
-    const playBtn = screen.getByTitle('Play');
+    const playBtn = screen.getByTitle('player.play');
     await user.click(playBtn);
     expect(mockPlay).toHaveBeenCalled();
 
@@ -100,7 +102,7 @@ describe('PlayerBar', () => {
     } as unknown as ReturnType<typeof usePlayer>);
     
     rerender(<PlayerBar />);
-    const pauseBtn = screen.getByTitle('Pause');
+    const pauseBtn = screen.getByTitle('player.pause');
     await user.click(pauseBtn);
     expect(mockPause).toHaveBeenCalled();
   });
@@ -109,10 +111,10 @@ describe('PlayerBar', () => {
     const user = userEvent.setup();
     render(<PlayerBar />);
     
-    await user.click(screen.getByTitle('Next'));
+    await user.click(screen.getByTitle('player.next'));
     expect(mockNext).toHaveBeenCalled();
     
-    await user.click(screen.getByTitle('Previous'));
+    await user.click(screen.getByTitle('player.previous'));
     expect(mockPrev).toHaveBeenCalled();
   });
 
@@ -120,10 +122,10 @@ describe('PlayerBar', () => {
     const user = userEvent.setup();
     render(<PlayerBar />);
     
-    await user.click(screen.getByTitle('Shuffle'));
+    await user.click(screen.getByTitle('player.shuffle'));
     expect(mockToggleShuffle).toHaveBeenCalled();
     
-    await user.click(screen.getByTitle('Repeat'));
+    await user.click(screen.getByTitle('player.repeat'));
     expect(mockSetRepeatMode).toHaveBeenCalledWith('ALL');
   });
 
@@ -138,7 +140,6 @@ describe('PlayerBar', () => {
     render(<PlayerBar />);
     const progressSlider = screen.getByPlaceholderText('Player');
     
-    // Note: handleSeekEnd checks isSeeking state which is set on PointerDown
     fireEvent.pointerDown(progressSlider);
     fireEvent.change(progressSlider, { target: { value: '200' } });
     fireEvent.pointerUp(progressSlider);
@@ -150,7 +151,7 @@ describe('PlayerBar', () => {
     const user = userEvent.setup();
     render(<PlayerBar />);
     
-    const queueBtn = screen.getByTitle('Queue Items');
+    const queueBtn = screen.getByTitle('player.queue');
     await user.click(queueBtn);
     expect(screen.getByTestId('queue-panel')).toBeInTheDocument();
     
@@ -162,7 +163,7 @@ describe('PlayerBar', () => {
     const user = userEvent.setup();
     render(<PlayerBar />);
     
-    await user.click(screen.getByTitle('Lyrics'));
+    await user.click(screen.getByTitle('player.lyrics'));
     expect(mockToggleLyrics).toHaveBeenCalled();
   });
 });

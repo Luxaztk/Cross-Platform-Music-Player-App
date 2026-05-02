@@ -20,6 +20,7 @@ export const translations = {
       more: 'Thêm',
       remove: 'Gỡ',
       system: 'Hệ thống',
+      moreActions: 'Thêm hành động',
     },
     header: {
       searchPlaceholder: 'Bạn muốn nghe gì?',
@@ -44,6 +45,8 @@ export const translations = {
       sortZA: 'Tên (Z-A)',
       sortDefault: 'Mặc định',
       noResults: 'Không tìm thấy kết quả nào.',
+      collapse: 'Thu gọn sidebar',
+      expand: 'Mở rộng sidebar',
     },
     playlist: {
       songs: 'bài hát',
@@ -214,6 +217,15 @@ export const translations = {
     },
     player: {
       fileNotFound: 'Không tìm thấy file: "{title}". Đã chuyển bài tiếp theo.',
+      play: 'Phát',
+      pause: 'Tạm dừng',
+      next: 'Bài tiếp theo',
+      previous: 'Bài trước đó',
+      shuffle: 'Phát ngẫu nhiên',
+      repeat: 'Lặp lại',
+      notPlaying: 'Đang không phát nhạc',
+      queue: 'Hàng đợi',
+      lyrics: 'Lời bài hát',
     },
     downloader: {
       title: 'Tải nhạc Trực tuyến',
@@ -250,6 +262,8 @@ export const translations = {
         processing: 'Đang xử lý...',
         completed: 'Đã xong',
         error: 'Lỗi',
+        preview: 'Xem trước',
+        converting: 'Đang chuyển đổi...',
       },
       enqueued: 'Đã thêm {count} bài hát vào hàng đợi tải xuống',
     },
@@ -314,6 +328,7 @@ export const translations = {
       more: 'More',
       remove: 'Remove',
       system: 'System',
+      moreActions: 'More actions',
     },
     header: {
       searchPlaceholder: 'What do you want to play?',
@@ -338,6 +353,8 @@ export const translations = {
       sortZA: 'Name (Z-A)',
       sortDefault: 'Default',
       noResults: 'No results found.',
+      collapse: 'Collapse sidebar',
+      expand: 'Expand sidebar',
     },
     playlist: {
       songs: 'songs',
@@ -508,6 +525,15 @@ export const translations = {
     },
     player: {
       fileNotFound: 'File not found: "{title}". Skipping to next song.',
+      play: 'Play',
+      pause: 'Pause',
+      next: 'Next song',
+      previous: 'Previous song',
+      shuffle: 'Shuffle',
+      repeat: 'Repeat',
+      notPlaying: 'Not playing',
+      queue: 'Queue',
+      lyrics: 'Lyrics',
     },
     downloader: {
       title: 'Online Downloader',
@@ -546,6 +572,8 @@ export const translations = {
         processing: 'Processing...',
         completed: 'Completed',
         error: 'Error',
+        preview: 'Preview',
+        converting: 'Converting...',
       },
     },
     libraryCleanup: {

@@ -1,11 +1,9 @@
-feat(downloader): standardize downloader UI and implement bulk metadata editing
+feat: UI/UX hardening and stability improvements
 
-- Refactor `DownloaderModal` and `DownloadSection` to use `DownloadPreviewCard` consistently.
-- Add visual status indicators (Success, Pending, Downloading) with icons and progress bars.
-- Implement `isBulk` mode in `EditModal` to allow batch updating Artist and Album for playlists.
-- Disable song editing during the download process to ensure data integrity.
-- Fix UI layout issues including vertical alignment and height management in downloader components.
-- Resolve multiple TypeScript errors in `DownloadProvider`, `DownloaderUI`, and tests.
-- Achieve "Zero Ghost Key" status by adding missing i18n keys and creating `check-i18n-keys.js`.
-- Upgrade `ghost-css-variables.js` with professional reporting and unused variable detection.
-- Update `____ROADMAP.md` to reflect V5 Downloader and DX improvements.
+- Fix UI Flash in LyricsPanel by removing redundant fadeIn animations and delaying hints
+- Eliminate startup flicker in SettingsProvider by removing ephemeral loading text
+- Optimize DownloadPreviewCard layout: album tags now expand to full width when status badges are absent
+- Improve DownloadModal: titles are now properly truncated with ellipsis if too long
+- Re-order DownloadSection: moved auto-import folder settings to the bottom for better hierarchy
+- Standardize i18n: replaced remaining plain text with `t()` calls for 100% translation coverage
+- Build & Test Stabilization: fixed critical test failures in Sidebar, PlayerBar, and DownloaderModal, and resolved unused variable build errors
