@@ -104,7 +104,7 @@ Finalize secondary screens.
     - [X] Update `(tabs)/_layout.tsx` to hide default headers and tab bar
     - [X] Update `PlayerBar.tsx` layout and progress bar
     - [X] Add translation strings for new UI elements
-    - [ ] Install `lucide-react-native` and replace existing icons to use Lucide icons
+    - [ ] Install `lucide-react-native` and replace existing icons to use Lucide icons // Skip for now because using Lucide requires re-building the development build
 - [ ] **Phase 2: Home & Playlist Management**
     - [ ] Ensure "All songs" default playlist
     - [ ] Update `library.tsx` playlist row design
