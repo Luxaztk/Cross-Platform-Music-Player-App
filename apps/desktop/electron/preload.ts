@@ -60,12 +60,14 @@ export interface ElectronAPI {
   incrementLyricUsage: (id: number | string) => Promise<void>
   patchSong: (songId: string, updates: Partial<Song>) => Promise<Song | null>
   fetchYtInfo: (url: string) => Promise<{ success: boolean; info?: YoutubeInfo; error?: string }>
+  fetchPlaylistInfo: (url: string) => Promise<{ success: boolean; items?: YoutubeInfo[]; error?: string }>
   downloadYtAudio: (
+    id: string,
     url: string,
     title: string,
   ) => Promise<{ success: boolean; filePath?: string; error?: string }>
   writeAudioMetadata: (filePath: string, metadata: Partial<Song>) => Promise<void>
-  onDownloadProgress: (callback: (data: { url: string; percent: number }) => void) => () => void
+  onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => () => void
   openItemPath: (filePath: string) => Promise<void>
   deleteFile: (filePath: string) => Promise<void>
   getSettings: () => Promise<any>
@@ -82,6 +84,12 @@ export interface ElectronAPI {
   getSyncHistory: () => Promise<SyncHistoryEntry[]>
   clearSyncHistory: () => Promise<void>
   logSyncEvent: (stats: SyncStats, details: string[]) => Promise<void>
+  
+  // YouTube Authentication
+  openYoutubeAuth: () => Promise<boolean>
+  logoutYoutube: () => Promise<void>
+  getYoutubeAuthStatus: () => Promise<boolean>
+  onYoutubeAuthRequired: (callback: (data: { url: string; id?: string }) => void) => () => void
 }
 
 // Expose safe APIs to the renderer process
@@ -140,12 +148,13 @@ const electronAPI: ElectronAPI = {
 
   // Downloader operations
   fetchYtInfo: (url: string) => ipcRenderer.invoke('fetch-yt-info', url),
-  downloadYtAudio: (url: string, title: string) =>
-    ipcRenderer.invoke('download-yt-audio', url, title),
+  fetchPlaylistInfo: (url: string) => ipcRenderer.invoke('fetch-playlist-info', url),
+  downloadYtAudio: (id: string, url: string, title: string) =>
+    ipcRenderer.invoke('download-yt-audio', id, url, title),
   writeAudioMetadata: (filePath: string, metadata: Partial<Song>) =>
     ipcRenderer.invoke('write-audio-metadata', filePath, metadata),
-  onDownloadProgress: (callback: (data: { url: string; percent: number }) => void) => {
-    const listener = (_event: IpcRendererEvent, data: { url: string; percent: number }) =>
+  onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => {
+    const listener = (_event: IpcRendererEvent, data: { id: string; percent: number }) =>
       callback(data)
     ipcRenderer.on('download-progress', listener)
     return () => ipcRenderer.off('download-progress', listener)
@@ -175,6 +184,16 @@ const electronAPI: ElectronAPI = {
   getSyncHistory: () => ipcRenderer.invoke('library:getSyncHistory'),
   clearSyncHistory: () => ipcRenderer.invoke('library:clearSyncHistory'),
   logSyncEvent: (stats: any, details: string[]) => ipcRenderer.invoke('library:logSyncEvent', stats, details),
+
+  // YouTube Authentication
+  openYoutubeAuth: () => ipcRenderer.invoke('open-youtube-auth'),
+  logoutYoutube: () => ipcRenderer.invoke('logout-youtube'),
+  getYoutubeAuthStatus: () => ipcRenderer.invoke('get-youtube-auth-status'),
+  onYoutubeAuthRequired: (callback) => {
+    const listener = (_event: IpcRendererEvent, data: { url: string; id?: string }) => callback(data)
+    ipcRenderer.on('youtube-auth-required', listener)
+    return () => ipcRenderer.off('youtube-auth-required', listener)
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

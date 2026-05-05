@@ -12,6 +12,7 @@ export * from './useUI';
 
 export * from './useAudioDevices';
 export * from './useLyrics';
+export * from './useLyricSync';
 
 export * from './types';
 export * from './constants';

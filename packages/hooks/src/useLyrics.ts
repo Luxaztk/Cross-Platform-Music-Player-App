@@ -1,16 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { usePlayer } from './usePlayer';
 import { useLibrary } from './useLibrary';
+import { useLyricSync } from './useLyricSync';
 
 import { LyricsParser } from '@music/core';
 import { LYRIC_OFFSET } from './constants/index';
 
-
-
-
 export const useLyrics = () => {
   const { currentSong, progress, updateCurrentSongMetadata } = usePlayer();
   const { repository, handleUpdateSong, handlePatchSong } = useLibrary();
+  const { offset, adjustOffset, setOffset, resetOffset } = useLyricSync();
   
   const [rawLyrics, setRawLyrics] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,8 +25,8 @@ export const useLyrics = () => {
   const currentLineIndex = useMemo(() => {
     if (lyricLines.length === 0) return -1;
     
-    const adjustedProgress = progress - LYRIC_OFFSET;
-
+    // Combine base global offset with user-defined local offset
+    const adjustedProgress = progress - (LYRIC_OFFSET + offset);
 
     let index = -1;
     for (let i = 0; i < lyricLines.length; i++) {
@@ -38,7 +37,7 @@ export const useLyrics = () => {
       }
     }
     return index;
-  }, [lyricLines, progress]);
+  }, [lyricLines, progress, offset]);
 
   // Fetch lyrics when song changes
   useEffect(() => {
@@ -134,6 +133,11 @@ export const useLyrics = () => {
     searchLyrics,
     saveLyrics,
     patchLyricSearchParam,
-    currentLine: currentLineIndex >= 0 ? lyricLines[currentLineIndex] : null
+    currentLine: currentLineIndex >= 0 ? lyricLines[currentLineIndex] : null,
+    // Sync related
+    offset,
+    adjustOffset,
+    setOffset,
+    resetOffset
   };
 };

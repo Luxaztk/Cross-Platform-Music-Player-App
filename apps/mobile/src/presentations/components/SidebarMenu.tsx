@@ -20,12 +20,6 @@ const SCREEN_WIDTH = Dimensions.get('window').width
 const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.75
 const ANIMATION_DURATION = 250
 
-/**
- * Right-side overlay sidebar menu.
- *
- * Shows app logo / name / version, and navigation links to
- * Home, Search, and Settings.
- */
 export function SidebarMenu() {
   const { theme } = useTheme()
   const { t } = useLanguage()
@@ -81,13 +75,19 @@ export function SidebarMenu() {
       label: t.tabs.library,
       icon: 'home',
       route: '/library',
-      matchPaths: ['/', '/library', '/playlists'],
+      matchPaths: ['/', '/library'],
     },
     {
       label: t.tabs.search,
       icon: 'search',
       route: '/search',
       matchPaths: ['/search'],
+    },
+    {
+      label: t.tabs.playlists,
+      icon: 'list',
+      route: '/playlists',
+      matchPaths: ['/playlists'],
     },
     {
       label: t.settings.title,
@@ -99,18 +99,15 @@ export function SidebarMenu() {
 
   const handleNavigate = (route: string) => {
     closeSidebar()
-    // Small delay so the sidebar closes before navigating
     setTimeout(() => {
       router.navigate(route as any)
     }, 100)
   }
 
-  // Don't render anything in the tree when closed (performance)
   if (!isSidebarOpen) return null
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      {/* Overlay / scrim */}
       <Pressable style={StyleSheet.absoluteFill} onPress={closeSidebar}>
         <Animated.View
           style={[
@@ -120,7 +117,6 @@ export function SidebarMenu() {
         />
       </Pressable>
 
-      {/* Sidebar panel */}
       <Animated.View
         style={[
           styles.panel,
@@ -134,7 +130,6 @@ export function SidebarMenu() {
           },
         ]}
       >
-        {/* App branding */}
         <View style={styles.branding}>
           <View style={[styles.logo, { backgroundColor: theme.colors.primary + '20' }]}>
             <Text style={[styles.logoText, { color: theme.colors.primary }]}>M</Text>
@@ -143,10 +138,8 @@ export function SidebarMenu() {
           <Text style={[styles.version, { color: theme.colors.mutedText }]}>v{appVersion}</Text>
         </View>
 
-        {/* Divider */}
         <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
-        {/* Navigation links */}
         <View style={styles.links}>
           {links.map((link) => {
             const isActive = link.matchPaths.includes(pathname)

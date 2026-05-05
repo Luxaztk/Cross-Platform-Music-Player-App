@@ -227,6 +227,19 @@
             .setting-info {
                 flex: 1;
 
+                .title-with-icon {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 6px;
+
+                    h3 {
+                        margin: 0;
+                        font-size: 17px;
+                        font-weight: 600;
+                    }
+                }
+
                 .with-badge {
                     display: flex;
                     align-items: center;
@@ -262,6 +275,28 @@
                 min-width: 300px;
                 display: flex;
                 justify-content: flex-end;
+                gap: 12px;
+
+                .login-btn {
+                    background: var(--color-primary);
+                    color: #fff;
+                    
+                    &:hover {
+                        background: var(--color-primary-hover, var(--color-primary));
+                        box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+                    }
+                }
+
+                .logout-btn {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid var(--border-color);
+                    
+                    &:hover {
+                        background: rgba(255, 59, 48, 0.1);
+                        color: #ff3b30;
+                        border-color: rgba(255, 59, 48, 0.3);
+                    }
+                }
 
                 select,
                 input[type="text"] {
@@ -998,6 +1033,60 @@
             }
         }
 
+        /* Mini Queue Monitor (For downloading state) */
+        .queue-mini-monitor {
+            background: var(--bg-surface-hover);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+
+            .monitor-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 12px;
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--color-text-main);
+            }
+
+            .monitor-bar {
+                height: 8px;
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 4px;
+                overflow: hidden;
+                margin-bottom: 12px;
+
+                .fill {
+                    height: 100%;
+                    background: var(--color-primary);
+                    transition: width 0.3s ease;
+                    box-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.5);
+                }
+            }
+
+            .monitor-actions {
+                display: flex;
+                justify-content: flex-end;
+
+                .reset-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: transparent;
+                    border: none;
+                    color: var(--color-text-muted);
+                    font-size: 12px;
+                    cursor: pointer;
+                    transition: color 0.2s;
+
+                    &:hover {
+                        color: var(--color-text-main);
+                    }
+                }
+            }
+        }
+
+
         /* Duplicate Warning (Modal Port) */
         .duplicate-warning {
             display: flex;
@@ -1143,6 +1232,7 @@
             background: rgba(34, 197, 94, 0.1);
             border: 1px solid rgba(34, 197, 94, 0.2);
             animation: fadeIn 0.4s ease;
+            gap: 15px;
 
             .success-info {
                 display: flex;
@@ -1213,6 +1303,7 @@
                     border: none;
                     cursor: pointer;
                     transition: all 0.2s ease;
+                    min-width: max-content;
 
                     &:hover {
                         filter: brightness(1.1);

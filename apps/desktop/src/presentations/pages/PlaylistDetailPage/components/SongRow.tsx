@@ -3,7 +3,6 @@ import { CheckSquare, Play, MoreVertical } from 'lucide-react';
 import type { Song, Playlist } from '@music/types';
 import { ICON_SIZES } from '@constants';
 import { formatTime } from '@music/utils';
-import { splitArtists } from '@music/core';
 
 
 interface SongRowProps {
@@ -37,18 +36,20 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
     isActiveMenu,
     hasActiveSelection,
     appIcon,
+    t,
     onToggleSelect,
     onPlay,
     onToggleFilter,
     onToggleMenu,
   }) => {
-    // 1. Tách logic xử lý Artists để tránh tính toán lại trong render
-    const artistsList = useMemo(() => {
-      const rawArtists = song.artists && song.artists.length > 0 ? song.artists : [song.artist];
-      return rawArtists.flatMap((a) => splitArtists(a));
-    }, [song.artists, song.artist]);
+    // 1. Tách nghệ sĩ và giữ nguyên dấu nối gốc (ft., x, &, ,, and)
+    const artistParts = useMemo(() => {
+      const rawArtist = song.artist || '';
+      // Regex tách nhưng giữ lại separator
+      return rawArtist.split(/(\s(?:ft\.?|x|&|and)\s|,\s?)/i);
+    }, [song.artist]);
 
-    // 2. Handler click tiêu đề (Ngăn chặn nổi bọt sự kiện một cách sạch sẽ)
+    // 2. Handler click tiêu đề
     const handleTitleClick = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -107,24 +108,29 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
                 {song.title}
               </span>
               <div className="artist-text">
-                {artistsList.map((artist, i) => (
-                  <React.Fragment key={`${artist}-${i}`}>
+                {artistParts.map((part, i) => {
+                  const isSeparator = /(\s(?:ft\.?|x|&|and)\s|,\s?)/i.test(part);
+                  if (isSeparator) {
+                    return <span key={i} className="artist-separator">{part}</span>;
+                  }
+                  return (
                     <span
+                      key={i}
                       className="clickable-artist"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onToggleFilter('artist', artist);
+                        onToggleFilter('artist', part.trim());
                       }}
                     >
-                      {artist}
+                      {part}
                     </span>
-                    {i < artistsList.length - 1 && <span className="artist-separator"> ft.&nbsp;</span>}
-                  </React.Fragment>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
+
 
         <div className="col-album">{song.album || '-'}</div>
         <div className="col-duration">{formatTime(song.duration || 0)}</div>
@@ -133,7 +139,7 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
           <button
             className={`row-more-btn ${isActiveMenu ? 'active' : ''} ${isPlaying ? 'visible' : ''}`}
             onClick={(e) => onToggleMenu(song.id, e)}
-            title="More actions"
+            title={t('common.moreActions')}
           >
             <MoreVertical size={ICON_SIZES.SMALL} />
           </button>

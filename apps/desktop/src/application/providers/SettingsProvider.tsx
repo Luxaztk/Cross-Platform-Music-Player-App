@@ -53,7 +53,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   if (!settings) {
-    return <div className="loading-screen">Loading Settings...</div>;
+    return <div className="loading-screen" />;
   }
 
   return (

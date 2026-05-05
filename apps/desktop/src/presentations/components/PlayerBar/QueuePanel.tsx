@@ -42,7 +42,7 @@ const QueueItemRow = memo(({ item, index, isDraggingActive, onRemove, t }: Queue
               <button
                 className="remove-queue-btn"
                 onClick={() => onRemove(index)}
-                title={t('common.remove') || 'Xoá'}
+                title={t('common.remove')}
               >
                 <Trash2 size={14} />
               </button>
@@ -117,7 +117,7 @@ const QueuePanel: React.FC = () => {
           <ListMusic size={18} className="header-icon" />
           <h3>{t('playlist.upNext')}</h3>
         </div>
-        <span className="queue-total">{localQueue.length} {t('common.songs') || 'tracks'}</span>
+        <span className="queue-total">{localQueue.length} {t('common.songs')}</span>
       </div>
 
       <div className="queue-list-container">

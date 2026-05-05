@@ -14,17 +14,117 @@
   .lyrics-header {
     position: absolute;
     top: var(--spacing-md);
+    left: var(--spacing-md);
     right: var(--spacing-md);
     z-index: 5000;
     display: flex;
-    gap: var(--spacing-sm);
+    justify-content: space-between;
+    align-items: center;
 
-    &:hover {
-      .change-lyrics-btn,
-      .close-lyrics-btn {
-        opacity: 1;
-        transform: scale(1);
+    .header-left {
+      display: flex;
+      gap: 8px;
+    }
+
+    .sync-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(12px);
+      transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: rgba(var(--color-primary-rgb), 0.4);
+        transform: translateY(-1px) !important;
       }
+
+      .sync-buttons {
+        display: flex;
+        gap: 6px;
+
+        button {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          border: none;
+          background: transparent;
+          color: var(--color-text-muted);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s;
+
+          &:hover {
+            background: rgba(var(--color-primary-rgb), 0.15);
+            color: var(--color-primary);
+            transform: scale(1.1);
+          }
+
+          &.reset-btn {
+            color: #ff9f43; // Warm Soft UI tone
+
+            &:hover {
+              background: rgba(255, 159, 67, 0.15);
+            }
+          }
+        }
+      }
+
+      .sync-input {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border-left: 1px solid rgba(255, 255, 255, 0.15);
+        padding-left: 14px;
+
+        input {
+          width: 50px;
+          background: transparent;
+          border: none;
+          color: var(--color-primary);
+          font-weight: 700;
+          font-size: 0.9rem;
+          text-align: right;
+          outline: none;
+          font-family: inherit;
+
+          &::-webkit-inner-spin-button {
+            display: none;
+          }
+        }
+
+        span {
+          font-size: 0.75rem;
+          color: var(--color-text-muted);
+          font-weight: 600;
+          opacity: 0.6;
+        }
+      }
+    }
+  }
+
+  &:hover {
+
+    .change-lyrics-btn,
+    .close-lyrics-btn,
+    .sync-toolbar {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+    }
+
+    .sync-now-btn {
+      opacity: 0.3;
     }
   }
 
@@ -94,25 +194,35 @@
       display: flex;
       flex-direction: column;
       gap: var(--spacing-lg);
-      padding: 120px 0;
+      padding: 140px 0;
     }
 
-    .lyric-line {
-      font-size: 1.25rem;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.28);
-      line-height: 1.6;
-      cursor: pointer;
-      transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-      transform-origin: left center;
-      filter: blur(0.5px);
+    .lyric-line-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      width: 100%;
 
-      &:hover {
-        color: rgba(255, 255, 255, 0.6);
-        filter: blur(0);
+      .lyric-line {
+        flex: 1;
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.28);
+        line-height: 1.6;
+        cursor: pointer;
+        transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        transform-origin: left center;
+        filter: blur(0.5px);
+        padding-right: 20px; // Minimal padding for safe hover
+
+        &:hover {
+          color: rgba(255, 255, 255, 0.6);
+          filter: blur(0);
+        }
       }
 
-      &.active {
+      &.active .lyric-line {
         color: var(--color-primary);
         font-size: 1.65rem;
         font-weight: 700;
@@ -122,8 +232,46 @@
         margin: 4px 0;
       }
 
-      &.passed {
+      &.passed .lyric-line {
         color: rgba(255, 255, 255, 0.12);
+      }
+
+      .sync-now-btn {
+        position: absolute;
+        right: -30px; // Start further outside
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(var(--bg-secondary-rgb), 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: var(--color-text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        z-index: 10;
+
+        &:hover {
+          background: var(--color-primary);
+          color: white;
+          border-color: var(--color-primary);
+          box-shadow: 0 0 25px rgba(var(--color-primary-rgb), 0.6);
+          transform: scale(1.2);
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+
+      &:hover .sync-now-btn {
+        opacity: 1 !important;
+        right: -8px; // Move closer to the panel edge
+        pointer-events: auto;
       }
     }
 
@@ -367,6 +515,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -377,6 +526,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

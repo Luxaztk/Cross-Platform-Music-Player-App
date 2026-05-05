@@ -104,3 +104,30 @@ export interface SyncHistoryEntry {
   stats: SyncStats;
   details: string[]; // List of detailed actions
 }
+
+export const DOWNLOAD_STATUS = {
+  IDLE: 'idle',
+  FETCHING: 'fetching',
+  PREVIEW: 'preview',
+  PENDING: 'pending',
+  DOWNLOADING: 'downloading',
+  SUCCESS: 'success',
+  ERROR: 'error',
+} as const;
+
+export type DownloadStatus = (typeof DOWNLOAD_STATUS)[keyof typeof DOWNLOAD_STATUS];
+
+export interface DownloadItem {
+  id: string; // YouTube Video ID
+  url: string;
+  title: string;
+  artist: string;
+  album: string;
+  thumbnail: string;
+  duration?: number;
+  status: DownloadStatus;
+  progress: number;
+  speed?: string;
+  error?: string;
+  downloadedPath?: string;
+}

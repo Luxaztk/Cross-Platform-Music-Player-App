@@ -2,7 +2,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import Sidebar from '../../../../presentations/components/Sidebar/Sidebar';
+import { Sidebar } from '../../../../presentations/components/Sidebar';
+
 import { useLibraryContext } from '@music/hooks';
 import { useLanguage, useTheme } from '@hooks';
 import { BrowserRouter } from 'react-router-dom';
@@ -25,19 +26,24 @@ vi.mock('@hooks', () => ({
   useLanguage: vi.fn(),
   useTheme: vi.fn(),
   useLocalFilter: vi.fn((items, query) => {
-    if (!query) return items;
-    return items.filter((item: any) => 
+    const filtered = !query ? items : items.filter((item: any) => 
       item.name.toLowerCase().includes(query.toLowerCase())
     );
+    return [filtered, false];
   }),
+
 }));
 
-vi.mock('@components', () => ({
-  EditModal: ({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () => void; onSave: (data: Record<string, unknown>) => Promise<void> }) => 
+vi.mock('../../../../presentations/components/EditModal', () => ({
+  EditModal: ({ isOpen, onClose, onSave }: any) => 
     isOpen ? <div data-testid="edit-modal"><button onClick={() => onSave({ name: 'Updated' })}>Save</button><button onClick={onClose}>Close</button></div> : null,
-  DeleteConfirmationModal: ({ isOpen, onConfirm, onClose }: { isOpen: boolean; onConfirm: () => Promise<void>; onClose: () => void }) => 
+}));
+
+vi.mock('../../../../presentations/components/DeleteConfirmationModal', () => ({
+  DeleteConfirmationModal: ({ isOpen, onConfirm, onClose }: any) => 
     isOpen ? <div data-testid="delete-modal"><button onClick={onConfirm}>Confirm</button><button onClick={onClose}>Cancel</button></div> : null,
 }));
+
 
 describe('Sidebar', () => {
   const mockOnToggle = vi.fn();
@@ -98,7 +104,7 @@ describe('Sidebar', () => {
     const user = userEvent.setup();
     renderSidebar();
     
-    await user.click(screen.getByTitle('common.edit'));
+    await user.click(screen.getByTitle('sidebar.collapse'));
     expect(mockOnToggle).toHaveBeenCalled();
   });
 
@@ -133,7 +139,7 @@ describe('Sidebar', () => {
     renderSidebar();
     
     // Open more menu for Playlist 1
-    const moreBtns = screen.getAllByTitle('header.settings');
+    const moreBtns = screen.getAllByTitle('common.more');
     await user.click(moreBtns[1]); // Index 0 is Library, 1 is Playlist 1
     
     const deleteBtn = screen.getByText('common.delete');
@@ -150,7 +156,7 @@ describe('Sidebar', () => {
     renderSidebar();
     
     // Open more menu for Playlist 1
-    const moreBtns = screen.getAllByTitle('header.settings');
+    const moreBtns = screen.getAllByTitle('common.more');
     await user.click(moreBtns[1]);
     
     const editBtn = screen.getByText('common.edit');

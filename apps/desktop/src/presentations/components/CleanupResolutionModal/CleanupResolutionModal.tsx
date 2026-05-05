@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { X, Check, Trash2, AlertTriangle, FileX } from 'lucide-react';
 import type { Song } from '@music/types';
-import { useLanguage } from '@hooks';
+import { useCleanupResolution } from './useCleanupResolution';
 import './CleanupResolutionModal.scss';
 
 interface CleanupResolutionModalProps {
@@ -17,33 +17,10 @@ export const CleanupResolutionModal: React.FC<CleanupResolutionModalProps> = ({
   onClose,
   onConfirm,
 }) => {
-  const { t } = useLanguage();
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(missingSongs.map(s => s.id)));
+  const { state, actions, utils } = useCleanupResolution(missingSongs, onConfirm, onClose);
+  const { t } = utils;
 
   if (!isOpen || missingSongs.length === 0) return null;
-
-  const toggleSelect = (id: string) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    setSelectedIds(next);
-  };
-
-  const selectAll = () => {
-    if (selectedIds.size === missingSongs.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(missingSongs.map(s => s.id)));
-    }
-  };
-
-  const handleApply = () => {
-    onConfirm(Array.from(selectedIds));
-    onClose();
-  };
 
   return (
     <div className="cleanup-modal-overlay">
@@ -53,7 +30,7 @@ export const CleanupResolutionModal: React.FC<CleanupResolutionModalProps> = ({
             <AlertTriangle size={24} className="warning-icon" />
             <h2>{t('libraryCleanup.title') || 'Dọn dẹp thư viện'}</h2>
           </div>
-          <button className="close-btn" onClick={onClose} title={t('common.close')}>
+          <button className="close-btn" onClick={actions.onClose} title={t('common.close')}>
             <X size={20} />
           </button>
         </div>
@@ -69,8 +46,8 @@ export const CleanupResolutionModal: React.FC<CleanupResolutionModalProps> = ({
             {missingSongs.map((song) => (
               <div 
                 key={song.id} 
-                className={`cleanup-item ${selectedIds.has(song.id) ? 'selected' : ''}`}
-                onClick={() => toggleSelect(song.id)}
+                className={`cleanup-item ${state.selectedIds.has(song.id) ? 'selected' : ''}`}
+                onClick={() => actions.toggleSelect(song.id)}
               >
                 <div className="item-icon">
                     <FileX size={20} />
@@ -80,7 +57,7 @@ export const CleanupResolutionModal: React.FC<CleanupResolutionModalProps> = ({
                   <span className="song-path" title={song.filePath}>{song.filePath}</span>
                 </div>
                 <div className="checkbox-wrapper">
-                    {selectedIds.has(song.id) ? (
+                    {state.selectedIds.has(song.id) ? (
                     <div className="checkbox checked">
                         <Check size={14} />
                     </div>
@@ -95,21 +72,21 @@ export const CleanupResolutionModal: React.FC<CleanupResolutionModalProps> = ({
 
         <div className="modal-footer">
           <div className="footer-left">
-              <button className="text-btn" onClick={selectAll}>
-                {selectedIds.size === missingSongs.length ? t('common.deselectAll') : t('common.selectAll')}
+              <button className="text-btn" onClick={actions.selectAll}>
+                {state.isAllSelected ? t('common.deselectAll') : t('common.selectAll')}
               </button>
           </div>
           <div className="footer-right">
-              <button className="secondary-btn" onClick={onClose}>
+              <button className="secondary-btn" onClick={actions.onClose}>
                 {t('common.cancel')}
               </button>
               <button 
                 className="primary-btn danger-btn" 
-                onClick={handleApply}
-                disabled={selectedIds.size === 0}
+                onClick={actions.handleApply}
+                disabled={state.selectedIds.size === 0}
               >
                 <Trash2 size={16} />
-                <span>{t('libraryCleanup.removeSelected').replace('{count}', selectedIds.size.toString())}</span>
+                <span>{t('libraryCleanup.removeSelected').replace('{count}', state.selectedIds.size.toString())}</span>
               </button>
           </div>
         </div>

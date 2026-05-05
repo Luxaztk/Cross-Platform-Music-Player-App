@@ -1,82 +1,110 @@
-import { ipcMain, app, shell } from 'electron';
+import { ipcMain, app, shell, BrowserWindow } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { YoutubeDownloader } from '../modules/downloader/YoutubeDownloader';
 import { MetadataManager } from '../modules/metadata/MetadataManager';
 import type { ID3Metadata } from '../modules/metadata/MetadataManager';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
-import { logger, normalizeString } from '@music/utils';
+import { normalizeString } from '@music/utils';
+import log from 'electron-log/main';
 
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
+import { YouTubeAuthService } from '../modules/auth/YouTubeAuthService';
 
 const downloader = new YoutubeDownloader();
 const metadataManager = new MetadataManager();
+
 const storageAdapter = new MainStorageAdapter();
+const authService = new YouTubeAuthService();
 
 const getDownloadsDir = async () => {
-    // 1. Get path from settings
     const settings = await storageAdapter.getSettings();
     let downloadsDir = settings.downloads.downloadPath;
 
-    // 2. Fallback to default if not set (though StorageAdapter handles it, we guard)
     if (!downloadsDir) {
         const musicDir = app.getPath('music');
         downloadsDir = path.join(musicDir, 'Melovista Downloads');
     }
 
-    // 3. Ensure exists
     await fs.mkdir(downloadsDir, { recursive: true });
     logFileTrace('downloader.getDownloadsDir', downloadsDir, 'SUCCESS', 'Resolved download path from settings');
     return downloadsDir;
 };
 
 export const setupDownloaderIPC = () => {
+    // Global Progress Listener
+    downloader.on('progress', (data: { id: string; percent: number }) => {
+        BrowserWindow.getAllWindows().forEach((win) => {
+            win.webContents.send('download-progress', data);
+        });
+    });
+
+    // Auth Required Listener
+    downloader.on('auth-required', (data: { url: string; id?: string }) => {
+        log.warn('[IPC] YouTube Authentication Required for:', data.url);
+        BrowserWindow.getAllWindows().forEach((win) => {
+            win.webContents.send('youtube-auth-required', data);
+        });
+    });
+
     ipcMain.handle('fetch-yt-info', async (_event, url: string) => {
         try {
             const info = await downloader.getInfo(url);
             return { success: true, info };
         } catch (error) {
-            if (error instanceof Error) {
-                console.error('IPC fetch-yt-info error:', error);
-                return { success: false, error: error.message };
-            }
             console.error('IPC fetch-yt-info error:', error);
-            return { success: false, error: 'Unknown error' };
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            return { success: false, error: message };
         }
     });
 
-    ipcMain.handle('download-yt-audio', async (event, url: string, title: string) => {
+    ipcMain.handle('fetch-playlist-info', async (_event, url: string) => {
+        try {
+            const result = await downloader.getPlaylistInfo(url);
+            return { success: true, title: result.title, items: result.items };
+        } catch (error) {
+            console.error('IPC fetch-playlist-info error:', error);
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            return { success: false, error: message };
+        }
+    });
+
+    ipcMain.handle('download-yt-audio', async (_event, id: string, url: string, title: string) => {
         try {
             const downloadsDir = await getDownloadsDir();
-            // Use NFD normalization + space collapsing for clean, readable filenames
             const safeTitle = normalizeString(title).replace(/[\s_]+/g, '_');
             const outputPath = path.join(downloadsDir, `${safeTitle}_${Date.now()}.mp3`);
-            logFileTrace('download-yt-audio.prepare', outputPath, 'SUCCESS', `Downloading audio for URL=${url}`);
-
-            // Setup a one-time progress listener for this download
-            const progressHandler = (percent: number) => {
-                event.sender.send('download-progress', { url, percent });
-            };
-            downloader.on('progress', progressHandler);
-
-            const savedPath = await downloader.downloadAudio(url, outputPath);
             
-            logger.info('[IPC] Download complete, returning path to frontend (which may request library import)', { path: savedPath });
+            logFileTrace('download-yt-audio.prepare', outputPath, 'SUCCESS', `Enqueuing download ID=${id} URL=${url}`);
+
+            const savedPath = await downloader.downloadAudio(id, url, outputPath);
+            
             logFileTrace('download-yt-audio.completed', savedPath, 'SUCCESS', 'Downloaded audio to file');
-
-            downloader.off('progress', progressHandler);
-
             return { success: true, filePath: savedPath };
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             logFileTrace('download-yt-audio', undefined, 'FAIL', message);
-            if (error instanceof Error) {
-                console.error('IPC download-yt-audio error:', error);
-                return { success: false, error: error.message };
-            }
-            console.error('IPC download-yt-audio error:', error);
-            return { success: false, error: 'Unknown error' };
+            return { success: false, error: message };
         }
+    });
+
+    // YouTube Auth IPCs
+    ipcMain.handle('open-youtube-auth', async () => {
+        return await authService.openAuthWindow();
+    });
+
+    ipcMain.handle('logout-youtube', async () => {
+        authService.logout();
+        return true;
+    });
+
+    ipcMain.handle('get-youtube-auth-status', async () => {
+        return authService.isLoggedIn();
+    });
+
+    ipcMain.handle('cancel-download', async (_event, id: string) => {
+        downloader.cancelDownload(id);
+        return { success: true };
     });
 
     ipcMain.handle('write-audio-metadata', async (_event, filePath: string, metadata: ID3Metadata) => {
@@ -87,12 +115,7 @@ export const setupDownloaderIPC = () => {
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             logFileTrace('write-audio-metadata', filePath, 'FAIL', message);
-            if (error instanceof Error) {
-                console.error('IPC write-audio-metadata error:', error);
-                return { success: false, error: error.message };
-            }
-            console.error('IPC write-audio-metadata error:', error);
-            return { success: false, error: 'Unknown error' };
+            return { success: false, error: message };
         }
     });
 
@@ -108,7 +131,6 @@ export const setupDownloaderIPC = () => {
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err);
             logFileTrace('delete-file', filePath, 'FAIL', message);
-            console.error('[IPC] Failed to delete file:', err);
             return { success: false };
         }
     });
