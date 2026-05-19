@@ -16,12 +16,15 @@ export const DownloadPreviewCard: React.FC<DownloadPreviewCardProps> = ({ info, 
     const { t } = useLanguage();
     if (!info) return null;
 
+    const isEditable = info.status === DOWNLOAD_STATUS.PREVIEW;
+    const finalOnClick = isEditable ? onClick : undefined;
+
     return (
         <div 
-            className={`video-card ${onClick ? 'clickable' : ''} status-${info.status}`} 
-            onClick={onClick} 
-            role={onClick ? 'button' : undefined}
-            tabIndex={onClick ? 0 : undefined}
+            className={`video-card ${finalOnClick ? 'clickable' : ''} status-${info.status}`} 
+            onClick={finalOnClick} 
+            role={finalOnClick ? 'button' : undefined}
+            tabIndex={finalOnClick ? 0 : undefined}
         >
             <div className="thumbnail-container">
                 <img src={info.thumbnail} alt={info.title} />
@@ -71,7 +74,7 @@ export const DownloadPreviewCard: React.FC<DownloadPreviewCardProps> = ({ info, 
                 </div>
             )}
 
-            {onClick && (info.status === DOWNLOAD_STATUS.IDLE || info.status === DOWNLOAD_STATUS.PREVIEW) && (
+            {finalOnClick && (
                 <div className="edit-overlay">
                     <div className="edit-pill">
                         <Edit2 size={ICON_SIZES.TINY} />

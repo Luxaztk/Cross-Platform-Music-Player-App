@@ -26,7 +26,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         downloads: { ...settings.downloads, ...(newSettings.downloads || {}) },
       };
 
-      await window.electronAPI.saveSettings(newSettings);
+      await window.electronAPI.saveSettings(updated);
       setSettings(updated as AppSettings);
     } catch (err) {
       console.error('[Settings] Failed to save settings:', err);

@@ -38,44 +38,88 @@ export const EditModal: React.FC<EditModalProps> = ({
         </div>
 
         <div className="modal-body">
-          {!isBulk && (
-            <div className="image-edit-section">
-              <div className="playlist-image-large" onClick={actions.handleChooseImage}>
-                {state.currentImage ? (
-                  <div className="image-container">
-                    <img src={state.currentImage} alt="" className="image-blur-bg" />
-                    <img src={state.currentImage} alt="Cover" className="image-main" />
+          <div className="modal-top-row">
+            {!isBulk && (
+              <div className="image-edit-section">
+                <div className="playlist-image-large" onClick={actions.handleChooseImage}>
+                  {state.currentImage ? (
+                    <div className="image-container">
+                      <img src={state.currentImage} alt="" className="image-blur-bg" />
+                      <img src={state.currentImage} alt="Cover" className="image-main" />
+                    </div>
+                  ) : (
+                    <img src={state.appIcon} alt="Default Cover" className="placeholder-brand-icon" />
+                  )}
+                  <div className="image-overlay">
+                    <span>{t('modal.choosePhoto')}</span>
                   </div>
-                ) : (
-                  <img src={state.appIcon} alt="Default Cover" className="placeholder-brand-icon" />
-                )}
-                <div className="image-overlay">
-                  <span>{t('modal.choosePhoto')}</span>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="info-edit-section">
+            <div className="info-edit-section">
+              {type === 'playlist' ? (
+                <div className="input-group">
+                  <label className="input-label">{t('modal.addName')}</label>
+                  <input
+                    type="text"
+                    value={state.name}
+                    onChange={(e) => actions.setName(e.target.value)}
+                    placeholder={t('modal.addName')}
+                    className="modal-input name-input"
+                  />
+                </div>
+              ) : (
+                <>
+                  {!isBulk && (
+                    <div className="input-group">
+                      <label className="input-label">{t('modal.songTitle')}</label>
+                      <input
+                        type="text"
+                        value={state.title}
+                        onChange={(e) => actions.setTitle(e.target.value)}
+                        placeholder={t('modal.songTitle')}
+                        className="modal-input"
+                      />
+                    </div>
+                  )}
+                  <div className="input-group">
+                    <label className="input-label">{t('modal.songArtist')}</label>
+                    <input
+                      type="text"
+                      value={state.artist}
+                      onChange={(e) => actions.setArtist(e.target.value)}
+                      placeholder={t('modal.songArtist')}
+                      className="modal-input"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="modal-bottom-row">
             {type === 'playlist' ? (
-              <PlaylistForm 
-                name={state.name} 
-                description={state.description} 
-                setName={actions.setName} 
-                setDescription={actions.setDescription} 
-                t={t} 
-              />
+              <div className="input-group">
+                <label className="input-label">{t('modal.addDescription')}</label>
+                <textarea
+                  value={state.description}
+                  onChange={(e) => actions.setDescription(e.target.value)}
+                  placeholder={t('modal.addDescription')}
+                  className="modal-input desc-input"
+                />
+              </div>
             ) : (
-              <SongForm 
-                title={state.title} 
-                artist={state.artist} 
-                album={state.album} 
-                isBulk={isBulk} 
-                setTitle={actions.setTitle} 
-                setArtist={actions.setArtist} 
-                setAlbum={actions.setAlbum} 
-                t={t} 
-              />
+              <div className="input-group">
+                <label className="input-label">{t('modal.songAlbum')}</label>
+                <input
+                  type="text"
+                  value={state.album}
+                  onChange={(e) => actions.setAlbum(e.target.value)}
+                  placeholder={t('modal.songAlbum')}
+                  className="modal-input"
+                />
+              </div>
             )}
           </div>
         </div>
@@ -95,62 +139,4 @@ export const EditModal: React.FC<EditModalProps> = ({
   );
 };
 
-// Sub-components for better organization
-const PlaylistForm = ({ name, description, setName, setDescription, t }: any) => (
-  <>
-    <div className="input-group">
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder={t('modal.addName')}
-        className="modal-input name-input"
-      />
-    </div>
-    <div className="input-group">
-      <textarea
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder={t('modal.addDescription')}
-        className="modal-input desc-input"
-      />
-    </div>
-  </>
-);
 
-const SongForm = ({ title, artist, album, isBulk, setTitle, setArtist, setAlbum, t }: any) => (
-  <>
-    {!isBulk && (
-      <div className="input-group">
-        <label className="input-label">{t('modal.songTitle')}</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={t('modal.songTitle')}
-          className="modal-input"
-        />
-      </div>
-    )}
-    <div className="input-group">
-      <label className="input-label">{t('modal.songArtist')}</label>
-      <input
-        type="text"
-        value={artist}
-        onChange={(e) => setArtist(e.target.value)}
-        placeholder={t('modal.songArtist')}
-        className="modal-input"
-      />
-    </div>
-    <div className="input-group">
-      <label className="input-label">{t('modal.songAlbum')}</label>
-      <input
-        type="text"
-        value={album}
-        onChange={(e) => setAlbum(e.target.value)}
-        placeholder={t('modal.songAlbum')}
-        className="modal-input"
-      />
-    </div>
-  </>
-);

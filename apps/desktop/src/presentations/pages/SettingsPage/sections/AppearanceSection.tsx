@@ -2,22 +2,24 @@ import React from 'react';
 import { useTheme, useLanguage } from '@hooks';
 import { ICON_SIZES } from '@constants';
 import { Palette, Check } from 'lucide-react';
-import { type AppearanceSectionProps, matchesSearch, THEMES } from '../utils';
+import { type AppearanceSectionProps, matchesSearch, getThemes } from '../utils';
 
 export const AppearanceSection: React.FC<AppearanceSectionProps> = ({ searchQuery }) => {
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
 
+  const themes = getThemes(t);
+
   const showsTheme =
     matchesSearch(t('settings.appearance.theme'), searchQuery) ||
     matchesSearch(t('settings.appearance.themeDesc'), searchQuery) ||
-    THEMES.some((tItem) => matchesSearch(t(tItem.nameKey), searchQuery));
+    themes.some((tItem) => matchesSearch(tItem.name, searchQuery));
 
   if (searchQuery && !showsTheme) return null;
 
   const filteredThemes = searchQuery 
-    ? THEMES.filter((tItem) => matchesSearch(t(tItem.nameKey), searchQuery)) 
-    : THEMES;
+    ? themes.filter((tItem) => matchesSearch(tItem.name, searchQuery)) 
+    : themes;
 
   return (
     <div className="settings-section">
@@ -52,7 +54,7 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({ searchQuer
                   </div>
                 </div>
                 <div className="theme-name">
-                  <span>{t(tItem.nameKey)}</span>
+                  <span>{tItem.name}</span>
                   {theme === tItem.id && <Check size={ICON_SIZES.TINY} />}
                 </div>
               </div>

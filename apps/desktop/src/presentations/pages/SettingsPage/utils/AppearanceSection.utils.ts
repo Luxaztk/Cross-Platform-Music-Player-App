@@ -3,11 +3,11 @@ import { type SettingsSectionProps } from './Settings.utils';
 
 export interface AppearanceSectionProps extends SettingsSectionProps {}
 
-export const THEMES: { id: ThemeType; colorVar: string; nameKey: string }[] = [
-  { id: 'midnight', colorVar: '--color-primary', nameKey: 'settings.appearance.themeMidnight' },
-  { id: 'amoled', colorVar: '--color-primary', nameKey: 'settings.appearance.themeAmoled' },
-  { id: 'nord', colorVar: '--color-primary', nameKey: 'settings.appearance.themeNord' },
-  { id: 'rose', colorVar: '--color-primary', nameKey: 'settings.appearance.themeRose' },
-  { id: 'ocean', colorVar: '--color-primary', nameKey: 'settings.appearance.themeOcean' },
-  { id: 'snow', colorVar: '--color-primary', nameKey: 'settings.appearance.themeSnow' },
+export const getThemes = (t: (key: string) => string): { id: ThemeType; colorVar: string; name: string }[] => [
+  { id: 'midnight', colorVar: '--color-primary', name: t('settings.appearance.themeMidnight') },
+  { id: 'amoled', colorVar: '--color-primary', name: t('settings.appearance.themeAmoled') },
+  { id: 'nord', colorVar: '--color-primary', name: t('settings.appearance.themeNord') },
+  { id: 'rose', colorVar: '--color-primary', name: t('settings.appearance.themeRose') },
+  { id: 'ocean', colorVar: '--color-primary', name: t('settings.appearance.themeOcean') },
+  { id: 'snow', colorVar: '--color-primary', name: t('settings.appearance.themeSnow') },
 ];

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Clipboard, Loader2, Download, Edit2, X } from 'lucide-react';
+import { Search, Clipboard, Loader2, Download, Edit2, Folder } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { DOWNLOAD_STATUS } from '@music/types';
 import { DownloadPreviewCard, DuplicateWarningBanner } from '@components';
@@ -17,6 +17,9 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
     if (!isVisible) return null;
 
     const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING;
+    const hideDownloadBtn = manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING || 
+                            manager.downloadState === DOWNLOAD_STATUS.SUCCESS || 
+                            manager.downloadState === DOWNLOAD_STATUS.ERROR;
 
     return (
         <div className="setting-item vertical online-downloader-item">
@@ -44,6 +47,7 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                 <button
                     type="button"
                     className={`fetch-download-btn ${isBusy ? 'loading' : ''}`}
+                    style={hideDownloadBtn ? { display: 'none' } : undefined}
                     onClick={onFetch}
                     disabled={isBusy || !manager.url.trim()}
                 >
@@ -111,31 +115,78 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
 
             {manager.downloads.size > 0 && (
                 <div className="downloader-result-area">
-                    <div className="queue-mini-monitor">
-                        <div className="monitor-header">
-                            <span
-                                className="monitor-title"
-                                title={manager.downloads.size === 1 ? Array.from(manager.downloads.values())[0].title : ''}
-                                style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: '16px' }}
-                            >
-                                {manager.downloads.size === 1
-                                    ? Array.from(manager.downloads.values())[0].title
-                                    : t('downloader.downloadingCount', { count: manager.activeCount })}
-                            </span>
-                            <span>{Math.round(manager.totalProgress)}%</span>
-                        </div>
-                        <div className="monitor-bar">
-                            <div className="fill" style={{ width: `${manager.totalProgress}%` }} />
-                        </div>
-                        {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
-                            <div className="monitor-actions">
-                                <button className="reset-link" onClick={() => manager.resetDownload()}>
-                                    <X size={14} />
-                                    <span>{t('common.clear')}</span>
-                                </button>
-                            </div>
-                        )}
+                    <div className="preview-items-list" style={{ marginBottom: '12px' }}>
+                        {Array.from(manager.downloads.values()).map((item) => (
+                            <DownloadPreviewCard
+                                key={item.id}
+                                info={item}
+                                badgeCount={0}
+                            />
+                        ))}
                     </div>
+
+                    {manager.downloads.size === 1 ? (
+                        <div className="single-download-monitor">
+                            {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
+                                <div className="action-buttons horizontal" style={{ marginTop: '12px', justifyContent: 'flex-end', gap: '10px' }}>
+                                    <button 
+                                        type="button" 
+                                        className="secondary-btn" 
+                                        onClick={() => window.electronAPI.openDownloadsFolder()}
+                                        title={t('common.openFolder', 'Mở thư mục')}
+                                        style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                    >
+                                        <Folder size={16} />
+                                        <span>{t('common.openFolder', 'Mở thư mục')}</span>
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        className="primary-btn" 
+                                        onClick={() => manager.resetDownload()}
+                                    >
+                                        {t('common.done', 'Hoàn tất')}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="queue-mini-monitor">
+                            <div className="monitor-header">
+                                <span
+                                    className="monitor-title"
+                                    title={t('downloader.downloadingCount', { count: manager.downloads.size })}
+                                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: '16px' }}
+                                >
+                                    {t('downloader.downloadingCount', { count: manager.downloads.size })}
+                                </span>
+                                <span>{Math.round(manager.totalProgress)}%</span>
+                            </div>
+                            <div className="monitor-bar">
+                                <div className="fill" style={{ width: `${manager.totalProgress}%` }} />
+                            </div>
+                            {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
+                                <div className="action-buttons horizontal" style={{ marginTop: '12px', justifyContent: 'flex-end', gap: '10px' }}>
+                                    <button 
+                                        type="button" 
+                                        className="secondary-btn" 
+                                        onClick={() => window.electronAPI.openDownloadsFolder()}
+                                        title={t('common.openFolder', 'Mở thư mục')}
+                                        style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                    >
+                                        <Folder size={16} />
+                                        <span>{t('common.openFolder', 'Mở thư mục')}</span>
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        className="primary-btn" 
+                                        onClick={() => manager.resetDownload()}
+                                    >
+                                        {t('common.done', 'Hoàn tất')}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </div>

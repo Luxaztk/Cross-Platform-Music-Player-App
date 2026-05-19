@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Download } from 'lucide-react';
+import { Edit2, Download, Folder } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { DOWNLOAD_STATUS } from '@music/types';
 
@@ -85,9 +85,18 @@ export const DownloaderFooter: React.FC<DownloaderFooterProps> = ({
     case DOWNLOAD_STATUS.SUCCESS:
       return (
         <div className="modal-footer">
-          <div className="action-buttons horizontal">
+          <div className="action-buttons horizontal" style={{ justifyContent: 'flex-end', gap: '10px' }}>
+            <button 
+              type="button" 
+              className="secondary-btn" 
+              onClick={() => window.electronAPI.openDownloadsFolder()}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Folder size={16} />
+              <span>{t('common.openFolder', 'Mở thư mục')}</span>
+            </button>
             <button type="button" className="primary-btn" onClick={onClose}>
-              {t('common.close')}
+              {t('common.done', 'Hoàn tất')}
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useSettings, useLanguage, useLibrary, useDownload } from '@hooks';
 import { DOWNLOAD_STATUS, type DownloadItem } from '@music/types';
 import { YOUTUBE_URL_REGEX, matchesSearch } from '../../utils';
@@ -23,6 +23,13 @@ export const useDownloadSection = (searchQuery: string): UseDownloadSectionRetur
     const [showBulkEdit, setShowBulkEdit] = useState(false);
 
     const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING;
+
+    useEffect(() => {
+        if (manager.downloadState === DOWNLOAD_STATUS.SUCCESS || manager.downloadState === DOWNLOAD_STATUS.ERROR) {
+            manager.resetDownload();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Visibility logic
     const visibility = useMemo(() => {

@@ -1,6 +1,6 @@
 process.env.YOUTUBE_DL_SKIP_PYTHON_CHECK = '1'
 
-import { app, BrowserWindow, protocol, session, ipcMain } from 'electron' // Xóa 'dialog', thêm 'ipcMain'
+import { app, BrowserWindow, protocol, session, ipcMain, dialog } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import path from 'node:path'
 import fs from 'node:fs/promises'
@@ -34,7 +34,7 @@ if (app) {
 }
 // -------------------------------------------------
 import { setupLibraryIPC } from './ipc/library'
-import { setupStorageIPC } from './ipc/storage'
+import { setupStorageIPC, storageAdapter } from './ipc/storage'
 import { setupDownloaderIPC } from './ipc/downloader'
 import { setupDialogIPC } from './ipc/dialog'
 import { logFileTrace } from './infrastructure/FileTraceLogger'
@@ -98,25 +98,96 @@ function createWindow() {
 }
 
 // --- HÀM XỬ LÝ AUTO UPDATE (CƠ CHẾ BROADCAST) ---
-function setupAutoUpdate() {
+async function setupAutoUpdate() {
   autoUpdater.logger = log
 
-  // Kiểm tra xem app có đang chạy trong thư mục "win-unpacked" của lệnh build:fast không
+  // Đọc cấu hình từ storageAdapter đã được khởi tạo
+  const settings = await storageAdapter.getSettings();
+  const isAutoUpdateEnabled = settings?.general?.autoUpdate !== false // Mặc định là true
+
   const isUnpackedTest = app.getAppPath().includes('unpacked');
-
-  if (!app.isPackaged || isUnpackedTest) {
-    log.info('[Updater] Chạy ở Development hoặc Test Local - Bỏ qua kiểm tra cập nhật.');
-    return
-  }
-
-  log.info('[Updater] Bắt đầu kiểm tra bản cập nhật mới...')
-  autoUpdater.checkForUpdatesAndNotify()
+  const isDev = !app.isPackaged || isUnpackedTest;
 
   const broadcast = (channel: string, data?: any) => {
     BrowserWindow.getAllWindows().forEach((w) => {
       w.webContents.send(channel, data)
     })
   }
+
+  const simulateUpdate = () => {
+    log.info('[Updater] Bắt đầu giả lập cập nhật...');
+    
+    setTimeout(() => {
+      // 1. Check update available
+      broadcast('update-available', '2.0.0-mock');
+      log.info('[Updater] Giả lập: Đã tìm thấy bản cập nhật mới: 2.0.0-mock');
+      
+      // 2. Download progress
+      let percent = 0;
+      const interval = setInterval(() => {
+        percent += 20;
+        broadcast('update-progress', percent);
+        log.info(`[Updater] Giả lập tiến độ tải: ${percent}%`);
+        
+        if (percent >= 100) {
+          clearInterval(interval);
+          // 3. Downloaded
+          setTimeout(() => {
+            broadcast('update-downloaded');
+            log.info('[Updater] Giả lập: Tải xong bản cập nhật.');
+          }, 1000);
+        }
+      }, 1000);
+    }, 2000);
+  };
+
+  // Đăng ký IPC handler cho kiểm tra thủ công (Luôn luôn đăng ký dù có bật auto-update hay không!)
+  ipcMain.removeHandler('check-for-updates-manual');
+  ipcMain.handle('check-for-updates-manual', async () => {
+    log.info('[Updater] Yêu cầu kiểm tra cập nhật thủ công.')
+    if (isDev) {
+      log.info('[Updater] Chạy ở Development - Giả lập luồng check update thủ công.')
+      simulateUpdate()
+      return { success: true, version: '2.0.0-mock' }
+    } else {
+      try {
+        const result = await autoUpdater.checkForUpdates()
+        return { success: true, version: result?.updateInfo.version }
+      } catch (err) {
+        log.error('[Updater] Lỗi khi kiểm tra cập nhật thủ công:', err)
+        return { success: false, error: String(err) }
+      }
+    }
+  })
+
+  if (!isAutoUpdateEnabled) {
+    log.info('[Updater] Tự động cập nhật bị tắt theo cài đặt người dùng.')
+    return
+  }
+
+  if (isDev) {
+    log.info('[Updater] Chạy ở Development - Bật chế độ MOCK UPDATE trên startup.');
+    
+    // Chờ window load xong để đảm bảo React đã mount và lắng nghe event
+    if (win) {
+      win.webContents.on('did-finish-load', () => {
+        log.info('[Updater] Window đã load xong. Sẽ chạy giả lập update sau 5 giây...');
+        setTimeout(simulateUpdate, 5000);
+      });
+    } else {
+      // Fallback nếu win chưa được tạo (thường thì đã tạo rồi)
+      setTimeout(simulateUpdate, 5000);
+    }
+    
+    
+    // IPC handler đã được đăng ký ở trên để dùng chung
+    return
+    
+    return
+  }
+
+  log.info('[Updater] Bắt đầu kiểm tra bản cập nhật mới...')
+  autoUpdater.checkForUpdatesAndNotify()
 
   autoUpdater.on('checking-for-update', () => {
     log.info('[Updater] Đang kiểm tra cập nhật...')
@@ -129,6 +200,7 @@ function setupAutoUpdate() {
 
   autoUpdater.on('update-not-available', () => {
     log.info('[Updater] Không có bản cập nhật nào mới.')
+    broadcast('update-not-available')
   })
 
   autoUpdater.on('download-progress', (progressObj) => {
@@ -143,13 +215,32 @@ function setupAutoUpdate() {
 
   autoUpdater.on('error', (err) => {
     log.error('[Updater] Lỗi nghiêm trọng khi cập nhật:', err)
+    broadcast('update-error', err.message)
   })
+
+  // IPC handler đã được đăng ký ở trên để dùng chung
 }
 
 // Lắng nghe lệnh yêu cầu khởi động lại từ React
-ipcMain.handle('restart-app', () => {
+ipcMain.handle('restart-app', async () => {
+  const isUnpackedTest = app.getAppPath().includes('unpacked');
+  const isDev = !app.isPackaged || isUnpackedTest;
+
+  if (isDev) {
+    log.info('[Updater] Chạy ở Dev - Giả lập thông báo khởi động lại.');
+    await dialog.showMessageBox({
+      type: 'info',
+      title: 'Mock Update',
+      message: 'Ứng dụng đang chạy ở môi trường Dev. Luồng Mock Update đã hoàn thành!\n\nNếu ở bản thật, ứng dụng sẽ tự đóng và cài đặt bản cập nhật.',
+      buttons: ['Đóng']
+    });
+    return;
+  }
+
   autoUpdater.quitAndInstall()
 })
+
+// Lắng nghe lệnh kiểm tra cập nhật thủ công đã được chuyển vào trong setupAutoUpdate
 // ------------------------------------
 
 app.on('window-all-closed', () => {

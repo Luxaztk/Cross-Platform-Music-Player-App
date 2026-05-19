@@ -311,7 +311,7 @@
           }
         }
 
-        .row-more-btn {
+        .col-more .row-more-btn {
           opacity: 1;
         }
       }
@@ -485,6 +485,10 @@
           align-items: center;
           justify-content: center;
           border-radius: 50%;
+
+          &.visible {
+            opacity: 1;
+          }
 
           &:hover,
           &.active {

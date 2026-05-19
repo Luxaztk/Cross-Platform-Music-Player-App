@@ -10,39 +10,7 @@ export function UpdateNotification() {
   const [isDownloaded, setIsDownloaded] = useState(false);
 
   useEffect(() => {
-    // ==========================================
-    // KHU VỰC MOCK DATA CHO MÔI TRƯỜNG DEV (CHỈ CHẠY KHI NPM RUN DEV)
-    // ==========================================
-    if (import.meta.env.DEV) {
-      // 1. Sau 2 giây mở app, giả vờ báo có bản cập nhật
-      const mockStart = setTimeout(() => {
-        setVersion('v9.9.9 (Dev Mock)');
-        setShow(true);
-
-        // 2. Tạo hiệu ứng % chạy mượt mà như đang tải thật
-        let currentProgress = 0;
-        const progressInterval = setInterval(() => {
-          currentProgress += Math.floor(Math.random() * 15) + 5; // Tăng ngẫu nhiên 5-20%
-
-          if (currentProgress >= 100) {
-            currentProgress = 100;
-            setProgress(currentProgress);
-            setIsDownloaded(true); // 3. Báo tải xong
-            clearInterval(progressInterval);
-          } else {
-            setProgress(currentProgress);
-          }
-        }, 600); // Mỗi 0.6s cập nhật % một lần
-      }, 2000);
-
-      // Cleanup mock
-      return () => clearTimeout(mockStart);
-    }
-    // ==========================================
-    // KẾT THÚC KHU VỰC MOCK
-    // ==========================================
-
-    // Kịch bản thật (Chỉ có tác dụng khi chạy file .exe)
+    // Lắng nghe các sự kiện từ Electron (Hoạt động cả ở bản thật và bản Mock trong Dev)
     const removeAvailableListener = window.electronAPI.onUpdateAvailable((ver: string) => {
       setVersion(ver);
       setShow(true);
