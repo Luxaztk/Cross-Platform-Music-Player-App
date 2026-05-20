@@ -21,9 +21,9 @@ export function TopBar() {
   const { t } = useLanguage()
   const insets = useSafeAreaInsets()
   const pathname = usePathname()
-  const { openSidebar, customTitle } = useAppShell()
+  const { customTitle } = useAppShell()
 
-  const isHome =
+  const showSearchTopBar =
     pathname === '/' ||
     pathname === '/library' ||
     pathname === '/playlists'
@@ -34,6 +34,8 @@ export function TopBar() {
   const isNowPlaying = pathname === '/now-playing'
 
   if (isNowPlaying) return null
+
+  const showBackButton = isSearch || isPlaylistDetail
 
   let title = ''
   if (pathname === '/' || pathname === '/library') title = t.library.title
@@ -86,7 +88,7 @@ export function TopBar() {
         },
       ]}
     >
-      {isHome ? (
+      {showSearchTopBar ? (
         <View style={styles.homeInner}>
           <Pressable
             onPress={handleSearch}
@@ -119,12 +121,12 @@ export function TopBar() {
 
             <Feather name="music" size={19} color={theme.colors.primary} />
           </Pressable>
-
-          <IconButton icon="menu" onPress={openSidebar} label="Open menu" />
         </View>
       ) : (
         <View style={styles.pageInner}>
-          <IconButton icon="arrow-left" onPress={handleBack} label="Back" />
+          {showBackButton && (
+            <IconButton icon="arrow-left" onPress={handleBack} label="Back" />
+          )}
 
           <View style={styles.titleBlock}>
             <Text
@@ -141,8 +143,6 @@ export function TopBar() {
               Melovista
             </Text>
           </View>
-
-          <IconButton icon="menu" onPress={openSidebar} label="Open menu" />
         </View>
       )}
     </View>
@@ -160,7 +160,6 @@ const styles = StyleSheet.create({
     minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
   },
   pageInner: {
     minHeight: 52,

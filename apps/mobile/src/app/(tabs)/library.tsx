@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   container: {
   flex: 1,
   padding: 24,
-  paddingBottom: 110,
+  paddingBottom: 190,
   },
   
   libraryHeaderRow: {
