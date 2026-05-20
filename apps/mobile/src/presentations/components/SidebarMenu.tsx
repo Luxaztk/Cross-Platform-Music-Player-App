@@ -122,7 +122,7 @@ export function SidebarMenu() {
           styles.panel,
           {
             width: SIDEBAR_WIDTH,
-            backgroundColor: theme.colors.surface,
+            backgroundColor: theme.colors.sidebar,
             borderLeftColor: theme.colors.border,
             paddingTop: insets.top + 16,
             paddingBottom: insets.bottom + 16,
