@@ -10,6 +10,8 @@ import {
 } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
 
+import Feather from '@expo/vector-icons/Feather'
+
 import type { Playlist, Song } from '@music/types'
 
 import { useTheme } from '../../presentations/components/Theme'
@@ -308,12 +310,37 @@ export default function LibraryScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>{t.library.title}</Text>
-      <Text style={[styles.subtitle, { color: colors.mutedText }]}>
-        {isHydrated ? `${songCount} songs` : t.common.loadingPreference}
-      </Text>
+      <View style={styles.libraryHeaderRow}>
+      <View style={styles.libraryTitleBlock}>
+        <Text style={[styles.title, { color: colors.text }]}>{t.library.title}</Text>
 
-      <View style={styles.sortRow}>
+        <Text style={[styles.subtitle, { color: colors.mutedText }]}>
+          {isHydrated ? `${songCount} songs` : t.common.loadingPreference}
+        </Text>
+      </View>
+
+      <Pressable
+        onPress={pickAudioFiles}
+        accessibilityRole="button"
+        accessibilityLabel="Upload music"
+        style={({ pressed }) => [
+          styles.uploadBtn,
+          {
+            backgroundColor: colors.primary,
+            opacity: pressed ? 0.78 : 1,
+            transform: [{ scale: pressed ? 0.97 : 1 }],
+          },
+        ]}
+      >
+        <Feather name="upload" size={16} color={colors.inverseText} />
+
+        <Text style={[styles.uploadBtnText, { color: colors.inverseText }]}>
+          Upload
+        </Text>
+      </Pressable>
+    </View>
+
+    <View style={styles.sortRow}>
         <Text style={[styles.sortLabel, { color: colors.mutedText }]}>Sort:</Text>
 
         <Pressable
@@ -456,10 +483,39 @@ const ROW_GAP = 8
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 24,
-    paddingBottom: 110,
+  flex: 1,
+  padding: 24,
+  paddingBottom: 110,
   },
+  
+  libraryHeaderRow: {
+  flexDirection: 'row',
+  alignItems: 'flex-end',
+  justifyContent: 'space-between',
+  gap: 14,
+  },
+  
+  libraryTitleBlock: {
+  flex: 1,
+  minWidth: 0,
+  },
+  
+  uploadBtn: {
+  minHeight: 40,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 7,
+  borderRadius: 999,
+  paddingHorizontal: 15,
+  paddingVertical: 10,
+  },
+  
+  uploadBtnText: {
+  fontSize: 13,
+  fontWeight: '800',
+  },
+  
   title: {
     fontSize: 26,
     fontWeight: '800',
