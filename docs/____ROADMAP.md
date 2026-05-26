@@ -113,6 +113,11 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
     - [X] **Download UI Polishing**: Tự động mở rộng tag album khi không có badge trạng thái, rút gọn tiêu đề modal quá dài và chuẩn hóa vị trí các mục cài đặt.
     - [X] **i18n Coverage Audit**: Rà soát và chuyển đổi 100% các đoạn text thuần sang hàm `t()`, đảm bảo tính đa ngôn ngữ tuyệt đối.
     - [X] **Full Test & Build Stabilization**: Khắc phục triệt để lỗi logic trong bộ test Sidebar/PlayerBar và giải quyết các lỗi biên dịch TS nghiêm trọng, đảm bảo dự án luôn trong trạng thái "Build-Ready".
+- [X] **Hiệu ứng & Phân tích Âm thanh (Audio FX)**: Triển khai hệ thống Peak Meter (đo cường độ sóng âm thời gian thực theo chuẩn dBFS) và công cụ Test Sound trực tiếp trong Cài đặt.
+- [X] **Hệ thống Xác thực (Hybrid Auth)**: Tích hợp luồng đăng nhập YouTube (`YouTubeAuthService`) để xử lý và tải các luồng âm thanh bị giới hạn độ tuổi.
+- [X] **Cơ chế Hàng đợi Tải xuống (Queue-based Download)**: Tích hợp xử lý tải đồng thời (Concurrent Processing) và batch processing tải hàng loạt bài hát từ Playlist.
+- [X] **Tách God Components**: Phân rã triệt để kiến trúc của `Header` và `SearchOverlay` thành các Modular Hooks và UI sub-components tách biệt theo chuẩn TDD.
+- [X] **Quản trị Hệ thống Cập nhật (Updater UI)**: Tích hợp giao diện quản lý Cập nhật tự động (Toggle Auto-Update) và kiểm tra thủ công (Manual Check) với hiệu ứng phản hồi trực quan ngay trong trang Cài đặt Chung.
 
 ---
 
@@ -165,14 +170,12 @@ Mục tiêu: Cung cấp các công cụ mạnh mẽ để quản lý và thưở
 - [X] **Biên tập Metadata (Ghi vào file nhạc)**: Hỗ trợ ghi đè trực tiếp ID3 tags vào file vật lý (.mp3, .flac...).
 - [X] **Multi-level Profile Menu**: Nâng cấp Header Profile Menu sang kiến trúc Drill-down (đa cấp). Khắc phục triệt để lỗi tràn layout (text wrap, overflow icon) và tối ưu chiều cao động (dynamic height), tuân thủ 100% hệ thống CSS Variables.
 
-### 🔵 GIAI ĐOẠN 5: Triển khai Mobile (Transform)
+### 🔵 GIAI ĐOẠN 5: Tính Năng Mở Rộng (Future)
 
-Mục tiêu: Đưa trải nghiệm lên các nền tảng di động.
+Mục tiêu: Bổ sung các trải nghiệm nâng cao và liên kết đám mây.
 
-- [X] **React Native Mobile App**: Xây dựng ứng dụng mobile dựa trên các UseCases/Hooks đã có (Đã xong Core Integration, Layout & MobileStorageAdapter).
-
-- [ ] **Hiệu ứng âm thanh (Audio FX)**: Bộ chỉnh âm (Equalizer), Visualizer (Sóng nhạc).
-- [ ] **Đồng bộ hóa (Sync)**: (Tùy chọn) Đồng bộ playlist và sở thích giữa Desktop & Mobile.
+- [ ] **Bộ chỉnh âm nâng cao (Advanced Equalizer)**: Tính năng Equalizer và Visualizer chuyên sâu (Đã hoàn thành Peak Meter & Test Sound ở Phase trước).
+- [ ] **Đồng bộ hóa (Sync)**: Đồng bộ hóa thư viện Playlist và cấu hình sở thích người dùng qua mạng/cloud.
 
 ---
 

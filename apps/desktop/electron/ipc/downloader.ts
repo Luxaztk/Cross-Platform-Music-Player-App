@@ -134,4 +134,9 @@ export const setupDownloaderIPC = () => {
             return { success: false };
         }
     });
+
+    ipcMain.handle('open-downloads-folder', async () => {
+        const downloadsDir = await getDownloadsDir();
+        shell.openPath(downloadsDir);
+    });
 };

@@ -69,6 +69,7 @@ export interface ElectronAPI {
   writeAudioMetadata: (filePath: string, metadata: Partial<Song>) => Promise<void>
   onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => () => void
   openItemPath: (filePath: string) => Promise<void>
+  openDownloadsFolder: () => Promise<void>
   deleteFile: (filePath: string) => Promise<void>
   getSettings: () => Promise<any>
   saveSettings: (settings: any) => Promise<void>
@@ -79,7 +80,10 @@ export interface ElectronAPI {
   onUpdateAvailable: (callback: (version: string) => void) => () => void
   onUpdateProgress: (callback: (percent: number) => void) => () => void
   onUpdateDownloaded: (callback: () => void) => () => void
+  onUpdateNotAvailable: (callback: () => void) => () => void
+  onUpdateError: (callback: (error: string) => void) => () => void
   restartApp: () => Promise<void>
+  checkForUpdatesManual: () => Promise<void>
   log: (level: string, message: string) => void
   getSyncHistory: () => Promise<SyncHistoryEntry[]>
   clearSyncHistory: () => Promise<void>
@@ -160,6 +164,7 @@ const electronAPI: ElectronAPI = {
     return () => ipcRenderer.off('download-progress', listener)
   },
   openItemPath: (filePath: string) => ipcRenderer.invoke('open-item-path', filePath),
+  openDownloadsFolder: () => ipcRenderer.invoke('open-downloads-folder'),
   deleteFile: (filePath: string) => ipcRenderer.invoke('delete-file', filePath),
 
   // Auto Update Implementations (Mới thêm)
@@ -178,7 +183,18 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.on('update-downloaded', listener)
     return () => ipcRenderer.off('update-downloaded', listener)
   },
+  onUpdateNotAvailable: (callback) => {
+    const listener = () => callback()
+    ipcRenderer.on('update-not-available', listener)
+    return () => ipcRenderer.off('update-not-available', listener)
+  },
+  onUpdateError: (callback) => {
+    const listener = (_event: IpcRendererEvent, error: string) => callback(error)
+    ipcRenderer.on('update-error', listener)
+    return () => ipcRenderer.off('update-error', listener)
+  },
   restartApp: () => ipcRenderer.invoke('restart-app'),
+  checkForUpdatesManual: () => ipcRenderer.invoke('check-for-updates-manual'),
   log: (level, message) => ipcRenderer.send('electron-log-message', { level, message }),
   resetCache: () => ipcRenderer.invoke('library:reset-cache'),
   getSyncHistory: () => ipcRenderer.invoke('library:getSyncHistory'),

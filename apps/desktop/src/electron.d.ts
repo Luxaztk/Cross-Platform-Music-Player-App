@@ -83,6 +83,7 @@ declare global {
       ) => Promise<{ success: boolean; error?: string }>
       onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => () => void
       openItemPath: (filePath: string) => Promise<void>
+      openDownloadsFolder: () => Promise<void>
       deleteFile: (filePath: string) => Promise<{ success: boolean }>
       getSettings: () => Promise<any>
       saveSettings: (settings: any) => Promise<void>
@@ -93,7 +94,10 @@ declare global {
       onUpdateAvailable: (callback: (version: string) => void) => () => void
       onUpdateProgress: (callback: (percent: number) => void) => () => void
       onUpdateDownloaded: (callback: () => void) => () => void
+      onUpdateNotAvailable: (callback: () => void) => () => void
+      onUpdateError: (callback: (error: string) => void) => () => void
       restartApp: () => Promise<void>
+      checkForUpdatesManual: () => Promise<void>
       resetCache: () => Promise<{ success: boolean; message?: string }>
       getSyncHistory: () => Promise<SyncHistoryEntry[]>
       clearSyncHistory: () => Promise<void>

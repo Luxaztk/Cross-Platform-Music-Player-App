@@ -298,6 +298,45 @@
                     }
                 }
 
+                .check-updates-btn {
+                    padding: 6px 14px;
+                    border-radius: 4px;
+                    border: 1px solid var(--border-color);
+                    background: var(--bg-surface);
+                    color: var(--color-text-main);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                    transition: all 0.2s ease;
+
+                    &:hover:not(:disabled) {
+                        background: rgba(255, 255, 255, 0.05);
+                        border-color: var(--color-primary);
+                    }
+
+                    &:disabled {
+                        cursor: not-allowed;
+                        opacity: 0.6;
+                    }
+
+                    &.restart {
+                        border-radius: 4px; /* Đồng bộ với trạng thái thường thay vì dùng dạng viên thuốc */
+                        border: none !important;
+                        background: var(--color-primary) !important;
+                        color: #fff !important;
+                        font-weight: 600;
+                        
+                        &:hover {
+                            background: var(--color-primary-hover, var(--color-primary)) !important;
+                            box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 29, 185, 84), 0.3) !important;
+                            opacity: 1 !important;
+                        }
+                    }
+                }
+
                 select,
                 input[type="text"] {
                     width: 100%;
@@ -1028,6 +1067,31 @@
                         .edit-pill {
                             transform: translateY(0);
                         }
+                    }
+                }
+            }
+        }
+
+        /* Single Download Monitor */
+        .single-download-monitor {
+            .monitor-actions {
+                display: flex;
+                justify-content: flex-end;
+                margin-top: 12px;
+
+                .reset-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: transparent;
+                    border: none;
+                    color: var(--color-text-muted);
+                    font-size: 12px;
+                    cursor: pointer;
+                    transition: color 0.2s;
+
+                    &:hover {
+                        color: var(--color-text-main);
                     }
                 }
             }
