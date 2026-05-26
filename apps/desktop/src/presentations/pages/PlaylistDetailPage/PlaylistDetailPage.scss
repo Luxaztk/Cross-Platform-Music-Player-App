@@ -522,7 +522,15 @@
 
 // Portal-rendered Song Row Context Menu
 .song-row-portal-menu {
-  @extend %global-dropdown-surface;
+  background-color: var(--bg-surface-solid);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
   position: fixed;
   z-index: 1000;
   min-width: 200px;
@@ -573,7 +581,15 @@
       }
 
       .nested-menu {
-        @extend %global-dropdown-surface;
+        background-color: var(--bg-surface-solid);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        padding: 4px;
+        display: flex;
+        flex-direction: column;
         position: absolute;
         right: 100%;
         top: 0;

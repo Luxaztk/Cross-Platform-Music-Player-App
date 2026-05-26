@@ -1,9 +1,5 @@
-feat: UI/UX hardening and stability improvements
+feat: update project architecture docs and resolve UI styling regressions
 
-- Fix UI Flash in LyricsPanel by removing redundant fadeIn animations and delaying hints
-- Eliminate startup flicker in SettingsProvider by removing ephemeral loading text
-- Optimize DownloadPreviewCard layout: album tags now expand to full width when status badges are absent
-- Improve DownloadModal: titles are now properly truncated with ellipsis if too long
-- Re-order DownloadSection: moved auto-import folder settings to the bottom for better hierarchy
-- Standardize i18n: replaced remaining plain text with `t()` calls for 100% translation coverage
-- Build & Test Stabilization: fixed critical test failures in Sidebar, PlayerBar, and DownloaderModal, and resolved unused variable build errors
+- docs: Create and finalize __PROJECT_REPORT.md encompassing the system architecture diagram (Mermaid), monorepo directory structure, MVP definition, and comprehensive module-based task progress.
+- fix(PlayerBar): Relocate the QueuePanel component directly inside the .player-right container to perfectly synchronize with the original SCSS structure, permanently resolving the lost styling issue of the Queue without messing with complex nested SCSS rules.
+- fix(SongRow): Replace the cross-file Vite SCSS `@extend` directive with static CSS properties (background, backdrop-filter, border) and inject `flex-direction`, ensuring the Song Row Context Menu (more-menu) renders correctly without missing backgrounds or breaking structure when rendered via React Portal.
