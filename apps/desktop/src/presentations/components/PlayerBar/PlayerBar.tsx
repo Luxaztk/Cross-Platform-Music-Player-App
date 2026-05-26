@@ -92,15 +92,13 @@ export const PlayerBar: React.FC = () => {
                 >
                     <MicVocal size={ICON_SIZES.SMALL} />
                 </button>
+
+                {state.isQueueOpen && (
+                    <div className="queue-popover-container" ref={refs.queueContainerRef}>
+                        <QueuePanel />
+                    </div>
+                )}
             </div>
-
-
-            {state.isQueueOpen && (
-                <div className="queue-popover-container" ref={refs.queueContainerRef}>
-                    <QueuePanel />
-
-                </div>
-            )}
         </footer>
     );
 };
