@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { type ComponentProps } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { router, usePathname } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -8,25 +8,22 @@ import { useTheme } from './Theme'
 import { useLanguage } from './Language'
 import { useAppShell } from './AppShell'
 
-/**
- * Persistent top bar rendered above the Stack navigator.
- *
- * Adapts its buttons and title based on the current pathname:
- *  - Home (library/playlists): Import | Title | Search + Menu
- *  - Search / Settings:        Back   | Title | Menu
- *  - Playlist detail:          Back   | Playlist name | Menu
- *  - Now-playing:              not rendered (has its own header)
- */
+type FeatherName = ComponentProps<typeof Feather>['name']
+
+type IconButtonProps = {
+  icon: FeatherName
+  onPress: () => void
+  label: string
+}
+
 export function TopBar() {
   const { theme } = useTheme()
   const { t } = useLanguage()
   const insets = useSafeAreaInsets()
   const pathname = usePathname()
-  const { openSidebar, triggerImport, customTitle } = useAppShell()
+  const { customTitle } = useAppShell()
 
-  // ── Derive config from pathname ────────────────────────────────
-
-  const isHome =
+  const showSearchTopBar =
     pathname === '/' ||
     pathname === '/library' ||
     pathname === '/playlists'
@@ -36,33 +33,23 @@ export function TopBar() {
   const isPlaylistDetail = pathname.startsWith('/playlist/')
   const isNowPlaying = pathname === '/now-playing'
 
-  // Don't render on Now-Playing (it has its own custom header)
   if (isNowPlaying) return null
 
-  // Left action
-  const showImportButton = isHome
-  const showBackButton = isSearch || isSettings || isPlaylistDetail
+  const showBackButton = isSearch || isPlaylistDetail
 
-  // Right actions
-  const showSearchButton = isHome
-  const showMenuButton = true
-
-  // Title
   let title = ''
   if (pathname === '/' || pathname === '/library') title = t.library.title
   else if (pathname === '/playlists') title = t.playlists.title
   else if (isSearch) title = t.tabs.search
   else if (isSettings) title = t.settings.title
   else if (isPlaylistDetail && customTitle) title = customTitle
-  else if (isPlaylistDetail) title = ''
-
-  // ── Handlers ───────────────────────────────────────────────────
+  else if (isPlaylistDetail) title = 'Playlist'
 
   const handleBack = () => {
     if (router.canGoBack()) {
       router.back()
     } else {
-      router.replace('/')
+      router.replace('/library')
     }
   }
 
@@ -70,90 +57,154 @@ export function TopBar() {
     router.push('/search')
   }
 
-  // ── Render ─────────────────────────────────────────────────────
+  const IconButton = ({ icon, onPress, label }: IconButtonProps) => (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={10}
+      style={({ pressed }) => [
+        styles.iconBtn,
+        {
+          backgroundColor: theme.colors.surfaceSolid,
+          borderColor: theme.colors.subtleBorder,
+          opacity: pressed ? 0.75 : 1,
+          transform: [{ scale: pressed ? 0.96 : 1 }],
+        },
+      ]}
+    >
+      <Feather name={icon} size={21} color={theme.colors.text} />
+    </Pressable>
+  )
 
   return (
     <View
       style={[
         styles.container,
         {
-          paddingTop: insets.top + 4,
+          paddingTop: insets.top + 8,
           backgroundColor: theme.colors.background,
-          borderBottomColor: theme.colors.border,
+          borderBottomColor: theme.colors.subtleBorder,
         },
       ]}
     >
-      <View style={styles.inner}>
-        {/* ── Left slot ── */}
-        <View style={styles.slot}>
+      {showSearchTopBar ? (
+        <View style={styles.homeInner}>
+          <Pressable
+            onPress={handleSearch}
+            accessibilityRole="button"
+            accessibilityLabel="Search music"
+            style={({ pressed }) => [
+              styles.searchBar,
+              {
+                backgroundColor: theme.colors.surfaceSolid,
+                borderColor: theme.colors.subtleBorder,
+                opacity: pressed ? 0.82 : 1,
+              },
+            ]}
+          >
+            <Feather name="search" size={20} color={theme.colors.mutedText} />
+
+            <Text
+              numberOfLines={1}
+              style={[styles.searchPlaceholder, { color: theme.colors.mutedText }]}
+            >
+              Search songs, artists, albums
+            </Text>
+
+            <View
+              style={[
+                styles.searchDivider,
+                { backgroundColor: theme.colors.subtleBorder },
+              ]}
+            />
+
+            <Feather name="music" size={19} color={theme.colors.primary} />
+          </Pressable>
+        </View>
+      ) : (
+        <View style={styles.pageInner}>
           {showBackButton && (
-            <Pressable onPress={handleBack} hitSlop={12} style={styles.iconBtn}>
-              <Feather name="arrow-left" size={22} color={theme.colors.text} />
-            </Pressable>
+            <IconButton icon="arrow-left" onPress={handleBack} label="Back" />
           )}
-          {showImportButton && (
-            <Pressable onPress={triggerImport} hitSlop={12} style={styles.iconBtn}>
-              <Feather name="plus" size={22} color={theme.colors.text} />
-            </Pressable>
-          )}
-        </View>
 
-        {/* ── Center ── */}
-        <Text
-          style={[styles.title, { color: theme.colors.text }]}
-          numberOfLines={1}
-        >
-          {title}
-        </Text>
+          <View style={styles.titleBlock}>
+            <Text
+              numberOfLines={1}
+              style={[styles.pageTitle, { color: theme.colors.text }]}
+            >
+              {title}
+            </Text>
 
-        {/* ── Right slot ── */}
-        <View style={[styles.slot, styles.slotRight]}>
-          {showSearchButton && (
-            <Pressable onPress={handleSearch} hitSlop={12} style={styles.iconBtn}>
-              <Feather name="search" size={20} color={theme.colors.text} />
-            </Pressable>
-          )}
-          {showMenuButton && (
-            <Pressable onPress={openSidebar} hitSlop={12} style={styles.iconBtn}>
-              <Feather name="menu" size={22} color={theme.colors.text} />
-            </Pressable>
-          )}
+            <Text
+              numberOfLines={1}
+              style={[styles.pageSubtitle, { color: theme.colors.mutedText }]}
+            >
+              Melovista
+            </Text>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
+    flexShrink: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingBottom: 10,
   },
-  inner: {
-    height: 48,
+  homeInner: {
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
   },
-  slot: {
-    width: 72,
+  pageInner: {
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 12,
   },
-  slotRight: {
-    justifyContent: 'flex-end',
+  searchBar: {
+    flex: 1,
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    gap: 9,
+  },
+  searchPlaceholder: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  searchDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 24,
   },
   iconBtn: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 18,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  title: {
+  titleBlock: {
     flex: 1,
+    minWidth: 0,
+  },
+  pageTitle: {
     fontSize: 17,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: '800',
+  },
+  pageSubtitle: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '500',
   },
 })

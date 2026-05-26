@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { useColorScheme } from 'react-native'
 
 import { darkTheme, lightTheme, type ThemeName, type ThemeTokens } from './tokens'
 import { loadThemePreference, saveThemePreference } from './storage'
@@ -14,34 +13,33 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useColorScheme()
-  const systemThemeName: ThemeName = systemScheme === 'dark' ? 'dark' : 'light'
+const DEFAULT_THEME_NAME: ThemeName = 'dark'
 
-  const [themeName, setThemeNameState] = useState<ThemeName>(systemThemeName)
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [themeName, setThemeNameState] = useState<ThemeName>(DEFAULT_THEME_NAME)
   const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
     let cancelled = false
+
     ;(async () => {
       try {
         const saved = await loadThemePreference()
-        if (!cancelled && saved) setThemeNameState(saved)
+
+        if (!cancelled && saved) {
+          setThemeNameState(saved)
+        }
       } finally {
-        if (!cancelled) setIsHydrated(true)
+        if (!cancelled) {
+          setIsHydrated(true)
+        }
       }
     })()
+
     return () => {
       cancelled = true
     }
   }, [])
-
-  // If the user never picked a theme, follow system changes before hydration finishes.
-  const [prevSystemThemeName, setPrevSystemThemeName] = useState(systemThemeName)
-  if (!isHydrated && systemThemeName !== prevSystemThemeName) {
-    setPrevSystemThemeName(systemThemeName)
-    setThemeNameState(systemThemeName)
-  }
 
   const setThemeName = useCallback((next: ThemeName) => {
     setThemeNameState(next)
@@ -55,7 +53,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = themeName === 'dark' ? darkTheme : lightTheme
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ theme, themeName, setThemeName, toggleTheme, isHydrated }),
+    () => ({
+      theme,
+      themeName,
+      setThemeName,
+      toggleTheme,
+      isHydrated,
+    }),
     [theme, themeName, setThemeName, toggleTheme, isHydrated],
   )
 
@@ -64,8 +68,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme() {
   const ctx = useContext(ThemeContext)
+
   if (!ctx) {
     throw new Error('useTheme must be used within ThemeProvider')
   }
+
   return ctx
 }

@@ -1,19 +1,141 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  Alert,
   FlatList,
+  Modal,
+  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
-import { router } from 'expo-router'
+import * as DocumentPicker from 'expo-document-picker'
+
+import Feather from '@expo/vector-icons/Feather'
+
+import type { Playlist, Song } from '@music/types'
 
 import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
 import { useLibrary } from '../../application'
-import { PlaylistRow } from '../../presentations/components/PlaylistRow'
-import { PlaylistActions } from '../../presentations/components/PlaylistActions'
-import { NameModal } from '../../presentations/components/NameModal'
+import { usePlayerState } from '../../application/player'
+import { useAppShell } from '../../presentations/components/AppShell'
+
+type SortField = 'title' | 'artist' | 'album' | 'dateAdded'
+type SortDir = 'asc' | 'desc'
+
+function compareSongs(a: Song, b: Song, field: SortField, dir: SortDir): number {
+  const aVal = (a[field] ?? '').toString().toLowerCase()
+  const bVal = (b[field] ?? '').toString().toLowerCase()
+  const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+  return dir === 'asc' ? cmp : -cmp
+}
+
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+const SongRow = React.memo(function SongRow({
+  item,
+  isActive,
+  onPress,
+  onLongPress,
+  onAddToPlaylist,
+  colors,
+}: {
+  item: Song
+  isActive: boolean
+  onPress: (id: string) => void
+  onLongPress: (id: string, title: string) => void
+  onAddToPlaylist: (song: Song) => void
+  colors: { surface: string; border: string; text: string; mutedText: string; primary: string }
+}) {
+  return (
+    <Pressable
+      onPress={() => onPress(item.id)}
+      onLongPress={() => onLongPress(item.id, item.title)}
+      style={[
+        styles.row,
+        {
+          backgroundColor: isActive ? colors.primary + '18' : colors.surface,
+          borderColor: isActive ? colors.primary + '44' : colors.border,
+        },
+      ]}
+    >
+      <View style={styles.rowLeft}>
+        <Text
+          numberOfLines={1}
+          style={[styles.rowTitle, { color: isActive ? colors.primary : colors.text }]}
+        >
+          {item.title}
+        </Text>
+        <Text numberOfLines={1} style={[styles.rowSubtitle, { color: colors.mutedText }]}>
+          {item.artist}
+          {item.album ? ` · ${item.album}` : ''}
+        </Text>
+      </View>
+
+      {item.duration > 0 && (
+        <Text style={[styles.rowDuration, { color: colors.mutedText }]}>
+          {formatDuration(item.duration)}
+        </Text>
+      )}
+
+      <Pressable
+        onPress={(e) => {
+          e.stopPropagation()
+          onAddToPlaylist(item)
+        }}
+        hitSlop={10}
+        style={[
+          styles.addBtn,
+          {
+            borderColor: colors.border,
+            backgroundColor: colors.primary + '14',
+          },
+        ]}
+      >
+        <Text style={[styles.addBtnText, { color: colors.primary }]}>+ Playlist</Text>
+      </Pressable>
+    </Pressable>
+  )
+})
+
+const PlaylistPickRow = React.memo(function PlaylistPickRow({
+  item,
+  onSelect,
+  colors,
+}: {
+  item: Playlist
+  onSelect: (playlistId: string) => void
+  colors: { surface: string; border: string; text: string; mutedText: string; primary: string }
+}) {
+  return (
+    <Pressable
+      onPress={() => onSelect(item.id)}
+      style={[
+        styles.playlistRow,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+        },
+      ]}
+    >
+      <View style={styles.playlistInfo}>
+        <Text numberOfLines={1} style={[styles.playlistName, { color: colors.text }]}>
+          {item.name}
+        </Text>
+        <Text style={[styles.playlistCount, { color: colors.mutedText }]}>
+          {item.songIds.length} bài hát
+        </Text>
+      </View>
+
+      <Text style={[styles.playlistChoose, { color: colors.primary }]}>Chọn</Text>
+    </Pressable>
+  )
+})
 
 export default function LibraryScreen() {
   const { theme } = useTheme()
@@ -21,138 +143,454 @@ export default function LibraryScreen() {
   const { notify } = useNotifications()
   const {
     isHydrated,
+    songsById,
     library,
     playlistsById,
-    renamePlaylist,
-    deletePlaylist,
+    importPickedAudio,
+    deleteSongs,
+    addSongsToPlaylist,
   } = useLibrary()
+  const { playList, state: playerState } = usePlayerState()
+  const { registerImportHandler } = useAppShell()
 
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null)
-  const [isActionsVisible, setIsActionsVisible] = useState(false)
-  const [isRenameVisible, setIsRenameVisible] = useState(false)
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
 
-  const sortedPlaylists = useMemo(() => {
-    return Object.values(playlistsById)
-      .filter((p) => p.id !== '0')
-      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
-  }, [playlistsById])
+  const [playlistModalVisible, setPlaylistModalVisible] = useState(false)
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null)
+
+  const songs = useMemo(() => {
+    const list = library.songIds.map((id) => songsById[id]).filter(Boolean) as Song[]
+    if (!sortField) return list
+    return [...list].sort((a, b) => compareSongs(a, b, sortField, sortDir))
+  }, [library.songIds, songsById, sortField, sortDir])
+
+  const sortedIds = useMemo(() => songs.map((s) => s.id), [songs])
 
   const playlists = useMemo(() => {
-    const allSongs = {
-      id: 'all',
-      name: t.library.allSongs,
-      songIds: library.songIds,
-      isSpecial: true,
-    }
-    return [allSongs, ...sortedPlaylists]
-  }, [library.songIds, sortedPlaylists, t])
+    return Object.values(playlistsById)
+      .filter((p) => p.id !== '0')
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [playlistsById])
 
-  const selectedPlaylist = useMemo(() => {
-    if (!selectedPlaylistId) return null
-    if (selectedPlaylistId === 'all') return playlists[0]
-    return playlistsById[selectedPlaylistId]
-  }, [selectedPlaylistId, playlists, playlistsById])
-
-  const handlePress = useCallback((id: string) => {
-    router.push({ pathname: '/playlist/[id]', params: { id } })
-  }, [])
-
-  const handleMore = useCallback((id: string) => {
-    setSelectedPlaylistId(id)
-    setIsActionsVisible(true)
-  }, [])
-
-  const handleRenameConfirm = useCallback(async (newName: string) => {
-    if (selectedPlaylistId) {
-      await renamePlaylist(selectedPlaylistId, newName)
-      notify({ message: t.playlists.renamed(newName), kind: 'success' })
-      setIsRenameVisible(false)
-    }
-  }, [selectedPlaylistId, renamePlaylist, notify, t])
-
+  const songCount = songs.length
   const colors = theme.colors
+
+  const pickAudioFiles = useCallback(async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: 'audio/*',
+      multiple: true,
+      copyToCacheDirectory: false,
+    })
+
+    if (result.canceled) {
+      notify({ message: t.library.importCanceled, kind: 'info' })
+      return
+    }
+
+    try {
+      const { imported, skippedDuplicates } = await importPickedAudio(result.assets)
+      notify({
+        message:
+          skippedDuplicates > 0
+            ? t.library.importSuccessWithSkipped(imported, skippedDuplicates)
+            : t.library.importSuccess(imported),
+        kind: 'success',
+      })
+    } catch {
+      notify({ message: t.library.importFailed, kind: 'error' })
+    }
+  }, [importPickedAudio, notify, t])
+
+  useEffect(() => {
+    registerImportHandler(pickAudioFiles)
+    return () => registerImportHandler(null)
+  }, [registerImportHandler, pickAudioFiles])
+
+  const onLongPressSong = useCallback(
+    (songId: string, title: string) => {
+      Alert.alert(t.library.confirmDeleteSong(title), '', [
+        { text: t.playlists.cancel, style: 'cancel' },
+        {
+          text: t.playlists.delete,
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              await deleteSongs([songId])
+              notify({ message: t.library.songDeleted(title), kind: 'success' })
+            })()
+          },
+        },
+      ])
+    },
+    [deleteSongs, notify, t],
+  )
+
+  const onPressSong = useCallback(
+    (songId: string) => {
+      void (async () => {
+        try {
+          const idx = sortedIds.indexOf(songId)
+          await playList(sortedIds, idx >= 0 ? idx : 0)
+        } catch (err: any) {
+          notify({
+            message:
+              err?.message === 'AUDIO_MODULE_UNAVAILABLE'
+                ? t.library.playbackUnavailable
+                : t.library.playbackFailed,
+            kind: 'error',
+          })
+        }
+      })()
+    },
+    [playList, sortedIds, notify, t],
+  )
+
+  const onOpenAddToPlaylist = useCallback(
+    (song: Song) => {
+      setSelectedSong(song)
+      setPlaylistModalVisible(true)
+    },
+    [],
+  )
+
+  const onClosePlaylistModal = useCallback(() => {
+    setSelectedSong(null)
+    setPlaylistModalVisible(false)
+  }, [])
+
+  const onSelectPlaylist = useCallback(
+    async (playlistId: string) => {
+      if (!selectedSong) return
+
+      await addSongsToPlaylist(playlistId, [selectedSong.id])
+      notify({
+        message: `"${selectedSong.title}" đã được thêm vào playlist`,
+        kind: 'success',
+      })
+      onClosePlaylistModal()
+    },
+    [addSongsToPlaylist, notify, onClosePlaylistModal, selectedSong],
+  )
+
+  const toggleSort = useCallback(
+    (field: SortField) => {
+      if (sortField === field) {
+        if (sortDir === 'asc') {
+          setSortDir('desc')
+        } else {
+          setSortField(null)
+          setSortDir('asc')
+        }
+      } else {
+        setSortField(field)
+        setSortDir('asc')
+      }
+    },
+    [sortField, sortDir],
+  )
+
+  const sortArrow = sortDir === 'asc' ? ' ↑' : ' ↓'
+
+  const renderItem = useCallback(
+    ({ item }: { item: Song }) => (
+      <SongRow
+        item={item}
+        isActive={item.id === playerState.currentSongId}
+        onPress={onPressSong}
+        onLongPress={onLongPressSong}
+        onAddToPlaylist={onOpenAddToPlaylist}
+        colors={colors}
+      />
+    ),
+    [playerState.currentSongId, onPressSong, onLongPressSong, onOpenAddToPlaylist, colors],
+  )
+
+  const keyExtractor = useCallback((item: Song) => item.id, [])
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          {t.library.yourLibrary}
+      <View style={styles.libraryHeaderRow}>
+      <View style={styles.libraryTitleBlock}>
+        <Text style={[styles.title, { color: colors.text }]}>{t.library.title}</Text>
+
+        <Text style={[styles.subtitle, { color: colors.mutedText }]}>
+          {isHydrated ? `${songCount} songs` : t.common.loadingPreference}
         </Text>
       </View>
 
+      <Pressable
+        onPress={pickAudioFiles}
+        accessibilityRole="button"
+        accessibilityLabel="Upload music"
+        style={({ pressed }) => [
+          styles.uploadBtn,
+          {
+            backgroundColor: colors.primary,
+            opacity: pressed ? 0.78 : 1,
+            transform: [{ scale: pressed ? 0.97 : 1 }],
+          },
+        ]}
+      >
+        <Feather name="upload" size={16} color={colors.inverseText} />
+
+        <Text style={[styles.uploadBtnText, { color: colors.inverseText }]}>
+          Upload
+        </Text>
+      </Pressable>
+    </View>
+
+    <View style={styles.sortRow}>
+        <Text style={[styles.sortLabel, { color: colors.mutedText }]}>Sort:</Text>
+
+        <Pressable
+          onPress={() => setSortField(null)}
+          style={[
+            styles.sortChip,
+            {
+              backgroundColor: !sortField ? colors.primary + '20' : colors.surface,
+              borderColor: !sortField ? colors.primary : colors.border,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.sortChipText,
+              { color: !sortField ? colors.primary : colors.mutedText },
+            ]}
+          >
+            Default
+          </Text>
+        </Pressable>
+
+        {(['title', 'artist', 'album', 'dateAdded'] as const).map((field) => {
+          const active = sortField === field
+          const label =
+            field === 'dateAdded'
+              ? 'Date Added'
+              : field.charAt(0).toUpperCase() + field.slice(1)
+
+          return (
+            <Pressable
+              key={field}
+              onPress={() => toggleSort(field)}
+              style={[
+                styles.sortChip,
+                {
+                  backgroundColor: active ? colors.primary + '20' : colors.surface,
+                  borderColor: active ? colors.primary : colors.border,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.sortChipText,
+                  { color: active ? colors.primary : colors.mutedText },
+                ]}
+              >
+                {label}
+                {active ? sortArrow : ''}
+              </Text>
+            </Pressable>
+          )
+        })}
+      </View>
+
       <FlatList
-        data={playlists}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <PlaylistRow
-            item={item}
-            onPress={handlePress}
-            onMorePress={item.id !== 'all' ? handleMore : undefined}
-            isFixed={item.id === 'all'}
-          />
-        )}
+        style={styles.list}
+        data={songs}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
         contentContainerStyle={styles.listContent}
+        initialNumToRender={15}
+        maxToRenderPerBatch={20}
+        windowSize={7}
+        removeClippedSubviews={true}
+        getItemLayout={(_data, index) => ({
+          length: ROW_HEIGHT + ROW_GAP,
+          offset: (ROW_HEIGHT + ROW_GAP) * index,
+          index,
+        })}
         ListEmptyComponent={
           isHydrated ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>🎶</Text>
               <Text style={[styles.emptyText, { color: colors.mutedText }]}>
-                {t.playlists.emptyState}
+                No songs yet — tap Import to add music
               </Text>
             </View>
           ) : null
         }
       />
 
-      <PlaylistActions
-        visible={isActionsVisible}
-        onClose={() => setIsActionsVisible(false)}
-        playlistName={selectedPlaylist?.name ?? ''}
-        onRename={() => setIsRenameVisible(true)}
-        onDelete={() => {
-          if (selectedPlaylistId) {
-            deletePlaylist(selectedPlaylistId)
-            notify({ message: t.playlists.deleted(selectedPlaylist?.name ?? ''), kind: 'success' })
-          }
-        }}
-      />
+      <Modal
+        visible={playlistModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={onClosePlaylistModal}
+      >
+        <Pressable style={styles.modalOverlay} onPress={onClosePlaylistModal}>
+          <Pressable
+            style={[styles.modalCard, { backgroundColor: colors.background, borderColor: colors.border }]}
+            onPress={() => {}}
+          >
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Thêm vào playlist
+            </Text>
 
-      {selectedPlaylist && (
-        <NameModal
-          visible={isRenameVisible}
-          title={t.playlists.rename}
-          initialValue={selectedPlaylist.name}
-          placeholder={t.playlists.enterName}
-          cancelLabel={t.playlists.cancel}
-          confirmLabel={t.playlists.rename}
-          onCancel={() => setIsRenameVisible(false)}
-          onConfirm={(v) => void handleRenameConfirm(v)}
-          colors={colors}
-        />
-      )}
+            {selectedSong ? (
+              <Text style={[styles.modalSubtitle, { color: colors.mutedText }]} numberOfLines={2}>
+                Bài hát: {selectedSong.title}
+              </Text>
+            ) : null}
+
+            {playlists.length === 0 ? (
+              <View style={styles.modalEmptyWrap}>
+                <Text style={[styles.modalEmptyText, { color: colors.mutedText }]}>
+                  Chưa có playlist nào. Hãy tạo playlist trước ở mục Playlists.
+                </Text>
+              </View>
+            ) : (
+              <FlatList
+                data={playlists}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.modalListContent}
+                renderItem={({ item }) => (
+                  <PlaylistPickRow
+                    item={item}
+                    onSelect={onSelectPlaylist}
+                    colors={colors}
+                  />
+                )}
+              />
+            )}
+
+            <Pressable
+              onPress={onClosePlaylistModal}
+              style={[styles.closeBtn, { borderColor: colors.border }]}
+            >
+              <Text style={[styles.closeBtnText, { color: colors.text }]}>Đóng</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   )
 }
 
+const ROW_HEIGHT = 64
+const ROW_GAP = 8
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    paddingTop: 16,
+  flex: 1,
+  padding: 24,
+  paddingBottom: 190,
   },
-  header: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
+  
+  libraryHeaderRow: {
+  flexDirection: 'row',
+  alignItems: 'flex-end',
+  justifyContent: 'space-between',
+  gap: 14,
   },
+  
+  libraryTitleBlock: {
+  flex: 1,
+  minWidth: 0,
+  },
+  
+  uploadBtn: {
+  minHeight: 40,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 7,
+  borderRadius: 999,
+  paddingHorizontal: 15,
+  paddingVertical: 10,
+  },
+  
+  uploadBtnText: {
+  fontSize: 13,
+  fontWeight: '800',
+  },
+  
   title: {
     fontSize: 26,
     fontWeight: '800',
   },
+  subtitle: {
+    marginTop: 6,
+    fontSize: 13,
+    opacity: 0.8,
+  },
+  sortRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 14,
+  },
+  sortLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  sortChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  sortChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  list: {
+    marginTop: 14,
+    flex: 1,
+  },
   listContent: {
-    paddingBottom: 120,
+    gap: ROW_GAP,
+    paddingBottom: 24,
+  },
+  row: {
+    minHeight: ROW_HEIGHT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    gap: 10,
+  },
+  rowLeft: {
+    flex: 1,
+    gap: 2,
+  },
+  rowTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  rowSubtitle: {
+    fontSize: 12,
+  },
+  rowDuration: {
+    fontSize: 12,
+    marginLeft: 6,
+  },
+  addBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  addBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingTop: 64,
+    paddingTop: 48,
     gap: 12,
   },
   emptyEmoji: {
@@ -161,6 +599,75 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     textAlign: 'center',
-    paddingHorizontal: 40,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    maxHeight: '75%',
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  modalSubtitle: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  modalEmptyWrap: {
+    paddingVertical: 28,
+    alignItems: 'center',
+  },
+  modalEmptyText: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalListContent: {
+    paddingTop: 14,
+    gap: 10,
+  },
+  playlistRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  playlistInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  playlistName: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  playlistCount: {
+    fontSize: 12,
+  },
+  playlistChoose: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  closeBtn: {
+    marginTop: 14,
+    alignSelf: 'flex-end',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  closeBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 })

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Animated,
   Dimensions,
@@ -17,8 +17,17 @@ import { useLanguage } from './Language'
 import { useAppShell } from './AppShell'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
-const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.75
-const ANIMATION_DURATION = 250
+const SIDEBAR_WIDTH = Math.min(SCREEN_WIDTH * 0.78, 330)
+const ANIMATION_DURATION = 220
+
+type FeatherName = React.ComponentProps<typeof Feather>['name']
+
+type NavLink = {
+  label: string
+  icon: FeatherName
+  route: string
+  matchPaths: string[]
+}
 
 export function SidebarMenu() {
   const { theme } = useTheme()
@@ -27,48 +36,13 @@ export function SidebarMenu() {
   const pathname = usePathname()
   const { isSidebarOpen, closeSidebar } = useAppShell()
 
+  const [shouldRender, setShouldRender] = useState(false)
+
   const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current
   const overlayAnim = useRef(new Animated.Value(0)).current
 
   const appVersion = Constants.expoConfig?.version ?? '1.0.0'
   const appName = 'Melovista'
-
-  useEffect(() => {
-    if (isSidebarOpen) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-        Animated.timing(overlayAnim, {
-          toValue: 1,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-      ]).start()
-    } else {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: SIDEBAR_WIDTH,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-        Animated.timing(overlayAnim, {
-          toValue: 0,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-      ]).start()
-    }
-  }, [isSidebarOpen, slideAnim, overlayAnim])
-
-  type NavLink = {
-    label: string
-    icon: React.ComponentProps<typeof Feather>['name']
-    route: string
-    matchPaths: string[]
-  }
 
   const links: NavLink[] = [
     {
@@ -97,22 +71,63 @@ export function SidebarMenu() {
     },
   ]
 
+  useEffect(() => {
+    if (isSidebarOpen) {
+      setShouldRender(true)
+    }
+  }, [isSidebarOpen])
+
+  useEffect(() => {
+    if (!shouldRender) return
+
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: isSidebarOpen ? 0 : SIDEBAR_WIDTH,
+        duration: ANIMATION_DURATION,
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayAnim, {
+        toValue: isSidebarOpen ? 1 : 0,
+        duration: ANIMATION_DURATION,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished && !isSidebarOpen) {
+        setShouldRender(false)
+      }
+    })
+  }, [isSidebarOpen, overlayAnim, shouldRender, slideAnim])
+
   const handleNavigate = (route: string) => {
     closeSidebar()
+
     setTimeout(() => {
-      router.navigate(route as any)
-    }, 100)
+      router.navigate(route as never)
+    }, 120)
   }
 
-  if (!isSidebarOpen) return null
+  const isActiveRoute = (link: NavLink) => {
+    if (link.matchPaths.includes(pathname)) return true
+
+    if (pathname.startsWith('/playlist/') && link.route === '/playlists') {
+      return true
+    }
+
+    return false
+  }
+
+  if (!shouldRender) return null
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      <Pressable style={StyleSheet.absoluteFill} onPress={closeSidebar}>
+    <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+      <Pressable style={StyleSheet.absoluteFillObject} onPress={closeSidebar}>
         <Animated.View
           style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: 'rgba(0,0,0,0.5)', opacity: overlayAnim },
+            StyleSheet.absoluteFillObject,
+            {
+              backgroundColor: theme.colors.overlay,
+              opacity: overlayAnim,
+            },
           ]}
         />
       </Pressable>
@@ -122,57 +137,171 @@ export function SidebarMenu() {
           styles.panel,
           {
             width: SIDEBAR_WIDTH,
-            backgroundColor: theme.colors.surface,
-            borderLeftColor: theme.colors.border,
-            paddingTop: insets.top + 16,
-            paddingBottom: insets.bottom + 16,
+            backgroundColor: theme.colors.sidebar,
+            borderLeftColor: theme.colors.subtleBorder,
+            paddingTop: insets.top + 14,
+            paddingBottom: insets.bottom + 18,
             transform: [{ translateX: slideAnim }],
           },
         ]}
       >
-        <View style={styles.branding}>
-          <View style={[styles.logo, { backgroundColor: theme.colors.primary + '20' }]}>
-            <Text style={[styles.logoText, { color: theme.colors.primary }]}>M</Text>
+        <View style={styles.header}>
+          <View style={styles.brandRow}>
+            <View
+              style={[
+                styles.logo,
+                {
+                  backgroundColor: theme.colors.primary + '22',
+                  borderColor: theme.colors.primary + '40',
+                },
+              ]}
+            >
+              <Text style={[styles.logoText, { color: theme.colors.primary }]}>M</Text>
+            </View>
+
+            <View style={styles.brandTextBlock}>
+              <Text style={[styles.appName, { color: theme.colors.text }]}>
+                {appName}
+              </Text>
+
+              <Text style={[styles.version, { color: theme.colors.mutedText }]}>
+                Mobile music player
+              </Text>
+            </View>
           </View>
-          <Text style={[styles.appName, { color: theme.colors.text }]}>{appName}</Text>
-          <Text style={[styles.version, { color: theme.colors.mutedText }]}>v{appVersion}</Text>
+
+          <Pressable
+            onPress={closeSidebar}
+            accessibilityRole="button"
+            accessibilityLabel="Close menu"
+            hitSlop={10}
+            style={({ pressed }) => [
+              styles.closeBtn,
+              {
+                backgroundColor: theme.colors.surfaceSolid,
+                borderColor: theme.colors.subtleBorder,
+                opacity: pressed ? 0.75 : 1,
+              },
+            ]}
+          >
+            <Feather name="x" size={20} color={theme.colors.text} />
+          </Pressable>
         </View>
 
-        <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+        <View
+          style={[
+            styles.heroCard,
+            {
+              backgroundColor: theme.colors.surfaceSolid,
+              borderColor: theme.colors.subtleBorder,
+            },
+          ]}
+        >
+          <View style={styles.heroIconWrap}>
+            <Feather name="headphones" size={20} color={theme.colors.primary} />
+          </View>
+
+          <View style={styles.heroTextBlock}>
+            <Text style={[styles.heroTitle, { color: theme.colors.text }]}>
+              Your sound space
+            </Text>
+
+            <Text style={[styles.heroSubtitle, { color: theme.colors.mutedText }]}>
+              Listen, organize, and enjoy offline.
+            </Text>
+          </View>
+        </View>
+
+        <View style={[styles.divider, { backgroundColor: theme.colors.subtleBorder }]} />
 
         <View style={styles.links}>
           {links.map((link) => {
-            const isActive = link.matchPaths.includes(pathname)
+            const isActive = isActiveRoute(link)
+
             return (
               <Pressable
                 key={link.route}
                 onPress={() => handleNavigate(link.route)}
-                style={[
+                accessibilityRole="button"
+                accessibilityLabel={link.label}
+                style={({ pressed }) => [
                   styles.linkRow,
-                  isActive && {
-                    backgroundColor: theme.colors.primary + '14',
+                  {
+                    backgroundColor: isActive
+                      ? theme.colors.primary + '18'
+                      : pressed
+                        ? theme.colors.surfaceHover
+                        : 'transparent',
+                    borderColor: isActive
+                      ? theme.colors.primary + '30'
+                      : 'transparent',
                   },
                 ]}
               >
-                <Feather
-                  name={link.icon}
-                  size={20}
-                  color={isActive ? theme.colors.primary : theme.colors.mutedText}
-                />
+                <View
+                  style={[
+                    styles.linkIconBox,
+                    {
+                      backgroundColor: isActive
+                        ? theme.colors.primary + '20'
+                        : theme.colors.surfaceSolid,
+                    },
+                  ]}
+                >
+                  <Feather
+                    name={link.icon}
+                    size={19}
+                    color={isActive ? theme.colors.primary : theme.colors.mutedText}
+                  />
+                </View>
+
                 <Text
                   style={[
                     styles.linkLabel,
                     {
                       color: isActive ? theme.colors.primary : theme.colors.text,
-                      fontWeight: isActive ? '700' : '500',
+                      fontWeight: isActive ? '800' : '600',
                     },
                   ]}
                 >
                   {link.label}
                 </Text>
+
+                {isActive ? (
+                  <View
+                    style={[
+                      styles.activeDot,
+                      { backgroundColor: theme.colors.primary },
+                    ]}
+                  />
+                ) : null}
               </Pressable>
             )
           })}
+        </View>
+
+        <View style={styles.footerSpacer} />
+
+        <View
+          style={[
+            styles.footerCard,
+            {
+              backgroundColor: theme.colors.surfaceDim,
+              borderColor: theme.colors.subtleBorder,
+            },
+          ]}
+        >
+          <View>
+            <Text style={[styles.footerTitle, { color: theme.colors.text }]}>
+              Melovista Mobile
+            </Text>
+
+            <Text style={[styles.footerVersion, { color: theme.colors.mutedText }]}>
+              Version {appVersion}
+            </Text>
+          </View>
+
+          <Feather name="music" size={18} color={theme.colors.primary} />
         </View>
       </Animated.View>
     </View>
@@ -185,49 +314,142 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0,
     bottom: 0,
-    borderLeftWidth: 1,
-    paddingHorizontal: 20,
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 18,
+    elevation: 18,
   },
-  branding: {
+  header: {
+    minHeight: 58,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  brandRow: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
   },
   logo: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 46,
+    height: 46,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  logoText: {
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  brandTextBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+  appName: {
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 0.2,
+  },
+  version: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  closeBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  heroCard: {
+    marginTop: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  heroIconWrap: {
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoText: {
-    fontSize: 28,
-    fontWeight: '900',
+  heroTextBlock: {
+    flex: 1,
+    minWidth: 0,
   },
-  appName: {
-    fontSize: 20,
+  heroTitle: {
+    fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 0.5,
   },
-  version: {
+  heroSubtitle: {
+    marginTop: 3,
     fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '500',
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    marginVertical: 16,
+    marginVertical: 18,
   },
   links: {
-    gap: 4,
+    gap: 8,
   },
   linkRow: {
+    minHeight: 54,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderRadius: 12,
+    gap: 12,
+    borderRadius: 17,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  linkIconBox: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
   },
   linkLabel: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 15,
+  },
+  activeDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+  },
+  footerSpacer: {
+    flex: 1,
+  },
+  footerCard: {
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  footerTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  footerVersion: {
+    marginTop: 3,
+    fontSize: 12,
+    fontWeight: '500',
   },
 })

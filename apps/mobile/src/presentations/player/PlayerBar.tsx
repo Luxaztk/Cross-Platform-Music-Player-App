@@ -25,16 +25,8 @@ export function PlayerBar() {
   const pathname = usePathname()
   const insets = useSafeAreaInsets()
 
-  // Position: sit above the gesture bar / bottom edge
-  const isInTabs =
-    pathname.includes('(tabs)') ||
-    pathname === '/' ||
-    pathname === '/library' ||
-    pathname === '/search' ||
-    pathname === '/playlists' ||
-    pathname === '/settings'
-
-  const bottomOffset = isInTabs ? insets.bottom + 12 : 12
+  // Position: sit above the custom bottom navigation
+  const bottomOffset = insets.bottom + 86
 
   const hasSong = !!currentSong
   const title = currentSong?.title ?? ''
@@ -51,13 +43,12 @@ export function PlayerBar() {
       style={[
         styles.container,
         {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
-          bottom: bottomOffset
+          backgroundColor: theme.colors.playerBar,
+          borderColor: theme.colors.subtleBorder,
+          bottom: bottomOffset,
         },
       ]}
     >
-
       {/* ── Progress bar (top edge, non-seekable) ── */}
       <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}>
         <View
@@ -137,13 +128,16 @@ export function PlayerBar() {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    borderWidth: 1,
-    borderRadius: 18,
-    overflow: 'hidden',
+  position: 'absolute',
+  left: 12,
+  right: 12,
+  borderWidth: 1,
+  borderRadius: 18,
+  overflow: 'hidden',
+  zIndex: 20,
+  elevation: 20,
   },
+  
   progressTrack: {
     width: '100%',
     height: 3,

@@ -7,16 +7,19 @@ import { LibraryProvider } from '../application'
 import { PlayerProvider } from '../application/player'
 import { AppShellProvider } from '../presentations/components/AppShell'
 import { TopBar } from '../presentations/components/TopBar'
-import { SidebarMenu } from '../presentations/components/SidebarMenu'
+import { BottomNav } from '../presentations/components/BottomNav'
 import { PlayerBar } from '../presentations/player/PlayerBar'
 
 export default function RootLayout() {
   const pathname = usePathname()
   const isNowPlaying = pathname === '/now-playing'
+  const isSearch = pathname === '/search'
   const isSettings = pathname === '/settings'
 
-  // PlayerBar hidden on Now-Playing (has its own controls) and Settings
-  const showPlayerBar = !isNowPlaying && !isSettings
+  const showBottomNav = !isNowPlaying && !isSearch
+
+  // PlayerBar hidden on Now-Playing, Search, and Settings
+  const showPlayerBar = !isNowPlaying && !isSearch && !isSettings
 
   return (
     <ThemeProvider>
@@ -45,8 +48,8 @@ export default function RootLayout() {
                   {/* Persistent player bar */}
                   {showPlayerBar && <PlayerBar />}
 
-                  {/* Sidebar overlay (renders on top of everything) */}
-                  <SidebarMenu />
+                  {/* Spotify-like bottom navigation */}
+                  {showBottomNav && <BottomNav />}
                 </View>
               </AppShellProvider>
             </PlayerProvider>
