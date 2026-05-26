@@ -237,6 +237,7 @@ export default function PlaylistDetailScreen() {
   const {
     playlistsById,
     songsById,
+    library,
     addSongsToPlaylist,
     removeSongsFromPlaylist,
   } = useLibrary()
@@ -250,7 +251,16 @@ export default function PlaylistDetailScreen() {
   const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false)
   const [actionMode, setActionMode] = useState<'add' | 'move' | null>(null)
 
-  const playlist = playlistsById[id]
+  const playlist = useMemo(() => {
+    if (id === 'all' || id === '0') {
+      return {
+        id: 'all',
+        name: t.library.allSongs,
+        songIds: library.songIds,
+      } as Playlist
+    }
+    return playlistsById[id]
+  }, [id, playlistsById, library, t])
 
   const playlistSongs = useMemo(() => {
     if (!playlist) return []
@@ -416,17 +426,19 @@ export default function PlaylistDetailScreen() {
           <Text style={styles.mainBtnText}>▶ {t.playlists.playAll}</Text>
         </Pressable>
 
-        <Pressable
-          onPress={() => {
-            setSelectedIds([])
-            setAddModalVisible(true)
-          }}
-          style={[styles.outlineBtn, { borderColor: theme.colors.border }]}
-        >
-          <Text style={[styles.outlineBtnText, { color: theme.colors.text }]}>
-            ＋ {t.playlists.addSongs}
-          </Text>
-        </Pressable>
+        {id !== 'all' && id !== '0' && (
+          <Pressable
+            onPress={() => {
+              setSelectedIds([])
+              setAddModalVisible(true)
+            }}
+            style={[styles.outlineBtn, { borderColor: theme.colors.border }]}
+          >
+            <Text style={[styles.outlineBtnText, { color: theme.colors.text }]}>
+              ＋ {t.playlists.addSongs}
+            </Text>
+          </Pressable>
+        )}
       </View>
 
       <FlatList
