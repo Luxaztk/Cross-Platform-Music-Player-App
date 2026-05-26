@@ -11,6 +11,7 @@ export type Translations = {
     placeholder: string
     savedToDevice: string
     loadingPreference: string
+    totalDuration: (h: number, m: number) => string
   }
   settings: {
     title: string
@@ -21,6 +22,8 @@ export type Translations = {
   }
   library: {
     title: string
+    yourLibrary: string
+    allSongs: string
     importSongs: string
     importCanceled: string
     importPicked: (count: number) => string
@@ -76,6 +79,18 @@ export type Translations = {
     recentSearches: string
     clearAll: string
   }
+  songs: {
+    playNext: string
+    addToQueue: string
+    editMetadata: string
+    viewArtist: string
+    viewAlbum: string
+    remove: string
+    delete: string
+    addedToQueue: string
+    playNow: string
+    shufflePlay: string
+  }
 }
 
 export const translations: Record<LanguageCode, Translations> = {
@@ -90,6 +105,7 @@ export const translations: Record<LanguageCode, Translations> = {
       placeholder: 'Placeholder screen',
       savedToDevice: 'Saved to device',
       loadingPreference: 'Loading preference…',
+      totalDuration: (h, m) => (h > 0 ? `${h} hr ${m} min` : `${m} min`),
     },
     settings: {
       title: 'Settings',
@@ -100,6 +116,8 @@ export const translations: Record<LanguageCode, Translations> = {
     },
     library: {
       title: 'Library',
+      yourLibrary: 'Your Library',
+      allSongs: 'All Songs',
       importSongs: 'Import songs',
       importCanceled: 'Import canceled',
       importPicked: (count) => `Picked ${count} file(s)`,
@@ -156,6 +174,18 @@ export const translations: Record<LanguageCode, Translations> = {
       recentSearches: 'Recent searches',
       clearAll: 'Clear all history',
     },
+    songs: {
+      playNext: 'Play Next',
+      addToQueue: 'Add to Queue',
+      editMetadata: 'Edit info',
+      viewArtist: 'View Artist',
+      viewAlbum: 'View Album',
+      remove: 'Remove from playlist',
+      delete: 'Delete from Library',
+      addedToQueue: 'Added to queue',
+      playNow: 'Play Now',
+      shufflePlay: 'Shuffle Play',
+    },
   },
   vi: {
     tabs: {
@@ -168,6 +198,7 @@ export const translations: Record<LanguageCode, Translations> = {
       placeholder: 'Màn hình tạm',
       savedToDevice: 'Đã lưu trên thiết bị',
       loadingPreference: 'Đang tải tùy chọn…',
+      totalDuration: (h, m) => (h > 0 ? `${h} giờ ${m} phút` : `${m} phút`),
     },
     settings: {
       title: 'Cài đặt',
@@ -178,6 +209,8 @@ export const translations: Record<LanguageCode, Translations> = {
     },
     library: {
       title: 'Thư viện',
+      yourLibrary: 'Thư viện của bạn',
+      allSongs: 'Tất cả bài hát',
       importSongs: 'Nhập bài hát',
       importCanceled: 'Đã hủy nhập',
       importPicked: (count) => `Đã chọn ${count} tệp`,
