@@ -1,5 +1,5 @@
-import React, { type ComponentProps } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import React, { type ComponentProps, useRef } from 'react'
+import { Pressable, StyleSheet, Text, View, Animated } from 'react-native'
 import { router, usePathname } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Feather from '@expo/vector-icons/Feather'
@@ -21,12 +21,7 @@ export function TopBar() {
   const { t } = useLanguage()
   const insets = useSafeAreaInsets()
   const pathname = usePathname()
-  const { customTitle } = useAppShell()
-
-  const showSearchTopBar =
-    pathname === '/' ||
-    pathname === '/library' ||
-    pathname === '/playlists'
+  const { navigationLayout, customTitle, openSidebar, triggerImport } = useAppShell()
 
   const isSearch = pathname === '/search'
   const isSettings = pathname === '/settings'
@@ -53,7 +48,16 @@ export function TopBar() {
     }
   }
 
+  const fadeAnim = useRef(new Animated.Value(1)).current;
   const handleSearch = () => {
+    // fade out
+    // Animated.timing(fadeAnim, {
+    //   toValue: 0,
+    //   duration: 100,
+    //   useNativeDriver: true,
+    // }).start(() => {
+    //   fadeAnim.setValue(1);
+    // });
     router.push('/search')
   }
 
@@ -88,63 +92,29 @@ export function TopBar() {
         },
       ]}
     >
-      {showSearchTopBar ? (
-        <View style={styles.homeInner}>
-          <Pressable
-            onPress={handleSearch}
-            accessibilityRole="button"
-            accessibilityLabel="Search music"
-            style={({ pressed }) => [
-              styles.searchBar,
-              {
-                backgroundColor: theme.colors.surfaceSolid,
-                borderColor: theme.colors.subtleBorder,
-                opacity: pressed ? 0.82 : 1,
-              },
-            ]}
-          >
-            <Feather name="search" size={20} color={theme.colors.mutedText} />
-
-            <Text
-              numberOfLines={1}
-              style={[styles.searchPlaceholder, { color: theme.colors.mutedText }]}
-            >
-              Search songs, artists, albums
-            </Text>
-
-            <View
-              style={[
-                styles.searchDivider,
-                { backgroundColor: theme.colors.subtleBorder },
-              ]}
-            />
-
-            <Feather name="music" size={19} color={theme.colors.primary} />
-          </Pressable>
-        </View>
-      ) : (
-        <View style={styles.pageInner}>
-          {showBackButton && (
+      <View style={[styles.pageInner, { justifyContent: 'space-between' }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {showBackButton ? (
             <IconButton icon="arrow-left" onPress={handleBack} label="Back" />
+          ) : (
+            <IconButton icon="upload" onPress={triggerImport} label="Import songs" />
           )}
-
-          <View style={styles.titleBlock}>
-            <Text
-              numberOfLines={1}
-              style={[styles.pageTitle, { color: theme.colors.text }]}
-            >
-              {title}
-            </Text>
-
-            <Text
-              numberOfLines={1}
-              style={[styles.pageSubtitle, { color: theme.colors.mutedText }]}
-            >
-              Melovista
-            </Text>
-          </View>
         </View>
-      )}
+
+        <View style={[styles.titleBlock, { flex: 0, alignItems: 'center' }]}>
+          <Text
+            numberOfLines={1}
+            style={[styles.pageTitle, { color: theme.colors.text }]}
+          >
+            {title}
+          </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {!isSearch && <IconButton icon="search" onPress={handleSearch} label="Search" />}
+          {navigationLayout === 'sidebar' && <IconButton icon="menu" onPress={openSidebar} label="Sidebar menu" />}
+        </View>
+      </View>
     </View>
   )
 }

@@ -16,6 +16,8 @@ type BottomNavItem = {
   matchPaths: string[]
 }
 
+export const BOTTOM_NAV_HEIGHT = 120;
+
 export function BottomNav() {
   const { theme } = useTheme()
   const { t } = useLanguage()
@@ -61,6 +63,7 @@ export function BottomNav() {
           paddingBottom: Math.max(insets.bottom, 8),
           backgroundColor: theme.colors.background,
           borderTopColor: theme.colors.subtleBorder,
+          height: BOTTOM_NAV_HEIGHT
         },
       ]}
     >
@@ -88,6 +91,7 @@ export function BottomNav() {
                     backgroundColor: active
                       ? theme.colors.primary + '20'
                       : 'transparent',
+                    borderRadius: active ? 18 : 0,
                   },
                 ]}
               >
@@ -103,7 +107,7 @@ export function BottomNav() {
                 style={[
                   styles.label,
                   {
-                    color: active ? theme.colors.text : theme.colors.mutedText,
+                    color: active ? theme.colors.primary : theme.colors.mutedText,
                     fontWeight: active ? '800' : '600',
                   },
                 ]}

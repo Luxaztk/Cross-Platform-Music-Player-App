@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import type { Toast, ToastKind } from './types'
 import { useTheme } from '../Theme'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 type NotifyInput = {
   message: string
@@ -61,11 +62,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     [notify, dismiss, clear],
   )
 
+  const insets = useSafeAreaInsets();
+
   return (
     <NotificationContext.Provider value={value}>
       {children}
 
-      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { paddingBottom: insets.bottom }]}>
         <View pointerEvents="box-none" style={styles.toastHost}>
           {toasts.map((t) => {
             const bg =
@@ -86,6 +89,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                   {
                     backgroundColor: bg,
                     borderColor,
+                    marginTop: insets.top
                   },
                 ]}
               >
@@ -93,7 +97,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                   {t.message}
                 </Text>
                 <Pressable onPress={() => dismiss(t.id)} hitSlop={10}>
-                  <Text style={[styles.dismiss, { color: textColor }]}>×</Text>
+                  <Text style={[styles.dismiss, { color: textColor, backgroundColor: "rgba(255,255,227,0.25)" }]}>×</Text>
                 </Pressable>
               </View>
             )
@@ -135,5 +139,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 18,
+    width: 25,
+    height: 25,
+    borderRadius: 50,
+    textAlign: "center",
+    textAlignVertical: "center",
   },
 })

@@ -10,6 +10,7 @@ import { formatTime } from '../presentations/player/format'
 import { QueueModal } from '../presentations/player/QueueModal'
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Feather from '@expo/vector-icons/Feather'
 
 export default function NowPlayingScreen() {
   const { theme } = useTheme()
@@ -65,8 +66,15 @@ export default function NowPlayingScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: theme.colors.text }]}>←</Text>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={({ pressed }) => [
+          styles.backBtn,
+          {
+            backgroundColor: theme.colors.surfaceSolid,
+            borderColor: theme.colors.subtleBorder,
+            opacity: pressed ? 0.75 : 1,
+          },
+        ]}>
+          <Feather name="chevron-down" size={20} color={theme.colors.text} />
         </Pressable>
 
         <Text style={[styles.headerTitle, { color: theme.colors.mutedText }]}>
@@ -76,9 +84,16 @@ export default function NowPlayingScreen() {
         <Pressable
           onPress={() => setIsQueueVisible(true)}
           hitSlop={12}
-          style={styles.headerRight}
+          style={({ pressed }) => [
+            styles.headerRight,
+            {
+              backgroundColor: theme.colors.surfaceSolid,
+              borderColor: theme.colors.subtleBorder,
+              opacity: pressed ? 0.75 : 1,
+            },
+          ]}
         >
-          <Text style={[styles.queueIcon, { color: theme.colors.text }]}>≡</Text>
+          <Feather name="disc" size={20} color={theme.colors.text} />
         </Pressable>
       </View>
 
@@ -219,6 +234,7 @@ export default function NowPlayingScreen() {
           {
             backgroundColor: theme.colors.surface,
             borderColor: theme.colors.border,
+            marginBottom: insets.bottom + 20,
           },
         ]}
       >
@@ -259,10 +275,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   backBtn: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
+    width: 40,
+    height: 40,
+    alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   backText: {
     fontSize: 26,
@@ -273,10 +291,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   headerRight: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-end',
+    width: 40,
+    height: 40,
+    alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   queueIcon: {
     fontSize: 24,
@@ -379,6 +399,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    display: "none"
   },
   volumeIcon: {
     fontSize: 16,

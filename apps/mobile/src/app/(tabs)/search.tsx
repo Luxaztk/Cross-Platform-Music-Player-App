@@ -17,6 +17,7 @@ import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
 import { useLibrary } from '../../application'
 import { usePlayerState } from '../../application/player'
+import { Feather } from '@expo/vector-icons'
 
 // ── Search Result Rows ──────────────────────────────────────────
 
@@ -111,13 +112,13 @@ export default function SearchScreen() {
   const { theme } = useTheme()
   const { t } = useLanguage()
   const { notify } = useNotifications()
-  const { 
-    songsById, 
-    playlistsById, 
-    recentSearches, 
-    addRecentSearch, 
-    removeRecentSearch, 
-    clearRecentSearches 
+  const {
+    songsById,
+    playlistsById,
+    recentSearches,
+    addRecentSearch,
+    removeRecentSearch,
+    clearRecentSearches
   } = useLibrary()
   const { playList } = usePlayerState()
 
@@ -214,7 +215,7 @@ export default function SearchScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Search Bar */}
       <View style={[styles.searchBar, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Feather name="search" size={20} color={theme.colors.mutedText} style={styles.searchIcon} />
         <TextInput
           style={[styles.input, { color: theme.colors.text }]}
           placeholder={t.search.placeholder}
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 110,
+    paddingBottom: 190,
     gap: 10,
   },
   sectionHeader: {
@@ -390,7 +391,6 @@ const styles = StyleSheet.create({
   },
   recentList: {
     gap: 4,
-    paddingBottom: 110,
   },
   recentRow: {
     flexDirection: 'row',

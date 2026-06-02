@@ -7,6 +7,8 @@ import {
   Text,
   View,
 } from 'react-native'
+import { Image } from 'expo-image'
+import { PanGestureHandler, State, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler'
 import { router, usePathname } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Constants from 'expo-constants'
@@ -46,16 +48,16 @@ export function SidebarMenu() {
 
   const links: NavLink[] = [
     {
-      label: t.tabs.library,
-      icon: 'home',
-      route: '/library',
-      matchPaths: ['/', '/library'],
-    },
-    {
       label: t.tabs.search,
       icon: 'search',
       route: '/search',
       matchPaths: ['/search'],
+    },
+    {
+      label: t.tabs.library,
+      icon: 'home',
+      route: '/library',
+      matchPaths: ['/', '/library'],
     },
     {
       label: t.tabs.playlists,
@@ -77,8 +79,31 @@ export function SidebarMenu() {
     }
   }, [isSidebarOpen])
 
+  const handleGestureEvent = Animated.event(
+    [{ nativeEvent: { translationX: slideAnim } }],
+    { useNativeDriver: true }
+  )
+
+  const handleGestureStateChange = (event: PanGestureHandlerGestureEvent) => {
+    if (event.nativeEvent.state === State.END) {
+      if (event.nativeEvent.translationX > SIDEBAR_WIDTH / 3 || event.nativeEvent.velocityX > 500) {
+        closeSidebar()
+      } else {
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          bounciness: 0,
+        }).start()
+      }
+    }
+  }
+
   useEffect(() => {
     if (!shouldRender) return
+
+    if (isSidebarOpen) {
+      slideAnim.setValue(SIDEBAR_WIDTH) // ensure starting pos is hidden if just opened
+    }
 
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -119,191 +144,200 @@ export function SidebarMenu() {
   if (!shouldRender) return null
 
   return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
-      <Pressable style={StyleSheet.absoluteFillObject} onPress={closeSidebar}>
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+      <Pressable style={StyleSheet.absoluteFill} onPress={closeSidebar}>
         <Animated.View
           style={[
-            StyleSheet.absoluteFillObject,
+            StyleSheet.absoluteFill,
             {
               backgroundColor: theme.colors.overlay,
-              opacity: overlayAnim,
+              opacity: overlayAnim
             },
           ]}
         />
       </Pressable>
 
-      <Animated.View
-        style={[
-          styles.panel,
-          {
-            width: SIDEBAR_WIDTH,
-            backgroundColor: theme.colors.sidebar,
-            borderLeftColor: theme.colors.subtleBorder,
-            paddingTop: insets.top + 14,
-            paddingBottom: insets.bottom + 18,
-            transform: [{ translateX: slideAnim }],
-          },
-        ]}
+      <PanGestureHandler
+        onGestureEvent={handleGestureEvent}
+        onHandlerStateChange={handleGestureStateChange}
+        activeOffsetX={[0, 20]} // Only activate on horizontal swipe
       >
-        <View style={styles.header}>
-          <View style={styles.brandRow}>
-            <View
-              style={[
-                styles.logo,
+        <Animated.View
+          style={[
+            styles.panel,
+            {
+              width: SIDEBAR_WIDTH,
+              backgroundColor: theme.colors.sidebar,
+              borderLeftColor: theme.colors.subtleBorder,
+              paddingTop: insets.top + 14,
+              paddingBottom: insets.bottom + 18,
+              transform: [
                 {
-                  backgroundColor: theme.colors.primary + '22',
-                  borderColor: theme.colors.primary + '40',
+                  translateX: slideAnim.interpolate({
+                    inputRange: [0, SIDEBAR_WIDTH],
+                    outputRange: [0, SIDEBAR_WIDTH],
+                    extrapolate: 'clamp', // prevent sliding to the left past 0
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.header}>
+            <View style={styles.brandRow}>
+              <Image
+                source={require('../../../../../packages/brand/logos/icon_only_gradient.png')}
+                style={styles.logo}
+                contentFit="contain"
+              />
+
+              <View style={styles.brandTextBlock}>
+                <Text style={[styles.appName, { color: theme.colors.text }]}>
+                  {appName}
+                </Text>
+
+                <Text style={[styles.version, { color: theme.colors.mutedText }]}>
+                  Mobile music player
+                </Text>
+              </View>
+            </View>
+
+            <Pressable
+              onPress={closeSidebar}
+              accessibilityRole="button"
+              accessibilityLabel="Close menu"
+              hitSlop={10}
+              style={({ pressed }) => [
+                styles.closeBtn,
+                {
+                  backgroundColor: theme.colors.surfaceSolid,
+                  borderColor: theme.colors.subtleBorder,
+                  opacity: pressed ? 0.75 : 1,
                 },
               ]}
             >
-              <Text style={[styles.logoText, { color: theme.colors.primary }]}>M</Text>
-            </View>
-
-            <View style={styles.brandTextBlock}>
-              <Text style={[styles.appName, { color: theme.colors.text }]}>
-                {appName}
-              </Text>
-
-              <Text style={[styles.version, { color: theme.colors.mutedText }]}>
-                Mobile music player
-              </Text>
-            </View>
+              <Feather name="chevron-right" size={20} color={theme.colors.text} />
+            </Pressable>
           </View>
 
-          <Pressable
-            onPress={closeSidebar}
-            accessibilityRole="button"
-            accessibilityLabel="Close menu"
-            hitSlop={10}
-            style={({ pressed }) => [
-              styles.closeBtn,
+          <View
+            style={[
+              styles.heroCard,
               {
                 backgroundColor: theme.colors.surfaceSolid,
                 borderColor: theme.colors.subtleBorder,
-                opacity: pressed ? 0.75 : 1,
               },
             ]}
           >
-            <Feather name="x" size={20} color={theme.colors.text} />
-          </Pressable>
-        </View>
+            <View style={styles.heroIconWrap}>
+              <Feather name="headphones" size={20} color={theme.colors.primary} />
+            </View>
 
-        <View
-          style={[
-            styles.heroCard,
-            {
-              backgroundColor: theme.colors.surfaceSolid,
-              borderColor: theme.colors.subtleBorder,
-            },
-          ]}
-        >
-          <View style={styles.heroIconWrap}>
-            <Feather name="headphones" size={20} color={theme.colors.primary} />
+            <View style={styles.heroTextBlock}>
+              <Text style={[styles.heroTitle, { color: theme.colors.text }]}>
+                Your sound space
+              </Text>
+
+              <Text style={[styles.heroSubtitle, { color: theme.colors.mutedText }]}>
+                Listen, organize, and enjoy offline.
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.heroTextBlock}>
-            <Text style={[styles.heroTitle, { color: theme.colors.text }]}>
-              Your sound space
-            </Text>
+          <View style={[styles.divider, { backgroundColor: theme.colors.subtleBorder }]} />
 
-            <Text style={[styles.heroSubtitle, { color: theme.colors.mutedText }]}>
-              Listen, organize, and enjoy offline.
-            </Text>
-          </View>
-        </View>
+          <View style={styles.links}>
+            {links.map((link) => {
+              const isActive = isActiveRoute(link)
 
-        <View style={[styles.divider, { backgroundColor: theme.colors.subtleBorder }]} />
-
-        <View style={styles.links}>
-          {links.map((link) => {
-            const isActive = isActiveRoute(link)
-
-            return (
-              <Pressable
-                key={link.route}
-                onPress={() => handleNavigate(link.route)}
-                accessibilityRole="button"
-                accessibilityLabel={link.label}
-                style={({ pressed }) => [
-                  styles.linkRow,
-                  {
-                    backgroundColor: isActive
-                      ? theme.colors.primary + '18'
-                      : pressed
-                        ? theme.colors.surfaceHover
-                        : 'transparent',
-                    borderColor: isActive
-                      ? theme.colors.primary + '30'
-                      : 'transparent',
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.linkIconBox,
+              return (
+                <Pressable
+                  key={link.route}
+                  onPress={() => handleNavigate(link.route)}
+                  accessibilityRole="button"
+                  accessibilityLabel={link.label}
+                  style={({ pressed }) => [
+                    styles.linkRow,
                     {
                       backgroundColor: isActive
-                        ? theme.colors.primary + '20'
-                        : theme.colors.surfaceSolid,
+                        ? theme.colors.primary + '18'
+                        : pressed
+                          ? theme.colors.surfaceHover
+                          : 'transparent',
+                      borderColor: isActive
+                        ? theme.colors.primary + '30'
+                        : 'transparent',
                     },
                   ]}
                 >
-                  <Feather
-                    name={link.icon}
-                    size={19}
-                    color={isActive ? theme.colors.primary : theme.colors.mutedText}
-                  />
-                </View>
-
-                <Text
-                  style={[
-                    styles.linkLabel,
-                    {
-                      color: isActive ? theme.colors.primary : theme.colors.text,
-                      fontWeight: isActive ? '800' : '600',
-                    },
-                  ]}
-                >
-                  {link.label}
-                </Text>
-
-                {isActive ? (
                   <View
                     style={[
-                      styles.activeDot,
-                      { backgroundColor: theme.colors.primary },
+                      styles.linkIconBox,
+                      {
+                        backgroundColor: isActive
+                          ? theme.colors.primary + '20'
+                          : theme.colors.surfaceSolid,
+                      },
                     ]}
-                  />
-                ) : null}
-              </Pressable>
-            )
-          })}
-        </View>
+                  >
+                    <Feather
+                      name={link.icon}
+                      size={19}
+                      color={isActive ? theme.colors.primary : theme.colors.mutedText}
+                    />
+                  </View>
 
-        <View style={styles.footerSpacer} />
+                  <Text
+                    style={[
+                      styles.linkLabel,
+                      {
+                        color: isActive ? theme.colors.primary : theme.colors.text,
+                        fontWeight: isActive ? '800' : '600',
+                      },
+                    ]}
+                  >
+                    {link.label}
+                  </Text>
 
-        <View
-          style={[
-            styles.footerCard,
-            {
-              backgroundColor: theme.colors.surfaceDim,
-              borderColor: theme.colors.subtleBorder,
-            },
-          ]}
-        >
-          <View>
-            <Text style={[styles.footerTitle, { color: theme.colors.text }]}>
-              Melovista Mobile
-            </Text>
-
-            <Text style={[styles.footerVersion, { color: theme.colors.mutedText }]}>
-              Version {appVersion}
-            </Text>
+                  {isActive ? (
+                    <View
+                      style={[
+                        styles.activeDot,
+                        { backgroundColor: theme.colors.primary },
+                      ]}
+                    />
+                  ) : null}
+                </Pressable>
+              )
+            })}
           </View>
 
-          <Feather name="music" size={18} color={theme.colors.primary} />
-        </View>
-      </Animated.View>
+          <View style={styles.footerSpacer} />
+
+          { /* Footer card */}
+          <View
+            style={[
+              styles.footerCard,
+              {
+                backgroundColor: theme.colors.surfaceDim,
+                borderColor: theme.colors.subtleBorder,
+              },
+            ]}
+          >
+            <View>
+              <Text style={[styles.footerTitle, { color: theme.colors.text }]}>
+                Melovista Mobile
+              </Text>
+
+              <Text style={[styles.footerVersion, { color: theme.colors.mutedText }]}>
+                Version {appVersion}
+              </Text>
+            </View>
+
+            <Feather name="music" size={18} color={theme.colors.primary} />
+          </View>
+        </Animated.View>
+      </PanGestureHandler>
     </View>
   )
 }
@@ -317,6 +351,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 18,
     elevation: 18,
+    zIndex: 2
   },
   header: {
     minHeight: 58,

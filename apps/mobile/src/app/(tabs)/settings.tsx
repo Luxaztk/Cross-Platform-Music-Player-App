@@ -1,11 +1,13 @@
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
+import { useAppShell } from '../../presentations/components/AppShell'
 
 export default function SettingsScreen() {
   const { theme, themeName, toggleTheme, isHydrated } = useTheme()
   const isDark = themeName === 'dark'
   const { t, language, setLanguage, isHydrated: isLanguageHydrated } = useLanguage()
+  const { navigationLayout, setNavigationLayout } = useAppShell()
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -71,6 +73,56 @@ export default function SettingsScreen() {
               style={[styles.pillText, { color: language === 'vi' ? '#fff' : theme.colors.text }]}
             >
               {t.settings.vietnamese}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.row,
+          { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+        ]}
+      >
+        <View style={styles.rowText}>
+          <Text style={[styles.rowTitle, { color: theme.colors.text }]}>Navigation Layout</Text>
+          <Text style={[styles.rowSubtitle, { color: theme.colors.mutedText }]}>
+            Choose Tab Bar or Sidebar
+          </Text>
+        </View>
+        <View style={styles.langPills}>
+          <Pressable
+            onPress={() => setNavigationLayout('tabs')}
+            style={[
+              styles.pill,
+              navigationLayout === 'tabs' && {
+                backgroundColor: theme.colors.primary,
+                borderColor: theme.colors.primary,
+              },
+              navigationLayout !== 'tabs' && { borderColor: theme.colors.border },
+            ]}
+          >
+            <Text
+              style={[styles.pillText, { color: navigationLayout === 'tabs' ? '#fff' : theme.colors.text }]}
+            >
+              Tab Bar
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setNavigationLayout('sidebar')}
+            style={[
+              styles.pill,
+              navigationLayout === 'sidebar' && {
+                backgroundColor: theme.colors.primary,
+                borderColor: theme.colors.primary,
+              },
+              navigationLayout !== 'sidebar' && { borderColor: theme.colors.border },
+            ]}
+          >
+            <Text
+              style={[styles.pillText, { color: navigationLayout === 'sidebar' ? '#fff' : theme.colors.text }]}
+            >
+              Sidebar
             </Text>
           </Pressable>
         </View>

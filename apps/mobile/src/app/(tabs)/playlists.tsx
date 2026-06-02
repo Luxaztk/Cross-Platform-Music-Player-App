@@ -277,8 +277,8 @@ export default function PlaylistsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    paddingBottom: 110,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   header: {
     flexDirection: 'row',
@@ -313,7 +313,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: 10,
-    paddingBottom: 24,
   },
   rowWrap: {
     position: 'relative',

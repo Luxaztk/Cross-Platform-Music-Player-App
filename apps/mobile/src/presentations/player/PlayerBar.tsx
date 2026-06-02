@@ -5,7 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Feather from '@expo/vector-icons/Feather'
 
 import { useTheme } from '../../presentations/components/Theme'
+import { useAppShell } from '../../presentations/components/AppShell'
 import { usePlayerState, usePlayerProgress } from '../../application/player'
+
+import { BOTTOM_NAV_HEIGHT } from '../components/BottomNav'
 
 /**
  * Persistent mini-player bar shown at the bottom of most screens.
@@ -24,9 +27,10 @@ export function PlayerBar() {
   const progress = usePlayerProgress()
   const pathname = usePathname()
   const insets = useSafeAreaInsets()
+  const { navigationLayout } = useAppShell()
 
-  // Position: sit above the custom bottom navigation
-  const bottomOffset = insets.bottom + 86
+  // Position: sit above the custom bottom navigation if tabs are used
+  const bottomOffset = navigationLayout === 'tabs' ? BOTTOM_NAV_HEIGHT + 8 : insets.bottom + 16
 
   const hasSong = !!currentSong
   const title = currentSong?.title ?? ''
@@ -128,16 +132,15 @@ export function PlayerBar() {
 
 const styles = StyleSheet.create({
   container: {
-  position: 'absolute',
-  left: 12,
-  right: 12,
-  borderWidth: 1,
-  borderRadius: 18,
-  overflow: 'hidden',
-  zIndex: 20,
-  elevation: 20,
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    borderWidth: 1,
+    borderRadius: 18,
+    overflow: 'hidden',
+    zIndex: 1,
   },
-  
+
   progressTrack: {
     width: '100%',
     height: 3,
@@ -198,6 +201,7 @@ const styles = StyleSheet.create({
   playBtn: {
     width: 36,
     height: 36,
+    paddingLeft: 4, // To center the play icon
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
