@@ -69,6 +69,15 @@ export type Translations = {
     songMovedToOtherPlaylist: (title: string) => string
     close: string
     choose: string
+
+    duplicate: string
+    playNext: string
+    addToQueue: string
+    shuffle: string
+    duplicated: (name: string) => string
+    addedToQueue: string
+    addedToPlayNext: string
+    shuffling: string
   }
   search: {
     placeholder: string
@@ -82,14 +91,17 @@ export type Translations = {
   songs: {
     playNext: string
     addToQueue: string
-    editMetadata: string
-    viewArtist: string
-    viewAlbum: string
-    remove: string
-    delete: string
+    addToPlaylist: string
+    moveToPlaylist: string
+    removeFromPlaylist: string
+    deleteFromLibrary: string
     addedToQueue: string
-    playNow: string
-    shufflePlay: string
+    addedToPlayNext: string
+    sortBy: string
+    sortTitle: string
+    sortArtist: string
+    sortDuration: string
+    sortDateAdded: string
   }
 }
 
@@ -164,6 +176,15 @@ export const translations: Record<LanguageCode, Translations> = {
       songMovedToOtherPlaylist: (title) => `Moved "${title}" to another playlist`,
       close: 'Close',
       choose: 'Choose',
+
+      duplicate: 'Duplicate playlist',
+      playNext: 'Play next',
+      addToQueue: 'Add to queue',
+      shuffle: 'Shuffle play',
+      duplicated: (name) => `Duplicated to "${name}"`,
+      addedToQueue: 'Playlist added to queue',
+      addedToPlayNext: 'Playlist will play next',
+      shuffling: 'Shuffling playlist…',
     },
     search: {
       placeholder: 'Songs, artists, or playlists',
@@ -175,16 +196,19 @@ export const translations: Record<LanguageCode, Translations> = {
       clearAll: 'Clear all history',
     },
     songs: {
-      playNext: 'Play Next',
-      addToQueue: 'Add to Queue',
-      editMetadata: 'Edit info',
-      viewArtist: 'View Artist',
-      viewAlbum: 'View Album',
-      remove: 'Remove from playlist',
-      delete: 'Delete from Library',
+      playNext: 'Play next',
+      addToQueue: 'Add to queue',
+      addToPlaylist: 'Add to playlist',
+      moveToPlaylist: 'Move to playlist',
+      removeFromPlaylist: 'Remove from playlist',
+      deleteFromLibrary: 'Delete from library',
       addedToQueue: 'Added to queue',
-      playNow: 'Play Now',
-      shufflePlay: 'Shuffle Play',
+      addedToPlayNext: 'Will play next',
+      sortBy: 'Sort by',
+      sortTitle: 'Title',
+      sortArtist: 'Artist',
+      sortDuration: 'Duration',
+      sortDateAdded: 'Date added',
     },
   },
   vi: {
@@ -216,7 +240,7 @@ export const translations: Record<LanguageCode, Translations> = {
       importPicked: (count) => `Đã chọn ${count} tệp`,
       importSuccess: (count) => `Đã nhập ${count} bài`,
       importSuccessWithSkipped: (imported, skipped) =>
-        `Đã nhập ${imported} bài • Bỏ qua ${skipped} trùng`,
+        `Đã nhập ${imported} bài • Bỏ qua ${skipped} bài hát bị trùng`,
       importFailed: 'Nhập thất bại',
       playbackUnavailable: 'Thiết bị/ứng dụng hiện tại không hỗ trợ phát nhạc.',
       playbackFailed: 'Không thể bắt đầu phát nhạc.',
@@ -257,6 +281,30 @@ export const translations: Record<LanguageCode, Translations> = {
       songMovedToOtherPlaylist: (title) => `Đã chuyển "${title}" sang playlist khác`,
       close: 'Đóng',
       choose: 'Chọn',
+
+      duplicate: 'Sao chép playlist',
+      playNext: 'Phát tiếp theo',
+      addToQueue: 'Thêm vào hàng chờ',
+      shuffle: 'Phát ngẫu nhiên',
+      duplicated: (name) => `Đã sao chép thành "${name}"`,
+      addedToQueue: 'Đã thêm playlist vào hàng chờ',
+      addedToPlayNext: 'Playlist sẽ được phát tiếp theo',
+      shuffling: 'Đang phát ngẫu nhiên playlist…',
+    },
+    songs: {
+      playNext: 'Phát tiếp theo',
+      addToQueue: 'Thêm vào hàng chờ',
+      addToPlaylist: 'Thêm vào playlist',
+      moveToPlaylist: 'Di chuyển sang playlist',
+      removeFromPlaylist: 'Xóa khỏi playlist',
+      deleteFromLibrary: 'Xóa khỏi thư viện',
+      addedToQueue: 'Đã thêm vào hàng chờ',
+      addedToPlayNext: 'Sẽ phát tiếp theo',
+      sortBy: 'Sắp xếp',
+      sortTitle: 'Tên bài',
+      sortArtist: 'Nghệ sĩ',
+      sortDuration: 'Thời lượng',
+      sortDateAdded: 'Ngày thêm',
     },
     search: {
       placeholder: 'Bài hát, nghệ sĩ hoặc playlist',

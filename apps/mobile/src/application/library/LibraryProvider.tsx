@@ -21,6 +21,7 @@ type LibraryContextValue = LibraryState & {
     assets: { uri: string; name?: string | null }[],
   ) => Promise<{ imported: number; skippedDuplicates: number }>
   createPlaylist: (name: string) => Promise<Playlist>
+  duplicatePlaylist: (id: string, name: string) => Promise<Playlist>
   renamePlaylist: (id: string, name: string) => Promise<void>
   deletePlaylist: (id: string) => Promise<void>
   addSongsToPlaylist: (playlistId: string, songIds: string[]) => Promise<void>
@@ -134,6 +135,35 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       return playlist
     },
     [state.playlistsById],
+  )
+
+  const duplicatePlaylist = useCallback(
+    async (id: string, name: string): Promise<Playlist> => {
+      let songIds: string[] = []
+
+      if (id === '0' || id === 'all') {
+        songIds = state.library.songIds
+      } else {
+        const existing = state.playlistsById[id]
+        if (!existing) throw new Error('Playlist not found')
+        songIds = existing.songIds
+      }
+
+      const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
+      const playlist: Playlist = {
+        id: newId,
+        name: name.trim(),
+        description: '',
+        songIds: [...songIds],
+        createdAt: new Date().toISOString(),
+      }
+
+      const next = { ...state.playlistsById, [newId]: playlist }
+      await storage.savePlaylists(next)
+      setState((prev) => ({ ...prev, playlistsById: next }))
+      return playlist
+    },
+    [state.playlistsById, state.library],
   )
 
   const renamePlaylist = useCallback(
@@ -280,6 +310,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       refresh,
       importPickedAudio,
       createPlaylist,
+      duplicatePlaylist,
       renamePlaylist,
       deletePlaylist,
       addSongsToPlaylist,
@@ -294,6 +325,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       refresh,
       importPickedAudio,
       createPlaylist,
+      duplicatePlaylist,
       renamePlaylist,
       deletePlaylist,
       addSongsToPlaylist,

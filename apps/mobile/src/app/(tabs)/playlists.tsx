@@ -2,11 +2,9 @@ import React, { useCallback, useMemo, useState } from 'react'
 import {
   Alert,
   FlatList,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native'
 import { router } from 'expo-router'
@@ -17,154 +15,62 @@ import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
 import { useLibrary } from '../../application'
+import { usePlayer } from '../../application/player'
 import { NameModal } from '../../presentations/components/NameModal'
+import { PlaylistRow } from '../../presentations/components/PlaylistRow'
+import { PlaylistActions } from '../../presentations/components/PlaylistActions'
 
-const PlaylistRow = React.memo(function PlaylistRow({
-  item,
-  onPress,
-  onRename,
-  onDelete,
-  colors,
-  strings,
-  isMenuOpen,
-  onToggleMenu,
-  onCloseMenu,
-}: {
-  item: Playlist
-  onPress: (id: string) => void
-  onRename: (id: string, currentName: string) => void
-  onDelete: (id: string, name: string) => void
-  colors: { surface: string; border: string; text: string; mutedText: string; primary: string; background: string }
-  strings: { rename: string; delete: string; songCount: (n: number) => string }
-  isMenuOpen: boolean
-  onToggleMenu: (id: string) => void
-  onCloseMenu: () => void
-}) {
-  return (
-    <View style={styles.rowWrap}>
-      <Pressable
-        onPress={() => {
-          if (isMenuOpen) {
-            onCloseMenu()
-            return
-          }
-          onPress(item.id)
-        }}
-        style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}
-      >
-        <View style={[styles.rowIcon, { backgroundColor: colors.primary + '18' }]}>
-          <Text style={styles.rowIconText}>🎶</Text>
-        </View>
-
-        <View style={styles.rowInfo}>
-          <Text numberOfLines={1} style={[styles.rowTitle, { color: colors.text }]}>
-            {item.name}
-          </Text>
-          <Text style={[styles.rowSub, { color: colors.mutedText }]}>
-            {strings.songCount(item.songIds.length)}
-          </Text>
-        </View>
-
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation()
-            onToggleMenu(item.id)
-          }}
-          hitSlop={8}
-          style={styles.moreBtn}
-        >
-          <Text style={[styles.moreText, { color: colors.mutedText }]}>⋯</Text>
-        </Pressable>
-      </Pressable>
-
-      {isMenuOpen && (
-        <>
-          <Pressable style={styles.menuBackdrop} onPress={onCloseMenu} />
-          <View
-            style={[
-              styles.menu,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Pressable
-              style={styles.menuItem}
-              onPress={() => {
-                onCloseMenu()
-                onRename(item.id, item.name)
-              }}
-            >
-              <Text style={[styles.menuText, { color: colors.text }]}>{strings.rename}</Text>
-            </Pressable>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-
-            <Pressable
-              style={styles.menuItem}
-              onPress={() => {
-                onCloseMenu()
-                onDelete(item.id, item.name)
-              }}
-            >
-              <Text style={[styles.menuText, { color: '#FF5A5F' }]}>{strings.delete}</Text>
-            </Pressable>
-          </View>
-        </>
-      )}
-    </View>
-  )
-})
-
+const shuffleArray = <T,>(arr: T[]): T[] => {
+  const newArr = [...arr]
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[newArr[i], newArr[j]] = [newArr[j], newArr[i]]
+  }
+  return newArr
+}
 
 export default function PlaylistsScreen() {
   const { theme } = useTheme()
   const { t } = useLanguage()
   const { notify } = useNotifications()
-  const { isHydrated, playlistsById, createPlaylist, renamePlaylist, deletePlaylist } = useLibrary()
+  const {
+    isHydrated,
+    library,
+    playlistsById,
+    createPlaylist,
+    duplicatePlaylist,
+    renamePlaylist,
+    deletePlaylist,
+  } = useLibrary()
+
+  const { playNextSongs, addSongsToQueue, playList } = usePlayer()
 
   const [modalMode, setModalMode] = useState<'create' | 'rename' | null>(null)
   const [renameTarget, setRenameTarget] = useState<{ id: string; name: string } | null>(null)
-  const [openedMenuId, setOpenedMenuId] = useState<string | null>(null)
+  const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null)
+  const [actionsVisible, setActionsVisible] = useState(false)
 
   const playlists = useMemo(() => {
-    return Object.values(playlistsById)
+    const customPlaylists = Object.values(playlistsById)
       .filter((p) => p.id !== '0')
       .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
-  }, [playlistsById])
 
-  const playlistCount = playlists.length
+    const allSongsPlaylist = {
+      ...library,
+      id: '0',
+      name: t.library.allSongs,
+      isSpecial: true,
+    } as Playlist
+
+    return [allSongsPlaylist, ...customPlaylists]
+  }, [playlistsById, library, t])
+
+  const playlistCount = Object.values(playlistsById).filter((p) => p.id !== '0').length
 
   const onPressCreate = useCallback(() => {
-    setOpenedMenuId(null)
     setModalMode('create')
     setRenameTarget(null)
   }, [])
-
-  const onPressRename = useCallback((id: string, currentName: string) => {
-    setModalMode('rename')
-    setRenameTarget({ id, name: currentName })
-  }, [])
-
-  const onPressDelete = useCallback(
-    (id: string, name: string) => {
-      Alert.alert(t.playlists.confirmDelete(name), '', [
-        { text: t.playlists.cancel, style: 'cancel' },
-        {
-          text: t.playlists.delete,
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              await deletePlaylist(id)
-              notify({ message: t.playlists.deleted(name), kind: 'success' })
-            })()
-          },
-        },
-      ])
-    },
-    [deletePlaylist, notify, t],
-  )
 
   const onPressPlaylist = useCallback((id: string) => {
     router.push({ pathname: '/playlist/[id]', params: { id } })
@@ -190,13 +96,92 @@ export default function PlaylistsScreen() {
     setRenameTarget(null)
   }, [])
 
-  const onToggleMenu = useCallback((id: string) => {
-    setOpenedMenuId((prev) => (prev === id ? null : id))
-  }, [])
+  const onMorePress = useCallback((id: string) => {
+    const playlist = playlists.find((p) => p.id === id)
+    if (playlist) {
+      setSelectedPlaylist(playlist)
+      setActionsVisible(true)
+    }
+  }, [playlists])
 
-  const onCloseMenu = useCallback(() => {
-    setOpenedMenuId(null)
-  }, [])
+  const onLongPress = useCallback((id: string) => {
+    const playlist = playlists.find((p) => p.id === id)
+    if (playlist) {
+      setSelectedPlaylist(playlist)
+      setActionsVisible(true)
+    }
+  }, [playlists])
+
+  const handlePlayNext = useCallback(async () => {
+    if (!selectedPlaylist) return
+    if (selectedPlaylist.songIds.length === 0) {
+      notify({ message: t.playlists.emptyPlaylist, kind: 'info' })
+      return
+    }
+    await playNextSongs(selectedPlaylist.songIds)
+    notify({ message: t.playlists.addedToPlayNext, kind: 'success' })
+  }, [selectedPlaylist, playNextSongs, notify, t])
+
+  const handleAddToQueue = useCallback(async () => {
+    if (!selectedPlaylist) return
+    if (selectedPlaylist.songIds.length === 0) {
+      notify({ message: t.playlists.emptyPlaylist, kind: 'info' })
+      return
+    }
+    await addSongsToQueue(selectedPlaylist.songIds)
+    notify({ message: t.playlists.addedToQueue, kind: 'success' })
+  }, [selectedPlaylist, addSongsToQueue, notify, t])
+
+  const handleShuffle = useCallback(async () => {
+    if (!selectedPlaylist) return
+    if (selectedPlaylist.songIds.length === 0) {
+      notify({ message: t.playlists.emptyPlaylist, kind: 'info' })
+      return
+    }
+    const shuffled = shuffleArray(selectedPlaylist.songIds)
+    await playList(shuffled, 0)
+    notify({ message: t.playlists.shuffling, kind: 'success' })
+  }, [selectedPlaylist, playList, notify, t])
+
+  const handleDuplicate = useCallback(async () => {
+    if (!selectedPlaylist) return
+    try {
+      const sourceName = selectedPlaylist.id === '0' ? t.library.allSongs : selectedPlaylist.name
+      const suffix = t.playlists.rename === 'Đổi tên' ? ' (Sao chép)' : ' (Copy)'
+      const name = `${sourceName}${suffix}`
+
+      const copy = await duplicatePlaylist(selectedPlaylist.id, name)
+      notify({ message: t.playlists.duplicated(copy.name), kind: 'success' })
+    } catch (err) {
+      console.error(err)
+      notify({ message: 'Không thể sao chép playlist', kind: 'error' })
+    }
+  }, [selectedPlaylist, duplicatePlaylist, notify, t])
+
+  const handleRename = useCallback(() => {
+    if (!selectedPlaylist) return
+    setModalMode('rename')
+    setRenameTarget({ id: selectedPlaylist.id, name: selectedPlaylist.name })
+  }, [selectedPlaylist])
+
+  const handleDelete = useCallback(() => {
+    if (!selectedPlaylist) return
+    const id = selectedPlaylist.id
+    const name = selectedPlaylist.name
+    Alert.alert(t.playlists.confirmDelete(name), '', [
+      { text: t.playlists.cancel, style: 'cancel' },
+      {
+        text: t.playlists.delete,
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            await deletePlaylist(id)
+            notify({ message: t.playlists.deleted(name), kind: 'success' })
+          })()
+        },
+      },
+    ])
+  }, [selectedPlaylist, deletePlaylist, notify, t])
 
   const colors = theme.colors
 
@@ -205,20 +190,12 @@ export default function PlaylistsScreen() {
       <PlaylistRow
         item={item}
         onPress={onPressPlaylist}
-        onRename={onPressRename}
-        onDelete={onPressDelete}
-        colors={colors}
-        strings={{
-          rename: 'Sửa tên playlist',
-          delete: 'Xóa playlist',
-          songCount: t.playlists.songCount,
-        }}
-        isMenuOpen={openedMenuId === item.id}
-        onToggleMenu={onToggleMenu}
-        onCloseMenu={onCloseMenu}
+        onLongPress={onLongPress}
+        onMorePress={onMorePress}
+        isFixed={item.id === '0'}
       />
     ),
-    [onPressPlaylist, onPressRename, onPressDelete, colors, t, openedMenuId, onToggleMenu, onCloseMenu],
+    [onPressPlaylist, onLongPress, onMorePress],
   )
 
   const keyExtractor = useCallback((item: Playlist) => item.id, [])
@@ -270,6 +247,21 @@ export default function PlaylistsScreen() {
         onConfirm={(v) => void onModalConfirm(v)}
         colors={colors}
       />
+
+      {selectedPlaylist && (
+        <PlaylistActions
+          visible={actionsVisible}
+          onClose={() => setActionsVisible(false)}
+          playlistId={selectedPlaylist.id}
+          playlistName={selectedPlaylist.name}
+          onRename={handleRename}
+          onDelete={handleDelete}
+          onDuplicate={handleDuplicate}
+          onPlayNext={handlePlayNext}
+          onAddToQueue={handleAddToQueue}
+          onShuffle={handleShuffle}
+        />
+      )}
     </View>
   )
 }

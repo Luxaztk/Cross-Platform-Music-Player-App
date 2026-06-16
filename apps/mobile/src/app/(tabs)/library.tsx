@@ -377,7 +377,7 @@ export default function LibraryScreen() {
       </View>
 
       <FlatList
-        style={styles.list}
+        style={[styles.list]}
         data={songs}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
@@ -511,7 +511,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 14,
-    display: "none" // add lại sau
   },
   sortLabel: {
     fontSize: 13,
@@ -529,10 +528,11 @@ const styles = StyleSheet.create({
   },
   list: {
     marginTop: 14,
-    flex: 1,
+    flex: 1
   },
   listContent: {
     gap: ROW_GAP,
+    paddingBottom: 100
   },
   row: {
     minHeight: ROW_HEIGHT,

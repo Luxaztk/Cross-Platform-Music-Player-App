@@ -1,5 +1,6 @@
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Image } from 'expo-image'
 import Feather from '@expo/vector-icons/Feather'
 import type { Playlist } from '@music/types'
 import { useTheme } from './Theme'
@@ -7,8 +8,9 @@ import { useTheme } from './Theme'
 import { useLanguage } from './Language'
 
 interface PlaylistRowProps {
-  item: Playlist | { id: string; name: string; songIds: string[]; isSpecial?: boolean }
+  item: Playlist & { isSpecial?: boolean }
   onPress: (id: string) => void
+  onLongPress?: (id: string) => void
   onMorePress?: (id: string) => void
   isFixed?: boolean
 }
@@ -16,6 +18,7 @@ interface PlaylistRowProps {
 export const PlaylistRow = React.memo(function PlaylistRow({
   item,
   onPress,
+  onLongPress,
   onMorePress,
   isFixed,
 }: PlaylistRowProps) {
@@ -26,6 +29,7 @@ export const PlaylistRow = React.memo(function PlaylistRow({
   return (
     <Pressable
       onPress={() => onPress(item.id)}
+      onLongPress={() => onLongPress?.(item.id)}
       style={({ pressed }) => [
         styles.container,
         {
@@ -33,8 +37,10 @@ export const PlaylistRow = React.memo(function PlaylistRow({
         },
       ]}
     >
-      <View style={[styles.cover, { backgroundColor: colors.primary + '18' }]}>
-        {item.isSpecial ? (
+      <View style={[styles.cover, { backgroundColor: colors.primary + '18', overflow: 'hidden' }]}>
+        {item.thumbnail ? (
+          <Image source={{ uri: item.thumbnail }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        ) : item.isSpecial ? (
           <Feather name="heart" size={24} color={colors.primary} />
         ) : (
           <Feather name="music" size={24} color={colors.primary} />

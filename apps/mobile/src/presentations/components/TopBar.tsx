@@ -48,16 +48,7 @@ export function TopBar() {
     }
   }
 
-  const fadeAnim = useRef(new Animated.Value(1)).current;
   const handleSearch = () => {
-    // fade out
-    // Animated.timing(fadeAnim, {
-    //   toValue: 0,
-    //   duration: 100,
-    //   useNativeDriver: true,
-    // }).start(() => {
-    //   fadeAnim.setValue(1);
-    // });
     router.push('/search')
   }
 
@@ -101,7 +92,7 @@ export function TopBar() {
           )}
         </View>
 
-        <View style={[styles.titleBlock, { flex: 0, alignItems: 'center' }]}>
+        <View style={[styles.titleBlock, { position: "absolute", width: "100%", flex: 0, alignItems: 'center' }]}>
           <Text
             numberOfLines={1}
             style={[styles.pageTitle, { color: theme.colors.text }]}

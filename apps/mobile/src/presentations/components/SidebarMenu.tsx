@@ -144,7 +144,7 @@ export function SidebarMenu() {
   if (!shouldRender) return null
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+    <View style={[StyleSheet.absoluteFill, { zIndex: 2 }]} pointerEvents="box-none">
       <Pressable style={StyleSheet.absoluteFill} onPress={closeSidebar}>
         <Animated.View
           style={[

@@ -20,6 +20,7 @@ type PlayerStateContextValue = {
 
   playNow: (songId: string) => Promise<void>
   playNext: (songId: string) => Promise<void>
+  playNextSongs: (songIds: string[]) => Promise<void>
   addToQueue: (songId: string) => Promise<void>
   addSongsToQueue: (songIds: string[]) => Promise<void>
   playList: (songIds: string[], startIndex: number) => Promise<void>
@@ -386,6 +387,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     await persist(stateRef.current, nextItems)
   }, [persist, generateUid])
 
+  const playNextSongs = useCallback(async (songIds: string[]) => {
+    const newItems = songIds.map(id => ({ uid: generateUid(), id }))
+    const nextItems = [...newItems, ...queueItemsRef.current]
+    await persist(stateRef.current, nextItems)
+  }, [persist, generateUid])
+
   const addToQueue = useCallback(async (songId: string) => {
     const nextItems = [...queueItemsRef.current, { uid: generateUid(), id: songId }]
     await persist(stateRef.current, nextItems)
@@ -532,6 +539,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       queueItems,
       playNow,
       playNext,
+      playNextSongs,
       addToQueue,
       addSongsToQueue,
       playList,
@@ -554,6 +562,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       queueItems,
       playNow,
       playNext,
+      playNextSongs,
       addToQueue,
       addSongsToQueue,
       playList,
