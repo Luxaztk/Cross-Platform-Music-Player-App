@@ -13,7 +13,9 @@ type SegmentedToggleProps<T extends string> = {
   options: SegmentedOption<T>[]
   value: T
   onChange: (value: T) => void
+  itemWidth?: number
   colors: {
+    itemWidth?: number
     primary: string
     text: string
     mutedText: string
@@ -30,6 +32,7 @@ function SegmentedToggle<T extends string>({
   options,
   value,
   onChange,
+  itemWidth = SEGMENT_ITEM_WIDTH,
   colors,
 }: SegmentedToggleProps<T>) {
   const translateX = useRef(new Animated.Value(0)).current
@@ -41,7 +44,7 @@ function SegmentedToggle<T extends string>({
 
   useEffect(() => {
     Animated.timing(translateX, {
-      toValue: activeIndex * SEGMENT_ITEM_WIDTH,
+      toValue: activeIndex * itemWidth,
       duration: 180,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
@@ -53,7 +56,7 @@ function SegmentedToggle<T extends string>({
       style={[
         styles.segmentTrack,
         {
-          width: SEGMENT_ITEM_WIDTH * options.length,
+          width: itemWidth * options.length,
           height: SEGMENT_HEIGHT,
           backgroundColor: colors.surfaceSolid,
           borderColor: colors.subtleBorder,
@@ -65,7 +68,7 @@ function SegmentedToggle<T extends string>({
         style={[
           styles.segmentThumb,
           {
-            width: SEGMENT_ITEM_WIDTH - 4,
+            width: itemWidth - 4,
             backgroundColor: colors.primary,
             transform: [{ translateX }],
           },
@@ -84,7 +87,7 @@ function SegmentedToggle<T extends string>({
             style={({ pressed }) => [
               styles.segmentItem,
               {
-                width: SEGMENT_ITEM_WIDTH,
+                width: itemWidth,
                 opacity: pressed ? 0.72 : 1,
               },
             ]}
@@ -152,6 +155,7 @@ export default function SettingsScreen() {
           ]}
           value={language}
           onChange={setLanguage}
+          itemWidth={55}
           colors={theme.colors}
         />
       </View>
@@ -168,42 +172,16 @@ export default function SettingsScreen() {
             Choose Tab Bar or Sidebar
           </Text>
         </View>
-        <View style={styles.langPills}>
-          <Pressable
-            onPress={() => setNavigationLayout('tabs')}
-            style={[
-              styles.pill,
-              navigationLayout === 'tabs' && {
-                backgroundColor: theme.colors.primary,
-                borderColor: theme.colors.primary,
-              },
-              navigationLayout !== 'tabs' && { borderColor: theme.colors.border },
-            ]}
-          >
-            <Text
-              style={[styles.pillText, { color: navigationLayout === 'tabs' ? '#fff' : theme.colors.text }]}
-            >
-              Tab Bar
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setNavigationLayout('sidebar')}
-            style={[
-              styles.pill,
-              navigationLayout === 'sidebar' && {
-                backgroundColor: theme.colors.primary,
-                borderColor: theme.colors.primary,
-              },
-              navigationLayout !== 'sidebar' && { borderColor: theme.colors.border },
-            ]}
-          >
-            <Text
-              style={[styles.pillText, { color: navigationLayout === 'sidebar' ? '#fff' : theme.colors.text }]}
-            >
-              Sidebar
-            </Text>
-          </Pressable>
-        </View>
+        <SegmentedToggle
+          options={[
+            { value: 'tabs', label: 'Tab Bar' },
+            { value: 'sidebar', label: 'Sidebar' },
+          ]}
+          value={navigationLayout}
+          onChange={setNavigationLayout}
+          itemWidth={86}
+          colors={theme.colors}
+        />
       </View>
     </View>
   )
