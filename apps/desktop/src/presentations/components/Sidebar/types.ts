@@ -90,6 +90,9 @@ export interface PlaylistSectionProps extends BaseSidebarSectionProps {
     onToggleMenu: (e: React.MouseEvent, id: string) => void;
     onEditPlaylist: (e: React.MouseEvent, p: Playlist) => void;
     onDeletePlaylist: (e: React.MouseEvent, p: Playlist) => void;
+    onToggleSidebar: () => void;
+    onImportFiles: (e: React.MouseEvent) => Promise<void>;
+    onImportFolder: (e: React.MouseEvent) => Promise<void>;
     appIcon: string;
     t: (key: string) => string;
 }

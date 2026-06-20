@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { LanguageCode } from './translations'
+import type { LanguageCode } from '@music/i18n'
 
 const LANGUAGE_KEY = 'melovista:language'
 

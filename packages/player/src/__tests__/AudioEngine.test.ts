@@ -20,7 +20,7 @@ let lastHowlInstance: MockHowlInstance | null = null;
 // --- BƯỚC 2: MOCK CLASS ---
 
 class MockHowl {
-  public options: any;
+  public options: Record<string, unknown>;
   public _isPlaying = false;
   public _state: 'unloaded' | 'loading' | 'loaded' = 'loading';
   public _seek = 0;
@@ -32,7 +32,7 @@ class MockHowl {
     }
   }];
 
-  constructor(options: any) {
+  constructor(options: Record<string, unknown>) {
     this.options = options
     // Ép kiểu một lần duy nhất để capture instance phục vụ việc kiểm tra seek/state
     lastHowlInstance = this as unknown as MockHowlInstance;
@@ -43,7 +43,7 @@ class MockHowl {
 
     setTimeout(() => {
       this._state = 'loaded';
-      if (this.options.onload) this.options.onload();
+      if (typeof this.options.onload === 'function') this.options.onload();
     }, 0);
   }
 
@@ -51,7 +51,7 @@ class MockHowl {
     this._state = 'loading';
     setTimeout(() => {
       this._state = 'loaded';
-      if (this.options.onload) this.options.onload();
+      if (typeof this.options.onload === 'function') this.options.onload();
     }, 0);
     return this;
   });
@@ -85,7 +85,7 @@ class MockHowl {
 
   _trigger(event: string, ...args: unknown[]) {
     const handler = this.options[`on${event}`];
-    if (handler) handler(...args);
+    if (typeof handler === 'function') handler(...args);
   }
 
   // Các phương thức còn lại dùng mockImplementation để giữ đúng context
@@ -106,7 +106,7 @@ vi.mock('howler', () => {
   // Trả về một object chứa Class MockHowl trực tiếp
   return {
     // Sử dụng chính class MockHowl (đã được định nghĩa ở trên) làm constructor
-    Howl: vi.fn().mockImplementation(function(this: any, options: any) {
+    Howl: vi.fn().mockImplementation(function(this: unknown, options: Record<string, unknown>) {
        return new MockHowl(options);
     }),
     Howler: {

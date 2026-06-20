@@ -4,7 +4,7 @@ import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import type { Playlist } from '@music/types';
 import { type SidebarProps } from './types';
 import { useSidebar } from './useSidebar';
-import { LibrarySection } from './components/LibrarySection';
+
 import { PlaylistSection } from './components/PlaylistSection';
 import { SidebarMini } from './components/SidebarMini';
 import './Sidebar.scss';
@@ -25,19 +25,6 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
             {/* Expanded View */}
             {!isCollapsed && (
                 <nav className="sidebar-nav">
-                    <LibrarySection
-                        isVisible={true}
-                        activeMenuId={state.activeMenuId}
-                        menuPlacement={state.menuPlacement}
-                        menuRef={refs.menuRef}
-                        onToggleMenu={actions.toggleMenu}
-                        onImportFiles={actions.onImportFiles}
-                        onImportFolder={actions.onImportFolder}
-                        onToggleSidebar={onToggle}
-                        appIcon={appIcon}
-                        t={t}
-                    />
-
                     <PlaylistSection
                         isVisible={true}
                         playlists={playlists.sorted}
@@ -63,6 +50,9 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                         onToggleMenu={actions.toggleMenu}
                         onEditPlaylist={actions.onEditPlaylist}
                         onDeletePlaylist={actions.onDeletePlaylist}
+                        onToggleSidebar={onToggle}
+                        onImportFiles={actions.onImportFiles}
+                        onImportFolder={actions.onImportFolder}
                         appIcon={appIcon}
                         t={t}
                     />

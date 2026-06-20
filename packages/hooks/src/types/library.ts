@@ -55,5 +55,5 @@ export interface SharedLibraryProviderProps {
     actions: { setShowCleanupModal: (show: boolean) => void }
   ) => void;
   onSyncStart?: (options: SyncOptions) => void;
-  onSyncError?: (error: any, actions: { setShowCleanupModal: (show: boolean) => void }) => void;
+  onSyncError?: (error: unknown, actions: { setShowCleanupModal: (show: boolean) => void }) => void;
 }

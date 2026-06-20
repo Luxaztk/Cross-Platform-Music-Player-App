@@ -291,7 +291,7 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
           importResult.details
         );
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[Library] Sync failed', err);
       
       if (onSyncError) {
@@ -301,7 +301,7 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
       // Log error event
       await repository.logSyncEvent(
         { added: 0, migrated: 0, deleted: 0 },
-        [`[Error] ${err.message || 'Unknown sync error'}`]
+        [`[Error] ${err instanceof Error ? err.message : String(err) || 'Unknown sync error'}`]
       );
     } finally {
       setIsSyncing(false);
@@ -382,7 +382,7 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
 
   // Phase 4: Background Sync Logic
   useEffect(() => {
-    let interval: any;
+    let interval: ReturnType<typeof setInterval> | undefined;
     let isMounted = true;
     
     const setupSync = async () => {

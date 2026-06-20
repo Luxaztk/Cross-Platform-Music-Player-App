@@ -225,6 +225,7 @@ Mục tiêu: Bảo vệ logic dự án bằng Unit Test toàn diện (Full Cover
   - [X] `searchUtils.test.ts`: Kiểm thử Smart Intent (Dấu tiếng Việt) và phân cụm bài hát.
   - [X] `SearchOverlay.test.tsx`: Kiểm thử giao diện hiển thị kết quả và trạng thái Empty State.
   - [X] `SongPickerModal.test.tsx` (Drafted): Đảm bảo logic lọc bài hát trong Modal.
+- [X] **Linter & Code Smell Elimination**: Cấu hình lại `eslint.config.js` với `projectService` để sửa 200+ lỗi parsing ảo, khắc phục các vấn đề vi phạm React Hooks (`useLyricSync`, `TopBar`, `SidebarMenu`) và loại bỏ hoàn toàn các kiểu dữ liệu `any` nguy hiểm.
 
 ---
 

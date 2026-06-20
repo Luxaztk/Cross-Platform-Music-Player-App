@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, Search, ArrowUpDown, Loader2 } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Plus, Search, ArrowUpDown, Loader2, ChevronLeft, MoreVertical, ListMusic } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { type PlaylistSectionProps } from '../types';
 import { PlaylistItem } from './PlaylistItem';
@@ -26,6 +26,9 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
     onToggleMenu,
     onEditPlaylist,
     onDeletePlaylist,
+    onToggleSidebar,
+    onImportFiles,
+    onImportFolder,
     appIcon,
     t
 }) => {
@@ -34,6 +37,9 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
     return (
         <div className="nav-section-playlists">
             <div className="section-header">
+                <button className="sidebar-toggle-btn" onClick={onToggleSidebar} title={t('sidebar.collapse')}>
+                    <ChevronLeft size={ICON_SIZES.SMALL} />
+                </button>
                 <h3>{t('sidebar.playlists')}</h3>
                 <div className="section-actions">
                     <button className="add-playlist-btn" title={t('sidebar.createPlaylist')} onClick={onCreatePlaylist}>
@@ -100,12 +106,65 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
                 </div>
             </div>
 
-            {isDebouncing && query ? (
+            <ul>
+                <li>
+                    <NavLink
+                        to="/playlist/0"
+                        className={({ isActive }) =>
+                            `nav-item ${isActive ? 'active' : ''} ${isActive || activeMenuId === '0' ? 'menu-open' : ''}`
+                        }
+                    >
+                        <img src={appIcon} alt="" className="icon brand-icon-small" />
+                        <span className="text">{t('sidebar.allSongs')}</span>
+                        <div className="col-more">
+                            <button
+                                className={`more-btn ${activeMenuId === '0' ? 'active' : ''}`}
+                                onClick={(e) => onToggleMenu(e, '0')}
+                                title={t('common.more')}
+                            >
+                                <MoreVertical size={ICON_SIZES.TINY} />
+                            </button>
+
+                            {activeMenuId === '0' && (
+                                <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} ref={menuRef}>
+                                    <button className="menu-item" onClick={onImportFiles}>
+                                        <img src={appIcon} alt="" className="brand-icon-tiny" />
+                                        <span>{t('playlist.importFiles')}</span>
+                                    </button>
+                                    <button className="menu-item" onClick={onImportFolder}>
+                                        <ListMusic size={ICON_SIZES.TINY} />
+                                        <span>{t('playlist.importFolder')}</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </NavLink>
+                </li>
+                {!isDebouncing && playlists.length > 0 && playlists.map((playlist) => (
+                    <PlaylistItem
+                        key={playlist.id}
+                        playlist={playlist}
+                        isActive={window.location.hash.includes(`/playlist/${playlist.id}`)}
+                        isMenuOpen={activeMenuId === playlist.id}
+                        menuPlacement={menuPlacement}
+                        menuRef={menuRef}
+                        onToggleMenu={onToggleMenu}
+                        onEdit={onEditPlaylist}
+                        onDelete={onDeletePlaylist}
+                        appIcon={appIcon}
+                        t={t}
+                    />
+                ))}
+            </ul>
+
+            {isDebouncing && query && (
                 <div className="searching-sidebar">
                     <Loader2 size={16} className="animate-spin" />
                     <span>{t('downloader.searching') || 'Searching...'}</span>
                 </div>
-            ) : playlists.length === 0 ? (
+            )}
+            
+            {!isDebouncing && playlists.length === 0 && (
                 <div className="empty-playlists">
                     {query ? (
                         <p>{t('sidebar.noResults') || 'No results found.'}</p>
@@ -118,24 +177,6 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
                         </>
                     )}
                 </div>
-            ) : (
-                <ul>
-                    {playlists.map((playlist) => (
-                        <PlaylistItem
-                            key={playlist.id}
-                            playlist={playlist}
-                            isActive={window.location.hash.includes(`/playlist/${playlist.id}`)}
-                            isMenuOpen={activeMenuId === playlist.id}
-                            menuPlacement={menuPlacement}
-                            menuRef={menuRef}
-                            onToggleMenu={onToggleMenu}
-                            onEdit={onEditPlaylist}
-                            onDelete={onDeletePlaylist}
-                            appIcon={appIcon}
-                            t={t}
-                        />
-                    ))}
-                </ul>
             )}
         </div>
     );

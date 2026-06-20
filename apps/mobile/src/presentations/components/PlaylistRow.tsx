@@ -34,7 +34,7 @@ export const PlaylistRow = React.memo(function PlaylistRow({
       ]}
     >
       <View style={[styles.cover, { backgroundColor: colors.primary + '18' }]}>
-        {item.isSpecial ? (
+        {'isSpecial' in item && item.isSpecial ? (
           <Feather name="heart" size={24} color={colors.primary} />
         ) : (
           <Feather name="music" size={24} color={colors.primary} />

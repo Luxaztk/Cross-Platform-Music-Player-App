@@ -1,5 +1,10 @@
-feat: update project architecture docs and resolve UI styling regressions
+refactor(core): fix 280+ code smells, eslint configuration, and hook violations
 
-- docs: Create and finalize __PROJECT_REPORT.md encompassing the system architecture diagram (Mermaid), monorepo directory structure, MVP definition, and comprehensive module-based task progress.
-- fix(PlayerBar): Relocate the QueuePanel component directly inside the .player-right container to perfectly synchronize with the original SCSS structure, permanently resolving the lost styling issue of the Queue without messing with complex nested SCSS rules.
-- fix(SongRow): Replace the cross-file Vite SCSS `@extend` directive with static CSS properties (background, backdrop-filter, border) and inject `flex-direction`, ensuring the Song Row Context Menu (more-menu) renders correctly without missing backgrounds or breaking structure when rendered via React Portal.
+- **ESLint Config Enhancement**: Upgraded `parserOptions.project` to `projectService` in `eslint.config.js` to correctly resolve nested `tsconfig` files within the monorepo workspace. Added global ignores for `coverage/`. This cleared 200+ false-positive parsing errors out of the box.
+- **Strict Typings (any to unknown/Record)**: Eradicated explicit and implicit `any` usages across the repository (`AudioEngine.ts`, `AudioEngine.test.ts`, `logger.ts`, `LibraryProvider.tsx`, `library.ts`). Hardened Mock definitions and utilized specific types (`Record<string, unknown>`).
+- **React Hook & Compiler Stabilization**:
+  - `useLyricSync`: Addressed `set-state-in-effect` and dependency arrays. Changed the hydration pattern to the render phase state update pattern to prevent double renders.
+  - `SidebarMenu`: Fixed `react-hooks/refs` warnings by converting `Animated.Value` instantiations to lazy `useState` instead of `useRef`. Eliminated synchronous `setState` within an effect.
+  - `TopBar`: Removed an internally defined component (`IconButton`) that caused React Compiler to throw static-components errors. Fixed unused and conditionally executed `useRef` calls.
+- **Dependency & Import Fixes**: Resolved `@typescript-eslint/no-require-imports` by explicitly bypassing with `eslint-disable-next-line` where image requires are dynamically needed in React Native, while fulfilling TypeScript module resolution constraints.
+- Test coverage passes and no functionality was broken. The primary IDE warnings/errors are now clear.

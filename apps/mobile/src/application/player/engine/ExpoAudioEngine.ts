@@ -117,7 +117,7 @@ export class ExpoAudioEngine implements PlayerEngine {
 
     if (!this.player) {
       this.player = createAudioPlayer({ uri }, { updateInterval: 250 })
-      // @ts-ignore: addListener exists at runtime on SharedObject but may have type mismatch in this env
+      // @ts-expect-error - Expo Audio internal property accessxists at runtime on SharedObject but may have type mismatch in this env
       this.player.addListener('playbackStatusUpdate', this.onStatus)
     } else {
       console.log(`[engine] Replacing source: ${uri}`)

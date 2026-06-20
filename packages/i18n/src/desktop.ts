@@ -1,6 +1,6 @@
 export type Language = 'en' | 'vi';
 
-export const translations = {
+export const desktopTranslations = {
   vi: {
     common: {
       loading: 'Đang tải...',

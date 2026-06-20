@@ -38,13 +38,24 @@ export function SidebarMenu() {
   const pathname = usePathname()
   const { isSidebarOpen, closeSidebar } = useAppShell()
 
-  const [shouldRender, setShouldRender] = useState(false)
+  const [shouldRender, setShouldRender] = useState(isSidebarOpen)
+  const [prevIsOpen, setPrevIsOpen] = useState(isSidebarOpen)
 
-  const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current
-  const overlayAnim = useRef(new Animated.Value(0)).current
+  if (isSidebarOpen !== prevIsOpen) {
+    setPrevIsOpen(isSidebarOpen)
+    if (isSidebarOpen) {
+      setShouldRender(true)
+    }
+  }
+
+  const [slideAnim] = useState(() => new Animated.Value(SIDEBAR_WIDTH))
+  const [overlayAnim] = useState(() => new Animated.Value(0))
 
   const appVersion = Constants.expoConfig?.version ?? '1.0.0'
   const appName = 'Melovista'
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const logoImage = require('../../../../../packages/brand/logos/icon_only_gradient.png')
 
   const links: NavLink[] = [
     {
@@ -73,11 +84,7 @@ export function SidebarMenu() {
     },
   ]
 
-  useEffect(() => {
-    if (isSidebarOpen) {
-      setShouldRender(true)
-    }
-  }, [isSidebarOpen])
+
 
   const handleGestureEvent = Animated.event(
     [{ nativeEvent: { translationX: slideAnim } }],
@@ -186,7 +193,7 @@ export function SidebarMenu() {
           <View style={styles.header}>
             <View style={styles.brandRow}>
               <Image
-                source={require('../../../../../packages/brand/logos/icon_only_gradient.png')}
+                source={logoImage}
                 style={styles.logo}
                 contentFit="contain"
               />

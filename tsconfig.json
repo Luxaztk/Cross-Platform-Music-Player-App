@@ -20,6 +20,8 @@
       "@music/hooks/*": ["packages/hooks/*"],
       "@music/hooks/types": ["packages/hooks/src/types"],
       "@music/hooks/constants": ["packages/hooks/src/constants"],
+      "@music/i18n": ["packages/i18n"],
+      "@music/i18n/*": ["packages/i18n/*"],
       
       "@components": ["apps/desktop/src/presentations/components"],
       "@components/*": ["apps/desktop/src/presentations/components/*"],

@@ -1,6 +1,6 @@
 {
   "name": "melovista",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "type": "module",
   "private": true,
   "workspaces": [
@@ -29,6 +29,10 @@
   },
   "homepage": "https://github.com/Luxaztk/Cross-Platform-Music-Player-App#readme",
   "dependencies": {},
+  "overrides": {
+    "js-yaml": "^4.2.0",
+    "uuid": "^11.1.1"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@types/node": "^24.12.0",
