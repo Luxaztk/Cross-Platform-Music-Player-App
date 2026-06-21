@@ -34,15 +34,41 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
     switch (state.downloadState) {
       case DOWNLOAD_STATUS.IDLE:
         return (
-          <InputState
-            url={state.url}
-            isPasted={state.isPasted}
-            onUrlChange={actions.setUrl}
-            onPaste={actions.handlePaste}
-            onFetch={actions.fetchInfo}
-            inputRef={refs.urlInputRef}
-            t={t}
-          />
+            <InputState
+              url={state.url}
+              isPasted={state.isPasted}
+              onUrlChange={actions.setUrl}
+              onPaste={actions.handlePaste}
+              onFetch={() => actions.fetchInfo()}
+              inputRef={refs.urlInputRef}
+              t={t}
+            />
+        );
+
+      case DOWNLOAD_STATUS.MODE_SELECTION:
+        return (
+          <>
+            <InputState
+              url={state.url}
+              isPasted={state.isPasted}
+              onUrlChange={actions.setUrl}
+              onPaste={actions.handlePaste}
+              onFetch={() => actions.fetchInfo()}
+              inputRef={refs.urlInputRef}
+              t={t}
+            />
+            <div className="downloader-mode-selection" style={{ marginTop: '16px', padding: '16px', background: 'var(--bg-surface-elevated)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>{t('downloader.choiceRequired')}</p>
+                <div className="action-buttons horizontal" style={{ gap: '10px' }}>
+                    <button type="button" className="primary-btn" onClick={() => actions.fetchInfo('video')} style={{ flex: 1 }}>
+                        {t('downloader.downloadVideoOnly')}
+                    </button>
+                    <button type="button" className="secondary-btn" onClick={() => actions.fetchInfo('playlist')} style={{ flex: 1 }}>
+                        {t('downloader.downloadPlaylist')}
+                    </button>
+                </div>
+            </div>
+          </>
         );
 
       case DOWNLOAD_STATUS.FETCHING:
@@ -61,7 +87,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
 
       case DOWNLOAD_STATUS.DOWNLOADING:
       case DOWNLOAD_STATUS.SUCCESS:
-      case DOWNLOAD_STATUS.ERROR:
+      case DOWNLOAD_STATUS.ERROR: {
         const items = state.downloads.size > 0 
           ? Array.from(state.downloads.values())
           : state.previewItems;
@@ -74,6 +100,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
             t={t}
           />
         );
+      }
 
       default:
         return null;
@@ -125,9 +152,9 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
             artist: state.editingItem.artist,
             album: state.editingItem.album,
             coverArt: state.editingItem.thumbnail,
-          } as any}
+          } as unknown as import('@music/types').Song}
           onClose={() => actions.setEditingItem(null)}
-          onSave={(data: any) => {
+          onSave={(data: Record<string, string>) => {
             actions.updateMetadata(state.editingItem!.id, data);
             actions.setEditingItem(null);
           }}
@@ -144,9 +171,9 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
             artist: state.previewItems[0]?.artist || '',
             album: state.playlistTitle || state.previewItems[0]?.album || '',
             coverArt: '',
-          } as any}
+          } as unknown as import('@music/types').Song}
           onClose={() => actions.setShowBulkEdit(false)}
-          onSave={(data: any) => {
+          onSave={(data: Record<string, string>) => {
             const bulkData: Partial<DownloadItem> = {};
             if (data.artist) bulkData.artist = data.artist;
             if (data.album) bulkData.album = data.album;

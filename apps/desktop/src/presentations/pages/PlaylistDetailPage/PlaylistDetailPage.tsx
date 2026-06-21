@@ -7,15 +7,21 @@ import { SongListHeader } from './components/SongListHeader';
 import { VirtualSongList } from './components/VirtualSongList';
 import { BulkActionsBar } from './components/BulkActionsBar';
 import { SongRowContextMenu } from './components/SongRowContextMenu';
+import { FloatingBadge } from './components/FloatingBadge';
 import './PlaylistDetailPage.scss';
 
 export const PlaylistDetailPage: React.FC = () => {
   const {
     state,
-    refs,
+    refs: { containerRef, menuRef },
     actions,
     utils
   } = usePlaylistDetail();
+
+  React.useEffect(() => {
+    console.log('PlaylistDetailPage MOUNTED!');
+    return () => console.log('PlaylistDetailPage UNMOUNTED!');
+  }, []);
 
   const { t, appIcon, playlists, allSongs, currentSong, id, libraryFilter } = utils;
 
@@ -40,7 +46,7 @@ export const PlaylistDetailPage: React.FC = () => {
         t={t}
       />
 
-      <div className="songs-list-container" ref={refs.containerRef}>
+      <div className="songs-list-container" ref={containerRef}>
         <FilterChips
           filter={libraryFilter}
           onRemoveTag={(val) => {
@@ -70,6 +76,7 @@ export const PlaylistDetailPage: React.FC = () => {
           selectedIds={state.selectedIds}
           currentSongId={currentSong?.id}
           activeMenuId={state.activeMenuId}
+          isImporting={state.isImporting}
           playlists={playlists}
           currentPlaylistId={id}
           appIcon={appIcon}
@@ -86,6 +93,8 @@ export const PlaylistDetailPage: React.FC = () => {
           onDelete={actions.onDeleteSong}
           onToggleFilter={actions.toggleFilter}
           onToggleMenu={actions.toggleMenu}
+          onImportFiles={actions.onImportFiles}
+          onImportFolder={actions.onImportFolder}
           t={t}
         />
       </div>
@@ -119,7 +128,7 @@ export const PlaylistDetailPage: React.FC = () => {
         onDelete={() => activeSong && actions.onDeleteSong(activeSong)}
         onSetSubMenu={actions.setActiveSubMenuId}
         t={t}
-        menuRef={refs.menuRef}
+        menuRef={menuRef}
       />
 
       <BulkActionsBar
@@ -168,6 +177,8 @@ export const PlaylistDetailPage: React.FC = () => {
         existingSongIds={state.localSongs.map((s) => s.id)}
         onAdd={(songIds) => id && actions.onAddSongsToPlaylist(id, songIds)}
       />
+
+      <FloatingBadge />
     </div>
   );
 };

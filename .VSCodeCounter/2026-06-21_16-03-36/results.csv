@@ -1,0 +1,457 @@
+"filename", "language", "JavaScript", "JSON", "JSON with Comments", "Markdown", "YAML", "TypeScript", "TypeScript JSX", "Ignore", "SCSS", "XML", "HTML", "Batch", "CSS", "comment", "blank", "total"
+"k:\cross-platform-music-player-app\.github\ISSUE_TEMPLATE\bug_report.md", "Markdown", 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"k:\cross-platform-music-player-app\.github\ISSUE_TEMPLATE\feature_request.md", "Markdown", 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 17
+"k:\cross-platform-music-player-app\.github\workflows\ci.yml", "YAML", 0, 0, 0, 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7, 32
+"k:\cross-platform-music-player-app\.prettierignore", "Ignore", 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 4
+"k:\cross-platform-music-player-app\.prettierrc", "JSON", 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19
+"k:\cross-platform-music-player-app\README.md", "Markdown", 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 39
+"k:\cross-platform-music-player-app\apps\desktop\README.md", "Markdown", 0, 0, 0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 76
+"k:\cross-platform-music-player-app\apps\desktop\electron\infrastructure\FileTraceLogger.ts", "TypeScript", 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 5, 22
+"k:\cross-platform-music-player-app\apps\desktop\electron\infrastructure\MainMetadataService.ts", "TypeScript", 0, 0, 0, 0, 0, 247, 0, 0, 0, 0, 0, 0, 0, 15, 36, 298
+"k:\cross-platform-music-player-app\apps\desktop\electron\infrastructure\MainStorageAdapter.ts", "TypeScript", 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, 0, 0, 0, 2, 27, 158
+"k:\cross-platform-music-player-app\apps\desktop\electron\infrastructure\SyncHistoryService.ts", "TypeScript", 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 2, 9, 49
+"k:\cross-platform-music-player-app\apps\desktop\electron\ipc\dialog.ts", "TypeScript", 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 6, 22
+"k:\cross-platform-music-player-app\apps\desktop\electron\ipc\downloader.ts", "TypeScript", 0, 0, 0, 0, 0, 117, 0, 0, 0, 0, 0, 0, 0, 3, 23, 143
+"k:\cross-platform-music-player-app\apps\desktop\electron\ipc\library.ts", "TypeScript", 0, 0, 0, 0, 0, 482, 0, 0, 0, 0, 0, 0, 0, 33, 95, 610
+"k:\cross-platform-music-player-app\apps\desktop\electron\ipc\storage.ts", "TypeScript", 0, 0, 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 17, 71
+"k:\cross-platform-music-player-app\apps\desktop\electron\main.ts", "TypeScript", 0, 0, 0, 0, 0, 292, 0, 0, 0, 0, 0, 0, 0, 26, 61, 379
+"k:\cross-platform-music-player-app\apps\desktop\electron\modules\auth\YouTubeAuthService.ts", "TypeScript", 0, 0, 0, 0, 0, 82, 0, 0, 0, 0, 0, 0, 0, 3, 18, 103
+"k:\cross-platform-music-player-app\apps\desktop\electron\modules\downloader\YoutubeDownloader.ts", "TypeScript", 0, 0, 0, 0, 0, 290, 0, 0, 0, 0, 0, 0, 0, 0, 56, 346
+"k:\cross-platform-music-player-app\apps\desktop\electron\modules\downloader\__tests__\YoutubeDownloader.test.ts", "TypeScript", 0, 0, 0, 0, 0, 87, 0, 0, 0, 0, 0, 0, 0, 9, 27, 123
+"k:\cross-platform-music-player-app\apps\desktop\electron\modules\downloader\__tests__\YoutubeDownloaderPath.test.ts", "TypeScript", 0, 0, 0, 0, 0, 87, 0, 0, 0, 0, 0, 0, 0, 4, 27, 118
+"k:\cross-platform-music-player-app\apps\desktop\electron\modules\lyrics\LyricsManager.ts", "TypeScript", 0, 0, 0, 0, 0, 122, 0, 0, 0, 0, 0, 0, 0, 1, 18, 141
+"k:\cross-platform-music-player-app\apps\desktop\electron\modules\metadata\MetadataManager.ts", "TypeScript", 0, 0, 0, 0, 0, 156, 0, 0, 0, 0, 0, 0, 0, 4, 29, 189
+"k:\cross-platform-music-player-app\apps\desktop\electron\modules\metadata\__tests__\MetadataManager.test.ts", "TypeScript", 0, 0, 0, 0, 0, 56, 0, 0, 0, 0, 0, 0, 0, 8, 19, 83
+"k:\cross-platform-music-player-app\apps\desktop\electron\preload.ts", "TypeScript", 0, 0, 0, 0, 0, 207, 0, 0, 0, 0, 0, 0, 0, 7, 11, 225
+"k:\cross-platform-music-player-app\apps\desktop\electron\utils\ffmpegPath.ts", "TypeScript", 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 1, 4, 20
+"k:\cross-platform-music-player-app\apps\desktop\electron\utils\fileState.ts", "TypeScript", 0, 0, 0, 0, 0, 39, 0, 0, 0, 0, 0, 0, 0, 9, 9, 57
+"k:\cross-platform-music-player-app\apps\desktop\electron\workers\metadata.worker.ts", "TypeScript", 0, 0, 0, 0, 0, 183, 0, 0, 0, 0, 0, 0, 0, 7, 23, 213
+"k:\cross-platform-music-player-app\apps\desktop\eslint.config.js", "JavaScript", 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 28
+"k:\cross-platform-music-player-app\apps\desktop\index.html", "HTML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 0, 4, 17
+"k:\cross-platform-music-player-app\apps\desktop\package.json", "JSON", 0, 114, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 115
+"k:\cross-platform-music-player-app\apps\desktop\public\favicon.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1
+"k:\cross-platform-music-player-app\apps\desktop\public\icons.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 1, 25
+"k:\cross-platform-music-player-app\apps\desktop\src\App.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"k:\cross-platform-music-player-app\apps\desktop\src\App.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 1, 6
+"k:\cross-platform-music-player-app\apps\desktop\src\App.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 3, 25
+"k:\cross-platform-music-player-app\apps\desktop\src\application\context\HotkeysContext.ts", "TypeScript", 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 4, 16
+"k:\cross-platform-music-player-app\apps\desktop\src\application\context\HotkeysProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 2, 16
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\DownloadContext.ts", "TypeScript", 0, 0, 0, 0, 0, 37, 0, 0, 0, 0, 0, 0, 0, 4, 10, 51
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\SettingsContext.ts", "TypeScript", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\index.ts", "TypeScript", 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 1, 15
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useClusteredSearch.ts", "TypeScript", 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 2, 7, 49
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useDebounce.ts", "TypeScript", 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 1, 6, 29
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useDownload.ts", "TypeScript", 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useGlobalHotkeys.ts", "TypeScript", 0, 0, 0, 0, 0, 182, 0, 0, 0, 0, 0, 0, 0, 2, 22, 206
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useLanguage.ts", "TypeScript", 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useLibrary.ts", "TypeScript", 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 3, 7
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useLocalFilter.ts", "TypeScript", 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 0, 0, 0, 4, 15, 89
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useNotification.ts", "TypeScript", 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 6, 28
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useRecentSearches.ts", "TypeScript", 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 5, 13, 78
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useSearch.ts", "TypeScript", 0, 0, 0, 0, 0, 108, 0, 0, 0, 0, 0, 0, 0, 9, 15, 132
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useSettings.ts", "TypeScript", 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11
+"k:\cross-platform-music-player-app\apps\desktop\src\application\hooks\useTheme.ts", "TypeScript", 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 2, 9
+"k:\cross-platform-music-player-app\apps\desktop\src\application\providers\DownloadProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 296, 0, 0, 0, 0, 0, 0, 6, 45, 347
+"k:\cross-platform-music-player-app\apps\desktop\src\application\providers\PlayerWithLibrary.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 4, 25
+"k:\cross-platform-music-player-app\apps\desktop\src\application\providers\SettingsProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 10, 65
+"k:\cross-platform-music-player-app\apps\desktop\src\application\providers\index.ts", "TypeScript", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"k:\cross-platform-music-player-app\apps\desktop\src\application\utils\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"k:\cross-platform-music-player-app\apps\desktop\src\application\utils\searchUtils.ts", "TypeScript", 0, 0, 0, 0, 0, 74, 0, 0, 0, 0, 0, 0, 0, 5, 16, 95
+"k:\cross-platform-music-player-app\apps\desktop\src\electron.d.ts", "TypeScript", 0, 0, 0, 0, 0, 108, 0, 0, 0, 0, 0, 0, 0, 4, 7, 119
+"k:\cross-platform-music-player-app\apps\desktop\src\infrastructure\repositories\ElectronLibraryRepository.ts", "TypeScript", 0, 0, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 4, 29, 140
+"k:\cross-platform-music-player-app\apps\desktop\src\infrastructure\repositories\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\infrastructure\services\ElectronStorageAdapter.ts", "TypeScript", 0, 0, 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 0, 18, 71
+"k:\cross-platform-music-player-app\apps\desktop\src\infrastructure\services\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\main.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 1, 3, 47
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\CleanupResolutionModal\CleanupResolutionModal.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 215, 0, 0, 0, 0, 2, 34, 251
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\CleanupResolutionModal\CleanupResolutionModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 89, 0, 0, 0, 0, 0, 0, 0, 8, 97
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\CleanupResolutionModal\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\CleanupResolutionModal\useCleanupResolution.ts", "TypeScript", 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 6, 56
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DeleteConfirmationModal\DeleteConfirmationModal.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 150, 0, 0, 0, 0, 0, 22, 172
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DeleteConfirmationModal\DeleteConfirmationModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 77, 0, 0, 0, 0, 0, 0, 0, 8, 85
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DeleteConfirmationModal\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\DownloaderModal.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 430, 0, 0, 0, 0, 0, 66, 496
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\DownloaderModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 143, 0, 0, 0, 0, 0, 0, 0, 18, 161
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\components\AuthState.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 3, 18
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\components\DownloaderFooter.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 113, 0, 0, 0, 0, 0, 0, 0, 7, 120
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\components\InputState.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 57, 0, 0, 0, 0, 0, 0, 0, 3, 60
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\components\LoadingState.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 3, 17
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\components\PreviewList.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 0, 6, 49
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\components\index.ts", "TypeScript", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderModal\useDownloaderModal.ts", "TypeScript", 0, 0, 0, 0, 0, 84, 0, 0, 0, 0, 0, 0, 0, 3, 13, 100
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderUI\DownloadPreviewCard.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 282, 0, 0, 0, 0, 0, 43, 325
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderUI\DownloadPreviewCard.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 79, 0, 0, 0, 0, 0, 0, 0, 8, 87
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderUI\DownloadProgressBar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 2, 27
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderUI\DuplicateWarningBanner.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 4, 31
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DownloaderUI\index.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Dropdown\CustomDropdown.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 116, 0, 0, 0, 0, 0, 19, 135
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Dropdown\CustomDropdown.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 17, 152
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Dropdown\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DuplicateResolutionModal\DuplicateResolutionModal.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 146, 0, 0, 0, 0, 0, 22, 168
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DuplicateResolutionModal\DuplicateResolutionModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 73, 0, 0, 0, 0, 0, 0, 0, 8, 81
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DuplicateResolutionModal\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\DuplicateResolutionModal\useDuplicateResolution.ts", "TypeScript", 0, 0, 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 0, 0, 6, 57
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\EditModal\EditModal.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 194, 0, 0, 0, 0, 0, 29, 223
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\EditModal\EditModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 132, 0, 0, 0, 0, 0, 0, 0, 11, 143
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\EditModal\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\EditModal\useEditModal.ts", "TypeScript", 0, 0, 0, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 3, 11, 130
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\ErrorBoundary\ErrorBoundary.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 1, 9, 74
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\ErrorBoundary\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\GlobalDragDrop\GlobalDragDrop.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 73, 0, 0, 0, 0, 0, 8, 81
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\GlobalDragDrop\GlobalDragDrop.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 123, 0, 0, 0, 0, 0, 0, 7, 19, 149
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\GlobalDragDrop\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\Header.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 266, 0, 0, 0, 0, 0, 33, 299
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\Header.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 81, 0, 0, 0, 0, 0, 0, 0, 9, 90
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\SearchOverlay\SearchOverlay.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 334, 0, 0, 0, 0, 0, 49, 383
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\SearchOverlay\SearchOverlay.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 197, 0, 0, 0, 0, 0, 0, 0, 13, 210
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\SearchOverlay\components\RecentSearches.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 72, 0, 0, 0, 0, 0, 0, 0, 3, 75
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\SearchOverlay\components\SongResultItem.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 106, 0, 0, 0, 0, 0, 0, 0, 9, 115
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\SearchOverlay\index.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\SearchOverlay\types.ts", "TypeScript", 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0, 5, 50
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\SearchOverlay\useSearchOverlay.ts", "TypeScript", 0, 0, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 2, 11, 105
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\components\ProfileMenu.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 3, 95
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\components\SearchInput.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 3, 37
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\types.ts", "TypeScript", 0, 0, 0, 0, 0, 79, 0, 0, 0, 0, 0, 0, 0, 0, 6, 85
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Header\useHeader.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 303, 0, 0, 0, 0, 0, 0, 3, 20, 326
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\HotkeysModal\HotkeysModal.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 216, 0, 0, 0, 0, 0, 28, 244
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\HotkeysModal\HotkeysModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 120, 0, 0, 0, 0, 0, 0, 3, 8, 131
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\HotkeysModal\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Language\LanguageContext.ts", "TypeScript", 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 3, 11
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Language\LanguageProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 37, 0, 0, 0, 0, 0, 0, 1, 8, 46
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Language\index.ts", "TypeScript", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Layout\MainLayout.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 2, 6, 49
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Layout\MainLayout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 2, 10, 66
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Layout\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Library\LibraryProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 1, 16, 124
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Library\SyncHistoryModal.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 243, 0, 0, 0, 0, 0, 38, 281
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Library\SyncHistoryModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 122, 0, 0, 0, 0, 0, 0, 1, 12, 135
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Library\index.ts", "TypeScript", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\LyricsView\LyricsPanel.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 467, 0, 0, 0, 0, 1, 66, 534
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\LyricsView\LyricsPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 77, 0, 0, 0, 0, 0, 0, 0, 7, 84
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\LyricsView\components\EmptyLyrics.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0, 4, 35
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\LyricsView\components\LyricsContent.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 2, 38
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\LyricsView\components\LyricsHeader.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 4, 54
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\LyricsView\components\LyricsSearch.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 0, 4, 58
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\LyricsView\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\LyricsView\types.ts", "TypeScript", 0, 0, 0, 0, 0, 72, 0, 0, 0, 0, 0, 0, 0, 0, 7, 79
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\LyricsView\useLyricsPanel.ts", "TypeScript", 0, 0, 0, 0, 0, 122, 0, 0, 0, 0, 0, 0, 0, 2, 18, 142
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Notification\Notification.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 94, 0, 0, 0, 0, 0, 10, 104
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Notification\Notification.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 62, 0, 0, 0, 0, 0, 0, 0, 11, 73
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Notification\NotificationProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 1, 6, 45
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Notification\index.ts", "TypeScript", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\PlayerBar.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 504, 0, 0, 0, 0, 1, 74, 579
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\PlayerBar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 102, 0, 0, 0, 0, 0, 0, 0, 16, 118
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\QueuePanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 138, 0, 0, 0, 0, 0, 0, 3, 19, 160
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\components\NowPlaying.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0, 4, 35
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\components\PlaybackControls.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 72, 0, 0, 0, 0, 0, 0, 0, 8, 80
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\components\ProgressBar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 4, 38
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\components\VolumeControl.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 37, 0, 0, 0, 0, 0, 0, 0, 4, 41
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\index.ts", "TypeScript", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\types.ts", "TypeScript", 0, 0, 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 9, 94
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\PlayerBar\usePlayerBar.ts", "TypeScript", 0, 0, 0, 0, 0, 120, 0, 0, 0, 0, 0, 0, 0, 1, 16, 137
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\Sidebar.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 465, 0, 0, 0, 0, 0, 67, 532
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\Sidebar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 87, 0, 0, 0, 0, 0, 0, 3, 9, 99
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\components\DidYouKnow\DidYouKnow.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 87, 0, 0, 0, 0, 0, 13, 100
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\components\DidYouKnow\DidYouKnow.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 0, 11, 74
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\components\DidYouKnow\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\components\PlaylistItem.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 3, 56
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\components\PlaylistSection.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 175, 0, 0, 0, 0, 0, 0, 0, 9, 184
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\components\SidebarMini.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 6, 51
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\components\index.ts", "TypeScript", 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\index.ts", "TypeScript", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\types.ts", "TypeScript", 0, 0, 0, 0, 0, 111, 0, 0, 0, 0, 0, 0, 0, 0, 9, 120
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Sidebar\useSidebar.ts", "TypeScript", 0, 0, 0, 0, 0, 174, 0, 0, 0, 0, 0, 0, 0, 1, 21, 196
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\SongPickerModal\SongPickerModal.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 252, 0, 0, 0, 0, 0, 37, 289
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\SongPickerModal\SongPickerModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 125, 0, 0, 0, 0, 0, 0, 6, 13, 144
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\SongPickerModal\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\SongPickerModal\useSongPicker.ts", "TypeScript", 0, 0, 0, 0, 0, 58, 0, 0, 0, 0, 0, 0, 0, 2, 8, 68
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Theme\ThemeProvider.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 335, 0, 0, 0, 0, 0, 73, 408
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Theme\ThemeProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 1, 9, 48
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Theme\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Tooltip\SmartTooltip.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 3, 14, 102
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\Tooltip\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\UpdateNotification\UpdateNotification.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 0, 11, 81
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\UpdateNotification\UpdateNotification.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 2, 10, 75
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\UpdateNotification\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\components\index.ts", "TypeScript", 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 1, 23
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\constants\DownloadConstants.ts", "TypeScript", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\constants\IconSizes.ts", "TypeScript", 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 2, 24
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\constants\SettingsConstants.ts", "TypeScript", 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 2, 37
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\constants\index.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\debug\downloaderMockups.ts", "TypeScript", 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 2, 8, 60
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\PlaylistDetailPage.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 669, 0, 0, 0, 0, 1, 104, 774
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\PlaylistDetailPage.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 166, 0, 0, 0, 0, 0, 0, 0, 14, 180
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\BulkActionsBar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 47, 0, 0, 0, 0, 0, 0, 0, 3, 50
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\EmptyState.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 89, 0, 0, 0, 0, 0, 13, 102
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\EmptyState.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 39, 0, 0, 0, 0, 0, 0, 0, 6, 45
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\FilterChips.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 4, 37
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\FloatingBadge.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 4, 36
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\FloatingBadge.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 2, 8, 61
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\PlaylistHeader.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 5, 112
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\SongListHeader.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 0, 2, 30
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\SongRow.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 160, 0, 0, 0, 0, 0, 0, 5, 11, 176
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\SongRowContextMenu.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 142, 0, 0, 0, 0, 0, 0, 1, 13, 156
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\components\VirtualSongList.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 2, 78
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\hooks\usePlaylistData.ts", "TypeScript", 0, 0, 0, 0, 0, 167, 0, 0, 0, 0, 0, 0, 0, 0, 17, 184
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\hooks\usePlaylistMenu.ts", "TypeScript", 0, 0, 0, 0, 0, 66, 0, 0, 0, 0, 0, 0, 0, 2, 7, 75
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\hooks\usePlaylistSelection.ts", "TypeScript", 0, 0, 0, 0, 0, 66, 0, 0, 0, 0, 0, 0, 0, 1, 12, 79
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\hooks\usePlaylistVirtualization.ts", "TypeScript", 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 12, 52
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\types.ts", "TypeScript", 0, 0, 0, 0, 0, 130, 0, 0, 0, 0, 0, 0, 0, 0, 8, 138
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\usePlaylistDetail.ts", "TypeScript", 0, 0, 0, 0, 0, 205, 0, 0, 0, 0, 0, 0, 0, 8, 19, 232
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\PlaylistDetailPage\utils.ts", "TypeScript", 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 1, 15
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\SettingsPage.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 1312, 0, 0, 0, 0, 0, 211, 1523
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\SettingsPage.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 120, 0, 0, 0, 0, 0, 0, 2, 10, 132
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\components\SettingsSearch.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 29, 0, 0, 0, 0, 0, 0, 0, 4, 33
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\components\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\index.ts", "TypeScript", 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\AppearanceSection.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 8, 68
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\AudioSection.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 188, 0, 0, 0, 0, 0, 0, 8, 30, 226
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\components\AutoImportSettings.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 37, 0, 0, 0, 0, 0, 0, 0, 3, 40
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\components\DownloaderTool.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 184, 0, 0, 0, 0, 0, 0, 0, 11, 195
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\components\MaintenanceSettings.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 3, 43
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\components\PathSettings.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 1, 5, 37
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\components\QualitySettings.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 6, 66
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\components\YoutubeAuth.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 37, 0, 0, 0, 0, 0, 0, 0, 3, 40
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\constants.ts", "TypeScript", 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 2, 22
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\index.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 160, 0, 0, 0, 0, 0, 0, 1, 14, 175
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\types.ts", "TypeScript", 0, 0, 0, 0, 0, 81, 0, 0, 0, 0, 0, 0, 0, 0, 10, 91
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\DownloadSection\useDownloadSection.ts", "TypeScript", 0, 0, 0, 0, 0, 115, 0, 0, 0, 0, 0, 0, 0, 2, 20, 137
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\GeneralSection.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 274, 0, 0, 0, 0, 0, 0, 5, 27, 306
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\sections\index.ts", "TypeScript", 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\utils\AppearanceSection.utils.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\utils\AudioSection.utils.ts", "TypeScript", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 3, 8
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\utils\DownloadSection.utils.ts", "TypeScript", 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 5, 31
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\utils\GeneralSection.utils.ts", "TypeScript", 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 3, 12
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\utils\Settings.utils.ts", "TypeScript", 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 3, 19
+"k:\cross-platform-music-player-app\apps\desktop\src\presentations\pages\SettingsPage\utils\index.ts", "TypeScript", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\components\Header\SearchOverlay.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 48, 0, 0, 0, 0, 0, 0, 3, 6, 57
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\DeleteConfirmationModal\DeleteConfirmationModal.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 96, 0, 0, 0, 0, 0, 0, 1, 26, 123
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\DownloaderModal\DownloaderModal.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 0, 3, 24, 155
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\Dropdown\CustomDropdown.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 2, 12, 52
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\DuplicateResolutionModal\DuplicateResolutionModal.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 97, 0, 0, 0, 0, 0, 0, 12, 32, 141
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\EditModal\EditModal.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 148, 0, 0, 0, 0, 0, 0, 4, 43, 195
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\ErrorBoundary\ErrorBoundary.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 66, 0, 0, 0, 0, 0, 0, 6, 16, 88
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\Header\Header.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 139, 0, 0, 0, 0, 0, 0, 8, 34, 181
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\HotkeysModal\HotkeysModal.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 59, 0, 0, 0, 0, 0, 0, 4, 21, 84
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\Language\LanguageProvider.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 121, 0, 0, 0, 0, 0, 0, 8, 25, 154
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\Library\LibraryProvider.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 78, 0, 0, 0, 0, 0, 0, 3, 14, 95
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\Library\SyncHistoryModal.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 95, 0, 0, 0, 0, 0, 0, 6, 21, 122
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\LyricsView\LyricsPanel.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 79, 0, 0, 0, 0, 0, 0, 4, 19, 102
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\Notification\Notification.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 105, 0, 0, 0, 0, 0, 0, 2, 24, 131
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\PlayerBar\PlayerBar.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 138, 0, 0, 0, 0, 0, 0, 2, 30, 170
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\components\Sidebar\Sidebar.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 132, 0, 0, 0, 0, 0, 0, 4, 35, 171
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\pages\PlaylistDetailPage\components\SongRow.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 115, 0, 0, 0, 0, 0, 0, 1, 27, 143
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\pages\SettingsPage\sections\AppearanceSection.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 3, 7, 41
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\pages\SettingsPage\sections\AudioSection.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 1, 9, 65
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\pages\SettingsPage\sections\DownloadSection.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 109, 0, 0, 0, 0, 0, 0, 3, 19, 131
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\presentations\pages\SettingsPage\sections\GeneralSection.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 6, 13, 73
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\setup.ts", "TypeScript", 0, 0, 0, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 8, 9, 93
+"k:\cross-platform-music-player-app\apps\desktop\src\tests\utils\searchUtils.test.ts", "TypeScript", 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 4, 18
+"k:\cross-platform-music-player-app\apps\desktop\src\vite-env.d.ts", "TypeScript", 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 1, 5, 22
+"k:\cross-platform-music-player-app\apps\desktop\tsconfig.app.json", "JSON", 0, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 70
+"k:\cross-platform-music-player-app\apps\desktop\tsconfig.json", "JSON with Comments", 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 12
+"k:\cross-platform-music-player-app\apps\desktop\tsconfig.node.json", "JSON", 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 55
+"k:\cross-platform-music-player-app\apps\desktop\vite.config.ts", "TypeScript", 0, 0, 0, 0, 0, 84, 0, 0, 0, 0, 0, 0, 0, 5, 3, 92
+"k:\cross-platform-music-player-app\apps\mobile\...README.md", "Markdown", 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 21
+"k:\cross-platform-music-player-app\apps\mobile\app.json", "JSON", 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 65
+"k:\cross-platform-music-player-app\apps\mobile\assets\expo.icon\Assets\expo-symbol 2.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1, 4
+"k:\cross-platform-music-player-app\apps\mobile\assets\expo.icon\icon.json", "JSON", 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 36
+"k:\cross-platform-music-player-app\apps\mobile\babel.config.js", "JavaScript", 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7
+"k:\cross-platform-music-player-app\apps\mobile\eas.json", "JSON", 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 22
+"k:\cross-platform-music-player-app\apps\mobile\eslint.config.mjs", "JavaScript", 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 11
+"k:\cross-platform-music-player-app\apps\mobile\metro.config.js", "JavaScript", 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 8
+"k:\cross-platform-music-player-app\apps\mobile\package.json", "JSON", 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 66
+"k:\cross-platform-music-player-app\apps\mobile\src\app\(tabs)\_layout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 2, 23
+"k:\cross-platform-music-player-app\apps\mobile\src\app\(tabs)\library.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 603, 0, 0, 0, 0, 0, 0, 0, 50, 653
+"k:\cross-platform-music-player-app\apps\mobile\src\app\(tabs)\playlists.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 407, 0, 0, 0, 0, 0, 0, 0, 29, 436
+"k:\cross-platform-music-player-app\apps\mobile\src\app\(tabs)\search.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 387, 0, 0, 0, 0, 0, 0, 7, 28, 422
+"k:\cross-platform-music-player-app\apps\mobile\src\app\(tabs)\settings.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 247, 0, 0, 0, 0, 0, 0, 0, 16, 263
+"k:\cross-platform-music-player-app\apps\mobile\src\app\_layout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 6, 10, 76
+"k:\cross-platform-music-player-app\apps\mobile\src\app\index.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 3, 11
+"k:\cross-platform-music-player-app\apps\mobile\src\app\now-playing.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 376, 0, 0, 0, 0, 0, 0, 6, 29, 411
+"k:\cross-platform-music-player-app\apps\mobile\src\app\playlist\[id].tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 752, 0, 0, 0, 0, 0, 0, 3, 50, 805
+"k:\cross-platform-music-player-app\apps\mobile\src\application\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\mobile\src\application\library\LibraryProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 270, 0, 0, 0, 0, 0, 0, 2, 44, 316
+"k:\cross-platform-music-player-app\apps\mobile\src\application\library\importAudio.ts", "TypeScript", 0, 0, 0, 0, 0, 75, 0, 0, 0, 0, 0, 0, 0, 2, 18, 95
+"k:\cross-platform-music-player-app\apps\mobile\src\application\library\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\mobile\src\application\player\PlayerProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 488, 0, 0, 0, 0, 0, 0, 24, 87, 599
+"k:\cross-platform-music-player-app\apps\mobile\src\application\player\PlayerService.ts", "TypeScript", 0, 0, 0, 0, 0, 57, 0, 0, 0, 0, 0, 0, 0, 3, 17, 77
+"k:\cross-platform-music-player-app\apps\mobile\src\application\player\engine\ExpoAudioEngine.ts", "TypeScript", 0, 0, 0, 0, 0, 141, 0, 0, 0, 0, 0, 0, 0, 4, 29, 174
+"k:\cross-platform-music-player-app\apps\mobile\src\application\player\engine\types.ts", "TypeScript", 0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 9, 39
+"k:\cross-platform-music-player-app\apps\mobile\src\application\player\index.ts", "TypeScript", 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5
+"k:\cross-platform-music-player-app\apps\mobile\src\application\player\states\AudioPlayerState.ts", "TypeScript", 0, 0, 0, 0, 0, 119, 0, 0, 0, 0, 0, 0, 0, 7, 32, 158
+"k:\cross-platform-music-player-app\apps\mobile\src\infrastructure\storage\MobileStorageAdapter.ts", "TypeScript", 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 2, 26, 163
+"k:\cross-platform-music-player-app\apps\mobile\src\infrastructure\storage\composePlaylists.ts", "TypeScript", 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1, 2, 10
+"k:\cross-platform-music-player-app\apps\mobile\src\infrastructure\storage\index.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"k:\cross-platform-music-player-app\apps\mobile\src\infrastructure\storage\json.ts", "TypeScript", 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9
+"k:\cross-platform-music-player-app\apps\mobile\src\infrastructure\storage\keys.ts", "TypeScript", 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 3, 10
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\AppShell\AppShellProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 1, 16, 103
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\AppShell\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\BottomNav.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 145, 0, 0, 0, 0, 0, 0, 0, 13, 158
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Language\LanguageProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 0, 11, 54
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Language\index.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Language\storage.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 4, 15
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\NameModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 125, 0, 0, 0, 0, 0, 0, 0, 10, 135
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Notification\NotificationProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, 0, 0, 0, 20, 149
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Notification\index.ts", "TypeScript", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Notification\types.ts", "TypeScript", 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 2, 10
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\PlaylistActions.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 156, 0, 0, 0, 0, 0, 0, 0, 10, 166
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\PlaylistRow.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 8, 100
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\SidebarMenu.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 454, 0, 0, 0, 0, 0, 0, 1, 42, 497
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Theme\ThemeProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 1, 17, 78
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Theme\index.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Theme\storage.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 4, 15
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\Theme\tokens.ts", "TypeScript", 0, 0, 0, 0, 0, 124, 0, 0, 0, 0, 0, 0, 0, 2, 19, 145
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\components\TopBar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 157, 0, 0, 0, 0, 0, 0, 0, 16, 173
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\player\PlayerBar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 189, 0, 0, 0, 0, 0, 0, 6, 13, 208
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\player\QueueModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0, 11, 211
+"k:\cross-platform-music-player-app\apps\mobile\src\presentations\player\format.ts", "TypeScript", 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7
+"k:\cross-platform-music-player-app\apps\mobile\tsconfig.json", "JSON with Comments", 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 22
+"k:\cross-platform-music-player-app\docs\Bao_Cao_MVP_Draft.md", "Markdown", 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 74
+"k:\cross-platform-music-player-app\docs\__BTL_yêu_cầu.md", "Markdown", 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 32
+"k:\cross-platform-music-player-app\docs\__DESKTOP_Bao_Cao_BTL_MeloVista.md", "Markdown", 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 73
+"k:\cross-platform-music-player-app\docs\__DESKTOP_architecture_report.md", "Markdown", 0, 0, 0, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 67
+"k:\cross-platform-music-player-app\docs\__MOBILE_audio_improv_plan.md", "Markdown", 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 63
+"k:\cross-platform-music-player-app\docs\__MOBILE_playback_modes.md", "Markdown", 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 34
+"k:\cross-platform-music-player-app\docs\__MOBILE_roadmap.md", "Markdown", 0, 0, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 54, 182
+"k:\cross-platform-music-player-app\docs\__MOBILE_storage_schema.md", "Markdown", 0, 0, 0, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 101
+"k:\cross-platform-music-player-app\docs\__MOBILE_ui_desc.md", "Markdown", 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 156
+"k:\cross-platform-music-player-app\docs\__PROJECT_REPORT.md", "Markdown", 0, 0, 0, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 100
+"k:\cross-platform-music-player-app\docs\__PROJECT_architecture_report.md", "Markdown", 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 62
+"k:\cross-platform-music-player-app\docs\____ROADMAP.md", "Markdown", 0, 0, 0, 185, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 49, 234
+"k:\cross-platform-music-player-app\eslint.config.js", "JavaScript", 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 4, 55
+"k:\cross-platform-music-player-app\package-lock.json", "JSON", 0, 21779, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 21780
+"k:\cross-platform-music-player-app\package.json", "JSON", 0, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 50
+"k:\cross-platform-music-player-app\packages\brand\README.md", "Markdown", 0, 0, 0, 46, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 61
+"k:\cross-platform-music-player-app\packages\brand\colors\colors.json", "JSON", 0, 44, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 45
+"k:\cross-platform-music-player-app\packages\brand\colors\colors.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 19, 0, 0, 0, 0, 4, 4, 27
+"k:\cross-platform-music-player-app\packages\brand\package.json", "JSON", 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7
+"k:\cross-platform-music-player-app\packages\brand\typography\fonts.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 3, 3, 22
+"k:\cross-platform-music-player-app\packages\brand\typography\typography.json", "JSON", 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 28
+"k:\cross-platform-music-player-app\packages\brand\typography\typography.scss", "SCSS", 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 4, 5, 29
+"k:\cross-platform-music-player-app\packages\core\index.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"k:\cross-platform-music-player-app\packages\core\package.json", "JSON", 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 20
+"k:\cross-platform-music-player-app\packages\core\src\index.ts", "TypeScript", 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5
+"k:\cross-platform-music-player-app\packages\core\src\interfaces\ILibraryRepository.ts", "TypeScript", 0, 0, 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 2, 29
+"k:\cross-platform-music-player-app\packages\core\src\interfaces\IMetadataService.ts", "TypeScript", 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 4, 24
+"k:\cross-platform-music-player-app\packages\core\src\interfaces\IStorageAdapter.ts", "TypeScript", 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 2, 19
+"k:\cross-platform-music-player-app\packages\core\src\interfaces\index.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"k:\cross-platform-music-player-app\packages\core\src\services\LibraryService.ts", "TypeScript", 0, 0, 0, 0, 0, 557, 0, 0, 0, 0, 0, 0, 0, 49, 111, 717
+"k:\cross-platform-music-player-app\packages\core\src\services\__tests__\LibraryService.test.ts", "TypeScript", 0, 0, 0, 0, 0, 378, 0, 0, 0, 0, 0, 0, 0, 21, 87, 486
+"k:\cross-platform-music-player-app\packages\core\src\usecases\AddSongsToPlaylistUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"k:\cross-platform-music-player-app\packages\core\src\usecases\CreatePlaylistUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 4, 15
+"k:\cross-platform-music-player-app\packages\core\src\usecases\DeletePlaylistUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 4, 14
+"k:\cross-platform-music-player-app\packages\core\src\usecases\DeleteSongUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"k:\cross-platform-music-player-app\packages\core\src\usecases\DeleteSongsUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"k:\cross-platform-music-player-app\packages\core\src\usecases\GetLibraryUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"k:\cross-platform-music-player-app\packages\core\src\usecases\GetLyricsUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"k:\cross-platform-music-player-app\packages\core\src\usecases\GetPlaylistByIdUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"k:\cross-platform-music-player-app\packages\core\src\usecases\GetPlaylistsUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"k:\cross-platform-music-player-app\packages\core\src\usecases\ImportFilesUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"k:\cross-platform-music-player-app\packages\core\src\usecases\ImportFolderUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"k:\cross-platform-music-player-app\packages\core\src\usecases\PatchSongUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 2, 13
+"k:\cross-platform-music-player-app\packages\core\src\usecases\RemoveSongsFromPlaylistUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"k:\cross-platform-music-player-app\packages\core\src\usecases\SaveLyricsUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"k:\cross-platform-music-player-app\packages\core\src\usecases\ScanMissingFilesUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"k:\cross-platform-music-player-app\packages\core\src\usecases\SearchLyricsUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"k:\cross-platform-music-player-app\packages\core\src\usecases\UpdatePlaylistUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 4, 15
+"k:\cross-platform-music-player-app\packages\core\src\usecases\UpdateSongUseCase.ts", "TypeScript", 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"k:\cross-platform-music-player-app\packages\core\src\usecases\__tests__\LibraryUseCases.test.ts", "TypeScript", 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 4, 20
+"k:\cross-platform-music-player-app\packages\core\src\usecases\__tests__\PlaylistUseCases.test.ts", "TypeScript", 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 8, 63
+"k:\cross-platform-music-player-app\packages\core\src\usecases\__tests__\SongUseCases.test.ts", "TypeScript", 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 7, 47
+"k:\cross-platform-music-player-app\packages\core\src\usecases\index.ts", "TypeScript", 0, 0, 0, 0, 0, 18, 0, 0, 0, 0, 0, 0, 0, 0, 1, 19
+"k:\cross-platform-music-player-app\packages\core\src\utils\LyricsParser.ts", "TypeScript", 0, 0, 0, 0, 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 7, 36
+"k:\cross-platform-music-player-app\packages\core\src\utils\Mutex.ts", "TypeScript", 0, 0, 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 3, 5, 42
+"k:\cross-platform-music-player-app\packages\core\src\utils\__tests__\Mutex.test.ts", "TypeScript", 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 4, 20, 88
+"k:\cross-platform-music-player-app\packages\core\src\utils\__tests__\artists.test.ts", "TypeScript", 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 7, 45
+"k:\cross-platform-music-player-app\packages\core\src\utils\__tests__\lyrics.test.ts", "TypeScript", 0, 0, 0, 0, 0, 56, 0, 0, 0, 0, 0, 0, 0, 2, 12, 70
+"k:\cross-platform-music-player-app\packages\core\src\utils\__tests__\youtube.test.ts", "TypeScript", 0, 0, 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 8, 42
+"k:\cross-platform-music-player-app\packages\core\src\utils\artists.ts", "TypeScript", 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 3, 17
+"k:\cross-platform-music-player-app\packages\core\src\utils\index.ts", "TypeScript", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6
+"k:\cross-platform-music-player-app\packages\core\src\utils\lyrics.ts", "TypeScript", 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 0, 6, 42
+"k:\cross-platform-music-player-app\packages\core\src\utils\youtube.ts", "TypeScript", 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 3, 6, 35
+"k:\cross-platform-music-player-app\packages\core\tsconfig.json", "JSON with Comments", 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10
+"k:\cross-platform-music-player-app\packages\core\vitest.config.ts", "TypeScript", 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 2, 16
+"k:\cross-platform-music-player-app\packages\hooks\README.md", "Markdown", 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 8
+"k:\cross-platform-music-player-app\packages\hooks\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3
+"k:\cross-platform-music-player-app\packages\hooks\package.json", "JSON", 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 18
+"k:\cross-platform-music-player-app\packages\hooks\src\LibraryContext.ts", "TypeScript", 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 5, 9
+"k:\cross-platform-music-player-app\packages\hooks\src\PlayerContext.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 5, 8
+"k:\cross-platform-music-player-app\packages\hooks\src\UIContext.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 5, 8
+"k:\cross-platform-music-player-app\packages\hooks\src\constants\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\packages\hooks\src\constants\lyrics.ts", "TypeScript", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6
+"k:\cross-platform-music-player-app\packages\hooks\src\index.ts", "TypeScript", 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 5, 19
+"k:\cross-platform-music-player-app\packages\hooks\src\providers\LibraryProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 352, 0, 0, 0, 0, 0, 0, 21, 65, 438
+"k:\cross-platform-music-player-app\packages\hooks\src\providers\PlayerProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 358, 0, 0, 0, 0, 0, 0, 10, 65, 433
+"k:\cross-platform-music-player-app\packages\hooks\src\providers\UIProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 11, 23
+"k:\cross-platform-music-player-app\packages\hooks\src\tests\LibraryProvider.test.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 250, 0, 0, 0, 0, 0, 0, 4, 72, 326
+"k:\cross-platform-music-player-app\packages\hooks\src\types\audio.ts", "TypeScript", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6
+"k:\cross-platform-music-player-app\packages\hooks\src\types\index.ts", "TypeScript", 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5
+"k:\cross-platform-music-player-app\packages\hooks\src\types\library.ts", "TypeScript", 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 5, 60
+"k:\cross-platform-music-player-app\packages\hooks\src\types\player.ts", "TypeScript", 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 8, 50
+"k:\cross-platform-music-player-app\packages\hooks\src\types\ui.ts", "TypeScript", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6
+"k:\cross-platform-music-player-app\packages\hooks\src\useAudioDevices.ts", "TypeScript", 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 1, 14, 75
+"k:\cross-platform-music-player-app\packages\hooks\src\useLibrary.ts", "TypeScript", 0, 0, 0, 0, 0, 18, 0, 0, 0, 0, 0, 0, 0, 0, 4, 22
+"k:\cross-platform-music-player-app\packages\hooks\src\useLyricSync.ts", "TypeScript", 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 0, 1, 9, 53
+"k:\cross-platform-music-player-app\packages\hooks\src\useLyrics.ts", "TypeScript", 0, 0, 0, 0, 0, 105, 0, 0, 0, 0, 0, 0, 0, 13, 26, 144
+"k:\cross-platform-music-player-app\packages\hooks\src\usePlayer.ts", "TypeScript", 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11
+"k:\cross-platform-music-player-app\packages\hooks\src\useUI.ts", "TypeScript", 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11
+"k:\cross-platform-music-player-app\packages\hooks\tsconfig.json", "JSON with Comments", 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 19
+"k:\cross-platform-music-player-app\packages\hooks\vitest.config.ts", "TypeScript", 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 2, 18
+"k:\cross-platform-music-player-app\packages\i18n\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\packages\i18n\package.json", "JSON", 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14
+"k:\cross-platform-music-player-app\packages\i18n\src\desktop.ts", "TypeScript", 0, 0, 0, 0, 0, 726, 0, 0, 0, 0, 0, 0, 0, 0, 2, 728
+"k:\cross-platform-music-player-app\packages\i18n\src\index.ts", "TypeScript", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"k:\cross-platform-music-player-app\packages\i18n\src\mobile.ts", "TypeScript", 0, 0, 0, 0, 0, 278, 0, 0, 0, 0, 0, 0, 0, 0, 5, 283
+"k:\cross-platform-music-player-app\packages\i18n\tsconfig.json", "JSON with Comments", 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14
+"k:\cross-platform-music-player-app\packages\player\README.md", "Markdown", 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 8
+"k:\cross-platform-music-player-app\packages\player\index.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"k:\cross-platform-music-player-app\packages\player\package.json", "JSON", 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 20
+"k:\cross-platform-music-player-app\packages\player\src\AudioEngine.ts", "TypeScript", 0, 0, 0, 0, 0, 234, 0, 0, 0, 0, 0, 0, 0, 16, 38, 288
+"k:\cross-platform-music-player-app\packages\player\src\__tests__\AudioEngine.test.ts", "TypeScript", 0, 0, 0, 0, 0, 242, 0, 0, 0, 0, 0, 0, 0, 8, 54, 304
+"k:\cross-platform-music-player-app\packages\player\src\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\packages\player\vitest.config.ts", "TypeScript", 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 2, 16
+"k:\cross-platform-music-player-app\packages\types\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\packages\types\package.json", "JSON", 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8
+"k:\cross-platform-music-player-app\packages\types\src\index.ts", "TypeScript", 0, 0, 0, 0, 0, 117, 0, 0, 0, 0, 0, 0, 0, 0, 17, 134
+"k:\cross-platform-music-player-app\packages\ui\README.md", "Markdown", 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 9
+"k:\cross-platform-music-player-app\packages\ui\index.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"k:\cross-platform-music-player-app\packages\ui\package.json", "JSON", 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8
+"k:\cross-platform-music-player-app\packages\ui\src\Icon.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 6, 42
+"k:\cross-platform-music-player-app\packages\ui\src\Icon.web.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 5, 43
+"k:\cross-platform-music-player-app\packages\ui\src\index.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"k:\cross-platform-music-player-app\packages\utils\README.md", "Markdown", 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 12
+"k:\cross-platform-music-player-app\packages\utils\package.json", "JSON", 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 16
+"k:\cross-platform-music-player-app\packages\utils\src\__tests__\formatTime.test.ts", "TypeScript", 0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 2, 5, 28
+"k:\cross-platform-music-player-app\packages\utils\src\array.ts", "TypeScript", 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14
+"k:\cross-platform-music-player-app\packages\utils\src\errorHandler.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3
+"k:\cross-platform-music-player-app\packages\utils\src\formatTime.ts", "TypeScript", 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 3, 11
+"k:\cross-platform-music-player-app\packages\utils\src\index.ts", "TypeScript", 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7
+"k:\cross-platform-music-player-app\packages\utils\src\logger.ts", "TypeScript", 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 3, 8, 47
+"k:\cross-platform-music-player-app\packages\utils\src\normalize.ts", "TypeScript", 0, 0, 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 1, 3, 31
+"k:\cross-platform-music-player-app\packages\utils\src\path.ts", "TypeScript", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10
+"k:\cross-platform-music-player-app\packages\utils\src\string.ts", "TypeScript", 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13
+"k:\cross-platform-music-player-app\packages\utils\vitest.config.ts", "TypeScript", 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 2, 16
+"k:\cross-platform-music-player-app\scratch\test_regex.js", "JavaScript", 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5
+"k:\cross-platform-music-player-app\scripts\check-i18n-keys.js", "JavaScript", 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 24, 152
+"k:\cross-platform-music-player-app\scripts\deploy.js", "JavaScript", 109, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 32, 160
+"k:\cross-platform-music-player-app\scripts\ghost-css-variables.js", "JavaScript", 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 15, 86
+"k:\cross-platform-music-player-app\test\manual-verification\duplicates\test_smart_fingerprint.js", "JavaScript", 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 11, 71
+"k:\cross-platform-music-player-app\test\manual-verification\fingerprinting\check_hash_v2.js", "JavaScript", 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 12, 65
+"k:\cross-platform-music-player-app\test\manual-verification\fingerprinting\pcm_test.js", "JavaScript", 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 8, 47
+"k:\cross-platform-music-player-app\test\manual-verification\fingerprinting\sim.js", "JavaScript", 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7
+"k:\cross-platform-music-player-app\test\manual-verification\fingerprinting\v2_final_verification.js", "JavaScript", 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 10, 72
+"k:\cross-platform-music-player-app\test\manual-verification\legacy\check_hash.js", "JavaScript", 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 49
+"k:\cross-platform-music-player-app\test\manual-verification\legacy\download_fpcalc.bat", "Batch", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 1, 9
+"k:\cross-platform-music-player-app\test\manual-verification\legacy\download_fpcalc.js", "JavaScript", 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 9, 54
+"k:\cross-platform-music-player-app\test\manual-verification\legacy\final_verification.js", "JavaScript", 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 9, 34
+"k:\cross-platform-music-player-app\test\manual-verification\legacy\find_culprit.bat", "Batch", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 4
+"k:\cross-platform-music-player-app\test\manual-verification\metadata\test_id3.js", "JavaScript", 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6, 26
+"k:\cross-platform-music-player-app\test\manual-verification\metadata\test_id3_read.js", "JavaScript", 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 23
+"k:\cross-platform-music-player-app\test\manual-verification\metadata\test_persistence.js", "JavaScript", 44, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 12, 59
+"k:\cross-platform-music-player-app\tsconfig.base.json", "JSON", 0, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 35
+"k:\cross-platform-music-player-app\tsconfig.json", "JSON with Comments", 0, 0, 46, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 48
+"Total", "-", 778, 22464, 117, 1093, 23, 10903, 14982, 4, 7142, 28, 13, 11, 0, 696, 5399, 63653

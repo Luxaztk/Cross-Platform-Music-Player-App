@@ -56,6 +56,7 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
   const [isSyncing, setIsSyncing] = useState(false);
   const [missingSongs, setMissingSongs] = useState<Song[]>([]);
   const [showCleanupModal, setShowCleanupModal] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   
   // Guard against double initialization in StrictMode (Dev)
   const isInitialized = useRef(false);
@@ -93,11 +94,16 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
   }, [useCases]);
 
   const handleRunAutoImportScan = useCallback(async (paths: string[]) => {
-    const result = await repository.runAutoImportScan(paths);
-    if (result.added > 0 || result.migrated > 0) {
-      await Promise.all([fetchLibrary(), fetchPlaylists()]);
+    setIsImporting(true);
+    try {
+      const result = await repository.runAutoImportScan(paths);
+      if (result.added > 0 || result.migrated > 0) {
+        await Promise.all([fetchLibrary(), fetchPlaylists()]);
+      }
+      return result;
+    } finally {
+      setIsImporting(false);
     }
-    return result;
   }, [repository, fetchLibrary, fetchPlaylists]);
 
   useEffect(() => {
@@ -109,10 +115,11 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
       
       // Auto-import scan on startup
       try {
-        const settings = await repository.getSettings();
-        if (settings?.downloads?.autoImportPaths?.length > 0) {
+        const settings = (await repository.getSettings()) as { downloads?: { autoImportPaths?: string[], backgroundSync?: number } };
+        const autoImportPaths = settings?.downloads?.autoImportPaths || [];
+        if (autoImportPaths.length > 0) {
           console.log('[Library] Triggering startup auto-import scan');
-          await handleRunAutoImportScan(settings.downloads.autoImportPaths);
+          await handleRunAutoImportScan(autoImportPaths);
         }
       } catch (err) {
         console.error('[Library] Startup auto-import scan failed', err);
@@ -122,31 +129,41 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
   }, [fetchLibrary, fetchPlaylists, handleRunAutoImportScan, repository]);
 
   const handleImportFiles = useCallback(async () => {
-    const res = await useCases.importFiles.execute();
-    if (res.success) {
-      if (res.count > 0) {
-        await fetchLibrary();
-        await fetchPlaylists();
+    setIsImporting(true);
+    try {
+      const res = await useCases.importFiles.execute();
+      if (res.success) {
+        if (res.count > 0) {
+          await fetchLibrary();
+          await fetchPlaylists();
+        }
+        if (res.duplicateSongs && res.duplicateSongs.length > 0) {
+          setDuplicateSongs(res.duplicateSongs);
+        }
       }
-      if (res.duplicateSongs && res.duplicateSongs.length > 0) {
-        setDuplicateSongs(res.duplicateSongs);
-      }
+      return res;
+    } finally {
+      setIsImporting(false);
     }
-    return res;
   }, [useCases, fetchLibrary, fetchPlaylists]);
 
   const handleImportFolder = useCallback(async () => {
-    const res = await useCases.importFolder.execute();
-    if (res.success) {
-      if (res.count > 0) {
-        await fetchLibrary();
-        await fetchPlaylists();
+    setIsImporting(true);
+    try {
+      const res = await useCases.importFolder.execute();
+      if (res.success) {
+        if (res.count > 0) {
+          await fetchLibrary();
+          await fetchPlaylists();
+        }
+        if (res.duplicateSongs && res.duplicateSongs.length > 0) {
+          setDuplicateSongs(res.duplicateSongs);
+        }
       }
-      if (res.duplicateSongs && res.duplicateSongs.length > 0) {
-        setDuplicateSongs(res.duplicateSongs);
-      }
+      return res;
+    } finally {
+      setIsImporting(false);
     }
-    return res;
   }, [useCases, fetchLibrary, fetchPlaylists]);
 
   const handleAddSongs = useCallback(async (songsToAdd: Song[]) => {
@@ -261,7 +278,7 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
     
     try {
       // 1. Step 1 (Relink): Lấy settings và chạy Auto-import scan
-      const settings = await repository.getSettings();
+      const settings = (await repository.getSettings()) as { downloads?: { autoImportPaths?: string[], backgroundSync?: number } };
       const autoImportPaths = settings?.downloads?.autoImportPaths || [];
       
       const importResult = await handleRunAutoImportScan(autoImportPaths);
@@ -341,10 +358,11 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
     isSyncing,
     missingSongs,
     showCleanupModal,
-  }), [songs, library, playlists, libraryVersion, libraryFilter, duplicateSongs, isSyncing, missingSongs, showCleanupModal]);
+    isImporting,
+  }), [songs, library, playlists, libraryVersion, libraryFilter, duplicateSongs, isSyncing, missingSongs, showCleanupModal, isImporting]);
 
   const actionsValue = useMemo(() => ({
-    setLibraryFilter: (f: { type: 'artist' | 'album' | 'none'; values: string[] }) => setLibraryFilter(f),
+    setLibraryFilter,
     handleImportFiles,
     handleImportFolder,
     handleAddSongs,
@@ -387,7 +405,7 @@ export const SharedLibraryProvider: React.FC<SharedLibraryProviderProps> = ({
     
     const setupSync = async () => {
       try {
-        const settings = await repository.getSettings();
+        const settings = (await repository.getSettings()) as { downloads?: { autoImportPaths?: string[], backgroundSync?: number } };
         if (!isMounted) return;
 
         // 1. Periodic Background Sync

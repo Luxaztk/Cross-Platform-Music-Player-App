@@ -1,12 +1,23 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Languages, Palette, Headphones, Check, ShieldCheck, Download, Settings, Loader2 } from 'lucide-react';
+import { Languages, Palette, Headphones, Check, ShieldCheck, Download, Settings, Loader2, Power } from 'lucide-react';
 import { useSearch, useLibrary, useRecentSearches, useLanguage, useTheme } from '@hooks';
 import { usePlayer, useAudioDevices } from '@music/hooks';
 import type { Song, RecentSearch } from '@music/types';
 import type { SearchResultItem } from './SearchOverlay';
 
 import { type UseHeaderReturn, type MenuItem } from './types';
+
+const getMenuItemById = (id: string, items: MenuItem[]): MenuItem | null => {
+  for (const item of items) {
+    if (item.id === id) return item;
+    if (item.children) {
+      const found = getMenuItemById(id, item.children);
+      if (found) return found;
+    }
+  }
+  return null;
+};
 
 export const useHeader = (): UseHeaderReturn => {
   const navigate = useNavigate();
@@ -39,11 +50,11 @@ export const useHeader = (): UseHeaderReturn => {
 
   const flatResults: SearchResultItem[] = useMemo(() => [
     ...searchResults.songs.map((s: Song) => ({ type: 'song' as const, item: s })),
-    ...searchResults.artists.map((a: any) => ({
+    ...searchResults.artists.map((a: { id: string; name: string }) => ({
       type: 'artist' as const,
       item: a,
     })),
-    ...searchResults.albums.map((al: any) => ({
+    ...searchResults.albums.map((al: { id: string; name: string; artist: string }) => ({
       type: 'album' as const,
       item: al,
     })),
@@ -94,7 +105,7 @@ export const useHeader = (): UseHeaderReturn => {
   }, [handleSelectResult]);
 
   const handleTestSound = useCallback(() => {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ctx = new AudioContextClass();
     const playBeep = (c: AudioContext) => {
         const osc = c.createOscillator();
@@ -109,8 +120,8 @@ export const useHeader = (): UseHeaderReturn => {
         osc.stop(c.currentTime + 0.5);
     };
 
-    if ('setSinkId' in ctx && typeof (ctx as any).setSinkId === 'function') {
-      (ctx as any).setSinkId(currentDeviceId).then(() => playBeep(ctx)).catch(() => playBeep(ctx));
+    if ('setSinkId' in ctx && typeof (ctx as unknown as { setSinkId: (id: string) => Promise<void> }).setSinkId === 'function') {
+      (ctx as unknown as { setSinkId: (id: string) => Promise<void> }).setSinkId(currentDeviceId).then(() => playBeep(ctx)).catch(() => playBeep(ctx));
     } else {
       playBeep(ctx);
     }
@@ -129,16 +140,7 @@ export const useHeader = (): UseHeaderReturn => {
     }, 300);
   }, []);
 
-  const getMenuItemById = (id: string, items: MenuItem[]): MenuItem | null => {
-    for (const item of items) {
-      if (item.id === id) return item;
-      if (item.children) {
-        const found = getMenuItemById(id, item.children);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
+
 
   const rootMenuItems: MenuItem[] = useMemo(() => [
     {
@@ -213,6 +215,16 @@ export const useHeader = (): UseHeaderReturn => {
         navigate('/settingsPage');
         setShowProfileMenu(false);
       },
+    },
+    { id: 'div5', label: '', isDivider: true },
+    {
+      id: 'quit',
+      label: 'Quit',
+      icon: <Power size={16} />,
+      action: () => {
+        window.electronAPI?.quitApp?.();
+      },
+      className: 'quit-btn',
     },
   ], [t, language, setLanguage, theme, setTheme, currentDeviceId, devices, setAudioDevice, handleTestSound, isSyncing, handleSyncLibrary, navigate]);
 

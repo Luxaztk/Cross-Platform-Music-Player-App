@@ -8,7 +8,7 @@ export const usePlaylistData = (id: string | undefined) => {
   const [localSongs, setLocalSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
+
 
   const [editingSong, setEditingSong] = useState<Song | null>(null);
   const [deletingSong, setDeletingSong] = useState<Song | null>(null);
@@ -26,6 +26,7 @@ export const usePlaylistData = (id: string | undefined) => {
     handleAddSongsToPlaylist,
     playlists,
     libraryVersion,
+    isImporting,
   } = useLibraryContext();
 
   const { showNotification } = useNotification();
@@ -42,7 +43,6 @@ export const usePlaylistData = (id: string | undefined) => {
 
   useEffect(() => {
     if (id) {
-      setIsLoading(true);
       handleGetPlaylistDetail(id)
         .then((data: PlaylistDetail | null) => {
           if (data) {
@@ -105,36 +105,29 @@ export const usePlaylistData = (id: string | undefined) => {
   }, [bulkDeleteMode, id, handleDeleteSongs, handleRemoveSongsFromPlaylist, showNotification, t]);
 
   const onImportFiles = useCallback(async () => {
-    setIsImporting(true);
-    try {
-      const res = await handleImportFiles();
-      if (res.success && res.count > 0) {
-        showNotification('success', t('playlist.importSuccess', { count: res.count }));
-        if (isLibrary && id) {
-          const updated = await handleGetPlaylistDetail(id);
-          if (updated) setLocalSongs(updated.songs);
-        }
+    const res = await handleImportFiles();
+    if (res.success && res.count > 0) {
+      const key = res.totalAttempted === 1 ? 'playlist.importSuccess_singleFile' : 'playlist.importSuccess_multiFile';
+      showNotification('success', t(key, { count: res.count }));
+      if (isLibrary && id) {
+        const updated = await handleGetPlaylistDetail(id);
+        if (updated) setLocalSongs(updated.songs);
       }
-    } finally {
-      setIsImporting(false);
     }
   }, [handleImportFiles, showNotification, t, isLibrary, id, handleGetPlaylistDetail]);
 
   const onImportFolder = useCallback(async () => {
-    setIsImporting(true);
-    try {
-      const res = await handleImportFolder();
-      if (res.success && res.count > 0) {
-        showNotification('success', t('playlist.scanSuccess', { count: res.count }));
-        if (isLibrary && id) {
-          const updated = await handleGetPlaylistDetail(id);
-          if (updated) setLocalSongs(updated.songs);
-        }
+    const res = await handleImportFolder();
+    if (res.success && res.count > 0) {
+      showNotification('success', t('playlist.importSuccess_singleFolder', { count: res.count }));
+      if (isLibrary && id) {
+        const updated = await handleGetPlaylistDetail(id);
+        if (updated) setLocalSongs(updated.songs);
       }
-    } finally {
-      setIsImporting(false);
     }
   }, [handleImportFolder, showNotification, t, isLibrary, id, handleGetPlaylistDetail]);
+
+
 
   const onAddSongsToPlaylist = useCallback(async (playlistId: string, songIds: string[]) => {
     const targetPlaylist = playlists.find((p: Playlist) => p.id === playlistId);

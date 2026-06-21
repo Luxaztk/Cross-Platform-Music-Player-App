@@ -16,7 +16,7 @@
     top: var(--spacing-md);
     left: var(--spacing-md);
     right: var(--spacing-md);
-    z-index: 5000;
+    z-index: var(--z-overlay);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -253,7 +253,7 @@
         pointer-events: none;
         transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-        z-index: 10;
+        z-index: var(--z-base);
 
         &:hover {
           background: var(--color-primary);
@@ -288,7 +288,7 @@
       padding: 6px 14px;
       transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
       position: relative;
-      z-index: 4999;
+      z-index: var(--z-tooltip);
 
       &:focus-within {
         background: rgba(255, 255, 255, 0.07);

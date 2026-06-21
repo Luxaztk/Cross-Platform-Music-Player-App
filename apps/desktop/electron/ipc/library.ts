@@ -4,7 +4,7 @@ import path from 'node:path';
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
 import { MainMetadataService } from '../infrastructure/MainMetadataService';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
-import type { Song, Playlist } from '@music/types';
+import type { Song, Playlist, SyncStats } from '@music/types';
 import { LibraryService, type IMetadataService, extractYoutubeId, getCanonicalYoutubeUrl } from '@music/core';
 import { getErrorMessage, normalizeString, logger } from '@music/utils';
 import { LyricsManager } from '../modules/lyrics/LyricsManager';
@@ -157,7 +157,7 @@ export function setupLibraryIPC() {
     await syncHistoryService.clearHistory();
   });
 
-  ipcMain.handle('library:logSyncEvent', async (_, stats: any, details: string[]) => {
+  ipcMain.handle('library:logSyncEvent', async (_, stats: SyncStats, details: string[]) => {
     await syncHistoryService.logEvent(stats, details);
   });
 
@@ -454,12 +454,20 @@ export function setupLibraryIPC() {
 
       // 1. Discovery
       const allFiles: string[] = [];
-      for (const dir of paths) {
+      for (const itemPath of paths) {
         try {
-          const files = await scanDirectory(dir);
-          allFiles.push(...files);
-        } catch (dirErr) {
-          logger.error(`[Library] Failed to scan directory: ${dir}`, dirErr);
+          const stat = await fs.stat(itemPath);
+          if (stat.isDirectory()) {
+            const files = await scanDirectory(itemPath);
+            allFiles.push(...files);
+          } else if (stat.isFile()) {
+            const ext = path.extname(itemPath).toLowerCase();
+            if (SUPPORTED_EXTENSIONS.includes(ext)) {
+              allFiles.push(itemPath);
+            }
+          }
+        } catch (err) {
+          logger.error(`[Library] Failed to process path: ${itemPath}`, err);
         }
       }
 

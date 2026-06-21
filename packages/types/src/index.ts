@@ -107,6 +107,7 @@ export interface SyncHistoryEntry {
 
 export const DOWNLOAD_STATUS = {
   IDLE: 'idle',
+  MODE_SELECTION: 'mode_selection',
   FETCHING: 'fetching',
   PREVIEW: 'preview',
   PENDING: 'pending',

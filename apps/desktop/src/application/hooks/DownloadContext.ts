@@ -28,7 +28,7 @@ export interface DownloadContextType {
     playlistTitle: string | null;
 
     // Actions
-    fetchInfo: (targetUrl?: string, source?: 'modal' | 'section') => Promise<{ success: boolean; hasWarning: boolean }>;
+    fetchInfo: (targetUrl?: string, source?: 'modal' | 'section', mode?: 'video' | 'playlist') => Promise<{ success: boolean; hasWarning: boolean; requiresChoice?: boolean }>;
     executeDownload: (forceDownload?: boolean) => Promise<boolean>;
     updateMetadata: (id: string, updatedData: Partial<DownloadItem>) => void;
     bulkUpdateMetadata: (updatedData: Partial<DownloadItem>) => void;

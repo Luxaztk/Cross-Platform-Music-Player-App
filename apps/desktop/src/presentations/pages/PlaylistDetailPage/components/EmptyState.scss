@@ -1,0 +1,108 @@
+.empty-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  width: 100%;
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  border: 2px dashed transparent;
+  transition: all 0.3s ease;
+  background-color: transparent;
+
+  &.dragging {
+    border-color: var(--color-primary);
+    background-color: rgba(var(--color-primary-rgb), 0.05);
+
+    .icon-wrapper {
+      transform: scale(1.1);
+      color: var(--color-primary);
+    }
+  }
+
+  .empty-state-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 500px;
+  }
+
+  .icon-wrapper {
+    color: var(--color-text-dim);
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+  }
+
+  h3 {
+    font-size: var(--font-size-xl);
+    color: var(--color-text-main);
+    margin: 0 0 12px 0;
+    font-weight: 600;
+  }
+
+  .subtitle {
+    font-size: var(--font-size-md);
+    color: var(--color-text-muted);
+    margin: 0 0 32px 0;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 48px;
+
+    .import-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      font-size: var(--font-size-base);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+
+      &.primary {
+        background-color: var(--color-primary);
+        color: var(--color-on-primary);
+
+        &:hover:not(:disabled) {
+          background-color: var(--color-primary-hover);
+          transform: translateY(-2px);
+        }
+      }
+
+      &.secondary {
+        background-color: var(--bg-surface);
+        color: var(--color-text-main);
+        border: 1px solid var(--border-color);
+
+        &:hover:not(:disabled) {
+          background-color: var(--bg-surface-hover);
+          transform: translateY(-2px);
+        }
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
+  }
+
+  .microcopy-tip {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-dim);
+    font-style: italic;
+    background-color: var(--bg-surface);
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+  }
+}

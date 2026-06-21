@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--spacing-md);
-  z-index: 100;
+  z-index: var(--z-player-bar);
   position: relative;
 
   input[type='range'].styled-range {
@@ -223,6 +223,8 @@
 
           &:hover:not(:disabled) {
             transform: scale(1.05);
+            background-color: var(--color-primary);
+            color: var(--color-inverse);
           }
 
           &:disabled {
@@ -295,7 +297,7 @@
       flex-direction: column;
       overflow: hidden;
       animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 1000;
+      z-index: var(--z-dropdown);
 
       .queue-header {
         padding: 20px;
@@ -412,7 +414,8 @@
       }
     }
 
-    .lyrics-toggle {
+    .lyrics-toggle,
+    .hotkeys-toggle {
       background: none;
       border: none;
       color: var(--color-text-dim);
@@ -457,7 +460,7 @@
   &.is-in-portal {
     width: 316px;
     pointer-events: none;
-    z-index: var(--z-index-dragging, 2100);
+    z-index: var(--z-dragging);
     position: fixed;
   }
 
@@ -500,7 +503,7 @@
       border-color: var(--color-primary-hover) !important;
       box-shadow: var(--shadow-lg);
       transform: scale(1.06) rotate(1.5deg);
-      z-index: var(--z-index-dragging-active, 2200);
+      z-index: calc(var(--z-dragging) + 1);
       pointer-events: auto;
 
       .drag-handle {

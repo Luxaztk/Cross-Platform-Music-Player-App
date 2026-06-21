@@ -34,6 +34,20 @@
 
   /* Component specific (Defaults) */
   --range-progress: 0%;
+
+  /* Z-Index Scale */
+  --z-behind: -1;
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-sidebar: 200;
+  --z-player-bar: 300;
+  --z-header: 400;
+  --z-dropdown: 500;
+  --z-overlay: 1000;
+  --z-modal: 2000;
+  --z-toast: 3000;
+  --z-tooltip: 4000;
+  --z-dragging: 5000;
 }
 
 %global-dropdown-surface {

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LibraryService } from '../LibraryService';
 import type { IStorageAdapter } from '../../interfaces/IStorageAdapter';
+import type { IMetadataService } from '../../interfaces/IMetadataService';
 import type { Song, Playlist, PlayerState, RecentSearch } from '@music/types';
 
 // Mock Storage Adapter for In-Memory testing
@@ -49,7 +50,7 @@ class MockStorageAdapter implements IStorageAdapter {
   }
 }
 
-class MockMetadataService {
+class MockMetadataService implements IMetadataService {
   async extract(filePath: string, sourceUrl?: string, originId?: string): Promise<Song | null> {
     // Trả về một song tối thiểu cho mục đích test
     return {
@@ -83,7 +84,7 @@ describe('LibraryService', () => {
   beforeEach(() => {
     adapter = new MockStorageAdapter();
     metadataService = new MockMetadataService();
-    service = new LibraryService(adapter, metadataService as any);
+    service = new LibraryService(adapter, metadataService);
 
     // Mock ID generation for deterministic testing
     let idCounter = 0;

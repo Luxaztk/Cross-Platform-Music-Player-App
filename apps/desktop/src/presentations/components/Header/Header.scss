@@ -159,7 +159,7 @@
         width: 250px;
         overflow: hidden;
         max-height: 80vh;
-        z-index: 9998;
+        z-index: var(--z-dropdown);
         padding: 0;
 
         .drilldown-slider {
@@ -266,6 +266,7 @@
           cursor: pointer;
 
           .lang-label {
+            position: relative;
             font-size: 9px;
             font-weight: 900;
             color: var(--color-text-dim);
@@ -277,7 +278,7 @@
           }
 
           &.vi .lang-label.vi,
-          &.en .lang-label.en { color: var(--color-inverse); }
+          &.en .lang-label.en { color: var(--color-on-primary); }
 
           .toggle-handle {
             position: absolute;

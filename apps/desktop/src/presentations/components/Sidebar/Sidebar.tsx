@@ -5,8 +5,7 @@ import type { Playlist } from '@music/types';
 import { type SidebarProps } from './types';
 import { useSidebar } from './useSidebar';
 
-import { PlaylistSection } from './components/PlaylistSection';
-import { SidebarMini } from './components/SidebarMini';
+import { PlaylistSection, SidebarMini, DidYouKnow } from './components';
 import './Sidebar.scss';
 
 const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) => {
@@ -56,6 +55,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                         appIcon={appIcon}
                         t={t}
                     />
+                    <DidYouKnow />
                 </nav>
             )}
 

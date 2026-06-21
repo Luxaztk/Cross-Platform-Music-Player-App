@@ -1,23 +1,25 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Play, PlaySquare, ListPlus, FolderPlus, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { Play, PlaySquare, ListPlus, FolderPlus, ChevronRight, Edit2, Trash2, Keyboard } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import type { Song, Playlist } from '@music/types';
-
+import { useHotkeysModal } from '@application/context/HotkeysContext';
 
 interface MenuActionProps {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
   className?: string;
+  shortcut?: string;
 }
 
-const MenuAction: React.FC<MenuActionProps> = ({ icon, label, onClick, className }) => (
+const MenuAction: React.FC<MenuActionProps> = ({ icon, label, onClick, className, shortcut }) => (
   <button className={`menu-item ${className || ''}`} onClick={onClick}>
     <div className="item-content">
       {icon}
       <span>{label}</span>
     </div>
+    {shortcut && <span className="menu-shortcut">{shortcut}</span>}
   </button>
 );
 
@@ -35,7 +37,7 @@ interface SongRowContextMenuProps {
     onEdit: () => void;
     onDelete: () => void;
     onSetSubMenu: (id: string | null) => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, string | number>) => string;
     menuRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -56,11 +58,13 @@ export const SongRowContextMenu: React.FC<SongRowContextMenuProps> = ({
     t,
     menuRef
 }) => {
+    const { openHotkeysModal } = useHotkeysModal();
+
     if (!isVisible || !song) return null;
 
     const menuStyle: React.CSSProperties = {
       position: 'fixed',
-      zIndex: 9999,
+      zIndex: 'var(--z-dropdown)',
       right: position.right,
       ...(position.placement === 'bottom'
         ? { top: position.top }
@@ -73,6 +77,7 @@ export const SongRowContextMenu: React.FC<SongRowContextMenuProps> = ({
           icon={<Play size={ICON_SIZES.XSMALL} />}
           label={t('playlist.playNow')}
           onClick={onPlay}
+          shortcut="Enter"
         />
         <MenuAction
           icon={<PlaySquare size={ICON_SIZES.XSMALL} />}
@@ -127,12 +132,22 @@ export const SongRowContextMenu: React.FC<SongRowContextMenuProps> = ({
           icon={<Edit2 size={ICON_SIZES.XSMALL} />}
           label={t('common.edit')}
           onClick={onEdit}
+          shortcut="F2"
         />
         <MenuAction
           icon={<Trash2 size={16} />}
           label={t('common.delete')}
           onClick={onDelete}
           className="delete"
+          shortcut="Del"
+        />
+
+        <div className="menu-divider"></div>
+        <MenuAction
+          icon={<Keyboard size={ICON_SIZES.XSMALL} />}
+          label={t('common.viewShortcuts')}
+          onClick={openHotkeysModal}
+          shortcut="Ctrl+/"
         />
       </div>,
       document.body,

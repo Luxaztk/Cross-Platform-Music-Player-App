@@ -45,7 +45,7 @@ declare global {
       scanMissingFiles: () => Promise<Song[]>
       runAutoImportScan: (
         paths: string[],
-      ) => Promise<{ added: number; migrated: number; totalScanned: number; details: string[] }>
+      ) => Promise<{ added: number; migrated: number; totalScanned: number; details: string[]; inputFoldersCount: number; inputFilesCount: number }>
       getLyrics: (songId: string) => Promise<string | null>
       saveLyrics: (songId: string, lyrics: string, lyricId?: number) => Promise<boolean>
       searchLyrics: (query: string) => Promise<LyricSearchResult[]>
@@ -85,8 +85,8 @@ declare global {
       openItemPath: (filePath: string) => Promise<void>
       openDownloadsFolder: () => Promise<void>
       deleteFile: (filePath: string) => Promise<{ success: boolean }>
-      getSettings: () => Promise<any>
-      saveSettings: (settings: any) => Promise<void>
+      getSettings: () => Promise<unknown>
+      saveSettings: (settings: unknown) => Promise<void>
       selectDirectory: (title?: string) => Promise<string | null>
       incrementLyricUsage: (id: string | number) => Promise<void>
       patchSong: (songId: string, updates: Partial<Song>) => Promise<Song | null>
@@ -108,6 +108,8 @@ declare global {
       logoutYoutube: () => Promise<void>
       getYoutubeAuthStatus: () => Promise<boolean>
       onYoutubeAuthRequired: (callback: (data: { url: string; id?: string }) => void) => () => void
+      getPathForFile: (file: File) => string
+      quitApp: () => Promise<void>
     }
   }
 

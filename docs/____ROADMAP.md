@@ -102,6 +102,7 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
     - [X] Cơ chế **Auto-Cleanup on Edit**: Tự động dọn dẹp trạng thái lỗi/cũ ngay khi người dùng chỉnh sửa URL trong ô nhập liệu.
 - [X] **Downloader UI Standardization (V5)**:
     - [X] Đồng bộ hóa giao diện thẻ xem trước (`DownloadPreviewCard`) trên toàn bộ ứng dụng, bổ sung thanh tiến trình và các chỉ báo trạng thái trực quan (Check, Spinner, Clock).
+    - [X] Bổ sung đầy đủ các khóa đa ngôn ngữ (i18n) cho trạng thái tải (`success`, `downloading`), khắc phục triệt để lỗi hiển thị Literal Key trên UI.
     - [X] Triển khai chế độ **Bulk Metadata Edit**: Hỗ trợ chỉnh sửa đồng loạt Nghệ sĩ và Album cho danh sách phát, tự động điền dữ liệu thông minh và tối ưu hóa diện tích hiển thị.
     - [X] Khóa tương tác chỉnh sửa khi đang tải để đảm bảo an toàn dữ liệu và tính nhất quán của ID3 Tags.
 - [X] **i18n & Developer Experience Hardening**:
@@ -116,6 +117,7 @@ Bản kế hoạch tổng thể cho dự án Melovista - Ưu tiên hoàn thiện
 - [X] **Hiệu ứng & Phân tích Âm thanh (Audio FX)**: Triển khai hệ thống Peak Meter (đo cường độ sóng âm thời gian thực theo chuẩn dBFS) và công cụ Test Sound trực tiếp trong Cài đặt.
 - [X] **Hệ thống Xác thực (Hybrid Auth)**: Tích hợp luồng đăng nhập YouTube (`YouTubeAuthService`) để xử lý và tải các luồng âm thanh bị giới hạn độ tuổi.
 - [X] **Cơ chế Hàng đợi Tải xuống (Queue-based Download)**: Tích hợp xử lý tải đồng thời (Concurrent Processing) và batch processing tải hàng loạt bài hát từ Playlist.
+- [X] **Tách Bạch Logic Tải Video vs Danh Sách Phát (Mode Selection)**: Tái cấu trúc cơ chế phân tích URL dựa trên `URLSearchParams`, tự động phát hiện đường dẫn hỗn hợp (v+list). Cung cấp giao diện Action Buttons liền mạch (Inline UX) ngay tại `DownloaderModal` và `SettingsSection` mà không gây nghẽn luồng người dùng.
 - [X] **Tách God Components**: Phân rã triệt để kiến trúc của `Header` và `SearchOverlay` thành các Modular Hooks và UI sub-components tách biệt theo chuẩn TDD.
 - [X] **Quản trị Hệ thống Cập nhật (Updater UI)**: Tích hợp giao diện quản lý Cập nhật tự động (Toggle Auto-Update) và kiểm tra thủ công (Manual Check) với hiệu ứng phản hồi trực quan ngay trong trang Cài đặt Chung.
 
@@ -168,7 +170,7 @@ Mục tiêu: Cung cấp các công cụ mạnh mẽ để quản lý và thưở
 - [X] **Tải xuống trực tuyến (Online Download)**: Hỗ trợ tải nhạc từ các nguồn online để sử dụng offline.
 - [X] **Lời bài hát (Lyrics)**: Tự động tìm kiếm và hiển thị lời bài hát (Local hoặc Online).
 - [X] **Biên tập Metadata (Ghi vào file nhạc)**: Hỗ trợ ghi đè trực tiếp ID3 tags vào file vật lý (.mp3, .flac...).
-- [X] **Multi-level Profile Menu**: Nâng cấp Header Profile Menu sang kiến trúc Drill-down (đa cấp). Khắc phục triệt để lỗi tràn layout (text wrap, overflow icon) và tối ưu chiều cao động (dynamic height), tuân thủ 100% hệ thống CSS Variables.
+- [X] **Multi-level Profile Menu**: Nâng cấp Header Profile Menu sang kiến trúc Drill-down (đa cấp). Khắc phục triệt để lỗi tràn layout (text wrap, overflow icon), tối ưu chiều cao động (dynamic height) và tích hợp chức năng Thoát an toàn (Quit) thông qua cầu nối IPC.
 
 ### 🔵 GIAI ĐOẠN 5: Tính Năng Mở Rộng (Future)
 
@@ -176,6 +178,19 @@ Mục tiêu: Bổ sung các trải nghiệm nâng cao và liên kết đám mây
 
 - [ ] **Bộ chỉnh âm nâng cao (Advanced Equalizer)**: Tính năng Equalizer và Visualizer chuyên sâu (Đã hoàn thành Peak Meter & Test Sound ở Phase trước).
 - [ ] **Đồng bộ hóa (Sync)**: Đồng bộ hóa thư viện Playlist và cấu hình sở thích người dùng qua mạng/cloud.
+
+### 📱 GIAI ĐOẠN 6: Melovista Mobile App (Expo)
+
+Mục tiêu: Đưa trải nghiệm Melovista lên nền tảng di động (Offline-first).
+
+- [X] **Core & Architecture**: Khởi tạo Expo app, cấu trúc Monorepo để tái sử dụng `@music/core`, cấu hình TypeScript/ESLint chặt chẽ.
+- [X] **App Shell Parity**: Hệ thống Navigation đa tầng (Bottom Bar + Sidebar), đồng bộ Theme system (Dark/Light) và i18n với Desktop.
+- [X] **Data Persistence**: Triển khai `MobileStorageAdapter` với `AsyncStorage` cho dữ liệu Library, Playlists, PlayerState.
+- [X] **Trình phát Audio Engine**: Trừu tượng hóa `PlayerEngine` và triển khai tích hợp `expo-audio` để phát nhạc offline trơn tru.
+- [X] **Quản lý Thư viện**: Tích hợp Document Picker cho phép người dùng import file MP3, quản lý Playlist (Tạo/Sửa/Xóa).
+- [X] **Mobile UI/UX Refinement**: Giao diện Bottom Bar navigation, màn hình Search dạng Top Bar, Toggle Language dạng segmented animated, và các tinh chỉnh "pixel-perfect" giống hệ thống Desktop.
+- [ ] **Phát nhạc dưới nền (Background Audio)**: Thiết lập EAS dev build để duy trì âm thanh khi đưa app vào Background.
+- [ ] **Lock Screen Controls**: Cấu hình Media controls trực tiếp vào giao diện màn hình khóa (System UI) của thiết bị.
 
 ---
 
@@ -219,7 +234,7 @@ Mục tiêu: Bảo vệ logic dự án bằng Unit Test toàn diện (Full Cover
 ### 5. Presentations (Giao diện & Thành phần)
 
 - [X] **CustomDropdown Component**: Thay thế toàn bộ `<select>` nguyên bản bằng kiến trúc Portal + ARIA accessibility (100% Coverage).
-- [X] **Settings Page Ecosystem**: Chuẩn hóa toàn bộ logic và giao diện các mục General, Appearance, Audio, Downloads.
+- [X] **Settings Page Ecosystem**: Chuẩn hóa toàn bộ logic và giao diện các mục General, Appearance, Audio, Downloads. Nâng cấp thiết kế màn hình About (tích hợp thực tế dữ liệu Môn học/Nhóm, gom nhóm tab Semester/Group thông minh), cơ chế Fallback Avatar và hoàn thiện đa ngôn ngữ (i18n).
 - [X] **Centralized Testing Architecture**: Di chuyển toàn bộ Unit Test sang thư mục `src/tests/` tập trung, gương mẫu kiến trúc production.
 - [X] **Search System TDD**:
   - [X] `searchUtils.test.ts`: Kiểm thử Smart Intent (Dấu tiếng Việt) và phân cụm bài hát.

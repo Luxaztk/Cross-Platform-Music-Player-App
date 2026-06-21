@@ -70,6 +70,20 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                 </button>
             </div>
 
+            {manager.downloadState === DOWNLOAD_STATUS.MODE_SELECTION && (
+                <div className="downloader-mode-selection" style={{ marginTop: '12px', padding: '16px', background: 'var(--bg-surface-elevated)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>{t('downloader.choiceRequired')}</p>
+                    <div className="action-buttons horizontal" style={{ gap: '10px' }}>
+                        <button type="button" className="primary-btn" onClick={() => manager.fetchInfo(manager.url, 'section', 'video')} style={{ flex: 1 }}>
+                            {t('downloader.downloadVideoOnly')}
+                        </button>
+                        <button type="button" className="secondary-btn" onClick={() => manager.fetchInfo(manager.url, 'section', 'playlist')} style={{ flex: 1 }}>
+                            {t('downloader.downloadPlaylist')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {manager.previewItems.length > 0 && (
                 <div className="downloader-result-area">
                     <div className="preview-items-list" style={{ maxHeight: '600px', overflowY: 'auto', marginBottom: '12px' }}>

@@ -10,11 +10,13 @@ import { useAppShell } from './AppShell'
 
 type FeatherName = ComponentProps<typeof Feather>['name']
 
+import type { ThemeTokens } from './Theme/tokens'
+
 type IconButtonProps = {
   icon: FeatherName
   onPress: () => void
   label: string
-  theme: any // Will refine in next step, just to pass theme
+  theme: ThemeTokens
 }
 
 const IconButton = ({ icon, onPress, label, theme }: IconButtonProps) => (

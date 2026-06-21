@@ -58,7 +58,7 @@ export interface UsePlaylistDetailReturn {
     addToQueue: (song: Song) => void;
   };
   utils: {
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, string | number>) => string;
     appIcon: string;
     playlists: Playlist[];
     allSongs: Song[];
@@ -82,20 +82,20 @@ export interface PlaylistHeaderProps {
     onImportFolder: () => void;
     onAddFromSystem: () => void;
     onEditPlaylist: () => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, string | number>) => string;
 }
 
 export interface FilterChipsProps {
     filter: { type: 'artist' | 'album' | 'none'; values: string[] };
     onRemoveTag: (val: string) => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, string | number>) => string;
 }
 
 export interface SongListHeaderProps {
     isSticky: boolean;
     isSelectedAll: boolean;
     onToggleSelectAll: () => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, string | number>) => string;
 }
 
 export interface VirtualSongListProps {
@@ -108,6 +108,7 @@ export interface VirtualSongListProps {
     selectedIds: Set<string>;
     currentSongId?: string;
     activeMenuId: string | null;
+    isImporting: boolean;
     playlists: Playlist[];
     currentPlaylistId?: string;
     appIcon: string;
@@ -121,7 +122,9 @@ export interface VirtualSongListProps {
     onDelete: (song: Song) => void;
     onToggleFilter: (type: 'artist' | 'album', value: string) => void;
     onToggleMenu: (sid: string, e: React.MouseEvent) => void;
-    t: (key: string, options?: any) => string;
+    onImportFiles?: () => Promise<void>;
+    onImportFolder?: () => Promise<void>;
+    t: (key: string, options?: Record<string, string | number>) => string;
 }
 
 export interface BulkActionsBarProps {
@@ -130,5 +133,5 @@ export interface BulkActionsBarProps {
     onBulkDelete: (mode: 'library' | 'playlist') => void;
     onBulkAddToQueue: () => void;
     onCancel: () => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, string | number>) => string;
 }

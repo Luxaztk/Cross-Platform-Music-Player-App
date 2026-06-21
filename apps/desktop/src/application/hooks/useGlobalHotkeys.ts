@@ -1,21 +1,17 @@
 import { useEffect, useCallback } from 'react';
 import { usePlayer } from '@music/hooks';
+import { useHotkeysModal } from '../context/HotkeysContext';
 
 interface UseGlobalHotkeysProps {
   onToggleFullscreen?: () => void;
   onToggleVisualizer?: () => void;
-  onOpenHotkeysModal: () => void;
-  onCloseHotkeysModal: () => void;
-  isHotkeysModalOpen: boolean;
 }
 
 export const useGlobalHotkeys = ({
   onToggleFullscreen,
   onToggleVisualizer,
-  onOpenHotkeysModal,
-  onCloseHotkeysModal,
-  isHotkeysModalOpen,
-}: UseGlobalHotkeysProps) => {
+}: UseGlobalHotkeysProps = {}) => {
+  const { isHotkeysModalOpen, openHotkeysModal, closeHotkeysModal } = useHotkeysModal();
   const {
     play,
     pause,
@@ -30,7 +26,6 @@ export const useGlobalHotkeys = ({
     duration,
     volume,
     repeatMode,
-    isShuffle,
   } = usePlayer();
 
   const handleKeyDown = useCallback(
@@ -133,16 +128,34 @@ export const useGlobalHotkeys = ({
             (activeElement as HTMLElement).blur();
           }
           if (isHotkeysModalOpen) {
-            onCloseHotkeysModal();
+            closeHotkeysModal();
+          }
+          break;
+
+        case 'F1':
+          e.preventDefault();
+          if (isHotkeysModalOpen) {
+            closeHotkeysModal();
+          } else {
+            openHotkeysModal();
           }
           break;
 
         case '/': {
-          e.preventDefault();
-          // Focus search input - assuming there's a search input with id 'search-input'
-          const searchInput = document.getElementById('search-input') as HTMLInputElement;
-          if (searchInput) {
-            searchInput.focus();
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            if (isHotkeysModalOpen) {
+              closeHotkeysModal();
+            } else {
+              openHotkeysModal();
+            }
+          } else {
+            e.preventDefault();
+            // Focus search input - assuming there's a search input with id 'search-input'
+            const searchInput = document.getElementById('search-input') as HTMLInputElement;
+            if (searchInput) {
+              searchInput.focus();
+            }
           }
           break;
         }
@@ -150,7 +163,11 @@ export const useGlobalHotkeys = ({
         case '?':
           if (e.shiftKey) {
             e.preventDefault();
-            onOpenHotkeysModal();
+            if (isHotkeysModalOpen) {
+              closeHotkeysModal();
+            } else {
+              openHotkeysModal();
+            }
           }
           break;
 
@@ -164,7 +181,6 @@ export const useGlobalHotkeys = ({
       duration,
       volume,
       repeatMode,
-      isShuffle,
       play,
       pause,
       next,
@@ -175,9 +191,9 @@ export const useGlobalHotkeys = ({
       toggleShuffle,
       onToggleFullscreen,
       onToggleVisualizer,
-      onOpenHotkeysModal,
-      onCloseHotkeysModal,
       isHotkeysModalOpen,
+      openHotkeysModal,
+      closeHotkeysModal,
     ]
   );
 

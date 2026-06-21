@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Animated, Easing, Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
@@ -35,7 +35,7 @@ function SegmentedToggle<T extends string>({
   itemWidth = SEGMENT_ITEM_WIDTH,
   colors,
 }: SegmentedToggleProps<T>) {
-  const translateX = useRef(new Animated.Value(0)).current
+  const [translateX] = useState(() => new Animated.Value(0))
 
   const activeIndex = Math.max(
     0,
