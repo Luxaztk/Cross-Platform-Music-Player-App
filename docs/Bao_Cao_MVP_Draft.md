@@ -1,4 +1,4 @@
-# Báo Cáo Phát Triển Ứng Dụng (Draft) - Dự Án MeloVista (MVP)
+# Báo Cáo Phát Triển Ứng Dụng (Draft) - Dự Án MeloVista (MVP)
 
 > **Lưu ý**: Dữ liệu được trích xuất hoàn toàn dựa trên thực tế từ mã nguồn (source code) của dự án. Không bao gồm các tính năng ngoài lề MVP.
 > Bản báo cáo này đã được cập nhật với trạng thái mới nhất của dự án, phản ánh đầy đủ quy trình Test-Driven Development (TDD) khắt khe và hệ thống kiến trúc Clean Architecture được áp dụng.
@@ -9,12 +9,12 @@
 
 ### Bảng 1.2 & 13. Phân công công việc
 
-| Thành viên | Vai trò | Module phụ trách (MVP) | Phạm vi Test Case phụ trách |
-| :--- | :--- | :--- | :--- |
-| **Thành viên A** | Lead Developer | - Tương tác Electron API (`ElectronStorageAdapter`).<br>- Core logic Audio Player (`AudioEngine`).<br>- Tải/ghi metadata YouTube (`youtube.ts`).<br>- Xử lý phát hiện trùng lặp nâng cao (Duplicate Detection).<br>- Tối ưu Virtualization cho Playlist lớn. | Hơn 20 test cases logic cốt lõi tại `core` và `player`, đảm bảo tính ổn định của hệ thống nhận diện file, bắt lỗi audio và đồng bộ tiến trình. |
-| **Thành viên B** | Developer | - Dựng UI Component Cấu hình (`SettingsPage`, `AppearanceSection`, `AudioSection`, `DownloadSection`, `GeneralSection`).<br>- Tích hợp màn hình About với hiệu ứng Glassmorphism & đa ngôn ngữ (i18n).<br>- Quản lý state ngôn ngữ và giao diện (`LanguageProvider`). | Phụ trách vòng lặp TDD (Test-Driven Development) khắt khe cho UI Settings, Reactivity Check và Language Context, bao phủ UI components. |
-| **Thành viên C** | Developer | - Dựng UI Overlay/Notification (`SearchOverlay`, `Notification`, `DuplicateResolutionModal`).<br>- Quản lý Header, PlayerBar, và Sidebar. | Đảm nhận UI/UX Test Cases (Trạng thái Empty của Search, Notification Queue, PlayerBar interaction). |
-| **Thành viên D** | Developer | - Dựng Lyrics View (`LyricsPanel`) & CRUD danh sách phát (`PlaylistUseCases`, `SongUseCases`).<br>- Components tương tác trực tiếp danh sách (`SongRow`, Modal Xóa/Sửa). | UI Component Tests và Unit Tests cho Lyrics, Use Cases cơ bản, parse/normalize ký tự tiếng Việt. |
+| STT | Họ và tên | MSSV | Vai trò | Module phụ trách (MVP) | Phạm vi Test Case phụ trách |
+| :---: | :--- | :---: | :--- | :--- | :--- |
+| 1 | **Nguyễn Hồng Vân** | 20231649 | Developer | - CRUD danh sách phát (`PlaylistUseCases`, `SongUseCases`).<br>- Quản lý thư viện bài hát (Thêm/Xóa/Sửa metadata).<br>- Hệ thống nhận diện trùng lặp nâng cao (`LibraryService`, Duplicate Detection).<br>- Tối ưu hiển thị danh sách lớn (List Virtualization). | Phụ trách các test cases liên quan đến `LibraryService` (TC01–TC04, TC19–TC20) và `PlaylistUseCases` (TC06–TC07), đảm bảo tính toàn vẹn dữ liệu thư viện và danh sách phát. |
+| 2 | **Chử Văn Lộc** | 20221860 | Developer | - Hệ thống tải xuống (`DownloaderModal`, `DownloadProvider`).<br>- Quản lý hàng đợi tải (`DownloadQueue`).<br>- Dựng UI Overlay/Notification (`SearchOverlay`, `Notification`, `DuplicateResolutionModal`).<br>- Quản lý Header và Sidebar. | Đảm nhận UI/UX Test Cases cho luồng Downloader, trạng thái Empty của Search (TC14), Notification Queue, PlayerBar interaction (TC15–TC18). |
+| 3 | **Đỗ Nguyễn Việt Hoàng** | 20231590 | Developer | - Dựng UI Component Cấu hình (`SettingsPage`, `AppearanceSection`, `AudioSection`, `DownloadSection`, `GeneralSection`).<br>- Quản lý Cấu hình & Giao diện ứng dụng (Theme, Language, i18n).<br>- Tích hợp màn hình About với hiệu ứng Glassmorphism & đa ngôn ngữ.<br>- Quản lý state ngôn ngữ và giao diện (`LanguageProvider`). | Phụ trách vòng lặp TDD khắt khe cho UI Settings, Reactivity Check và Language Context (TC10–TC13), bao phủ đầy đủ UI components cấu hình. |
+| 4 | **Trần Công Minh** | 20231611 | Lead Developer | - Core logic Audio Player (`AudioEngine`, `packages/player`).<br>- Tương tác Electron API (`ElectronStorageAdapter`).<br>- Tải/ghi metadata YouTube (`youtube.ts`).<br>- Dựng Lyrics View (`LyricsPanel`) & xử lý lyrics (`lyrics.ts`).<br>- Tiện ích format chuỗi (`format.ts`). | Hơn 10 test cases logic cốt lõi tại `core`, `player` và `utils` (TC05, TC08–TC09) và xử lý YouTube URL (TC05), đảm bảo tính ổn định audio engine và đồng bộ lyrics. |
 
 ---
 
@@ -26,24 +26,25 @@ Dự án áp dụng nguyên tắc **"Không Thỏa Hiệp" (Unforgiving Assertio
 
 | TC ID | Tên test case | Layer | Component / Hàm được test | Kết quả đạt được | Người phụ trách |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| TC01 | Detect duplicate by Perceptual Hash - Tiered Logic | Application | `LibraryService` | Phát hiện trùng lặp file âm thanh dựa trên thuật toán Hash và thời lượng (Dynamic Tolerance). | Thành viên A |
-| TC02 | Match Vietnamese titles with accents | Application | `LibraryService` | Xử lý nhận dạng đúng metadata Tiếng Việt có dấu và chuẩn hóa Unicode. | Thành viên A |
-| TC03 | Self-Match Guard for same File Path | Application | `LibraryService` | Cập nhật file thay vì báo lỗi trùng lặp khi ghi đè cùng đường dẫn. | Thành viên A |
-| TC04 | Add/Remove songs to/from playlist | Application | `LibraryService` / `PlaylistUseCases` | Gọi phương thức thao tác danh sách và lưu trữ thành công vào Database. | Thành viên D |
-| TC05 | Core Functionality Tracking & State Emit | Infrastructure | `AudioEngine` | Cập nhật chính xác tiến trình phát audio và phát event state. | Thành viên A |
-| TC06 | Normalize Vietnamese characters to NFC | Application | `lyrics.ts / normalizeNFC` | Trả về chuỗi NFC chuẩn cho Unicode tiếng Việt khi tìm kiếm lyrics. | Thành viên D |
-| TC07 | Extract ID from standard URLs | Infrastructure | `youtube.ts / extractYoutubeId` | Tách chính xác ID video từ mọi định dạng link YouTube (sạch/bẩn). | Thành viên A |
-| TC08 | SearchOverlay Empty State Test | Presentation | `SearchOverlay.test.tsx` | Hiển thị chính xác thông báo khi người dùng không nhập văn bản. | Thành viên C |
-| TC09 | STRICT: UI label reflects settings state changes | Presentation | `GeneralSection.test.tsx` | Nhãn ngôn ngữ trên UI phản ánh tức thì khi thay đổi Settings State (Reactivity Check). | Thành viên B |
-| TC10 | AudioSection render and input behaviors | Presentation | `AudioSection.test.tsx` | Dropdown Output Device và thanh trượt Volume phản hồi sự kiện DOM thực tế (user-event). | Thành viên B |
-| TC11 | DeleteConfirmationModal accessibility | Presentation | `DeleteConfirmationModal.test.tsx`| Phản hồi đúng phím Esc, nút Hủy, và nút Xóa với real DOM testing. | Thành viên C |
-| TC12 | HotkeysModal render and key capturing | Presentation | `HotkeysModal.test.tsx` | Bắt và lưu cấu hình phím tắt toàn cục một cách chính xác. | Thành viên C |
+| TC01 | Detect duplicate by Perceptual Hash - Tiered Logic | Application | `LibraryService` | Phát hiện trùng lặp file âm thanh dựa trên thuật toán Hash và thời lượng (Dynamic Tolerance). | Nguyễn Hồng Vân |
+| TC02 | Match Vietnamese titles with accents | Application | `LibraryService` | Xử lý nhận dạng đúng metadata Tiếng Việt có dấu và chuẩn hóa Unicode. | Nguyễn Hồng Vân |
+| TC03 | Self-Match Guard for same File Path | Application | `LibraryService` | Cập nhật file thay vì báo lỗi trùng lặp khi ghi đè cùng đường dẫn. | Nguyễn Hồng Vân |
+| TC04 | Add/Remove songs to/from playlist | Application | `LibraryService` / `PlaylistUseCases` | Gọi phương thức thao tác danh sách và lưu trữ thành công vào Database. | Nguyễn Hồng Vân |
+| TC05 | Core Functionality Tracking & State Emit | Infrastructure | `AudioEngine` | Cập nhật chính xác tiến trình phát audio và phát event state. | Trần Công Minh |
+| TC06 | Normalize Vietnamese characters to NFC | Application | `lyrics.ts / normalizeNFC` | Trả về chuỗi NFC chuẩn cho Unicode tiếng Việt khi tìm kiếm lyrics. | Trần Công Minh |
+| TC07 | Extract ID from standard URLs | Infrastructure | `youtube.ts / extractYoutubeId` | Tách chính xác ID video từ mọi định dạng link YouTube (sạch/bẩn). | Trần Công Minh |
+| TC08 | SearchOverlay Empty State Test | Presentation | `SearchOverlay.test.tsx` | Hiển thị chính xác thông báo khi người dùng không nhập văn bản. | Chử Văn Lộc |
+| TC09 | STRICT: UI label reflects settings state changes | Presentation | `GeneralSection.test.tsx` | Nhãn ngôn ngữ trên UI phản ánh tức thì khi thay đổi Settings State (Reactivity Check). | Đỗ Nguyễn Việt Hoàng |
+| TC10 | AudioSection render and input behaviors | Presentation | `AudioSection.test.tsx` | Dropdown Output Device và thanh trượt Volume phản hồi sự kiện DOM thực tế (user-event). | Đỗ Nguyễn Việt Hoàng |
+| TC11 | DeleteConfirmationModal accessibility | Presentation | `DeleteConfirmationModal.test.tsx`| Phản hồi đúng phím Esc, nút Hủy, và nút Xóa với real DOM testing. | Chử Văn Lộc |
+| TC12 | HotkeysModal render and key capturing | Presentation | `HotkeysModal.test.tsx` | Bắt và lưu cấu hình phím tắt toàn cục một cách chính xác. | Chử Văn Lộc |
 
 > **Tổng quan Test Coverage**: Hệ thống hiện sở hữu hơn **50+ Unit Tests** trải dài từ `packages/core`, `packages/hooks`, `packages/player`, `packages/utils` cho đến `apps/desktop/src/tests/...`.
 
 ---
 
 ## 3. Code Smell & Refactoring (Clean Architecture)
+
 
 Dự án chú trọng tái cấu trúc liên tục nhằm đảm bảo nguyên tắc DRY và SoC (Separation of Concerns).
 
@@ -104,26 +105,26 @@ Tổng cộng dự án đã xây dựng hàng chục Test Cases chạy ngầm. D
 
 | TC ID | Tên test case | Layer | Hàm/lớp được test | Dữ liệu vào | Kết quả mong đợi | Người phụ trách | Trạng thái |
 |---|---|---|---|---|---|---|---|
-| TC01 | Detect duplicate by Hash | Domain/Service | `LibraryService` | 2 file âm thanh cùng dấu vân tay hash | Chặn import và cảnh báo trùng lặp | Thành viên A | Pass |
-| TC02 | Match Vietnamese accents | Domain/Service | `LibraryService` | File nhạc chứa Unicode tiếng Việt | Chuẩn hóa NFC và nhận diện đúng | Thành viên A | Pass |
-| TC03 | Self-Match Guard | Domain/Service | `LibraryService` | Cùng một đường dẫn file đang tồn tại | Cập nhật metadata thay vì báo lỗi | Thành viên A | Pass |
-| TC04 | Windows path casing guard | Domain/Service | `LibraryService` | `C:\a.mp3` và `c:\a.mp3` | Nhận dạng là chung 1 file | Thành viên A | Pass |
-| TC05 | Extract ID from standard URLs | Domain/Service | `youtube.ts` | `https://youtube.com/watch?v=123` | String `123` | Thành viên A | Pass |
-| TC06 | Add songs to playlist | Domain/Service | `PlaylistUseCases` | `addSong` với PlaylistID và SongID | Trả về state Playlist mới đã có nhạc | Thành viên D | Pass |
-| TC07 | Remove songs from playlist | Domain/Service | `PlaylistUseCases` | `removeSong` | Bài hát bị xóa khỏi array của Playlist | Thành viên D | Pass |
-| TC08 | Normalize Vietnamese NFC | Domain/Service | `lyrics.ts` | Chuỗi NFD lỗi | Chuỗi chuẩn NFC | Thành viên D | Pass |
-| TC09 | Format time strings (mm:ss) | Domain/Service | `format.ts` | `125` (giây) | Chuỗi `02:05` | Thành viên D | Pass |
-| TC10 | Language changes reactivity | Presentation | `GeneralSection.tsx`| Thay Dropdown thành 'en-US' | Toàn bộ nhãn text UI đổi ngôn ngữ | Thành viên B | Pass |
-| TC11 | Theme fallback default | Domain/Service | `useTheme.ts` | Theme lỗi không parse được JSON | Fallback về Dark Theme an toàn | Thành viên B | Pass |
-| TC12 | Dropdown Output Device | Presentation | `AudioSection.tsx` | Chọn thiết bị xuất âm thanh khác | Trả DeviceID mới vào hệ thống | Thành viên B | Pass |
-| TC13 | DuplicateResolution Apply | Presentation | `DuplicateResolutionModal.tsx`| Bấm `Apply` khi có >0 resolved | Đẩy lệnh resolve lên Database | Thành viên B | Pass |
-| TC14 | Search empty state | Presentation | `SearchOverlay.tsx` | Ô Input rỗng | Hiển thị nhắc nhở 'Nhập từ khóa...' | Thành viên C | Pass |
-| TC15 | DeleteConfirmationModal Esc | Presentation | `DeleteConfirmationModal.tsx`| Nhấn phím Escape | Đóng Modal, hàm `onClose` chạy | Thành viên C | Pass |
-| TC16 | HotkeysModal keybindings | Presentation | `HotkeysModal.tsx` | Bấm tổ hợp `Ctrl+Shift+N` | Lưu phím tắt chuẩn `CmdOrCtrl...` | Thành viên C | Pass |
-| TC17 | PlayerBar playback toggle | Presentation | `PlayerBar.tsx` | Click Play/Pause | Toggle icon và trigger event `play` | Thành viên C | Pass |
-| TC18 | Sidebar collapse UI | Presentation | `Sidebar.tsx` | Thay đổi state collapsed | Thu nhỏ/phóng to các item đúng CSS | Thành viên C | Pass |
-| TC19 | Empty metadata guard | Domain/Service | `LibraryService` | File rỗng tiêu đề | Không nhận dạng sai là trùng lặp | Thành viên A | Pass |
-| TC20 | Dynamic tolerance length | Domain/Service | `LibraryService` | 2 bài chênh nhau 10 giây | Vẫn detect hash thành công | Thành viên A | Pass |
+| TC01 | Detect duplicate by Hash | Domain/Service | `LibraryService` | 2 file âm thanh cùng dấu vân tay hash | Chặn import và cảnh báo trùng lặp | Nguyễn Hồng Vân | Pass |
+| TC02 | Match Vietnamese accents | Domain/Service | `LibraryService` | File nhạc chứa Unicode tiếng Việt | Chuẩn hóa NFC và nhận diện đúng | Nguyễn Hồng Vân | Pass |
+| TC03 | Self-Match Guard | Domain/Service | `LibraryService` | Cùng một đường dẫn file đang tồn tại | Cập nhật metadata thay vì báo lỗi | Nguyễn Hồng Vân | Pass |
+| TC04 | Windows path casing guard | Domain/Service | `LibraryService` | `C:\a.mp3` và `c:\a.mp3` | Nhận dạng là chung 1 file | Nguyễn Hồng Vân | Pass |
+| TC05 | Extract ID from standard URLs | Domain/Service | `youtube.ts` | `https://youtube.com/watch?v=123` | String `123` | Trần Công Minh | Pass |
+| TC06 | Add songs to playlist | Domain/Service | `PlaylistUseCases` | `addSong` với PlaylistID và SongID | Trả về state Playlist mới đã có nhạc | Nguyễn Hồng Vân | Pass |
+| TC07 | Remove songs from playlist | Domain/Service | `PlaylistUseCases` | `removeSong` | Bài hát bị xóa khỏi array của Playlist | Nguyễn Hồng Vân | Pass |
+| TC08 | Normalize Vietnamese NFC | Domain/Service | `lyrics.ts` | Chuỗi NFD lỗi | Chuỗi chuẩn NFC | Trần Công Minh | Pass |
+| TC09 | Format time strings (mm:ss) | Domain/Service | `format.ts` | `125` (giây) | Chuỗi `02:05` | Trần Công Minh | Pass |
+| TC10 | Language changes reactivity | Presentation | `GeneralSection.tsx`| Thay Dropdown thành 'en-US' | Toàn bộ nhãn text UI đổi ngôn ngữ | Đỗ Nguyễn Việt Hoàng | Pass |
+| TC11 | Theme fallback default | Domain/Service | `useTheme.ts` | Theme lỗi không parse được JSON | Fallback về Dark Theme an toàn | Đỗ Nguyễn Việt Hoàng | Pass |
+| TC12 | Dropdown Output Device | Presentation | `AudioSection.tsx` | Chọn thiết bị xuất âm thanh khác | Trả DeviceID mới vào hệ thống | Đỗ Nguyễn Việt Hoàng | Pass |
+| TC13 | DuplicateResolution Apply | Presentation | `DuplicateResolutionModal.tsx`| Bấm `Apply` khi có >0 resolved | Đẩy lệnh resolve lên Database | Đỗ Nguyễn Việt Hoàng | Pass |
+| TC14 | Search empty state | Presentation | `SearchOverlay.tsx` | Ô Input rỗng | Hiển thị nhắc nhở 'Nhập từ khóa...' | Chử Văn Lộc | Pass |
+| TC15 | DeleteConfirmationModal Esc | Presentation | `DeleteConfirmationModal.tsx`| Nhấn phím Escape | Đóng Modal, hàm `onClose` chạy | Chử Văn Lộc | Pass |
+| TC16 | HotkeysModal keybindings | Presentation | `HotkeysModal.tsx` | Bấm tổ hợp `Ctrl+Shift+N` | Lưu phím tắt chuẩn `CmdOrCtrl...` | Chử Văn Lộc | Pass |
+| TC17 | PlayerBar playback toggle | Presentation | `PlayerBar.tsx` | Click Play/Pause | Toggle icon và trigger event `play` | Chử Văn Lộc | Pass |
+| TC18 | Sidebar collapse UI | Presentation | `Sidebar.tsx` | Thay đổi state collapsed | Thu nhỏ/phóng to các item đúng CSS | Chử Văn Lộc | Pass |
+| TC19 | Empty metadata guard | Domain/Service | `LibraryService` | File rỗng tiêu đề | Không nhận dạng sai là trùng lặp | Nguyễn Hồng Vân | Pass |
+| TC20 | Dynamic tolerance length | Domain/Service | `LibraryService` | 2 bài chênh nhau 10 giây | Vẫn detect hash thành công | Nguyễn Hồng Vân | Pass |
 
 ### 9.4. Cấu trúc thư mục test
 
