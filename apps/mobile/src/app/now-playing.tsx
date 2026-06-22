@@ -6,14 +6,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useTheme } from '../presentations/components/Theme'
 import { usePlayerState, usePlayerProgress } from '../application/player'
+import { useLanguage } from '../presentations/components/Language'
 import { formatTime } from '../presentations/player/format'
 import { QueueModal } from '../presentations/player/QueueModal'
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import Feather from '@expo/vector-icons/Feather'
 
 export default function NowPlayingScreen() {
   const { theme } = useTheme()
+  const { t } = useLanguage()
   const insets = useSafeAreaInsets()
 
   const {
@@ -93,7 +95,7 @@ export default function NowPlayingScreen() {
             },
           ]}
         >
-          <Feather name="disc" size={20} color={theme.colors.text} />
+          <Feather name="more-vertical" size={20} color={theme.colors.text} />
         </Pressable>
       </View>
 
@@ -141,6 +143,25 @@ export default function NowPlayingScreen() {
             {currentSong.album}
           </Text>
         ) : null}
+      </View>
+
+      {/* Action buttons */}
+      <View style={styles.actionButtons}>
+        <Pressable
+          style={[styles.actionBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+          hitSlop={10}
+        >
+          <Feather name="music" size={18} color={theme.colors.primary} />
+          <Text style={[styles.actionBtnText, { color: theme.colors.text }]}>Lyrics</Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.actionBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+          hitSlop={10}
+        >
+          <Feather name="plus" size={18} color={theme.colors.primary} />
+          <Text style={[styles.actionBtnText, { color: theme.colors.text }]}>Add to Playlist</Text>
+        </Pressable>
       </View>
 
       {/* Seek bar */}
@@ -326,6 +347,24 @@ const styles = StyleSheet.create({
     gap: 6,
     alignItems: 'center',
     paddingHorizontal: 8,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'center',
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  actionBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   title: {
     fontSize: 24,

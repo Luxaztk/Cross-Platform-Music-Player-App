@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import {
   Modal,
   StyleSheet,
@@ -9,9 +9,12 @@ import {
   Platform,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { router } from 'expo-router'
+import Feather from '@expo/vector-icons/Feather'
 
 import { usePlayerState, type QueueItem } from '../../application/player'
 import { useTheme } from '../components/Theme'
+import { useLanguage } from '../components/Language'
 import { useLibrary } from '../../application/library/LibraryProvider'
 
 interface QueueModalProps {
@@ -21,16 +24,32 @@ interface QueueModalProps {
 
 export function QueueModal({ visible, onClose }: QueueModalProps) {
   const { theme } = useTheme()
+  const { t } = useLanguage()
   const insets = useSafeAreaInsets()
   const { queueItems, removeFromQueue, reorderQueue, clearQueue } = usePlayerState()
   const { songsById } = useLibrary()
+
+  const handleClearQueue = useCallback(async () => {
+    await clearQueue()
+    onClose()
+    // Navigate back to previous page
+    router.back()
+  }, [clearQueue, onClose])
+
+  const handlePlaySong = useCallback((index: number) => {
+    // Implementation for playing a song from queue at specific index
+    // This would typically update the player state
+  }, [])
 
   const renderItem = ({ item, index }: { item: QueueItem; index: number }) => {
     const song = songsById[item.id]
     if (!song) return null
 
     return (
-      <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
+      <Pressable
+        onPress={() => handlePlaySong(index)}
+        style={[styles.item, { borderBottomColor: theme.colors.border }]}
+      >
         <View style={styles.itemInfo}>
           <Text style={[styles.itemTitle, { color: theme.colors.text }]} numberOfLines={1}>
             {song.title}
@@ -47,7 +66,7 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
                 onPress={() => void reorderQueue(index, index - 1)}
                 style={[styles.reorderBtn, { backgroundColor: theme.colors.surface }]}
               >
-                <Text style={{ color: theme.colors.text, fontSize: 18 }}>↑</Text>
+                <Feather name="chevron-up" size={16} color={theme.colors.text} />
               </Pressable>
             )}
             {index < queueItems.length - 1 && (
@@ -55,7 +74,7 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
                 onPress={() => void reorderQueue(index, index + 1)}
                 style={[styles.reorderBtn, { backgroundColor: theme.colors.surface }]}
               >
-                <Text style={{ color: theme.colors.text, fontSize: 18 }}>↓</Text>
+                <Feather name="chevron-down" size={16} color={theme.colors.text} />
               </Pressable>
             )}
           </View>
@@ -63,10 +82,10 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
             onPress={() => void removeFromQueue(index)}
             style={styles.removeBtn}
           >
-            <Text style={{ color: '#ff4444', fontSize: 20 }}>✕</Text>
+            <Feather name="x" size={20} color="#ff4444" />
           </Pressable>
         </View>
-      </View>
+      </Pressable>
     )
   }
 
@@ -87,24 +106,30 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
         ]}
       >
         <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Danh sách chờ</Text>
+          <View style={styles.headerLeft}>
+            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Up Next</Text>
+            <Text style={[styles.queueCount, { color: theme.colors.mutedText }]}>
+              {queueItems.length} {queueItems.length === 1 ? 'song' : 'songs'}
+            </Text>
+          </View>
           
           <View style={styles.headerActions}>
             {queueItems.length > 0 && (
-              <Pressable onPress={() => void clearQueue()} style={styles.clearBtn}>
-                <Text style={{ color: '#ff4444', fontWeight: '600' }}>Xóa hết</Text>
+              <Pressable onPress={handleClearQueue} style={styles.clearBtn}>
+                <Feather name="trash-2" size={20} color="#ff4444" />
               </Pressable>
             )}
             <Pressable onPress={onClose} style={styles.closeBtn}>
-              <Text style={[styles.closeText, { color: theme.colors.primary }]}>Đóng</Text>
+              <Feather name="x" size={24} color={theme.colors.text} />
             </Pressable>
           </View>
         </View>
 
         {queueItems.length === 0 ? (
           <View style={styles.emptyState}>
+            <Feather name="list" size={48} color={theme.colors.mutedText} />
             <Text style={[styles.emptyText, { color: theme.colors.mutedText }]}>
-              Hàng đợi đang trống
+              Queue is empty
             </Text>
           </View>
         ) : (
@@ -128,16 +153,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    height: 60,
+    minHeight: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
+    paddingVertical: 12,
     borderBottomWidth: 1,
+  },
+  headerLeft: {
+    flex: 1,
+    gap: 4,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
+  },
+  queueCount: {
+    fontSize: 12,
   },
   headerActions: {
     flexDirection: 'row',
@@ -145,14 +178,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   closeBtn: {
-    paddingVertical: 8,
-  },
-  closeText: {
-    fontSize: 16,
-    fontWeight: '600',
+    padding: 8,
   },
   clearBtn: {
-    paddingVertical: 8,
+    padding: 8,
   },
   item: {
     flexDirection: 'row',
@@ -203,6 +232,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 16,
   },
   emptyText: {
     fontSize: 16,

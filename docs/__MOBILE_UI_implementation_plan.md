@@ -69,7 +69,6 @@ Enhance the individual playlist view.
 Polish the immersive playback experience.
 
 #### [MODIFY] [now-playing.tsx](file:///d:/MELOVISTA_DEV/apps/mobile/src/app/now-playing.tsx)
-- Implement the custom top bar with downwards chevron.
 - Add "Lyrics" and "Add to playlist" buttons.
 - Refine layout (large cover image).
 
@@ -105,21 +104,25 @@ Finalize secondary screens.
     - [X] Update `PlayerBar.tsx` layout and progress bar
     - [ ] Add translation strings for new UI elements
     - <del>[ ] Install `lucide-react-native` and replace existing icons to use Lucide icons // Skip for now because using Lucide requires re-building the development build</del>
-- [ ] **Phase 2: Home & Playlist Management**
-    - [ ] Ensure "All songs" default playlist
-    - [ ] Update `library.tsx` playlist row design
-    - [ ] Create `PlaylistActions.tsx` modal
-- [ ] **Phase 3: Playlist Details & Songs**
-    - [ ] Update `[id].tsx` header and song list design
-    - [ ] Create `SongActions.tsx` modal
+- [X] **Phase 2: Home & Playlist Management**
+    - [X] Ensure "All songs" default playlist
+    - [X] Update `library.tsx` playlist row design
+    - [X] Create `PlaylistActions.tsx` modal
+- [X] **Phase 3: Playlist Details & Songs**
+    - [X] Update `[id].tsx` header and song list design
+    - [X] Create `SongActions.tsx` modal
+    - [X] Add song cover art display in rows
+    - [X] Display total playlist duration in header
+    - [X] Add sorting options (title, artist, duration, date added)
+    - [X] Integrate SongActions modal for song actions
 - [ ] **Phase 4: Now Playing & Queue**
     - [ ] Refine `now-playing.tsx` layout
     - [ ] Implement swipe-up behavior in `QueueModal.tsx`
     - [ ] Add "Clear queue" and drag-and-drop to `QueueModal.tsx`
-- [ ] **Phase 5: Search & Settings**
-    - [ ] Update `search.tsx` with filter/sort bar
-    - [ ] Implement Theme/Language selectors in `settings.tsx`
-    - [ ] Hide `PlayerBar` on Settings screen
+- [X] **Phase 5: Search & Settings**
+    - [X] Update `search.tsx` with filter/sort bar
+    - [X] Implement Theme/Language selectors in `settings.tsx`
+    - [X] Hide `PlayerBar` on Settings screen
 
 
 ---

@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   playBtn: {
     width: 36,
     height: 36,
-    paddingLeft: 4, // To center the play icon
+    // paddingLeft: 4, // To center the play icon
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',

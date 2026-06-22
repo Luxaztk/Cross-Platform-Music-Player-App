@@ -2,6 +2,7 @@ import { useLocalSearchParams } from 'expo-router'
 import React, { useCallback, useMemo, useState } from 'react'
 import {
   FlatList,
+  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -9,14 +10,45 @@ import {
   View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Feather from '@expo/vector-icons/Feather'
 
 import type { Playlist, Song } from '@music/types'
 
 import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
+import { SongActions } from '../../presentations/components/SongActions'
 import { useLibrary } from '../../application'
 import { usePlayer } from '../../application/player'
+
+// ── Utilities ───────────────────────────────────────────────────
+
+const formatDuration = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+type SortOption = 'title' | 'artist' | 'duration' | 'dateAdded'
+
+const sortSongs = (songs: Song[], option: SortOption): Song[] => {
+  const sorted = [...songs]
+  switch (option) {
+    case 'artist':
+      return sorted.sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title))
+    case 'duration':
+      return sorted.sort((a, b) => a.duration - b.duration)
+    case 'dateAdded':
+      return sorted.sort((a, b) => {
+        const aDate = new Date(a.dateAdded || 0).getTime()
+        const bDate = new Date(b.dateAdded || 0).getTime()
+        return bDate - aDate
+      })
+    case 'title':
+    default:
+      return sorted.sort((a, b) => a.title.localeCompare(b.title))
+  }
+}
 
 // ── Song row for playlist ───────────────────────────────────────
 
@@ -24,121 +56,68 @@ const PlaylistSongRow = React.memo(function PlaylistSongRow({
   item,
   isActive,
   onPress,
-  isMenuOpen,
-  onOpenMenu,
-  onCloseMenu,
-  onAddToOtherPlaylist,
-  onMoveToOtherPlaylist,
-  onRemove,
+  onOpenActions,
   colors,
-  t,
 }: {
   item: Song
   isActive: boolean
   onPress: (id: string) => void
-  isMenuOpen: boolean
-  onOpenMenu: (song: Song) => void
-  onCloseMenu: () => void
-  onAddToOtherPlaylist: (song: Song) => void
-  onMoveToOtherPlaylist: (song: Song) => void
-  onRemove: (id: string) => void
+  onOpenActions: (song: Song) => void
   colors: {
     surface: string
     border: string
     text: string
     mutedText: string
     primary: string
-    background: string
-  }
-  t: {
-    addToOtherPlaylist: string
-    moveToOtherPlaylist: string
-    removeFromThisPlaylist: string
   }
 }) {
   return (
-    <View style={styles.rowWrap}>
-      <View
-        style={[
-          styles.row,
-          {
-            backgroundColor: isActive ? colors.primary + '18' : colors.surface,
-            borderColor: isActive ? colors.primary + '44' : colors.border,
-          },
-        ]}
-      >
-        <Pressable onPress={() => onPress(item.id)} style={styles.rowMain}>
-          <Text
-            numberOfLines={1}
-            style={[styles.rowTitle, { color: isActive ? colors.primary : colors.text }]}
-          >
-            {item.title}
-          </Text>
-          <Text numberOfLines={1} style={[styles.rowSubtitle, { color: colors.mutedText }]}>
+    <Pressable
+      onPress={() => onPress(item.id)}
+      style={[
+        styles.row,
+        {
+          backgroundColor: isActive ? colors.primary + '18' : colors.surface,
+          borderColor: isActive ? colors.primary + '44' : colors.border,
+        },
+      ]}
+    >
+      {/* Cover art */}
+      {item.coverArt ? (
+        <Image source={{ uri: item.coverArt }} style={styles.cover} />
+      ) : (
+        <View style={[styles.coverPlaceholder, { backgroundColor: colors.primary + '18' }]}>
+          <Feather name="music" size={18} color={colors.primary} />
+        </View>
+      )}
+
+      {/* Song info */}
+      <View style={styles.rowInfo}>
+        <Text
+          numberOfLines={1}
+          style={[styles.rowTitle, { color: isActive ? colors.primary : colors.text }]}
+        >
+          {item.title}
+        </Text>
+        <View style={styles.rowMeta}>
+          <Text numberOfLines={1} style={[styles.rowArtist, { color: colors.mutedText }]}>
             {item.artist}
           </Text>
-        </Pressable>
-
-        <Pressable onPress={() => onOpenMenu(item)} hitSlop={10} style={styles.moreBtn}>
-          <Text style={[styles.moreIcon, { color: colors.mutedText }]}>⋯</Text>
-        </Pressable>
+          <Text style={[styles.rowDuration, { color: colors.mutedText }]}>
+            {formatDuration(item.duration)}
+          </Text>
+        </View>
       </View>
 
-      {isMenuOpen && (
-        <>
-          <Pressable style={styles.menuBackdrop} onPress={onCloseMenu} />
-          <View
-            style={[
-              styles.menu,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Pressable
-              style={styles.menuItem}
-              onPress={() => {
-                onCloseMenu()
-                onAddToOtherPlaylist(item)
-              }}
-            >
-              <Text style={[styles.menuText, { color: colors.text }]}>
-                {t.addToOtherPlaylist}
-              </Text>
-            </Pressable>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-
-            <Pressable
-              style={styles.menuItem}
-              onPress={() => {
-                onCloseMenu()
-                onMoveToOtherPlaylist(item)
-              }}
-            >
-              <Text style={[styles.menuText, { color: colors.text }]}>
-                {t.moveToOtherPlaylist}
-              </Text>
-            </Pressable>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-
-            <Pressable
-              style={styles.menuItem}
-              onPress={() => {
-                onCloseMenu()
-                onRemove(item.id)
-              }}
-            >
-              <Text style={[styles.menuText, { color: '#FF5A5F' }]}>
-                {t.removeFromThisPlaylist}
-              </Text>
-            </Pressable>
-          </View>
-        </>
-      )}
-    </View>
+      {/* Action button */}
+      <Pressable
+        onPress={() => onOpenActions(item)}
+        hitSlop={10}
+        style={styles.actionBtn}
+      >
+        <Feather name="more-vertical" size={20} color={colors.mutedText} />
+      </Pressable>
+    </Pressable>
   )
 })
 
@@ -245,11 +224,12 @@ export default function PlaylistDetailScreen() {
 
   const [addModalVisible, setAddModalVisible] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState<SortOption>('title')
+  const [sortMenuVisible, setSortMenuVisible] = useState(false)
 
-  const [openedMenuSongId, setOpenedMenuSongId] = useState<string | null>(null)
-  const [targetSong, setTargetSong] = useState<Song | null>(null)
-  const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false)
-  const [actionMode, setActionMode] = useState<'add' | 'move' | null>(null)
+  // SongActions state
+  const [selectedSongForActions, setSelectedSongForActions] = useState<Song | null>(null)
+  const [songActionsVisible, setSongActionsVisible] = useState(false)
 
   const playlist = useMemo(() => {
     if (id === 'all' || id === '0') {
@@ -264,8 +244,9 @@ export default function PlaylistDetailScreen() {
 
   const playlistSongs = useMemo(() => {
     if (!playlist) return []
-    return playlist.songIds.map((sid) => songsById[sid]).filter(Boolean) as Song[]
-  }, [playlist, songsById])
+    const songs = playlist.songIds.map((sid) => songsById[sid]).filter(Boolean) as Song[]
+    return sortSongs(songs, sortBy)
+  }, [playlist, songsById, sortBy])
 
   const allLibrarySongs = useMemo(() => {
     return Object.values(songsById).sort((a, b) => a.title.localeCompare(b.title))
@@ -281,6 +262,11 @@ export default function PlaylistDetailScreen() {
       .filter((p) => p.id !== '0' && p.id !== id)
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [playlistsById, id])
+
+  // Calculate total duration
+  const totalDuration = useMemo(() => {
+    return playlistSongs.reduce((sum, song) => sum + song.duration, 0)
+  }, [playlistSongs])
 
   const onPlayAll = useCallback(async () => {
     if (!playlist || playlistSongs.length === 0) return
@@ -326,55 +312,47 @@ export default function PlaylistDetailScreen() {
     setSelectedIds([])
   }, [id, selectedIds, addSongsToPlaylist, notify, t])
 
-  const onOpenMenu = useCallback((song: Song) => {
-    setOpenedMenuSongId(song.id)
+  // SongActions handlers
+  const onOpenSongActions = useCallback((song: Song) => {
+    setSelectedSongForActions(song)
+    setSongActionsVisible(true)
   }, [])
 
-  const onCloseMenu = useCallback(() => {
-    setOpenedMenuSongId(null)
+  const onCloseSongActions = useCallback(() => {
+    setSongActionsVisible(false)
+    setSelectedSongForActions(null)
   }, [])
 
-  const onAddToOtherPlaylist = useCallback((song: Song) => {
-    setTargetSong(song)
-    setActionMode('add')
-    setPlaylistPickerVisible(true)
-  }, [])
+  const onPlayNext = useCallback(() => {
+    notify({ message: 'Play next coming soon', kind: 'info' })
+  }, [notify])
 
-  const onMoveToOtherPlaylist = useCallback((song: Song) => {
-    setTargetSong(song)
-    setActionMode('move')
-    setPlaylistPickerVisible(true)
-  }, [])
+  const onAddToQueue = useCallback(() => {
+    notify({ message: 'Add to queue coming soon', kind: 'info' })
+  }, [notify])
 
-  const onClosePlaylistPicker = useCallback(() => {
-    setTargetSong(null)
-    setActionMode(null)
-    setPlaylistPickerVisible(false)
-  }, [])
+  const onAddToPlaylist = useCallback(() => {
+    if (selectedSongForActions) {
+      setSelectedIds([selectedSongForActions.id])
+      setAddModalVisible(true)
+      onCloseSongActions()
+    }
+  }, [selectedSongForActions, onCloseSongActions])
 
-  const onSelectTargetPlaylist = useCallback(
-    async (targetPlaylistId: string) => {
-      if (!targetSong || !actionMode) return
+  const onMoveToPlaylist = useCallback(() => {
+    notify({ message: 'Move to playlist coming soon', kind: 'info' })
+  }, [notify])
 
-      await addSongsToPlaylist(targetPlaylistId, [targetSong.id])
+  const onRemoveFromPlaylist = useCallback(() => {
+    if (selectedSongForActions && id !== 'all' && id !== '0') {
+      onRemoveSong(selectedSongForActions.id)
+      onCloseSongActions()
+    }
+  }, [selectedSongForActions, id, onRemoveSong, onCloseSongActions])
 
-      if (actionMode === 'move') {
-        await removeSongsFromPlaylist(id, [targetSong.id])
-        notify({
-          message: t.playlists.songMovedToOtherPlaylist(targetSong.title),
-          kind: 'success',
-        })
-      } else {
-        notify({
-          message: t.playlists.songAddedToOtherPlaylist(targetSong.title),
-          kind: 'success',
-        })
-      }
-
-      onClosePlaylistPicker()
-    },
-    [targetSong, actionMode, addSongsToPlaylist, removeSongsFromPlaylist, id, notify, onClosePlaylistPicker, t],
-  )
+  const onDeleteFromLibrary = useCallback(() => {
+    notify({ message: 'Delete from library coming soon', kind: 'info' })
+  }, [notify])
 
   if (!playlist) {
     return (
@@ -400,17 +378,29 @@ export default function PlaylistDetailScreen() {
         { backgroundColor: theme.colors.background, paddingTop: insets.top },
       ]}
     >
+      {/* Header with title and duration */}
       <View style={styles.header}>
         <View style={styles.headerInfo}>
           <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
             {playlist.name}
           </Text>
-          <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-            {t.playlists.songCount(playlistSongs.length)}
-          </Text>
+          <View style={styles.headerMeta}>
+            <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
+              {t.playlists.songCount(playlistSongs.length)}
+            </Text>
+            {playlistSongs.length > 0 && (
+              <>
+                <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>•</Text>
+                <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
+                  {formatDuration(totalDuration)}
+                </Text>
+              </>
+            )}
+          </View>
         </View>
       </View>
 
+      {/* Action buttons and sort options */}
       <View style={styles.actions}>
         <Pressable
           onPress={onPlayAll}
@@ -439,8 +429,51 @@ export default function PlaylistDetailScreen() {
             </Text>
           </Pressable>
         )}
+
+        {playlistSongs.length > 0 && (
+          <Pressable
+            onPress={() => setSortMenuVisible(!sortMenuVisible)}
+            style={[styles.sortBtn, { borderColor: theme.colors.border }]}
+          >
+            <Feather name="filter" size={18} color={theme.colors.text} />
+          </Pressable>
+        )}
       </View>
 
+      {/* Sort menu */}
+      {sortMenuVisible && (
+        <View style={[styles.sortMenu, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+          {(['title', 'artist', 'duration', 'dateAdded'] as SortOption[]).map((option) => (
+            <Pressable
+              key={option}
+              onPress={() => {
+                setSortBy(option)
+                setSortMenuVisible(false)
+              }}
+              style={styles.sortMenuItem}
+            >
+              <Feather
+                name={sortBy === option ? 'check' : 'circle'}
+                size={16}
+                color={sortBy === option ? theme.colors.primary : theme.colors.mutedText}
+              />
+              <Text
+                style={[
+                  styles.sortMenuText,
+                  {
+                    color: sortBy === option ? theme.colors.primary : theme.colors.text,
+                    fontWeight: sortBy === option ? '700' : '500',
+                  },
+                ]}
+              >
+                {option.charAt(0).toUpperCase() + option.slice(1)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
+      {/* Songs list */}
       <FlatList
         data={playlistSongs}
         keyExtractor={(item) => item.id}
@@ -449,18 +482,8 @@ export default function PlaylistDetailScreen() {
             item={item}
             isActive={item.id === playerState.currentSongId}
             onPress={onPlaySong}
-            isMenuOpen={openedMenuSongId === item.id}
-            onOpenMenu={onOpenMenu}
-            onCloseMenu={onCloseMenu}
-            onAddToOtherPlaylist={onAddToOtherPlaylist}
-            onMoveToOtherPlaylist={onMoveToOtherPlaylist}
-            onRemove={onRemoveSong}
+            onOpenActions={onOpenSongActions}
             colors={theme.colors}
-            t={{
-              addToOtherPlaylist: t.playlists.addToOtherPlaylist,
-              moveToOtherPlaylist: t.playlists.moveToOtherPlaylist,
-              removeFromThisPlaylist: t.playlists.removeFromThisPlaylist,
-            }}
           />
         )}
         contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 120 }]}
@@ -473,6 +496,7 @@ export default function PlaylistDetailScreen() {
         }
       />
 
+      {/* Add songs modal */}
       <Modal visible={addModalVisible} animationType="slide" transparent={false}>
         <View
           style={[
@@ -520,68 +544,20 @@ export default function PlaylistDetailScreen() {
         </View>
       </Modal>
 
-      <Modal
-        visible={playlistPickerVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={onClosePlaylistPicker}
-      >
-        <Pressable style={styles.overlay} onPress={onClosePlaylistPicker}>
-          <Pressable
-            style={[
-              styles.pickerCard,
-              {
-                backgroundColor: theme.colors.background,
-                borderColor: theme.colors.border,
-              },
-            ]}
-            onPress={() => {}}
-          >
-            <Text style={[styles.pickerTitle, { color: theme.colors.text }]}>
-              {actionMode === 'move'
-                ? t.playlists.moveToOtherPlaylist
-                : t.playlists.addToOtherPlaylist}
-            </Text>
-
-            {targetSong ? (
-              <Text style={[styles.pickerSubtitle, { color: theme.colors.mutedText }]}>
-                {t.playlists.songLabel}: {targetSong.title}
-              </Text>
-            ) : null}
-
-            {otherPlaylists.length === 0 ? (
-              <View style={styles.emptyPickerWrap}>
-                <Text style={[styles.emptyText, { color: theme.colors.mutedText }]}>
-                  {t.playlists.noOtherPlaylists}
-                </Text>
-              </View>
-            ) : (
-              <FlatList
-                data={otherPlaylists}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.modalListContent}
-                renderItem={({ item }) => (
-                  <PlaylistTargetRow
-                    item={item}
-                    onSelect={onSelectTargetPlaylist}
-                    colors={theme.colors}
-                    chooseLabel={t.playlists.choose}
-                  />
-                )}
-              />
-            )}
-
-            <Pressable
-              onPress={onClosePlaylistPicker}
-              style={[styles.closeBtn, { borderColor: theme.colors.border }]}
-            >
-              <Text style={[styles.closeBtnText, { color: theme.colors.text }]}>
-                {t.playlists.close}
-              </Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      {/* Song actions modal */}
+      <SongActions
+        visible={songActionsVisible}
+        onClose={onCloseSongActions}
+        song={selectedSongForActions}
+        inPlaylist={id !== 'all' && id !== '0'}
+        canDelete={false}
+        onPlayNext={onPlayNext}
+        onAddToQueue={onAddToQueue}
+        onAddToPlaylist={onAddToPlaylist}
+        onMoveToPlaylist={onMoveToPlaylist}
+        onRemoveFromPlaylist={onRemoveFromPlaylist}
+        onDeleteFromLibrary={onDeleteFromLibrary}
+      />
     </View>
   )
 }
@@ -604,6 +580,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
   },
+  headerMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
   subtitle: {
     fontSize: 13,
   },
@@ -612,6 +594,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
     gap: 12,
+    alignItems: 'center',
   },
   mainBtn: {
     flex: 2,
@@ -637,12 +620,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  sortBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sortMenu: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  sortMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  sortMenuText: {
+    fontSize: 14,
+  },
   listContent: {
     paddingHorizontal: 20,
     gap: 10,
-  },
-  rowWrap: {
-    position: 'relative',
   },
   row: {
     flexDirection: 'row',
@@ -652,49 +657,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 12,
   },
-  rowMain: {
+  cover: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+  },
+  coverPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowInfo: {
     flex: 1,
-    gap: 2,
+    gap: 4,
   },
   rowTitle: {
     fontSize: 14,
     fontWeight: '700',
   },
-  rowSubtitle: {
+  rowMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rowArtist: {
+    fontSize: 12,
+    flex: 1,
+  },
+  rowDuration: {
     fontSize: 12,
   },
-  moreBtn: {
+  actionBtn: {
     padding: 8,
-  },
-  moreIcon: {
-    fontSize: 22,
-    fontWeight: '700',
-    lineHeight: 22,
-  },
-  menuBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 5,
-  },
-  menu: {
-    position: 'absolute',
-    top: 54,
-    right: 8,
-    minWidth: 220,
-    borderRadius: 14,
-    borderWidth: 1,
-    zIndex: 10,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-  },
-  menuText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  menuDivider: {
-    height: StyleSheet.hairlineWidth,
   },
   emptyContainer: {
     paddingTop: 60,
