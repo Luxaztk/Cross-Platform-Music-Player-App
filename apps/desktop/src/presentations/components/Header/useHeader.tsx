@@ -5,6 +5,7 @@ import { useSearch, useLibrary, useRecentSearches, useLanguage, useTheme } from 
 import { usePlayer, useAudioDevices } from '@music/hooks';
 import type { Song, RecentSearch } from '@music/types';
 import type { SearchResultItem } from './SearchOverlay';
+import { groupAndSortSongs } from '../../../application/utils/searchUtils';
 
 import { type UseHeaderReturn, type MenuItem } from './types';
 
@@ -48,17 +49,23 @@ export const useHeader = (): UseHeaderReturn => {
   const searchRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const flatResults: SearchResultItem[] = useMemo(() => [
-    ...searchResults.songs.map((s: Song) => ({ type: 'song' as const, item: s })),
-    ...searchResults.artists.map((a: { id: string; name: string }) => ({
-      type: 'artist' as const,
-      item: a,
-    })),
-    ...searchResults.albums.map((al: { id: string; name: string; artist: string }) => ({
-      type: 'album' as const,
-      item: al,
-    })),
-  ], [searchResults]);
+  const flatResults: SearchResultItem[] = useMemo(() => {
+    const groups = groupAndSortSongs(searchResults.songs, searchQuery);
+    return [
+      ...groups.titles.slice(0, 5).map((s: Song) => ({ type: 'song' as const, item: s })),
+      ...groups.artists.slice(0, 5).map((s: Song) => ({ type: 'song' as const, item: s })),
+      ...groups.albums.slice(0, 5).map((s: Song) => ({ type: 'song' as const, item: s })),
+      ...searchResults.artists.map((a: { id: string; name: string }) => ({
+        type: 'artist' as const,
+        item: a,
+      })),
+      ...searchResults.albums.map((al: { id: string; name: string; artist: string }) => ({
+        type: 'album' as const,
+        item: al,
+      })),
+    ];
+  }, [searchResults, searchQuery]);
+
 
   const handleSelectResult = useCallback((result: SearchResultItem) => {
     if (result.type === 'song') {
@@ -309,10 +316,10 @@ export const useHeader = (): UseHeaderReturn => {
       recentSearches,
       language
     },
-    refs: {
-      profileRef,
+    domNodes: {
       searchRef,
-      dropdownRef
+      profileRef,
+      dropdownRef,
     },
     actions: {
       setSearchQuery,

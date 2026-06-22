@@ -9,7 +9,8 @@ interface InputStateProps {
   onPaste: () => void;
   onFetch: () => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
-  t: (key: string, options?: any) => string;
+  t: (key: string, options?: Record<string, unknown> | string) => string;
+  disabled?: boolean;
 }
 
 export const InputState: React.FC<InputStateProps> = ({
@@ -19,7 +20,8 @@ export const InputState: React.FC<InputStateProps> = ({
   onPaste,
   onFetch,
   inputRef,
-  t
+  t,
+  disabled = false
 }) => {
   return (
     <div className="downloader-input-state">
@@ -36,6 +38,7 @@ export const InputState: React.FC<InputStateProps> = ({
             onChange={(e) => onUrlChange(e.target.value)}
             placeholder="https://www.youtube.com/watch?v=..."
             onKeyDown={(e) => e.key === 'Enter' && onFetch()}
+            disabled={disabled}
           />
           <button
             type="button"
@@ -49,7 +52,7 @@ export const InputState: React.FC<InputStateProps> = ({
           type="button"
           className="fetch-btn"
           onClick={onFetch}
-          disabled={!url.trim()}
+          disabled={!url.trim() || disabled}
         >
           {t('downloader.fetchInfo')}
         </button>

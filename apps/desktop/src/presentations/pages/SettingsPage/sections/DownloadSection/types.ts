@@ -11,7 +11,7 @@ export interface UseDownloadSectionReturn {
     updateSettings: SettingsContextType['updateSettings'];
     manager: DownloadContextType;
     isSaving: boolean;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
     uiState: {
         showHistory: boolean;
         showEditMetadata: boolean;
@@ -50,14 +50,14 @@ export interface PathSettingsProps extends BaseSectionProps {
     updateSettings: SettingsContextType['updateSettings'];
     isSaving: boolean;
     onSelectPath: () => Promise<void>;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export interface AutoImportSettingsProps extends BaseSectionProps {
     paths: string[];
     onAdd: () => Promise<void>;
     onRemove: (path: string) => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export interface DownloaderToolProps extends BaseSectionProps {
@@ -66,25 +66,25 @@ export interface DownloaderToolProps extends BaseSectionProps {
     onPaste: () => Promise<void>;
     onEditItem: (item: DownloadItem) => void;
     onBulkEdit: (val: boolean) => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export interface YoutubeAuthProps extends BaseSectionProps {
     isLoggedIn: boolean;
     onLogin: () => Promise<boolean>;
     onLogout: () => Promise<void>;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export interface QualitySettingsProps extends BaseSectionProps {
     bitrate: string;
     onBitrateChange: (val: string | number) => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export interface MaintenanceSettingsProps extends BaseSectionProps {
     isSyncing: boolean;
     onSync: () => Promise<void>;
     onShowHistory: (val: boolean) => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }

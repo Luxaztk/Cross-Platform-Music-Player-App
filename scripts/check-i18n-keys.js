@@ -1,24 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 
-const translationsPath = path.join(process.cwd(), 'apps', 'desktop', 'src', 'presentations', 'constants', 'translations.ts');
+const translationsPath = path.join(process.cwd(), 'packages', 'i18n', 'src', 'desktop.ts');
 const srcDir = path.join(process.cwd(), 'apps', 'desktop', 'src');
 const extensions = ['.tsx', '.ts', '.jsx'];
 
 /**
  * Thô bỉ nhưng hiệu quả: Trích xuất object 'en' từ file .ts mà không cần parser phức tạp
  */
-function getDeclaredKeys() {
-    const content = fs.readFileSync(translationsPath, 'utf8');
-    
-    // Tìm vị trí bắt đầu của block 'en:'
-    const enMatch = content.match(/en:\s*\{/);
-    if (!enMatch) {
-        console.error('❌ Không tìm thấy block "en:" trong translations.ts');
-        process.exit(1);
-    }
+function extractBlockKeys(content, lang) {
+    const match = content.match(new RegExp(`${lang}:\\s*\\{`));
+    if (!match) return new Set();
 
-    const startPos = enMatch.index + enMatch[0].length - 1; // Vị trí dấu '{'
+    const startPos = match.index + match[0].length - 1;
     let braceCount = 0;
     let endPos = -1;
 
@@ -31,33 +25,40 @@ function getDeclaredKeys() {
         }
     }
 
-    const enString = content.substring(startPos, endPos);
-    
-    // Eval để lấy object (vì translations.ts là code JS hợp lệ sau khi trích xuất)
-    // Lưu ý: Eval chỉ dùng cho script nội bộ tin cậy
+    const blockString = content.substring(startPos, endPos);
     try {
-        const enObj = eval(`(${enString})`);
+        const obj = eval(`(${blockString})`);
         const keys = new Set();
-        
-        function flatten(obj, prefix = '') {
-            for (const key in obj) {
-                const fullKey = prefix ? `${prefix}.${key}` : key;
-                if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
-                    flatten(obj[key], fullKey);
+        function flatten(o, prefix = '') {
+            for (const k in o) {
+                const fullKey = prefix ? `${prefix}.${k}` : k;
+                if (typeof o[k] === 'object' && o[k] !== null && !Array.isArray(o[k])) {
+                    flatten(o[k], fullKey);
                 } else {
                     keys.add(fullKey);
                 }
             }
         }
-        
-        flatten(enObj);
+        flatten(obj);
         return keys;
     } catch (e) {
-        console.error('❌ Lỗi khi parse block "en":', e.message);
-        process.exit(1);
+        console.error(`❌ Lỗi khi parse block "${lang}":`, e.message);
+        return new Set();
     }
 }
 
+function getDeclaredKeys() {
+    const content = fs.readFileSync(translationsPath, 'utf8');
+    const viKeys = extractBlockKeys(content, 'vi');
+    const enKeys = extractBlockKeys(content, 'en');
+    
+    if (viKeys.size === 0) {
+        console.error('❌ Không tìm thấy block "vi:" trong desktop.ts');
+        process.exit(1);
+    }
+    
+    return { viKeys, enKeys };
+}
 function walk(dir, callback) {
     fs.readdirSync(dir).forEach(f => {
         let dirPath = path.join(dir, f);
@@ -70,7 +71,8 @@ function walk(dir, callback) {
     });
 }
 
-const declaredKeys = getDeclaredKeys();
+const { viKeys, enKeys } = getDeclaredKeys();
+const declaredKeys = viKeys; // Lấy tiếng Việt làm base
 const usedKeys = new Set();
 
 // Regex trích xuất key: t('key'), t("key"), i18nKey="key"
@@ -108,6 +110,9 @@ walk(srcDir, (filePath) => {
 const ghostKeys = [...usedKeys].filter(k => !declaredKeys.has(k));
 const unusedKeys = [...declaredKeys].filter(k => !usedKeys.has(k));
 
+const missingInEn = [...viKeys].filter(k => !enKeys.has(k));
+const missingInVi = [...enKeys].filter(k => !viKeys.has(k));
+
 // === REPORT ===
 const colors = {
     reset: "\x1b[0m",
@@ -142,9 +147,24 @@ if (unusedKeys.length > 0) {
     console.log(`${colors.green}✨ No unused keys found!${colors.reset}\n`);
 }
 
+if (missingInEn.length > 0 || missingInVi.length > 0) {
+    console.log(`${colors.cyan}${colors.bright}⚠️  TRANSLATION MISMATCH FOUND${colors.reset}`);
+    if (missingInEn.length > 0) {
+        console.log(`${colors.red}Missing in 'en' (Declared in 'vi'):${colors.reset}`);
+        missingInEn.sort().forEach(k => console.log(`  - ${k}`));
+    }
+    if (missingInVi.length > 0) {
+        console.log(`${colors.red}Missing in 'vi' (Declared in 'en'):${colors.reset}`);
+        missingInVi.sort().forEach(k => console.log(`  - ${k}`));
+    }
+    console.log('');
+} else {
+    console.log(`${colors.green}✨ Translations 'vi' and 'en' are perfectly synced!${colors.reset}\n`);
+}
+
 console.log(`==========================================`);
-if (ghostKeys.length === 0 && unusedKeys.length === 0) {
-    console.log(`${colors.green}${colors.bright}PASSED: Your i18n keys are clean! 🚀${colors.reset}`);
+if (ghostKeys.length === 0 && unusedKeys.length === 0 && missingInEn.length === 0 && missingInVi.length === 0) {
+    console.log(`${colors.green}${colors.bright}PASSED: Your i18n keys are clean and perfectly synced! 🚀${colors.reset}`);
 } else {
     console.log(`${colors.yellow}DONE: Audit completed with findings.${colors.reset}`);
 }

@@ -30,7 +30,7 @@ export interface UseLyricsPanelReturn {
     setSearchResults: (results: LyricSearchResult[]) => void;
   };
   utils: {
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
   };
 }
 
@@ -43,7 +43,7 @@ export interface LyricsHeaderProps {
     onAdjustOffset: (delta: number) => void;
     onSetOffset: (val: number) => void;
     onResetOffset: () => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export interface LyricsContentProps {
@@ -53,7 +53,7 @@ export interface LyricsContentProps {
     onLineClick: (time: number) => void;
     onSyncNow: (offset: number) => void;
     activeLineRef: React.RefObject<HTMLDivElement | null>;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export interface LyricsSearchProps {
@@ -65,7 +65,7 @@ export interface LyricsSearchProps {
     onSearch: () => void;
     onSelectResult: (lyrics: string, id: number) => void;
     onClose: () => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export interface EmptyLyricsProps {
@@ -74,5 +74,5 @@ export interface EmptyLyricsProps {
     searchQuery: string;
     onSearchQueryChange: (val: string) => void;
     onSearch: () => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }

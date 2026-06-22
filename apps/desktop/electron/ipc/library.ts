@@ -1,4 +1,4 @@
-import { ipcMain, dialog } from 'electron';
+import { ipcMain, dialog, BrowserWindow } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
@@ -111,6 +111,14 @@ async function rehashAllSongs(): Promise<void> {
 }
 
 export function setupLibraryIPC() {
+  // Hook the Observer Pattern EventEmitter to Frontend
+  libraryService.events.on('import:progress', (...args: unknown[]) => {
+    const percent = args[0] as number;
+    BrowserWindow.getAllWindows().forEach(win => {
+      win.webContents.send('library:import-progress', percent);
+    });
+  });
+
   // Run rehash migration in the background on startup
   rehashAllSongs();
   ipcMain.handle('library:get', async () => {
@@ -220,8 +228,15 @@ export function setupLibraryIPC() {
       }
 
       const newSongs: Song[] = [];
-      for (const filePath of result.filePaths) {
+      for (let i = 0; i < result.filePaths.length; i++) {
+        const filePath = result.filePaths[i];
         try {
+          // Emit progress trong lúc đọc file
+          const percent = Math.round(((i + 1) / result.filePaths.length) * 100);
+          BrowserWindow.getAllWindows().forEach(win => {
+            win.webContents.send('library:import-progress', percent);
+          });
+
           logFileTrace('library:importFiles.extractMetadata', filePath, 'SUCCESS', 'Importing file');
           const songData = await MainMetadataService.extractMetadata(filePath);
           if (songData) {
@@ -264,8 +279,15 @@ export function setupLibraryIPC() {
       const audioFiles = await scanDirectory(dirPath);
 
       const newSongs: Song[] = [];
-      for (const filePath of audioFiles) {
+      for (let i = 0; i < audioFiles.length; i++) {
+        const filePath = audioFiles[i];
         try {
+          // Emit progress liên tục trong lúc đọc metadata (khâu tốn thời gian nhất)
+          const percent = Math.round(((i + 1) / audioFiles.length) * 100);
+          BrowserWindow.getAllWindows().forEach(win => {
+            win.webContents.send('library:import-progress', percent);
+          });
+
           logFileTrace('library:importFolder.extractMetadata', filePath, 'SUCCESS', 'Importing file from folder');
           const songData = await MainMetadataService.extractMetadata(filePath);
           if (songData) {

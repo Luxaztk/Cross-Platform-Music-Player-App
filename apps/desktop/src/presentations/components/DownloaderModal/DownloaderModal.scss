@@ -182,7 +182,62 @@
         }
       }
 
-      /* Loading State */
+      /* Mode Selection State */
+      .downloader-mode-selection {
+        margin-top: 16px;
+        padding: 16px;
+        width: 100%; // Rộng bằng 100% container (tương đương nút fetch-btn ở trên)
+        box-sizing: border-box;
+        background: var(--bg-surface-elevated);
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+
+        p {
+          margin: 0 0 12px 0;
+          font-size: var(--font-size-sm);
+          color: var(--color-text-muted);
+          text-align: center; // Căn giữa hint text
+        }
+
+
+        .action-buttons.horizontal {
+          gap: 10px;
+          display: flex;
+
+          button {
+            flex: 1;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+
+            &.primary-btn {
+              background: var(--color-primary);
+              color: white;
+              border: none;
+
+              &:hover {
+                filter: brightness(1.1);
+                transform: translateY(-2px);
+              }
+            }
+
+            &.secondary-btn {
+              background: var(--bg-surface-hover);
+              color: var(--color-text-main);
+              border: 1px solid var(--border-color);
+
+              &:hover {
+                background: var(--bg-surface);
+                border-color: var(--color-primary);
+              }
+            }
+          }
+        }
+      }
+
+
       .downloader-loading-state {
         display: flex;
         flex-direction: column;

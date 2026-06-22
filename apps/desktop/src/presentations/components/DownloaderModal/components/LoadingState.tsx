@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 
 interface LoadingStateProps {
-  t: (key: string, options?: any) => string;
+  t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export const LoadingState: React.FC<LoadingStateProps> = ({ t }) => {

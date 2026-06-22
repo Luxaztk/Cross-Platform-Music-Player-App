@@ -33,7 +33,7 @@ interface BackgroundSyncSettingsProps extends BaseSectionProps {
     value: number;
     onChange: (val: any) => void;
     isSaving: boolean;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export const BackgroundSyncSettings: React.FC<BackgroundSyncSettingsProps> = ({

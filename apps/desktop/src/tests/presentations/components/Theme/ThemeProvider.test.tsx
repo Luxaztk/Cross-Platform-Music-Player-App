@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { render, screen, act } from '@testing-library/react';
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ThemeProvider, ThemeContext, ThemeType } from '../../../../presentations/components/Theme/ThemeProvider';
+import { ThemeProvider, ThemeContext } from '../../../../presentations/components/Theme/ThemeProvider';
 
 vi.mock('@music/brand/logos/app_icon_ios_dark.png', () => ({ default: 'dark-icon.png' }));
 vi.mock('@music/brand/logos/app_icon_ios_light.png', () => ({ default: 'light-icon.png' }));

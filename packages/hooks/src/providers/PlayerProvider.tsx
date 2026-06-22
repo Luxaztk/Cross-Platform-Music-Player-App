@@ -82,50 +82,58 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     }
   }, []);
 
-  const handleNext = useCallback(() => {
-    if (currentSongRef.current) {
-      pushToHistory(currentSongRef.current);
-    }
-
-    if (queueRef.current.length > 0) {
-      const nextItem = queueRef.current[0];
-      setQueue(prev => prev.slice(1));
-      playSong(nextItem.song);
-    } else {
-      if (repeatModeRef.current === 'ALL' && originalContextRef.current.length > 0) {
-        let newSongs = [...originalContextRef.current];
-        if (isShuffleRef.current) {
-          newSongs = shuffleArray(newSongs);
-        }
-        const nextSong = newSongs[0];
-        setQueue(newSongs.slice(1).map(song => ({ uid: generateUid(), song })));
-        playSong(nextSong);
-      } else {
-        engineRef.current?.stop();
+  // ==========================================
+  // ITERATOR PATTERN (Playback Iterator)
+  // ==========================================
+  const playbackIterator = useMemo(() => ({
+    hasNext: () => queueRef.current.length > 0 || (repeatModeRef.current === 'ALL' && originalContextRef.current.length > 0),
+    hasPrev: () => historyRef.current.length > 0,
+    
+    next: () => {
+      if (currentSongRef.current) {
+        pushToHistory(currentSongRef.current);
       }
-    }
-  }, [playSong, pushToHistory, generateUid]);
 
-  const handlePrev = useCallback(() => {
-    // We use the progress state which is synchronized with the engine
-    if (progress > 3) {
-      engineRef.current?.seek(0);
-    } else {
-      if (historyRef.current.length > 0) {
-        const newHistory = [...historyRef.current];
-        const prevSong = newHistory.shift()!;
-        setHistory(newHistory);
-
-        if (currentSongRef.current) {
-          setQueue(q => [{ uid: generateUid(), song: currentSongRef.current! }, ...q]);
-        }
-        playSong(prevSong);
+      if (queueRef.current.length > 0) {
+        const nextItem = queueRef.current[0];
+        setQueue(prev => prev.slice(1));
+        playSong(nextItem.song);
       } else {
+        if (repeatModeRef.current === 'ALL' && originalContextRef.current.length > 0) {
+          let newSongs = [...originalContextRef.current];
+          if (isShuffleRef.current) {
+            newSongs = shuffleArray(newSongs);
+          }
+          const nextSong = newSongs[0];
+          setQueue(newSongs.slice(1).map(song => ({ uid: generateUid(), song })));
+          playSong(nextSong);
+        } else {
+          engineRef.current?.stop();
+        }
+      }
+    },
+
+    prev: () => {
+      if (progress > 3) {
         engineRef.current?.seek(0);
-        if (!engineRef.current?.isPlaying()) engineRef.current?.play();
+      } else {
+        if (historyRef.current.length > 0) {
+          const newHistory = [...historyRef.current];
+          const prevSong = newHistory.shift()!;
+          setHistory(newHistory);
+
+          if (currentSongRef.current) {
+            setQueue(q => [{ uid: generateUid(), song: currentSongRef.current! }, ...q]);
+          }
+          playSong(prevSong);
+        } else {
+          engineRef.current?.seek(0);
+          if (!engineRef.current?.isPlaying()) engineRef.current?.play();
+        }
       }
     }
-  }, [playSong, generateUid, progress]);
+  }), [playSong, pushToHistory, generateUid, progress]);
+  // ==========================================
 
   // Engine initialization effect
   useEffect(() => {
@@ -147,7 +155,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
           engineRef.current?.seek(0);
           engineRef.current?.play();
         } else {
-          handleNext();
+          playbackIterator.next();
         }
       },
       onLoad: (d) => {
@@ -160,7 +168,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
           onFileErrorRef.current(failedSong);
         }
         // Give the UI a tiny moment to show the toast, then skip
-        setTimeout(() => handleNext(), 800);
+        setTimeout(() => playbackIterator.next(), 800);
       },
       onPlayError: () => {
         // Play errors (e.g. autoplay blocked) — same auto-skip logic
@@ -168,7 +176,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         if (failedSong && onFileErrorRef.current) {
           onFileErrorRef.current(failedSong);
         }
-        setTimeout(() => handleNext(), 800);
+        setTimeout(() => playbackIterator.next(), 800);
       },
     });
 
@@ -178,7 +186,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     return () => {
       engine.stop();
     };
-  }, [handleNext]);
+  }, [playbackIterator]);
 
   useEffect(() => {
     if (engineRef.current && currentDeviceId) {
@@ -356,12 +364,12 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
   }, []);
 
   const next = useCallback(() => {
-    handleNext();
-  }, [handleNext]);
+    playbackIterator.next();
+  }, [playbackIterator]);
 
   const prev = useCallback(() => {
-    handlePrev();
-  }, [handlePrev]);
+    playbackIterator.prev();
+  }, [playbackIterator]);
 
   const seek = useCallback((time: number) => {
     if (currentSongRef.current && engineRef.current) {

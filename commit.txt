@@ -1,4 +1,1 @@
-docs: rewrite README and add Desktop project analysis
-
-- **README Overhaul**: Completely rewrote `README.md` to accurately reflect the current scale and architecture of the project. Clearly separated features into Shared Core, Desktop, and Mobile categories. Added detailed installation instructions, the Monorepo directory structure, and the rigorous Testing standards of the project.
-- **Project Analysis**: Added the `docs/_DESKTOP_analysis.md` document for an in-depth analysis of the Desktop platform. Highlighted architectural strengths (IPC Security, Virtualization), evaluated realistic production weaknesses (Bundle Size, RAM usage, Web Scraper stability), and outlined future directions (deep OS integration, Plugin Architecture, local AI processing).
+feat: implement core desktop architecture, downloader module, and IPC bridge for library management

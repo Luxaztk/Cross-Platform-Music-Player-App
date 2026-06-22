@@ -68,6 +68,7 @@ export interface ElectronAPI {
   ) => Promise<{ success: boolean; filePath?: string; error?: string }>
   writeAudioMetadata: (filePath: string, metadata: Partial<Song>) => Promise<void>
   onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => () => void
+  onImportProgress: (callback: (percent: number) => void) => () => void
   openItemPath: (filePath: string) => Promise<void>
   openDownloadsFolder: () => Promise<void>
   deleteFile: (filePath: string) => Promise<void>
@@ -164,6 +165,11 @@ const electronAPI: ElectronAPI = {
       callback(data)
     ipcRenderer.on('download-progress', listener)
     return () => ipcRenderer.off('download-progress', listener)
+  },
+  onImportProgress: (callback) => {
+    const listener = (_event: IpcRendererEvent, percent: number) => callback(percent)
+    ipcRenderer.on('library:import-progress', listener)
+    return () => ipcRenderer.off('library:import-progress', listener)
   },
   openItemPath: (filePath: string) => ipcRenderer.invoke('open-item-path', filePath),
   openDownloadsFolder: () => ipcRenderer.invoke('open-downloads-folder'),

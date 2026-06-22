@@ -7,7 +7,7 @@ interface RecentSearchesProps {
     onSelectRecent: (recent: RecentSearch) => void;
     onRemoveRecent: (timestamp: number) => void;
     onClearRecent: () => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export const RecentSearches: React.FC<RecentSearchesProps> = ({

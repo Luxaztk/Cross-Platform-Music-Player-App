@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useGlobalHotkeys } from '../../../application/hooks/useGlobalHotkeys';
 import { usePlayer } from '@music/hooks';
-import { useHotkeysModal, HotkeysContextType } from '../../../application/context/HotkeysContext';
+import { useHotkeysModal } from '../../../application/context/HotkeysContext';
+import type { HotkeysContextType } from '../../../application/context/HotkeysContext';
 import type { PlayerContextProps } from '@music/hooks';
 
 vi.mock('@music/hooks', () => ({
@@ -48,7 +49,7 @@ describe('useGlobalHotkeys', () => {
     vi.mocked(useHotkeysModal).mockReturnValue(mockHotkeysModal);
   });
 
-  const fireKey = (key: string, options: any = {}) => {
+  const fireKey = (key: string, options: Partial<KeyboardEventInit> = {}) => {
     const event = new KeyboardEvent('keydown', { key, ...options });
     window.dispatchEvent(event);
   };

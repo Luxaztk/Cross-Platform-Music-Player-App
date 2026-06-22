@@ -61,6 +61,7 @@ export const SettingsPage: React.FC = () => {
                             <div className="app-branding">
                                 <h1>Melovista</h1>
                                 <p>Version {__APP_VERSION__} (Desktop)</p>
+                                <p className="release-date">{t('settings.about.releaseDate', { date: __BUILD_DATE__ })}</p>
                             </div>
 
                             <p style={{ marginTop: '20px' }}>{t('settings.about.desc')}</p>
@@ -99,7 +100,7 @@ export const SettingsPage: React.FC = () => {
                                             </div>
                                             <div className="member-details">
                                                 <span className="name">Chử Văn Lộc</span>
-                                                <span className="role">20221860</span>
+                                                <span className="role">MSSV: 20221860 - Tech Lead</span>
                                             </div>
                                         </div>
                                         <div className="member-item">
@@ -108,7 +109,7 @@ export const SettingsPage: React.FC = () => {
                                             </div>
                                             <div className="member-details">
                                                 <span className="name">Nguyễn Hồng Vân</span>
-                                                <span className="role">20231649</span>
+                                                <span className="role">MSSV: 20231649 - Developer</span>
                                             </div>
                                         </div>
                                         <div className="member-item">
@@ -118,7 +119,7 @@ export const SettingsPage: React.FC = () => {
                                             </div>
                                             <div className="member-details">
                                                 <span className="name">Trần Công Minh</span>
-                                                <span className="role">20231611</span>
+                                                <span className="role">MSSV: 20231611 - Developer</span>
                                             </div>
                                         </div>
                                         <div className="member-item">
@@ -128,7 +129,7 @@ export const SettingsPage: React.FC = () => {
                                             </div>
                                             <div className="member-details">
                                                 <span className="name">Đỗ Nguyễn Việt Hoàng</span>
-                                                <span className="role">20231590</span>
+                                                <span className="role">MSSV: 20231590 - Developer</span>
                                             </div>
                                         </div>
                                     </div>

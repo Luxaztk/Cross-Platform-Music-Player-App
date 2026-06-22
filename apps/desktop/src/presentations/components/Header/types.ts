@@ -33,7 +33,7 @@ export interface UseHeaderReturn {
         recentSearches: RecentSearch[];
         language: string;
     };
-    refs: {
+    domNodes: {
         profileRef: React.RefObject<HTMLDivElement | null>;
         searchRef: React.RefObject<HTMLDivElement | null>;
         dropdownRef: React.RefObject<HTMLDivElement | null>;
@@ -55,19 +55,18 @@ export interface UseHeaderReturn {
         addToQueue: (song: Song) => void;
     };
     utils: {
-        t: (key: string, options?: any) => string;
+        t: (key: string, options?: Record<string, string | number>) => string;
         menusToRender: ( { id: string; title: string; items: MenuItem[] } | null )[];
     };
 }
 
 export interface SearchInputProps {
-    searchQuery: string;
-    isSearchFocused: boolean;
-    onSearchChange: (val: string) => void;
-    onFocus: () => void;
-    onClear: () => void;
-    searchRef: React.RefObject<HTMLDivElement | null>;
-    t: (key: string, options?: any) => string;
+  searchQuery: string;
+  isSearchFocused: boolean;
+  onSearchChange: (value: string) => void;
+  onFocus: () => void;
+  onClear: () => void;
+  t: (key: string, options?: Record<string, string | number>) => string;
 }
 
 export interface ProfileMenuProps {
@@ -80,5 +79,5 @@ export interface ProfileMenuProps {
     onToggle: () => void;
     onPushMenu: (id: string) => void;
     onPopMenu: (e: React.MouseEvent) => void;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, string | number>) => string;
 }

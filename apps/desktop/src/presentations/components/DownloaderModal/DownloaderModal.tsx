@@ -56,20 +56,22 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
               onFetch={() => actions.fetchInfo()}
               inputRef={refs.urlInputRef}
               t={t}
+              disabled={true}
             />
-            <div className="downloader-mode-selection" style={{ marginTop: '16px', padding: '16px', background: 'var(--bg-surface-elevated)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>{t('downloader.choiceRequired')}</p>
-                <div className="action-buttons horizontal" style={{ gap: '10px' }}>
-                    <button type="button" className="primary-btn" onClick={() => actions.fetchInfo('video')} style={{ flex: 1 }}>
+            <div className="downloader-mode-selection">
+                <p>{t('downloader.choiceRequired')}</p>
+                <div className="action-buttons horizontal">
+                    <button type="button" className="primary-btn" onClick={() => actions.fetchInfo('video')}>
                         {t('downloader.downloadVideoOnly')}
                     </button>
-                    <button type="button" className="secondary-btn" onClick={() => actions.fetchInfo('playlist')} style={{ flex: 1 }}>
+                    <button type="button" className="secondary-btn" onClick={() => actions.fetchInfo('playlist')}>
                         {t('downloader.downloadPlaylist')}
                     </button>
                 </div>
             </div>
           </>
         );
+
 
       case DOWNLOAD_STATUS.FETCHING:
         return <LoadingState t={t} />;

@@ -115,7 +115,7 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
                         }
                     >
                         <img src={appIcon} alt="" className="icon brand-icon-small" />
-                        <span className="text">{t('sidebar.allSongs')}</span>
+                        <span className="text">{t('sidebar.library')}</span>
                         <div className="col-more">
                             <button
                                 className={`more-btn ${activeMenuId === '0' ? 'active' : ''}`}
@@ -163,7 +163,7 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
                     <span>{t('downloader.searching') || 'Searching...'}</span>
                 </div>
             )}
-            
+
             {!isDebouncing && playlists.length === 0 && (
                 <div className="empty-playlists">
                     {query ? (

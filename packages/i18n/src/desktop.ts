@@ -18,6 +18,8 @@ export const desktopTranslations = {
       clear: 'Xóa',
       close: 'Đóng',
       more: 'Thêm',
+      filterByArtist: 'Lọc theo tác giả',
+      viewShortcuts: 'Xem phím tắt',
       remove: 'Gỡ',
       system: 'Hệ thống',
       moreActions: 'Thêm hành động',
@@ -36,7 +38,7 @@ export const desktopTranslations = {
       filterOptions: 'Lọc nâng cao',
     },
     sidebar: {
-      yourLibrary: 'Thư viện',
+      library: 'Thư viện',
       allSongs: 'Tất cả bài hát',
       playlists: 'Danh sách phát',
       createPlaylist: 'Danh sách phát',
@@ -69,6 +71,7 @@ export const desktopTranslations = {
       sec: 'giây',
       importFiles: 'Thêm tệp',
       importFolder: 'Thêm thư mục',
+      importComplete: 'Import hoàn tất!',
       addFromLibrary: 'Thêm từ Thư viện',
       noSongs: 'Không tìm thấy bài hát nào.',
       title: 'Tiêu đề',
@@ -234,6 +237,7 @@ export const desktopTranslations = {
       about: {
         desc: 'Melovista là một trình phát nhạc đa nền tảng tập trung vào trải nghiệm người dùng hiện đại và hiệu suất cao.',
         courseInfo: 'Thông tin môn học',
+        releaseDate: 'Ngày phát hành: {date}',
         course: 'Môn học',
         semester: 'Học kỳ',
         group: 'Nhóm',
@@ -396,6 +400,8 @@ export const desktopTranslations = {
       done: 'Done',
       openFolder: 'Open folder',
       keyboardShortcuts: 'Keyboard shortcuts',
+      filterByArtist: 'Filter by artist',
+      viewShortcuts: 'View shortcuts',
     },
     header: {
       searchPlaceholder: 'What do you want to play?',
@@ -408,7 +414,7 @@ export const desktopTranslations = {
       filterOptions: 'Filter options',
     },
     sidebar: {
-      yourLibrary: 'Your Library',
+      library: 'Library',
       allSongs: 'All Songs',
       playlists: 'Playlists',
       createPlaylist: 'Playlist',
@@ -441,6 +447,7 @@ export const desktopTranslations = {
       sec: 'sec',
       importFiles: 'Import Files',
       importFolder: 'Import Folder',
+      importComplete: 'Import complete!',
       addFromLibrary: 'Add from Library',
       noSongs: 'No songs found.',
       title: 'Title',
@@ -606,6 +613,7 @@ export const desktopTranslations = {
       about: {
         desc: 'Melovista is a cross-platform music player focused on delivering a modern, high-performance experience.',
         courseInfo: 'Course Information',
+        releaseDate: 'Release Date: {date}',
         course: 'Course',
         semester: 'Semester',
         group: 'Group',

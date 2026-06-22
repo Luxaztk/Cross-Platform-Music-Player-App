@@ -15,7 +15,7 @@ interface SongResultItemProps {
     onPlayNext: (song: Song) => void;
     onAddToQueue: (song: Song) => void;
     menuRef: React.RefObject<HTMLDivElement | null>;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export const SongResultItem: React.FC<SongResultItemProps> = ({

@@ -11,7 +11,7 @@ export const BITRATE_OPTIONS = [
 /**
  * Mapping function for background sync interval options with localized labels.
  */
-export const getSyncIntervalOptions = (t: (key: string, options?: any) => string) => [
+export const getSyncIntervalOptions = (t: (key: string, options?: Record<string, unknown> | string) => string) => [
     { value: 0, label: t('settings.downloads.syncInterval.never') },
     { value: 30, label: t('settings.downloads.syncInterval.min30') },
     { value: 60, label: t('settings.downloads.syncInterval.hour1') },

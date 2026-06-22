@@ -46,6 +46,48 @@ const StartupSyncTrigger: React.FC = () => {
   return null;
 };
 
+const ImportProgressObserver: React.FC = () => {
+  const { showNotification, updateNotification } = useNotification();
+  const { t } = useLanguage();
+
+  useEffect(() => {
+    let lastPercent = -1;
+    const unsub = window.electronAPI.onImportProgress?.((percent: number) => {
+      // Create toast if it doesn't exist
+      if (lastPercent === -1) {
+        showNotification('info', t('playlist.importFolder') + `... ${percent}%`, { 
+          id: 'import-progress', 
+          duration: 0 
+        });
+      } else {
+        updateNotification('import-progress', { 
+          message: t('playlist.importFolder') + `... ${percent}%` 
+        });
+      }
+      
+      lastPercent = percent;
+
+      // Clean up when done
+      if (percent >= 100) {
+        setTimeout(() => {
+          updateNotification('import-progress', {
+            type: 'success',
+            message: t('playlist.importComplete', 'Import hoàn tất!'),
+            duration: 3000
+          });
+          lastPercent = -1;
+        }, 500);
+      }
+    });
+
+    return () => {
+      if (unsub) unsub();
+    };
+  }, [showNotification, updateNotification, t]);
+
+  return null;
+};
+
 export const LibraryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { showNotification, updateNotification, removeNotification } = useNotification();
   const { t } = useLanguage();
@@ -119,6 +161,7 @@ export const LibraryProvider: React.FC<{ children: ReactNode }> = ({ children })
       {children}
       <CleanupModalWrapper />
       <StartupSyncTrigger />
+      <ImportProgressObserver />
     </SharedLibraryProvider>
   );
 };

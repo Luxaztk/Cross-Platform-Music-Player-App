@@ -10,7 +10,7 @@ interface PreviewListProps {
   duplicateInfo?: DuplicateInfo | null;
   downloadError?: string | null;
   onItemClick?: (item: DownloadItem) => void;
-  t: (keyPath: string, variables?: Record<string, string | number>) => string;
+  t: (keyPath: string, options?: Record<string, unknown> | string) => string;
 }
 
 export const PreviewList: React.FC<PreviewListProps> = ({

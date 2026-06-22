@@ -12,7 +12,7 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const {
     state,
-    refs,
+    domNodes,
     actions,
     utils
   } = useHeader();
@@ -29,7 +29,7 @@ const Header: React.FC = () => {
         </div>
 
         <div className="header-center">
-          <div className="search-bar-wrapper">
+          <div className="search-bar-wrapper" ref={domNodes.searchRef}>
             <SearchInput
               searchQuery={state.searchQuery}
               isSearchFocused={state.isSearchFocused}
@@ -40,7 +40,6 @@ const Header: React.FC = () => {
               }}
               onFocus={() => actions.setIsSearchFocused(true)}
               onClear={() => actions.setSearchQuery('')}
-              searchRef={refs.searchRef}
               t={t}
             />
 
@@ -67,8 +66,10 @@ const Header: React.FC = () => {
             activeMenuStack={state.activeMenuStack}
             menusToRender={utils.menusToRender}
             menuHeight={state.menuHeight}
-            dropdownRef={refs.dropdownRef}
-            profileRef={refs.profileRef}
+            // eslint-disable-next-line react-hooks/refs
+            dropdownRef={domNodes.dropdownRef}
+            // eslint-disable-next-line react-hooks/refs
+            profileRef={domNodes.profileRef}
             onToggle={() => actions.setShowProfileMenu(!state.showProfileMenu)}
             onPushMenu={actions.handlePushMenu}
             onPopMenu={actions.handlePopMenu}

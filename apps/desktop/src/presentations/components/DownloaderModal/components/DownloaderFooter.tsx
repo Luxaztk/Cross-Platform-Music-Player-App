@@ -14,7 +14,7 @@ interface DownloaderFooterProps {
   onEditSingle: () => void;
   onExecute: () => void;
   onClose: () => void;
-  t: (key: string, options?: any) => string;
+  t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export const DownloaderFooter: React.FC<DownloaderFooterProps> = ({

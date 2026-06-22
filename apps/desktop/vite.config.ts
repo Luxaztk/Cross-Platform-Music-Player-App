@@ -61,6 +61,7 @@ export default defineConfig({
     // Vite sẽ tự động thay thế chuỗi __APP_VERSION__ trong code
     // bằng số phiên bản lấy từ package.json lúc build
     __APP_VERSION__: JSON.stringify(packageJson.version),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().split('T')[0]),
   },
   esbuild: {
     // We keep this for development/esbuild-based tools if any
@@ -86,6 +87,13 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       reporter: ['text', 'json', 'html'],
+      include: [
+        '**/LibraryService.ts',
+        '**/AudioEngine.ts',
+        '**/ElectronLibraryRepository.ts',
+        '**/PlayerProvider.tsx',
+        '**/usePlayer.ts'
+      ],
     },
   },
 });

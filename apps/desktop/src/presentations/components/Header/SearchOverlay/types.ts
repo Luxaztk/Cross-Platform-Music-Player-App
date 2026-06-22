@@ -44,6 +44,6 @@ export interface UseSearchOverlayReturn {
         handleMoreClick: (e: React.MouseEvent, songId: string) => void;
     };
     utils: {
-        t: (key: string, options?: any) => string;
+        t: (key: string, options?: Record<string, unknown> | string) => string;
     };
 }

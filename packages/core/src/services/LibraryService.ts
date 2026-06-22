@@ -6,6 +6,21 @@ import type { IMetadataService } from '../interfaces/IMetadataService';
 import { Mutex } from '../utils/Mutex';
 import path from 'node:path';
 
+type EventCallback = (...args: unknown[]) => void;
+
+class SimpleEventEmitter {
+  private listeners: Record<string, EventCallback[]> = {};
+  on(event: string, fn: EventCallback) {
+    if (!this.listeners[event]) this.listeners[event] = [];
+    this.listeners[event].push(fn);
+  }
+  emit(event: string, ...args: unknown[]) {
+    if (this.listeners[event]) {
+      this.listeners[event].forEach(fn => fn(...args));
+    }
+  }
+}
+
 // We'll use a simple fallback if crypto.randomUUID is not available (e.g. in some mobile environments)
 const generateId = (): string => {
   try {
@@ -24,6 +39,7 @@ export class LibraryService {
   private mutex = new Mutex();
   private processingPaths = new Set<string>();
   private songs: Song[] = [];
+  public events = new SimpleEventEmitter();
 
   constructor(storageAdapter: IStorageAdapter, metadataService: IMetadataService) {
     this.storageAdapter = storageAdapter;
@@ -137,7 +153,8 @@ export class LibraryService {
 
       logger.info('[Library] Starting processAndAddSongs', { newSongCount: newSongs.length });
 
-      for (const song of newSongs) {
+      for (let index = 0; index < newSongs.length; index++) {
+        const song = newSongs[index];
         try {
           logger.debug('[Library] Processing song hash / metadata', { filePath: song.filePath, hash: song.hash, title: song.title, artist: song.artist });
 

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ElectronLibraryRepository } from '../../../infrastructure/repositories/ElectronLibraryRepository';
 import type { Song, Playlist } from '@music/types';
@@ -242,7 +243,7 @@ describe('ElectronLibraryRepository', () => {
   });
 
   it('logSyncEvent calls logSyncEvent', async () => {
-    const stats = { scanned: 1 } as any;
+    const stats = { scanned: 1 } as unknown as import('@music/types').SyncStats;
     await repository.logSyncEvent(stats, ['detail']);
     expect((window as unknown as { electronAPI: Record<string, ReturnType<typeof vi.fn>> }).electronAPI.logSyncEvent).toHaveBeenCalledWith(stats, ['detail']);
   });

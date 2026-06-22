@@ -12,7 +12,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     localStorage.setItem('app_language', lang);
   };
 
-  const t = (keyPath: string, variables?: Record<string, string | number>): string => {
+  const t = (keyPath: string, options?: Record<string, unknown> | string): string => {
     const keys = keyPath.split('.');
     let result: unknown = translations[language];
 
@@ -24,7 +24,14 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
     }
 
-    if (typeof result !== 'string') return keyPath;
+    if (typeof result !== 'string') {
+      return typeof options === 'string' ? options : keyPath;
+    }
+
+    let variables: Record<string, unknown> | undefined;
+    if (options && typeof options === 'object') {
+      variables = options;
+    }
 
     // Replace variables if provided
     if (variables) {

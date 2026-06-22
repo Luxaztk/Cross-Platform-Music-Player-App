@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SmartTooltip } from '../../../../presentations/components/Tooltip/SmartTooltip';

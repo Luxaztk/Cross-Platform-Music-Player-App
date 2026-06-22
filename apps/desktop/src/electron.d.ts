@@ -82,6 +82,7 @@ declare global {
         metadata: Partial<Song>,
       ) => Promise<{ success: boolean; error?: string }>
       onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => () => void
+      onImportProgress: (callback: (percent: number) => void) => () => void
       openItemPath: (filePath: string) => Promise<void>
       openDownloadsFolder: () => Promise<void>
       deleteFile: (filePath: string) => Promise<{ success: boolean }>

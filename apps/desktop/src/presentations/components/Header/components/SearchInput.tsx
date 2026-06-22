@@ -8,12 +8,11 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     onSearchChange,
     onFocus,
     onClear,
-    searchRef,
     t
 }) => {
 
     return (
-        <div className="search-bar" ref={searchRef}>
+        <div className="search-bar">
             <Search className="search-icon" size={ICON_SIZES.SMALL} />
             <input
                 type="text"

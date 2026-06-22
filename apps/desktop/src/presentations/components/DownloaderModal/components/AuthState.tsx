@@ -3,7 +3,7 @@ import { AlertCircle } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 
 interface AuthStateProps {
-  t: (key: string, options?: any) => string;
+  t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
 export const AuthState: React.FC<AuthStateProps> = ({ t }) => {

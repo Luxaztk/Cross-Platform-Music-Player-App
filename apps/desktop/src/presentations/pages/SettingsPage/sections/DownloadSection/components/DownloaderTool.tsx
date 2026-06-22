@@ -37,7 +37,7 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                         value={manager.url}
                         onChange={(e) => manager.setUrl(e.target.value)}
                         placeholder={t('downloader.urlPlaceholder')}
-                        disabled={manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING}
+                        disabled={manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING || manager.downloadState === DOWNLOAD_STATUS.MODE_SELECTION}
                         onKeyDown={(e) => e.key === 'Enter' && onFetch()}
                     />
                     <button type="button" className="paste-icon-btn" onClick={onPaste} title={t('downloader.paste')}>
@@ -49,7 +49,7 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                     className={`fetch-download-btn ${isBusy ? 'loading' : ''}`}
                     style={hideDownloadBtn ? { display: 'none' } : undefined}
                     onClick={onFetch}
-                    disabled={isBusy || !manager.url.trim()}
+                    disabled={isBusy || !manager.url.trim() || manager.downloadState === DOWNLOAD_STATUS.MODE_SELECTION}
                 >
                     {isBusy ? (
                         <Loader2 size={16} className="spinning" />
@@ -71,13 +71,13 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
             </div>
 
             {manager.downloadState === DOWNLOAD_STATUS.MODE_SELECTION && (
-                <div className="downloader-mode-selection" style={{ marginTop: '12px', padding: '16px', background: 'var(--bg-surface-elevated)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                    <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>{t('downloader.choiceRequired')}</p>
-                    <div className="action-buttons horizontal" style={{ gap: '10px' }}>
-                        <button type="button" className="primary-btn" onClick={() => manager.fetchInfo(manager.url, 'section', 'video')} style={{ flex: 1 }}>
+                <div className="downloader-mode-selection">
+                    <p>{t('downloader.choiceRequired')}</p>
+                    <div className="action-buttons horizontal">
+                        <button type="button" className="primary-btn" onClick={() => manager.fetchInfo(manager.url, 'section', 'video')}>
                             {t('downloader.downloadVideoOnly')}
                         </button>
-                        <button type="button" className="secondary-btn" onClick={() => manager.fetchInfo(manager.url, 'section', 'playlist')} style={{ flex: 1 }}>
+                        <button type="button" className="secondary-btn" onClick={() => manager.fetchInfo(manager.url, 'section', 'playlist')}>
                             {t('downloader.downloadPlaylist')}
                         </button>
                     </div>
@@ -86,7 +86,7 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
 
             {manager.previewItems.length > 0 && (
                 <div className="downloader-result-area">
-                    <div className="preview-items-list" style={{ maxHeight: '600px', overflowY: 'auto', marginBottom: '12px' }}>
+                    <div className="preview-items-list">
                         {manager.previewItems.map((item) => (
                             <DownloadPreviewCard
                                 key={item.id}
@@ -98,7 +98,7 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                     </div>
 
                     {manager.downloadState === DOWNLOAD_STATUS.PREVIEW && manager.previewItems.length > 1 && (
-                        <div className="action-buttons horizontal" style={{ marginBottom: '12px' }}>
+                        <div className="action-buttons horizontal">
                             <button
                                 type="button"
                                 className="edit-btn bulk"
@@ -129,7 +129,7 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
 
             {manager.downloads.size > 0 && (
                 <div className="downloader-result-area">
-                    <div className="preview-items-list" style={{ marginBottom: '12px' }}>
+                    <div className="preview-items-list">
                         {Array.from(manager.downloads.values()).map((item) => (
                             <DownloadPreviewCard
                                 key={item.id}
@@ -142,13 +142,12 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                     {manager.downloads.size === 1 ? (
                         <div className="single-download-monitor">
                             {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
-                                <div className="action-buttons horizontal" style={{ marginTop: '12px', justifyContent: 'flex-end', gap: '10px' }}>
+                                <div className="action-buttons horizontal action-buttons--end">
                                     <button 
                                         type="button" 
-                                        className="secondary-btn" 
+                                        className="secondary-btn folder-action-btn" 
                                         onClick={() => window.electronAPI.openDownloadsFolder()}
                                         title={t('common.openFolder', 'Mở thư mục')}
-                                        style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
                                     >
                                         <Folder size={16} />
                                         <span>{t('common.openFolder', 'Mở thư mục')}</span>
@@ -169,7 +168,6 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                                 <span
                                     className="monitor-title"
                                     title={t('downloader.downloadingCount', { count: manager.downloads.size })}
-                                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: '16px' }}
                                 >
                                     {t('downloader.downloadingCount', { count: manager.downloads.size })}
                                 </span>
@@ -179,13 +177,12 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                                 <div className="fill" style={{ width: `${manager.totalProgress}%` }} />
                             </div>
                             {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
-                                <div className="action-buttons horizontal" style={{ marginTop: '12px', justifyContent: 'flex-end', gap: '10px' }}>
+                                <div className="action-buttons horizontal action-buttons--end">
                                     <button 
                                         type="button" 
-                                        className="secondary-btn" 
+                                        className="secondary-btn folder-action-btn" 
                                         onClick={() => window.electronAPI.openDownloadsFolder()}
                                         title={t('common.openFolder', 'Mở thư mục')}
-                                        style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
                                     >
                                         <Folder size={16} />
                                         <span>{t('common.openFolder', 'Mở thư mục')}</span>

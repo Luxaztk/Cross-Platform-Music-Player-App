@@ -1155,6 +1155,33 @@
         }
     }
 
+    /* Mode Selection Panel — shrink to fit, centered */
+    .downloader-mode-selection {
+        margin-top: 12px;
+        padding: 16px;
+        min-width: 436px; // Width of fetch-btn in DownloaderModal (500px modal - 64px padding)
+        align-self: center; // Center within the flex-start column
+        background: var(--bg-surface-elevated);
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+
+        p {
+            margin: 0 0 12px 0;
+            font-size: 13px;
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+
+        .action-buttons.horizontal {
+            gap: 10px;
+
+            button {
+                flex: 1;
+            }
+        }
+    }
+
+
     /* Result Area (Visibility Persistence) */
     .downloader-result-area {
         margin-top: 16px;
@@ -1448,9 +1475,53 @@
                     }
                 }
             }
+
+            /* End-aligned variant (replaces justifyContent: flex-end inline style) */
+            &.action-buttons--end {
+                justify-content: flex-end;
+                margin-top: 12px;
+                gap: 10px;
+
+                button {
+                    flex: 0 0 auto; // Don't stretch, keep intrinsic size
+                }
+            }
+        }
+
+        /* Folder action button (replaces padding/flex inline styles) */
+        .folder-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+        }
+
+        /* Monitor title text truncation (replaces whiteSpace/overflow inline styles) */
+        .monitor-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 16px;
+        }
+
+        /* Preview items list scroll container (replaces maxHeight/overflowY inline styles) */
+        .preview-items-list {
+            max-height: 600px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+
+            &::-webkit-scrollbar {
+                width: 5px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: var(--bg-surface-hover);
+                border-radius: 3px;
+            }
         }
 
         /* Success Banner (Horizontal Design) */
+
         .inline-success-banner {
             display: flex;
             align-items: center;

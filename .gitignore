@@ -111,6 +111,7 @@ Thumbs.db
 *.orig.*
 *.pem
 app-example
+docs/00_Bao_Cao_Mon_Hoc_MVP
 
 # =========================
 # AI Tooling & Prompts
