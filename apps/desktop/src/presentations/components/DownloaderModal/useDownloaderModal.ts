@@ -83,7 +83,7 @@ export const useDownloaderModal = (isOpen: boolean, onClose: () => void) => {
     },
     actions: {
       setUrl: manager.setUrl,
-      fetchInfo: (mode?: 'video' | 'playlist') => manager.fetchInfo(manager.url, 'modal', mode),
+      fetchInfo: (mode?: 'video' | 'playlist') => mode ? manager.fetchInfo(manager.url, 'modal', mode) : manager.fetchInfo(manager.url, 'modal'),
       handlePaste,
       handleClose,
       setEditingItem,

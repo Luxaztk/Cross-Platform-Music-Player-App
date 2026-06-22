@@ -67,7 +67,8 @@ class MockMetadataService implements IMetadataService {
       fileSize: 1024,
       artists: ['Mock Artist'],
       year: 2024,
-      coverArt: null
+      coverArt: null,
+      createdAt: new Date().toISOString()
     };
   }
   async exists(_filePath: string): Promise<boolean> {
@@ -113,7 +114,8 @@ describe('LibraryService', () => {
       fileSize: 1024,
       artists: ['Artist 1'],
       year: 2024,
-      coverArt: null
+      coverArt: null,
+      createdAt: '2024-01-01T00:00:00.000Z'
     };
 
     it('should add a new song if no duplicates exist', async () => {
@@ -125,8 +127,7 @@ describe('LibraryService', () => {
       const addedSong = Object.values(adapter.songs)[0];
       expect(addedSong).toMatchObject({
         ...mockSong,
-        id: expect.any(String),
-        createdAt: expect.any(String)
+        id: expect.any(String)
       });
       expect(adapter.library.songIds).toContain(addedSong.id);
     });

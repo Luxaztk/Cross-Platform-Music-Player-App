@@ -27,20 +27,20 @@ describe('HotkeysModal', () => {
     render(<HotkeysModal {...defaultProps} />);
     
     // Check main title
-    expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
+    expect(screen.getByText('common.keyboardShortcuts')).toBeInTheDocument();
     
     // Check group titles
-    expect(screen.getByText('Playback')).toBeInTheDocument();
-    expect(screen.getByText('UI Controls')).toBeInTheDocument();
-    expect(screen.getByText('Navigation')).toBeInTheDocument();
-    expect(screen.getByText('App Controls')).toBeInTheDocument();
+    expect(screen.getByText('hotkeys.playback')).toBeInTheDocument();
+    expect(screen.getByText('hotkeys.ui')).toBeInTheDocument();
+    expect(screen.getByText('hotkeys.navigation')).toBeInTheDocument();
+    expect(screen.getByText('hotkeys.app')).toBeInTheDocument();
     
     // Check some specific hotkeys
     expect(screen.getByText('Space')).toBeInTheDocument();
-    expect(screen.getByText('Play/Pause')).toBeInTheDocument();
+    expect(screen.getByText('hotkeys.playPause')).toBeInTheDocument();
     
-    expect(screen.getByText('Shift + ?')).toBeInTheDocument();
-    expect(screen.getByText('Show this hotkeys list')).toBeInTheDocument();
+    expect(screen.getByText('F1')).toBeInTheDocument();
+    expect(screen.getByText('hotkeys.showHotkeys')).toBeInTheDocument();
   });
 
   it('calls onClose when close button is clicked', async () => {

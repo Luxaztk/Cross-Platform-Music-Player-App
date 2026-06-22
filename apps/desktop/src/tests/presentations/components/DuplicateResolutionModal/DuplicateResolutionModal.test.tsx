@@ -1,140 +1,243 @@
-// @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DuplicateResolutionModal } from '@components/DuplicateResolutionModal';
 import type { Song } from '@music/types';
+import { DuplicateResolutionModal } from '../../../../presentations/components/DuplicateResolutionModal/DuplicateResolutionModal';
+import { useDuplicateResolution } from '../../../../presentations/components/DuplicateResolutionModal/useDuplicateResolution';
 
-vi.mock('@hooks', () => ({
-  useLanguage: () => ({
-    t: (key: string) => key
-  })
+vi.mock('../../../../presentations/components/DuplicateResolutionModal/useDuplicateResolution', () => ({
+  useDuplicateResolution: vi.fn(),
+}));
+
+vi.mock('lucide-react', () => ({
+  X: () => <svg data-testid="icon-x" />,
+  Check: () => <svg data-testid="icon-check" />,
+  Copy: () => <svg data-testid="icon-copy" />,
 }));
 
 describe('DuplicateResolutionModal', () => {
-  const mockSong1: Song = {
-    id: 'song1', title: 'Test Song 1', artist: 'Artist 1', album: 'Album',
-    duration: 120, filePath: '/path/to/song1.mp3', hash: 'hash1',
-    artists: ['Artist 1'], genre: 'Pop', year: 2023, coverArt: null
-  };
-  const mockSong2: Song = {
-    id: 'song2', title: 'Test Song 2', artist: 'Artist 2', album: 'Album',
-    duration: 180, filePath: '/path/to/song2.mp3', hash: 'hash2',
-    artists: ['Artist 2'], genre: 'Rock', year: 2023, coverArt: null
-  };
+  let mockToggleSelect: ReturnType<typeof vi.fn>;
+  let mockOnClose: ReturnType<typeof vi.fn>;
+  let mockSelectAll: ReturnType<typeof vi.fn>;
+  let mockHandleApply: ReturnType<typeof vi.fn>;
 
-  const defaultProps = {
-    isOpen: true,
-    duplicates: [mockSong1, mockSong2],
-    onClose: vi.fn(),
-    onResolve: vi.fn(),
-  };
+  const mockDuplicates: Song[] = [
+    { id: '1', title: 'Song 1', filePath: '/path/1.mp3' } as unknown as Song,
+    { id: '2', title: 'Song 2', filePath: '/path/2.mp3' } as unknown as Song,
+  ];
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockToggleSelect = vi.fn();
+    mockOnClose = vi.fn();
+    mockSelectAll = vi.fn();
+    mockHandleApply = vi.fn();
+
+    vi.mocked(useDuplicateResolution).mockReturnValue({
+      state: {
+        selectedIds: new Set(['1']),
+        isAllSelected: false,
+      },
+      actions: {
+        toggleSelect: mockToggleSelect,
+        onClose: mockOnClose,
+        selectAll: mockSelectAll,
+        handleApply: mockHandleApply,
+      },
+      utils: {
+        t: vi.fn((key: string) => key),
+      },
+    } as unknown as ReturnType<typeof useDuplicateResolution>);
   });
 
-  it('renders nothing when isOpen is false', () => {
-    const { container } = render(<DuplicateResolutionModal {...defaultProps} isOpen={false} />);
+  it('returns null if not open', () => {
+    const { container } = render(
+      <DuplicateResolutionModal
+        isOpen={false}
+        duplicates={mockDuplicates}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('renders nothing when duplicates array is empty', () => {
-    const { container } = render(<DuplicateResolutionModal {...defaultProps} duplicates={[]} />);
+  it('returns null if duplicates array is empty', () => {
+    const { container } = render(
+      <DuplicateResolutionModal
+        isOpen={true}
+        duplicates={[]}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('renders correctly with given duplicates', () => {
-    render(<DuplicateResolutionModal {...defaultProps} />);
+  it('renders modal with duplicates when open', () => {
+    render(
+      <DuplicateResolutionModal
+        isOpen={true}
+        duplicates={mockDuplicates}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
 
-    // Header
     expect(screen.getByText('modal.duplicatesFound')).toBeInTheDocument();
-
-    // Content descriptions
-    expect(screen.getByText('modal.duplicatesDescription')).toBeInTheDocument();
-
-    // Duplicate Items
-    expect(screen.getByText('Test Song 1')).toBeInTheDocument();
-    expect(screen.getByText('/path/to/song1.mp3')).toBeInTheDocument();
-
-    expect(screen.getByText('Test Song 2')).toBeInTheDocument();
-    expect(screen.getByText('/path/to/song2.mp3')).toBeInTheDocument();
-
-    // Apply button disabled initially
-    const addBtn = screen.getByRole('button', { name: /common.addSelected/i });
-    expect(addBtn).toBeDisabled();
+    expect(screen.getByText('Song 1')).toBeInTheDocument();
+    expect(screen.getByText('/path/1.mp3')).toBeInTheDocument();
+    expect(screen.getByText('Song 2')).toBeInTheDocument();
+    expect(screen.getByText('/path/2.mp3')).toBeInTheDocument();
   });
 
-  it('allows toggling individual selection and updates button state', async () => {
-    const user = userEvent.setup();
-    render(<DuplicateResolutionModal {...defaultProps} />);
+  it('calls actions.onClose when close button is clicked', () => {
+    render(
+      <DuplicateResolutionModal
+        isOpen={true}
+        duplicates={mockDuplicates}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
 
-    const song1Text = screen.getByText('Test Song 1');
-    const song1Row = song1Text.closest('.duplicate-item');
-
-    const addBtn = screen.getByRole('button', { name: /common.addSelected/i });
-    expect(addBtn).toBeDisabled();
-
-    // Click song1 row
-    await user.click(song1Row!);
-
-    expect(song1Row).toHaveClass('selected');
-    expect(addBtn).toBeEnabled();
-
-    // Click again to deselect
-    await user.click(song1Row!);
-    expect(song1Row).not.toHaveClass('selected');
-    expect(addBtn).toBeDisabled();
+    const closeBtns = screen.getAllByRole('button');
+    // Top right X button
+    act(() => {
+      closeBtns[0].click();
+    });
+    expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it('allows select all and deselect all functionality', async () => {
-    const user = userEvent.setup();
-    render(<DuplicateResolutionModal {...defaultProps} />);
+  it('calls actions.toggleSelect when a duplicate item is clicked', () => {
+    render(
+      <DuplicateResolutionModal
+        isOpen={true}
+        duplicates={mockDuplicates}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
 
-    const selectAllBtn = screen.getByRole('button', { name: 'common.selectAll' });
+    const song2Item = screen.getByText('Song 2').closest('.duplicate-item');
+    act(() => {
+      fireEvent.click(song2Item!);
+    });
 
-    // Click Select All
-    await user.click(selectAllBtn);
-
-    const addBtn = screen.getByRole('button', { name: /common.addSelected/i });
-    expect(addBtn).toBeEnabled();
-
-    // Button Text changes to deselectAll
-    const deselectAllBtn = screen.getByRole('button', { name: 'common.deselectAll' });
-    expect(deselectAllBtn).toBeInTheDocument();
-
-    // Click Deselect All
-    await user.click(deselectAllBtn);
-    expect(addBtn).toBeDisabled();
+    expect(mockToggleSelect).toHaveBeenCalledWith('2');
   });
 
-  it('handles apply resolution correctly', async () => {
-    const user = userEvent.setup();
-    render(<DuplicateResolutionModal {...defaultProps} />);
+  it('shows Check icon for selected item and Copy icon for unselected', () => {
+    render(
+      <DuplicateResolutionModal
+        isOpen={true}
+        duplicates={mockDuplicates}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
 
-    // Select song 1
-    const song1Text = screen.getByText('Test Song 1');
-    await user.click(song1Text.closest('.duplicate-item')!);
-
-    // Click apply
-    const addBtn = screen.getByRole('button', { name: /common.addSelected/i });
-    await user.click(addBtn);
-
-    expect(defaultProps.onResolve).toHaveBeenCalledTimes(1);
-    expect(defaultProps.onResolve).toHaveBeenCalledWith([mockSong1]);
-    expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
+    const items = document.querySelectorAll('.duplicate-item');
+    expect(items[0]).toHaveClass('selected');
+    expect(items[0].querySelector('[data-testid="icon-check"]')).toBeInTheDocument();
+    
+    expect(items[1]).not.toHaveClass('selected');
+    expect(items[1].querySelector('[data-testid="icon-copy"]')).toBeInTheDocument();
   });
 
-  it('triggers onClose when close button or cancel is clicked', async () => {
-    const user = userEvent.setup();
-    render(<DuplicateResolutionModal {...defaultProps} />);
+  it('calls actions.selectAll when Select All button is clicked', () => {
+    render(
+      <DuplicateResolutionModal
+        isOpen={true}
+        duplicates={mockDuplicates}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
 
-    const cancelBtn = screen.getByRole('button', { name: 'common.cancel' });
-    await user.click(cancelBtn);
-    expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
+    const selectAllBtn = screen.getByText('common.selectAll');
+    act(() => {
+      selectAllBtn.click();
+    });
+    expect(mockSelectAll).toHaveBeenCalled();
+  });
 
-    const closeIconBtn = screen.getByRole('button', { name: 'common.close' });
-    await user.click(closeIconBtn);
-    expect(defaultProps.onClose).toHaveBeenCalledTimes(2);
+  it('shows Deselect All if all are selected', () => {
+    vi.mocked(useDuplicateResolution).mockReturnValue({
+      state: {
+        selectedIds: new Set(['1', '2']),
+        isAllSelected: true,
+      },
+      actions: {
+        toggleSelect: mockToggleSelect,
+        onClose: mockOnClose,
+        selectAll: mockSelectAll,
+        handleApply: mockHandleApply,
+      },
+      utils: {
+        t: vi.fn((key: string) => key),
+      },
+    } as unknown as ReturnType<typeof useDuplicateResolution>);
+
+    render(
+      <DuplicateResolutionModal
+        isOpen={true}
+        duplicates={mockDuplicates}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('common.deselectAll')).toBeInTheDocument();
+  });
+
+  it('calls actions.handleApply when Apply button is clicked', () => {
+    render(
+      <DuplicateResolutionModal
+        isOpen={true}
+        duplicates={mockDuplicates}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
+
+    const applyBtn = screen.getByText('common.addSelected');
+    expect(applyBtn).not.toBeDisabled();
+
+    act(() => {
+      applyBtn.click();
+    });
+
+    expect(mockHandleApply).toHaveBeenCalled();
+  });
+
+  it('disables Apply button when no items are selected', () => {
+    vi.mocked(useDuplicateResolution).mockReturnValue({
+      state: {
+        selectedIds: new Set([]),
+        isAllSelected: false,
+      },
+      actions: {
+        toggleSelect: mockToggleSelect,
+        onClose: mockOnClose,
+        selectAll: mockSelectAll,
+        handleApply: mockHandleApply,
+      },
+      utils: {
+        t: vi.fn((key: string) => key),
+      },
+    } as unknown as ReturnType<typeof useDuplicateResolution>);
+
+    render(
+      <DuplicateResolutionModal
+        isOpen={true}
+        duplicates={mockDuplicates}
+        onClose={vi.fn()}
+        onResolve={vi.fn()}
+      />
+    );
+
+    const applyBtn = screen.getByText('common.addSelected');
+    expect(applyBtn).toBeDisabled();
   });
 });

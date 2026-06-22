@@ -1,0 +1,1238 @@
+
+> melovista@1.1.10 test:coverage
+> npm run test:coverage --workspaces
+
+
+> melovista-desktop@1.1.10 test:coverage
+> vitest run --coverage
+
+[33mBoth esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored.[39m The following esbuild options were set: `{ drop: [] }`
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/apps/desktop[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m src/tests/presentations/components/DeleteConfirmationModal/DeleteConfirmationModal.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 1013[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onClose when cancel button is clicked [33m 353[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/HotkeysModal/HotkeysModal.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 913[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onClose when close button is clicked [33m 388[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/DuplicateResolutionModal/DuplicateResolutionModal.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1452[2mms[22m[39m
+     [33m[2m✓[22m[39m renders correctly with given duplicates [33m 549[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/PlaylistDetailPage/components/SongRow.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 1088[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onPlay when clicking the row background [33m 322[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/SettingsPage/sections/DownloadSection.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1440[2mms[22m[39m
+     [33m[2m✓[22m[39m should trigger library sync when Scan Now button is clicked [33m 634[2mms[22m[39m
+     [33m[2m✓[22m[39m should change background sync interval [33m 495[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/PlayerBar/PlayerBar.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 2238[2mms[22m[39m
+     [33m[2m✓[22m[39m handles play/pause toggle [33m 656[2mms[22m[39m
+     [33m[2m✓[22m[39m handles playback controls [33m 320[2mms[22m[39m
+     [33m[2m✓[22m[39m toggles shuffle and repeat [33m 396[2mms[22m[39m
+     [33m[2m✓[22m[39m opens and closes queue panel [33m 415[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Sidebar/Sidebar.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 2943[2mms[22m[39m
+     [33m[2m✓[22m[39m renders correctly when collapsed [33m 463[2mms[22m[39m
+     [33m[2m✓[22m[39m filters playlists based on search [33m 755[2mms[22m[39m
+     [33m[2m✓[22m[39m handles playlist deletion [33m 656[2mms[22m[39m
+     [33m[2m✓[22m[39m handles playlist editing [33m 411[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/ErrorBoundary/ErrorBoundary.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 795[2mms[22m[39m
+     [33m[2m✓[22m[39m resets error state when "Try again" button is clicked [33m 533[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/LyricsView/LyricsPanel.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1013[2mms[22m[39m
+     [33m[2m✓[22m[39m renders lyrics and handles line click [33m 550[2mms[22m[39m
+     [33m[2m✓[22m[39m shows empty state when no lyrics and handles search [33m 413[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/EditModal/EditModal.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 3542[2mms[22m[39m
+     [33m[2m✓[22m[39m handles Save for Playlist [33m 1886[2mms[22m[39m
+     [33m[2m✓[22m[39m handles Save for Song [33m 737[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Language/LanguageProvider.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 666[2mms[22m[39m
+     [33m[2m✓[22m[39m updates language and persists to localStorage when setLanguage is called [33m 513[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Library/SyncHistoryModal.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1018[2mms[22m[39m
+     [33m[2m✓[22m[39m should call clearSyncHistory when clear button is clicked and confirmed [33m 515[2mms[22m[39m
+ [32m✓[39m src/tests/components/Header/SearchOverlay.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Library/LibraryProvider.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 99[2mms[22m[39m
+ [32m✓[39m src/tests/utils/searchUtils.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/SettingsPage/sections/AudioSection.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 171[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/SettingsPage/sections/AppearanceSection.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 129[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Notification/Notification.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 482[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/SettingsPage/sections/GeneralSection.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 582[2mms[22m[39m
+     [33m[2m✓[22m[39m STRICT: UI label reflects settings state changes (Reactivity Check) [33m 577[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/DownloaderModal/DownloaderModal.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 684[2mms[22m[39m
+     [33m[2m✓[22m[39m calls setUrl when typing [33m 394[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Dropdown/CustomDropdown.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 667[2mms[22m[39m
+     [33m[2m✓[22m[39m STRICT: all options must have type="button" to prevent form resets [33m 431[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Header/Header.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1246[2mms[22m[39m
+     [33m[2m✓[22m[39m navigates to home when logo or home button is clicked [33m 390[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+[2m      Tests [22m [1m[32m112 passed[39m[22m[90m (112)[39m
+[2m   Start at [22m 14:52:40
+[2m   Duration [22m 22.15s[2m (transform 58.67s, setup 9.93s, import 106.06s, tests 22.30s, environment 65.95s)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   58.18 |    48.68 |   43.67 |   62.69 |                   
+ ...cation/context |   33.33 |        0 |       0 |      50 |                   
+  ...eysContext.ts |   33.33 |        0 |       0 |      50 | 12-13             
+ application/hooks |    5.77 |     0.45 |    2.27 |    7.72 |                   
+  ...oadContext.ts |     100 |      100 |     100 |     100 |                   
+  ...ngsContext.ts |     100 |      100 |     100 |     100 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  ...eredSearch.ts |    3.57 |        0 |       0 |    8.33 | 28-47             
+  useDebounce.ts   |       0 |        0 |       0 |       0 | 9-27              
+  useDownload.ts   |      20 |        0 |       0 |      20 | 5-8               
+  ...balHotkeys.ts |    1.04 |        0 |       0 |    1.12 | 13-205            
+  useLanguage.ts   |      20 |        0 |       0 |      20 | 5-8               
+  useLibrary.ts    |       0 |      100 |       0 |       0 | 3                 
+  ...ocalFilter.ts |    2.43 |        0 |       0 |    4.16 | 36-87             
+  ...tification.ts |   83.33 |       50 |     100 |   83.33 | 24                
+  ...ntSearches.ts |       5 |        0 |       0 |    5.71 | 8-70              
+  useSearch.ts     |    2.73 |        0 |       0 |    4.44 | 20-23,27-130      
+  useSettings.ts   |      20 |        0 |       0 |      20 | 5-8               
+  useTheme.ts      |      20 |        0 |       0 |   33.33 | 5-6               
+ application/utils |   58.82 |    16.21 |   66.66 |   63.33 |                   
+  searchUtils.ts   |   58.82 |    16.21 |   66.66 |   63.33 | 43,62-72,78-86    
+ ...e/repositories |       0 |        0 |       0 |       0 |                   
+  ...Repository.ts |       0 |        0 |       0 |       0 | 14-138            
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...cture/services |       0 |      100 |       0 |       0 |                   
+  ...ageAdapter.ts |       0 |      100 |       0 |       0 | 6-68              
+ ...ons/components |       0 |        0 |       0 |       0 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...esolutionModal |     1.5 |        0 |       0 |    2.81 |                   
+  ...ionModal.scss |       0 |        0 |       0 |       0 |                   
+  ...tionModal.tsx |    1.16 |        0 |       0 |    2.38 | 20-94             
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  ...Resolution.ts |    2.12 |        0 |       0 |    3.44 | 10-54             
+ ...firmationModal |   74.32 |     57.5 |     100 |     100 |                   
+  ...ionModal.scss |       0 |        0 |       0 |       0 |                   
+  ...tionModal.tsx |   74.32 |     57.5 |     100 |     100 | 30-66,69-81       
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...ownloaderModal |   61.11 |    43.38 |   45.45 |   68.53 |                   
+  ...derModal.scss |       0 |        0 |       0 |       0 |                   
+  ...aderModal.tsx |   59.77 |    39.09 |   30.76 |   70.37 | ...56-159,175-181 
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  ...oaderModal.ts |    64.1 |    61.53 |   66.66 |   65.71 | 15,46-49,54-62,93 
+ ...dal/components |    48.9 |       36 |      70 |   67.44 |                   
+  AuthState.tsx    |    4.54 |        0 |       0 |   16.66 | 11-15             
+  ...derFooter.tsx |   34.24 |    26.66 |      50 |   43.24 | 35-44,72,85-102   
+  InputState.tsx   |      72 |       46 |     100 |   95.83 | 39                
+  LoadingState.tsx |   76.92 |       50 |     100 |     100 | 9-13              
+  PreviewList.tsx  |   70.83 |    56.66 |   66.66 |   92.85 | 31                
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...s/DownloaderUI |   45.31 |    30.71 |      75 |   69.23 |                   
+  ...viewCard.scss |       0 |        0 |       0 |       0 |                   
+  ...eviewCard.tsx |   71.83 |    45.09 |     100 |     100 | 17-58,63-84       
+  ...ogressBar.tsx |    3.12 |        0 |       0 |    7.69 | 9-25              
+  ...ingBanner.tsx |      24 |     4.54 |     100 |   27.27 | 17-29             
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...nents/Dropdown |   96.03 |    87.77 |   85.71 |   96.55 |                   
+  ...Dropdown.scss |       0 |        0 |       0 |       0 |                   
+  ...mDropdown.tsx |   96.03 |    87.77 |   85.71 |   96.55 | 58,76             
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...esolutionModal |   85.12 |       70 |     100 |   96.96 |                   
+  ...ionModal.scss |       0 |        0 |       0 |       0 |                   
+  ...tionModal.tsx |   82.19 |    70.45 |     100 |   97.22 | 60                
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  ...Resolution.ts |   89.58 |    68.75 |     100 |   96.66 | 39                
+ ...ents/EditModal |   85.81 |    75.91 |    92.3 |   95.91 |                   
+  EditModal.scss   |       0 |        0 |       0 |       0 |                   
+  EditModal.tsx    |   81.42 |       68 |   85.71 |   97.36 | 118               
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  useEditModal.ts  |   89.74 |    84.61 |     100 |      95 | 66-70             
+ .../ErrorBoundary |     100 |      100 |     100 |     100 |                   
+  ...rBoundary.tsx |     100 |      100 |     100 |     100 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...GlobalDragDrop |    1.36 |        0 |       0 |    1.42 |                   
+  ...DragDrop.scss |       0 |        0 |       0 |       0 |                   
+  ...lDragDrop.tsx |    1.36 |        0 |       0 |    1.42 | 9-118             
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...ponents/Header |   73.37 |    65.74 |   45.45 |   73.52 |                   
+  Header.scss      |       0 |        0 |       0 |       0 |                   
+  Header.tsx       |   77.96 |    56.75 |   71.42 |   96.77 | 78                
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  types.ts         |       0 |        0 |       0 |       0 |                   
+  useHeader.tsx    |    72.7 |    67.59 |   40.54 |   70.04 | ...54-255,257-258 
+ .../SearchOverlay |   61.76 |    36.73 |    23.8 |   59.45 |                   
+  ...hOverlay.scss |       0 |        0 |       0 |       0 |                   
+  ...chOverlay.tsx |   30.43 |    17.94 |    7.14 |   27.27 | 32,79-184         
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  types.ts         |       0 |        0 |       0 |       0 |                   
+  ...rchOverlay.ts |   70.88 |    49.15 |   57.14 |   73.07 | ...56-57,61,67-78 
+ ...lay/components |    1.88 |        0 |       0 |    3.84 |                   
+  ...tSearches.tsx |    2.43 |        0 |       0 |    5.26 | 19-72             
+  ...esultItem.tsx |    1.53 |        0 |       0 |    3.03 | 36-112            
+ ...der/components |      80 |    65.85 |   85.71 |   96.96 |                   
+  ProfileMenu.tsx  |   76.66 |    69.38 |      80 |   94.44 | 67                
+  SearchInput.tsx  |   82.85 |     60.6 |     100 |     100 | 17-24,30,33       
+ ...s/HotkeysModal |      80 |    55.55 |   85.71 |   94.87 |                   
+  ...eysModal.scss |       0 |        0 |       0 |       0 |                   
+  HotkeysModal.tsx |      80 |    55.55 |   85.71 |   94.87 | 18,104            
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...nents/Language |    92.1 |     82.6 |     100 |     100 |                   
+  ...ageContext.ts |     100 |      100 |     100 |     100 |                   
+  ...eProvider.tsx |   91.89 |     82.6 |     100 |     100 | 13,39-42          
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...ponents/Layout |    1.96 |        0 |       0 |    3.57 |                   
+  MainLayout.scss  |       0 |        0 |       0 |       0 |                   
+  MainLayout.tsx   |    1.96 |        0 |       0 |    3.57 | 17-61             
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...onents/Library |   73.33 |       55 |   73.68 |   79.22 |                   
+  ...yProvider.tsx |   64.86 |       34 |   58.33 |   68.75 | ...,86-96,105-106 
+  ...oryModal.scss |       0 |        0 |       0 |       0 |                   
+  ...toryModal.tsx |   93.54 |       90 |     100 |   96.55 | 29                
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...nts/LyricsView |   78.04 |    63.15 |   81.81 |   82.19 |                   
+  LyricsPanel.scss |       0 |        0 |       0 |       0 |                   
+  LyricsPanel.tsx  |      76 |    60.86 |      50 |   88.88 | 52-53             
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  types.ts         |       0 |        0 |       0 |       0 |                   
+  ...yricsPanel.ts |   78.94 |    66.66 |   88.88 |      80 | ...-87,92,101-106 
+ ...iew/components |   68.61 |    51.76 |   44.44 |   88.88 |                   
+  EmptyLyrics.tsx  |   67.44 |     43.9 |   33.33 |   93.33 | 26                
+  ...csContent.tsx |      75 |       40 |      75 |   88.88 | 28                
+  LyricsHeader.tsx |   66.66 |    85.29 |   16.66 |   66.66 | 33-44             
+  LyricsSearch.tsx |   68.42 |    44.28 |      60 |     100 | 15-54             
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...s/Notification |    87.3 |    81.25 |   57.14 |   92.53 |                   
+  ...fication.scss |       0 |        0 |       0 |       0 |                   
+  Notification.tsx |   94.59 |    86.36 |   88.88 |   95.34 | 45-46             
+  ...nProvider.tsx |   76.92 |       70 |   33.33 |    87.5 | 15,23,27          
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...ents/PlayerBar |   58.11 |    56.79 |   47.82 |   61.84 |                   
+  PlayerBar.scss   |       0 |        0 |       0 |       0 |                   
+  PlayerBar.tsx    |   86.15 |    81.11 |     100 |   97.36 | 66                
+  QueuePanel.tsx   |     2.4 |        0 |       0 |     3.7 | 21-63,71-155      
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  types.ts         |       0 |        0 |       0 |       0 |                   
+  usePlayerBar.ts  |   90.69 |    80.24 |    90.9 |   91.66 | 37,64-68          
+ ...Bar/components |   87.65 |    79.42 |     100 |     100 |                   
+  NowPlaying.tsx   |   92.59 |    84.37 |     100 |     100 | 10-28             
+  ...kControls.tsx |   89.83 |    85.89 |     100 |     100 | ...31-44,53-65,70 
+  ProgressBar.tsx  |   84.21 |    66.66 |     100 |     100 | 15-23,30,33       
+  ...meControl.tsx |   84.21 |    72.41 |     100 |     100 | 13-18,25,37       
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...onents/Sidebar |   80.19 |    78.23 |   63.63 |   80.14 |                   
+  Sidebar.scss     |       0 |        0 |       0 |       0 |                   
+  Sidebar.tsx      |      85 |    96.36 |      40 |   83.33 | 45-46,78,84       
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  types.ts         |       0 |        0 |       0 |       0 |                   
+  useSidebar.ts    |   79.01 |    69.56 |   70.58 |   79.46 | ...26-127,140-143 
+ ...bar/components |   90.04 |    78.66 |   68.75 |   97.24 |                   
+  PlaylistItem.tsx |     100 |    96.07 |     100 |     100 | 23,38             
+  ...stSection.tsx |   94.11 |    80.69 |   44.44 |   95.38 | 87-99             
+  SidebarMini.tsx  |   72.22 |    51.06 |     100 |     100 | 15-47             
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...nts/DidYouKnow |   88.57 |    96.49 |   54.54 |   88.88 |                   
+  DidYouKnow.scss  |       0 |        0 |       0 |       0 |                   
+  DidYouKnow.tsx   |   88.57 |    96.49 |   54.54 |   88.88 | 23,35,41-43       
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...ongPickerModal |    1.96 |        0 |       0 |    3.84 |                   
+  ...kerModal.scss |       0 |        0 |       0 |       0 |                   
+  ...ckerModal.tsx |    1.94 |        0 |       0 |    4.16 | 23-118,124-142    
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  useSongPicker.ts |       2 |        0 |       0 |    3.33 | 11-66             
+ ...mponents/Theme |    6.06 |        0 |       0 |      10 |                   
+  ...Provider.scss |       0 |        0 |       0 |       0 |                   
+  ...eProvider.tsx |    6.06 |        0 |       0 |      10 | 18-45             
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...onents/Tooltip |   57.14 |    47.22 |   33.33 |      50 |                   
+  SmartTooltip.tsx |   57.14 |    47.22 |   33.33 |      50 | 21-54,64-65       
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...teNotification |       0 |        0 |       0 |       0 |                   
+  ...fication.scss |       0 |        0 |       0 |       0 |                   
+  ...ification.tsx |       0 |        0 |       0 |       0 | 5-72              
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...ions/constants |     100 |      100 |     100 |     100 |                   
+  ...dConstants.ts |     100 |      100 |     100 |     100 |                   
+  IconSizes.ts     |     100 |      100 |     100 |     100 |                   
+  ...sConstants.ts |     100 |      100 |     100 |     100 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...ntations/debug |      16 |        0 |       0 |      20 |                   
+  ...derMockups.ts |      16 |        0 |       0 |      20 | 12-57             
+ ...age/components |   71.42 |    49.25 |    62.5 |   88.88 |                   
+  SongRow.tsx      |   71.42 |    49.25 |    62.5 |   88.88 | ...93,109,145,164 
+ ...sPage/sections |   64.98 |    52.09 |   58.06 |   64.97 |                   
+  ...ceSection.tsx |   73.01 |    49.18 |      60 |    86.2 | 16,21,29,36       
+  AudioSection.tsx |   50.56 |    39.68 |   88.88 |   54.32 | ...01,119-122,127 
+  ...alSection.tsx |    71.2 |    58.99 |   41.17 |   67.81 | ...,82-93,171,249 
+ ...ownloadSection |   55.97 |    29.69 |   36.84 |   65.04 |                   
+  constants.ts     |     100 |      100 |     100 |     100 |                   
+  index.tsx        |      55 |    29.68 |      25 |   72.54 | ...30-133,155-168 
+  types.ts         |       0 |        0 |       0 |       0 |                   
+  ...oadSection.ts |    54.9 |    29.72 |      40 |      56 | ...3,79-89,94-100 
+ ...ion/components |   66.04 |    45.53 |   31.81 |   90.78 |                   
+  ...tSettings.tsx |      66 |    47.72 |   33.33 |      90 | 25-27             
+  ...oaderTool.tsx |   59.34 |    40.31 |    7.69 |   80.39 | ...91-122,159-196 
+  ...eSettings.tsx |   68.51 |    52.83 |      50 |      95 | 29                
+  PathSettings.tsx |   69.44 |    48.57 |     100 |     100 | 13-30             
+  ...ySettings.tsx |   69.84 |    46.29 |     100 |     100 | 12-62             
+  YoutubeAuth.tsx  |      70 |    46.87 |     100 |     100 | 13-36             
+ ...ingsPage/utils |   85.71 |       50 |   66.66 |    90.9 |                   
+  ...tion.utils.ts |     100 |      100 |     100 |     100 |                   
+  ...tion.utils.ts |     100 |      100 |     100 |     100 |                   
+  ...tion.utils.ts |      75 |      100 |       0 |     100 |                   
+  ...tion.utils.ts |     100 |      100 |     100 |     100 |                   
+  ...ings.utils.ts |      75 |       50 |     100 |   66.66 | 17                
+  index.ts         |       0 |        0 |       0 |       0 |                   
+-------------------|---------|----------|---------|---------|-------------------
+npm error Lifecycle script `test:coverage` failed with error:
+npm error workspace mobile@1.0.0
+npm error location K:\cross-platform-music-player-app\apps\mobile
+npm error Missing script: "test:coverage"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=mobile@1.0.0
+
+npm error Lifecycle script `test:coverage` failed with error:
+npm error workspace @music/brand@1.0.0
+npm error location K:\cross-platform-music-player-app\packages\brand
+npm error Missing script: "test:coverage"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=@music/brand@1.0.0
+
+
+> @music/core@1.0.0 test:coverage
+> vitest run --coverage
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/packages/core[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m src/utils/__tests__/artists.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/usecases/__tests__/LibraryUseCases.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/youtube.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/usecases/__tests__/SongUseCases.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/usecases/__tests__/PlaylistUseCases.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould add a new song if no duplicates exist
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould implement Self-Match Guard for same File Path (Success/Update instead of Duplicate)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould implement Self-Match Guard for same File Path (Success/Update instead of Duplicate)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Updated Title",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: MATCHED {
+  "isSelfMatch": true,
+  "newPath": "C:/music/song1.mp3",
+  "existingPath": "C:/music/song1.mp3"
+}
+[Library] Self-Match detected: Updating metadata for C:/music/song1.mp3
+[Library] Final Action: UPDATED (Self-Match) {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Source URL (Priority: URL)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Source URL (Priority: URL)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/other/path.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/other/path.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Source URL (Priority: URL)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: URL[0m
+New: {
+  path: [32m'C:/other/path.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/dup1.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbb",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/dup1.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/music/dup1.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbb'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/dup2.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbb",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/dup2.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/music/dup2.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbb'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/new.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbb",
+  "title": "Not a Dup (Hash)",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/new.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/new.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by binary hash (p1: prefix)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p1:binaryhash",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by binary hash (p1: prefix)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/other.mp3",
+  "hash": "p1:binaryhash",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/other.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by binary hash (p1: prefix)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/other.mp3'[39m,
+  hash: [32m'p1:binaryhash'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p1:binaryhash'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould NOT detect as duplicate if hash is present but has different prefix or invalid format
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould NOT detect as duplicate if hash is present but has different prefix or invalid format
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/new.mp3",
+  "hash": "random-hash",
+  "title": "Not a Dup (Format)",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/new.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/new.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Title + Artist (Priority: METADATA)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Title + Artist (Priority: METADATA)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/other/path.mp3",
+  "hash": "p2:completely-different-hash-at-the-end-of-the-string-to-be-sure",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/other/path.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Title + Artist (Priority: METADATA)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: METADATA[0m
+New: {
+  path: [32m'C:/other/path.mp3'[39m,
+  hash: [32m'p2:completely-different-hash-at-the-end-of-the-string-to-be-sure'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should match Vietnamese titles with different accents/normalization (Vietnamese Support)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:vietnamese-base-hash",
+  "title": "Tiếng Việt",
+  "artist": "Ca Sĩ"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should match Vietnamese titles with different accents/normalization (Vietnamese Support)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/tiengviet_copy.mp3",
+  "hash": "p2:different-perceptual-hash",
+  "title": "tieng viet",
+  "artist": "ca si"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/tiengviet_copy.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should match Vietnamese titles with different accents/normalization (Vietnamese Support)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: METADATA[0m
+New: {
+  path: [32m'C:/music/tiengviet_copy.mp3'[39m,
+  hash: [32m'p2:different-perceptual-hash'[39m,
+  title: [32m'tieng viet'[39m,
+  artist: [32m'ca si'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:vietnamese-base-hash'[39m,
+  title: [32m'Tiếng Việt'[39m,
+  artist: [32m'Ca Sĩ'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should NOT collide when both songs have empty Title and Artist (Empty Metadata Guard)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/path1.mp3",
+  "hash": "p2:empty1",
+  "title": "",
+  "artist": ""
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/path1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/path1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should NOT collide when both songs have empty Title and Artist (Empty Metadata Guard)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/path2.mp3",
+  "hash": "p2:empty2",
+  "title": "  ",
+  "artist": ""
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/path2.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/path2.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should implement Self-Match Guard: Update metadata instead of deleting same-path file
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should implement Self-Match Guard: Update metadata instead of deleting same-path file
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Updated Title",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: MATCHED {
+  "isSelfMatch": true,
+  "newPath": "C:/music/song1.mp3",
+  "existingPath": "C:/music/song1.mp3"
+}
+[Library] Self-Match detected: Updating metadata for C:/music/song1.mp3
+[Library] Final Action: UPDATED (Self-Match) {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should handle Windows path casing/slashes correctly (isSamePath Guard)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:\\Music\\Song.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:\\Music\\Song.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:\\Music\\Song.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should handle Windows path casing/slashes correctly (isSamePath Guard)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "c:/music/song.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: MATCHED {
+  "isSelfMatch": true,
+  "newPath": "c:/music/song.mp3",
+  "existingPath": "C:\\Music\\Song.mp3"
+}
+[Library] Self-Match detected: Updating metadata for c:/music/song.mp3
+[Library] Final Action: UPDATED (Self-Match) {
+  "path": "c:/music/song.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with dynamic tolerance for long mixtapes (10m vs 10m 10s)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix1.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/mix1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with dynamic tolerance for long mixtapes (10m vs 10m 10s)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix2.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Different Title",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix2.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with dynamic tolerance for long mixtapes (10m vs 10m 10s)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/music/mix2.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Different Title'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/mix1.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould respect the 60s cap for extremely long mixtapes
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix3.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix3.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/mix3.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould respect the 60s cap for extremely long mixtapes
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix4.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix4.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould respect the 60s cap for extremely long mixtapes
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/music/mix4.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/mix3.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould respect the 60s cap for extremely long mixtapes
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix5.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Unique Metadata",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix5.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/mix5.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with normalized YouTube URLs (Clean vs Dirty)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/yt1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/yt1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/yt1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with normalized YouTube URLs (Clean vs Dirty)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/yt2.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/yt2.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with normalized YouTube URLs (Clean vs Dirty)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: URL[0m
+New: {
+  path: [32m'C:/music/yt2.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/yt1.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+ [32m✓[39m src/utils/__tests__/lyrics.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould scrub URLs at the earliest entry point (importFromPath)
+[22m[39m[32m🟢 [MUTEX] ACCEPTED | Caller: TEST | Path: c:\music\test.mp3[0m
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould scrub URLs at the earliest entry point (importFromPath)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/test.mp3",
+  "hash": "p2:mockhash",
+  "title": "Mock Title",
+  "artist": "Mock Artist"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/test.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/test.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mSong Management[2m > [22m[2mshould delete a song and remove it from all playlists
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "P",
+  "hash": "H",
+  "title": "T",
+  "artist": "A"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "P"
+}
+[Library] Final Action: ADDED {
+  "path": "P"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mSong Management[2m > [22m[2mshould update song information
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "P",
+  "hash": "H",
+  "title": "Old Title",
+  "artist": "A"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "P"
+}
+[Library] Final Action: ADDED {
+  "path": "P"
+}
+
+ [32m✓[39m src/services/__tests__/LibraryService.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/Mutex.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1668[2mms[22m[39m
+     [33m[2m✓[22m[39m should handle many concurrent tasks (Race Condition test) [33m 1539[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m59 passed[39m[22m[90m (59)[39m
+[2m   Start at [22m 14:53:04
+[2m   Duration [22m 2.27s[2m (transform 884ms, setup 0ms, import 1.43s, tests 1.78s, environment 1ms)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   69.02 |    63.84 |   67.34 |   71.14 |                   
+ services          |   70.84 |     62.7 |   71.42 |   73.16 |                   
+  ...aryService.ts |   70.84 |     62.7 |   71.42 |   73.16 | ...69,678,702-712 
+ usecases          |   55.55 |      100 |   55.55 |   55.55 |                   
+  ...istUseCase.ts |       0 |      100 |       0 |       0 | 6-10              
+  ...istUseCase.ts |     100 |      100 |     100 |     100 |                   
+  ...istUseCase.ts |     100 |      100 |     100 |     100 |                   
+  ...ongUseCase.ts |     100 |      100 |     100 |     100 |                   
+  ...ngsUseCase.ts |       0 |      100 |       0 |       0 | 6-10              
+  ...aryUseCase.ts |     100 |      100 |     100 |     100 |                   
+  ...icsUseCase.ts |       0 |      100 |       0 |       0 | 6-10              
+  ...yIdUseCase.ts |     100 |      100 |     100 |     100 |                   
+  ...stsUseCase.ts |     100 |      100 |     100 |     100 |                   
+  ...lesUseCase.ts |     100 |      100 |     100 |     100 |                   
+  ...derUseCase.ts |     100 |      100 |     100 |     100 |                   
+  ...ongUseCase.ts |       0 |      100 |       0 |       0 | 7-11              
+  ...istUseCase.ts |       0 |      100 |       0 |       0 | 6-10              
+  ...icsUseCase.ts |       0 |      100 |       0 |       0 | 6-10              
+  ...lesUseCase.ts |       0 |      100 |       0 |       0 | 7-11              
+  ...icsUseCase.ts |       0 |      100 |       0 |       0 | 7-11              
+  ...istUseCase.ts |     100 |      100 |     100 |     100 |                   
+  ...ongUseCase.ts |     100 |      100 |     100 |     100 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ utils             |   66.66 |    71.42 |   84.61 |   69.81 |                   
+  LyricsParser.ts  |       0 |        0 |       0 |       0 | 11-33             
+  Mutex.ts         |     100 |      100 |     100 |     100 |                   
+  artists.ts       |     100 |      100 |     100 |     100 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  lyrics.ts        |   91.66 |       80 |     100 |     100 | 9,28              
+  youtube.ts       |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------
+
+> @music/hooks@1.0.0 test:coverage
+> vitest run --coverage
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/packages/hooks[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould fetch library and playlists on mount
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle playlist creation
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle importing files
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle song updates
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle scan missing files
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle deleting a song
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle deleting multiple songs
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle removing songs from playlist
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle adding songs to playlist
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle deleting a playlist
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle adding songs to library
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle importing a folder with content and duplicates
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle getting playlist detail
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle updating a playlist
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mSync System Orchestration[2m > [22m[2mshould run auto-import scan before missing files scan in handleSyncLibrary
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mSync System Orchestration[2m > [22m[2mshould update missingSongs and showCleanupModal if missing files are found
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mSync System Orchestration[2m > [22m[2mshould NOT show cleanup modal if isSilent is true
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mSync System Orchestration[2m > [22m[2mshould handle confirm cleanup and log deleted songs
+[22m[39m[Library] Background sync is disabled
+
+ [32m✓[39m src/tests/LibraryProvider.test.tsx [2m([22m[2m19 tests[22m[2m)[22m[33m 5043[2mms[22m[39m
+     [33m[2m✓[22m[39m should fetch library and playlists on mount [33m 2507[2mms[22m[39m
+     [33m[2m✓[22m[39m should handle scan missing files [33m 2494[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 14:53:07
+[2m   Duration [22m 6.82s[2m (transform 234ms, setup 0ms, import 497ms, tests 5.04s, environment 904ms)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   29.31 |    18.88 |   23.44 |   31.01 |                   
+ src               |    6.32 |     6.89 |    3.44 |    6.57 |                   
+  ...aryContext.ts |     100 |      100 |     100 |     100 |                   
+  PlayerContext.ts |       0 |      100 |     100 |       0 | 6                 
+  UIContext.ts     |       0 |      100 |     100 |       0 | 6                 
+  ...dioDevices.ts |       0 |        0 |       0 |       0 | 8-73              
+  useLibrary.ts    |   66.66 |    66.66 |      50 |   66.66 | 16-20             
+  useLyricSync.ts  |       0 |        0 |       0 |       0 | 4-46              
+  useLyrics.ts     |       0 |        0 |       0 |       0 | 9-127             
+  usePlayer.ts     |       0 |        0 |       0 |       0 | 4-9               
+  useUI.ts         |       0 |        0 |       0 |       0 | 4-9               
+ src/constants     |       0 |      100 |     100 |       0 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  lyrics.ts        |       0 |      100 |     100 |       0 | 5                 
+ src/providers     |   37.36 |    22.16 |   28.44 |   40.19 |                   
+  ...yProvider.tsx |   82.92 |    54.65 |   78.57 |   85.86 | ...25-431,441-442 
+  ...rProvider.tsx |       0 |        0 |       0 |       0 | 21-426            
+  UIProvider.tsx   |       0 |      100 |       0 |       0 | 9-16              
+ src/types         |       0 |        0 |       0 |       0 |                   
+  audio.ts         |       0 |        0 |       0 |       0 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  library.ts       |       0 |        0 |       0 |       0 |                   
+  player.ts        |       0 |        0 |       0 |       0 |                   
+  ui.ts            |       0 |        0 |       0 |       0 |                   
+-------------------|---------|----------|---------|---------|-------------------
+
+> @music/i18n@1.0.0 test:coverage
+> echo "No tests specified"
+
+"No tests specified"
+
+> @music/player@1.0.0 test:coverage
+> vitest run --coverage
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/packages/player[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+[90mstderr[2m | src/__tests__/AudioEngine.test.ts[2m > [22m[2mAudioEngine[2m > [22m[2mAdvanced Logic[2m > [22m[2mshould handle events: onEnd and Errors
+[22m[39mHowler load error: Network Error
+Howler play error: Audio Blocked
+
+ [32m✓[39m src/__tests__/AudioEngine.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m   Start at [22m 14:53:14
+[2m   Duration [22m 347ms[2m (transform 62ms, setup 0ms, import 109ms, tests 20ms, environment 0ms)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+----------------|---------|----------|---------|---------|----------------------
+File            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s    
+----------------|---------|----------|---------|---------|----------------------
+All files       |   73.77 |    56.52 |   79.31 |    74.1 |                      
+ AudioEngine.ts |   73.77 |    56.52 |   79.31 |    74.1 | ...1,168,245,259-285 
+----------------|---------|----------|---------|---------|----------------------
+
+> @music/types@1.0.0 test:coverage
+> echo "No tests specified"
+
+"No tests specified"
+
+> @music/ui@1.0.0 test:coverage
+> echo "No tests specified"
+
+"No tests specified"
+
+> @music/utils@1.0.0 test:coverage
+> vitest run --coverage
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/packages/utils[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m src/__tests__/formatTime.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 14:53:15
+[2m   Duration [22m 261ms[2m (transform 28ms, setup 0ms, import 43ms, tests 4ms, environment 0ms)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-----------------|---------|----------|---------|---------|-------------------
+File             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-----------------|---------|----------|---------|---------|-------------------
+All files        |      10 |    16.21 |    6.25 |   11.11 |                   
+ array.ts        |       0 |      100 |       0 |       0 | 6-12              
+ errorHandler.ts |       0 |        0 |       0 |       0 | 2                 
+ formatTime.ts   |     100 |      100 |     100 |     100 |                   
+ logger.ts       |       0 |        0 |       0 |       0 | 10-46             
+ normalize.ts    |       0 |        0 |       0 |       0 | 7-28              
+ path.ts         |       0 |        0 |       0 |       0 | 7-9               
+ string.ts       |       0 |        0 |       0 |       0 | 6-10              
+-----------------|---------|----------|---------|---------|-------------------

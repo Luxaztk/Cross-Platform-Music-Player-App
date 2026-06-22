@@ -19,6 +19,10 @@ vi.mock('@hooks', () => ({
   }),
 }));
 
+vi.mock('@application/context/HotkeysContext', () => ({
+  useHotkeysModal: () => ({ openHotkeysModal: vi.fn() })
+}));
+
 vi.mock('../../../../presentations/components/PlayerBar/QueuePanel', () => ({
   default: () => <div data-testid="queue-panel">Queue Panel</div>,
 }));

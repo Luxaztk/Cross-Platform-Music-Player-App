@@ -1,0 +1,1174 @@
+
+> melovista@1.1.10 test
+> npm run test --workspaces
+
+
+> melovista-desktop@1.1.10 test
+> vitest run
+
+[33mBoth esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored.[39m The following esbuild options were set: `{ drop: [] }`
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/apps/desktop[39m
+
+ [32m✓[39m src/tests/presentations/components/Library/SyncHistoryModal.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 725[2mms[22m[39m
+     [33m[2m✓[22m[39m should call clearSyncHistory when clear button is clicked and confirmed [33m 335[2mms[22m[39m
+ [31m❯[39m src/tests/presentations/components/HotkeysModal/HotkeysModal.test.tsx [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 697[2mms[22m[39m
+     [32m✓[39m renders nothing when isOpen is false[32m 72[2mms[22m[39m
+[31m     [31m×[31m renders hotkey groups and items correctly when isOpen is true[39m[32m 140[2mms[22m[39m
+     [32m✓[39m calls onClose when close button is clicked[32m 276[2mms[22m[39m
+     [32m✓[39m calls onClose when overlay is clicked[32m 95[2mms[22m[39m
+     [32m✓[39m does not call onClose when modal body is clicked[32m 105[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/DuplicateResolutionModal/DuplicateResolutionModal.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1045[2mms[22m[39m
+     [33m[2m✓[22m[39m renders correctly with given duplicates [33m 365[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/PlaylistDetailPage/components/SongRow.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 987[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onPlay when clicking the row background [33m 313[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/PlayerBar/PlayerBar.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 2057[2mms[22m[39m
+     [33m[2m✓[22m[39m handles play/pause toggle [33m 678[2mms[22m[39m
+     [33m[2m✓[22m[39m handles playback controls [33m 353[2mms[22m[39m
+     [33m[2m✓[22m[39m toggles shuffle and repeat [33m 420[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/SettingsPage/sections/DownloadSection.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1351[2mms[22m[39m
+     [33m[2m✓[22m[39m should render section title and description [33m 364[2mms[22m[39m
+     [33m[2m✓[22m[39m should trigger library sync when Scan Now button is clicked [33m 823[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Sidebar/Sidebar.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 2660[2mms[22m[39m
+     [33m[2m✓[22m[39m renders correctly when collapsed [33m 361[2mms[22m[39m
+     [33m[2m✓[22m[39m filters playlists based on search [33m 698[2mms[22m[39m
+     [33m[2m✓[22m[39m handles playlist deletion [33m 759[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/LyricsView/LyricsPanel.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 845[2mms[22m[39m
+     [33m[2m✓[22m[39m renders lyrics and handles line click [33m 479[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/EditModal/EditModal.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 3122[2mms[22m[39m
+     [33m[2m✓[22m[39m handles Save for Playlist [33m 1409[2mms[22m[39m
+     [33m[2m✓[22m[39m handles Save for Song [33m 726[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Language/LanguageProvider.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 718[2mms[22m[39m
+     [33m[2m✓[22m[39m updates language and persists to localStorage when setLanguage is called [33m 541[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/DeleteConfirmationModal/DeleteConfirmationModal.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 1160[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onClose when cancel button is clicked [33m 454[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/ErrorBoundary/ErrorBoundary.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 733[2mms[22m[39m
+     [33m[2m✓[22m[39m resets error state when "Try again" button is clicked [33m 403[2mms[22m[39m
+ [32m✓[39m src/tests/components/Header/SearchOverlay.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 105[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Library/LibraryProvider.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 105[2mms[22m[39m
+ [32m✓[39m src/tests/utils/searchUtils.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/SettingsPage/sections/AppearanceSection.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 153[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/SettingsPage/sections/AudioSection.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 225[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Notification/Notification.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 471[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/pages/SettingsPage/sections/GeneralSection.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 529[2mms[22m[39m
+     [33m[2m✓[22m[39m STRICT: UI label reflects settings state changes (Reactivity Check) [33m 525[2mms[22m[39m
+ [31m❯[39m src/tests/presentations/components/DownloaderModal/DownloaderModal.test.tsx [2m([22m[2m8 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 603[2mms[22m[39m
+     [32m✓[39m renders nothing when isOpen is false[32m 34[2mms[22m[39m
+     [32m✓[39m renders initial input state correctly[32m 71[2mms[22m[39m
+     [33m[2m✓[22m[39m calls setUrl when typing [33m 311[2mms[22m[39m
+[31m     [31m×[31m calls fetchInfo when clicking fetch button[39m[32m 110[2mms[22m[39m
+     [32m✓[39m shows searching state when fetching[32m 7[2mms[22m[39m
+     [32m✓[39m shows error state when error occurs[32m 12[2mms[22m[39m
+     [32m✓[39m shows preview state when info is fetched[32m 8[2mms[22m[39m
+     [32m✓[39m prevents closing while busy[32m 44[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Dropdown/CustomDropdown.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 599[2mms[22m[39m
+     [33m[2m✓[22m[39m STRICT: all options must have type="button" to prevent form resets [33m 393[2mms[22m[39m
+ [32m✓[39m src/tests/presentations/components/Header/Header.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1088[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/tests/presentations/components/DownloaderModal/DownloaderModal.test.tsx[2m > [22mDownloaderModal[2m > [22mcalls fetchInfo when clicking fetch button
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ …(2) ][90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[2m    "https://youtube.com/watch?v=123",[22m
+[2m    "modal",[22m
+[31m+   undefined,[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/tests/presentations/components/DownloaderModal/DownloaderModal.test.tsx:[2m92:27[22m[39m
+    [90m 90|[39m     [35mawait[39m user[33m.[39m[34mclick[39m(fetchBtn)[33m;[39m
+    [90m 91|[39m
+    [90m 92|[39m     expect(mockFetchInfo).toHaveBeenCalledWith('https://youtube.com/wa…
+    [90m   |[39m                           [31m^[39m
+    [90m 93|[39m   })[33m;[39m
+    [90m 94|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/presentations/components/HotkeysModal/HotkeysModal.test.tsx[2m > [22mHotkeysModal[2m > [22mrenders hotkey groups and items correctly when isOpen is true
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: Keyboard Shortcuts. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"hotkeys-modal-overlay"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"hotkeys-modal"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"hotkeys-modal-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"header-title"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-keyboard header-icon"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M10 8h.01"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 12h.01"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M14 8h.01"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M16 12h.01"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M18 8h.01"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M6 8h.01"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M7 16h10"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M8 12h.01"[39m
+              [36m/>[39m
+              [36m<rect[39m
+                [33mheight[39m=[32m"16"[39m
+                [33mrx[39m=[32m"2"[39m
+                [33mwidth[39m=[32m"20"[39m
+                [33mx[39m=[32m"2"[39m
+                [33my[39m=[32m"4"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [36m<h2>[39m
+              [0mcommon.keyboardShortcuts[0m
+            [36m</h2>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"close-button"[39m
+            [33mtitle[39m=[32m"common.close"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-x"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"18"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M18 6 6 18"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m6 6 12 12"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"hotkeys-modal-body"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"hotkeys-grid"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"hotkeys-group"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"hotkeys-group-header"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-circle-play"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"12"[39m
+                    [33mr[39m=[32m"10"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<h3[39m
+                  [33mclass[39m=[32m"hotkeys-group-title"[39m
+                [36m>[39m
+                  [0mhotkeys.playback[0m
+                [36m</h3>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"hotkeys-list"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"hotkey-item"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"hotkey-keys-wrapper"[39m
+                  [36m>[39m
+                    [36m<kbd[39m
+                      [33mclass[39m=[32m"hotkey-key hotkey-key-wide"[39m
+                    [36m>[39m
+                      [0mSpace[0m
+                    [36m</kbd>[39m
+                  [36m</div>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"hotkey-description"[39m
+                  [36m>[39m
+                    [0mhotkeys.playPause[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"hotkey-item"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"hotkey-keys-wrapper"[39m
+                  [36m>[39m
+                    [36m<kbd[39m
+                      [33mclass[39m=[32m"hotkey-key "[39m
+                    [36m>[39m
+                      [0m←[0m
+                    [36m</kbd>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"key-separator"[39m
+                    [36m>[39m
+                      [0m/[0m
+                    [36m</span>[39m
+                    [36m<kbd[39m
+                      [33mclass[39m=[32m"hotkey-key "[39m
+                    [36m>[39m
+                      [0m→[0m
+                    [36m</kbd>[39m
+               ...
+[90m [2m❯[22m Object.getElementError ../../node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m ../../node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m ../../node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m getByText ../../node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/tests/presentations/components/HotkeysModal/HotkeysModal.test.tsx:[2m30:19[22m[39m
+    [90m 28|[39m
+    [90m 29|[39m     [90m// Check main title[39m
+    [90m 30|[39m     [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m'Keyboard Shortcuts'[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+    [90m   |[39m                   [31m^[39m
+    [90m 31|[39m
+    [90m 32|[39m     [90m// Check group titles[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m20 passed[39m[22m[90m (22)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m110 passed[39m[22m[90m (112)[39m
+[2m   Start at [22m 14:49:07
+[2m   Duration [22m 19.61s[2m (transform 61.31s, setup 8.36s, import 102.78s, tests 19.99s, environment 58.44s)[22m
+
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path K:\cross-platform-music-player-app\apps\desktop
+npm error workspace melovista-desktop@1.1.10
+npm error location K:\cross-platform-music-player-app\apps\desktop
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c vitest run
+
+npm error Lifecycle script `test` failed with error:
+npm error workspace mobile@1.0.0
+npm error location K:\cross-platform-music-player-app\apps\mobile
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=mobile@1.0.0
+
+npm error Lifecycle script `test` failed with error:
+npm error workspace @music/brand@1.0.0
+npm error location K:\cross-platform-music-player-app\packages\brand
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=@music/brand@1.0.0
+
+
+> @music/core@1.0.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/packages/core[39m
+
+ [32m✓[39m src/utils/__tests__/artists.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/usecases/__tests__/LibraryUseCases.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/youtube.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/usecases/__tests__/SongUseCases.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/usecases/__tests__/PlaylistUseCases.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould add a new song if no duplicates exist
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould implement Self-Match Guard for same File Path (Success/Update instead of Duplicate)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould implement Self-Match Guard for same File Path (Success/Update instead of Duplicate)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Updated Title",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: MATCHED {
+  "isSelfMatch": true,
+  "newPath": "C:/music/song1.mp3",
+  "existingPath": "C:/music/song1.mp3"
+}
+[Library] Self-Match detected: Updating metadata for C:/music/song1.mp3
+[Library] Final Action: UPDATED (Self-Match) {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Source URL (Priority: URL)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+ [32m✓[39m src/utils/__tests__/lyrics.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Source URL (Priority: URL)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/other/path.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/other/path.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Source URL (Priority: URL)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: URL[0m
+New: {
+  path: [32m'C:/other/path.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/dup1.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbb",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/dup1.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/music/dup1.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbb'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/dup2.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbb",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/dup2.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/music/dup2.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbb'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Perceptual Hash - Tiered Logic
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/new.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbb",
+  "title": "Not a Dup (Hash)",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/new.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/new.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by binary hash (p1: prefix)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p1:binaryhash",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by binary hash (p1: prefix)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/other.mp3",
+  "hash": "p1:binaryhash",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/other.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by binary hash (p1: prefix)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/other.mp3'[39m,
+  hash: [32m'p1:binaryhash'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p1:binaryhash'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould NOT detect as duplicate if hash is present but has different prefix or invalid format
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould NOT detect as duplicate if hash is present but has different prefix or invalid format
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/new.mp3",
+  "hash": "random-hash",
+  "title": "Not a Dup (Format)",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/new.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/new.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Title + Artist (Priority: METADATA)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Title + Artist (Priority: METADATA)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/other/path.mp3",
+  "hash": "p2:completely-different-hash-at-the-end-of-the-string-to-be-sure",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/other/path.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate by Title + Artist (Priority: METADATA)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: METADATA[0m
+New: {
+  path: [32m'C:/other/path.mp3'[39m,
+  hash: [32m'p2:completely-different-hash-at-the-end-of-the-string-to-be-sure'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should match Vietnamese titles with different accents/normalization (Vietnamese Support)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:vietnamese-base-hash",
+  "title": "Tiếng Việt",
+  "artist": "Ca Sĩ"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should match Vietnamese titles with different accents/normalization (Vietnamese Support)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/tiengviet_copy.mp3",
+  "hash": "p2:different-perceptual-hash",
+  "title": "tieng viet",
+  "artist": "ca si"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/tiengviet_copy.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should match Vietnamese titles with different accents/normalization (Vietnamese Support)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: METADATA[0m
+New: {
+  path: [32m'C:/music/tiengviet_copy.mp3'[39m,
+  hash: [32m'p2:different-perceptual-hash'[39m,
+  title: [32m'tieng viet'[39m,
+  artist: [32m'ca si'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/song1.mp3'[39m,
+  hash: [32m'p2:vietnamese-base-hash'[39m,
+  title: [32m'Tiếng Việt'[39m,
+  artist: [32m'Ca Sĩ'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should NOT collide when both songs have empty Title and Artist (Empty Metadata Guard)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/path1.mp3",
+  "hash": "p2:empty1",
+  "title": "",
+  "artist": ""
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/path1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/path1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should NOT collide when both songs have empty Title and Artist (Empty Metadata Guard)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/path2.mp3",
+  "hash": "p2:empty2",
+  "title": "  ",
+  "artist": ""
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/path2.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/path2.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should implement Self-Match Guard: Update metadata instead of deleting same-path file
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/song1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should implement Self-Match Guard: Update metadata instead of deleting same-path file
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/song1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Updated Title",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: MATCHED {
+  "isSelfMatch": true,
+  "newPath": "C:/music/song1.mp3",
+  "existingPath": "C:/music/song1.mp3"
+}
+[Library] Self-Match detected: Updating metadata for C:/music/song1.mp3
+[Library] Final Action: UPDATED (Self-Match) {
+  "path": "C:/music/song1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should handle Windows path casing/slashes correctly (isSamePath Guard)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:\\Music\\Song.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:\\Music\\Song.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:\\Music\\Song.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2m[REGRESSION] should handle Windows path casing/slashes correctly (isSamePath Guard)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "c:/music/song.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: MATCHED {
+  "isSelfMatch": true,
+  "newPath": "c:/music/song.mp3",
+  "existingPath": "C:\\Music\\Song.mp3"
+}
+[Library] Self-Match detected: Updating metadata for c:/music/song.mp3
+[Library] Final Action: UPDATED (Self-Match) {
+  "path": "c:/music/song.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with dynamic tolerance for long mixtapes (10m vs 10m 10s)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix1.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/mix1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with dynamic tolerance for long mixtapes (10m vs 10m 10s)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix2.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Different Title",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix2.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with dynamic tolerance for long mixtapes (10m vs 10m 10s)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/music/mix2.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Different Title'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/mix1.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould respect the 60s cap for extremely long mixtapes
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix3.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix3.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/mix3.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould respect the 60s cap for extremely long mixtapes
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix4.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix4.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould respect the 60s cap for extremely long mixtapes
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: HASH[0m
+New: {
+  path: [32m'C:/music/mix4.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/mix3.mp3'[39m,
+  hash: [32m'p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould respect the 60s cap for extremely long mixtapes
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/mix5.mp3",
+  "hash": "p2:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Unique Metadata",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/mix5.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/mix5.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with normalized YouTube URLs (Clean vs Dirty)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/yt1.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/yt1.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/yt1.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with normalized YouTube URLs (Clean vs Dirty)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/yt2.mp3",
+  "hash": "p2:abcdefg",
+  "title": "Song 1",
+  "artist": "Artist 1"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/yt2.mp3"
+}
+
+[90mstderr[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould detect duplicate with normalized YouTube URLs (Clean vs Dirty)
+[22m[39m[41m❌ [GUARD 3] COLLISION! Reason: URL[0m
+New: {
+  path: [32m'C:/music/yt2.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+Existing: {
+  id: [32m'1'[39m,
+  path: [32m'C:/music/yt1.mp3'[39m,
+  hash: [32m'p2:abcdefg'[39m,
+  title: [32m'Song 1'[39m,
+  artist: [32m'Artist 1'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould scrub URLs at the earliest entry point (importFromPath)
+[22m[39m[32m🟢 [MUTEX] ACCEPTED | Caller: TEST | Path: c:\music\test.mp3[0m
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mprocessAndAddSongs (Duplicate Detection)[2m > [22m[2mshould scrub URLs at the earliest entry point (importFromPath)
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "C:/music/test.mp3",
+  "hash": "p2:mockhash",
+  "title": "Mock Title",
+  "artist": "Mock Artist"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "C:/music/test.mp3"
+}
+[Library] Final Action: ADDED {
+  "path": "C:/music/test.mp3"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mSong Management[2m > [22m[2mshould delete a song and remove it from all playlists
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "P",
+  "hash": "H",
+  "title": "T",
+  "artist": "A"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "P"
+}
+[Library] Final Action: ADDED {
+  "path": "P"
+}
+
+[90mstdout[2m | src/services/__tests__/LibraryService.test.ts[2m > [22m[2mLibraryService[2m > [22m[2mSong Management[2m > [22m[2mshould update song information
+[22m[39m[Library] Starting processAndAddSongs {
+  "newSongCount": 1
+}
+[Library] Processing song hash / metadata {
+  "filePath": "P",
+  "hash": "H",
+  "title": "Old Title",
+  "artist": "A"
+}
+[Library] Self-Match Check: NOT MATCHED {
+  "isSelfMatch": false,
+  "newPath": "P"
+}
+[Library] Final Action: ADDED {
+  "path": "P"
+}
+
+ [32m✓[39m src/services/__tests__/LibraryService.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/Mutex.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1679[2mms[22m[39m
+     [33m[2m✓[22m[39m should handle many concurrent tasks (Race Condition test) [33m 1548[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m59 passed[39m[22m[90m (59)[39m
+[2m   Start at [22m 14:49:27
+[2m   Duration [22m 2.19s[2m (transform 1.01s, setup 0ms, import 1.55s, tests 1.76s, environment 2ms)[22m
+
+
+> @music/hooks@1.0.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/packages/hooks[39m
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould fetch library and playlists on mount
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle playlist creation
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle importing files
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle song updates
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle scan missing files
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle deleting a song
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle deleting multiple songs
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle removing songs from playlist
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle adding songs to playlist
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle deleting a playlist
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle adding songs to library
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle importing a folder with content and duplicates
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle getting playlist detail
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mshould handle updating a playlist
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mSync System Orchestration[2m > [22m[2mshould run auto-import scan before missing files scan in handleSyncLibrary
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mSync System Orchestration[2m > [22m[2mshould update missingSongs and showCleanupModal if missing files are found
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mSync System Orchestration[2m > [22m[2mshould NOT show cleanup modal if isSilent is true
+[22m[39m[Library] Background sync is disabled
+
+[90mstdout[2m | src/tests/LibraryProvider.test.tsx[2m > [22m[2mSharedLibraryProvider[2m > [22m[2mSync System Orchestration[2m > [22m[2mshould handle confirm cleanup and log deleted songs
+[22m[39m[Library] Background sync is disabled
+
+ [32m✓[39m src/tests/LibraryProvider.test.tsx [2m([22m[2m19 tests[22m[2m)[22m[33m 5034[2mms[22m[39m
+     [33m[2m✓[22m[39m should fetch library and playlists on mount [33m 2496[2mms[22m[39m
+     [33m[2m✓[22m[39m should handle scan missing files [33m 2482[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 14:49:30
+[2m   Duration [22m 6.61s[2m (transform 240ms, setup 0ms, import 486ms, tests 5.03s, environment 911ms)[22m
+
+
+> @music/i18n@1.0.0 test
+> echo "No tests specified"
+
+"No tests specified"
+
+> @music/player@1.0.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/packages/player[39m
+
+[90mstderr[2m | src/__tests__/AudioEngine.test.ts[2m > [22m[2mAudioEngine[2m > [22m[2mAdvanced Logic[2m > [22m[2mshould handle events: onEnd and Errors
+[22m[39mHowler load error: Network Error
+Howler play error: Audio Blocked
+
+ [32m✓[39m src/__tests__/AudioEngine.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m   Start at [22m 14:49:37
+[2m   Duration [22m 397ms[2m (transform 93ms, setup 0ms, import 161ms, tests 41ms, environment 0ms)[22m
+
+
+> @music/types@1.0.0 test
+> echo "No tests specified"
+
+"No tests specified"
+
+> @music/ui@1.0.0 test
+> echo "No tests specified"
+
+"No tests specified"
+
+> @music/utils@1.0.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90mK:/cross-platform-music-player-app/packages/utils[39m
+
+ [32m✓[39m src/__tests__/formatTime.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 14:49:38
+[2m   Duration [22m 246ms[2m (transform 37ms, setup 0ms, import 54ms, tests 4ms, environment 0ms)[22m
+
