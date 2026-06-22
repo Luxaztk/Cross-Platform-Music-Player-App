@@ -1,11 +1,9 @@
 import React from 'react';
-import { ListMusic, MicVocal } from 'lucide-react';
+import { ListMusic, MicVocal, Keyboard } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
+import { useHotkeysModal } from '@application/context/HotkeysContext';
 import { usePlayerBar } from './usePlayerBar';
-import { NowPlaying } from './components/NowPlaying';
-import { PlaybackControls } from './components/PlaybackControls';
-import { ProgressBar } from './components/ProgressBar';
-import { VolumeControl } from './components/VolumeControl';
+import { NowPlaying, PlaybackControls, ProgressBar, VolumeControl } from './components';
 import QueuePanel from './QueuePanel';
 import './PlayerBar.scss';
 
@@ -18,8 +16,10 @@ export const PlayerBar: React.FC = () => {
         utils
     } = usePlayerBar();
 
+    const { toggleBtnRef, queueContainerRef } = refs;
     const { t, formatTime, appIcon } = utils;
     const isDisabled = !state.currentSong;
+    const { openHotkeysModal } = useHotkeysModal();
 
     return (
         <footer className="player-bar">
@@ -68,7 +68,7 @@ export const PlayerBar: React.FC = () => {
 
             <div className="player-right">
                 <button
-                    ref={refs.toggleBtnRef}
+                    ref={toggleBtnRef}
                     className={`queue-info ${state.isQueueOpen ? 'active' : ''}`}
                     title={t('player.queue')}
                     onClick={actions.toggleQueue}
@@ -93,8 +93,16 @@ export const PlayerBar: React.FC = () => {
                     <MicVocal size={ICON_SIZES.SMALL} />
                 </button>
 
+                <button
+                    className="control-btn hotkeys-toggle"
+                    onClick={openHotkeysModal}
+                    title={t('common.viewShortcuts')}
+                >
+                    <Keyboard size={ICON_SIZES.SMALL} />
+                </button>
+
                 {state.isQueueOpen && (
-                    <div className="queue-popover-container" ref={refs.queueContainerRef}>
+                    <div className="queue-popover-container" ref={queueContainerRef}>
                         <QueuePanel />
                     </div>
                 )}

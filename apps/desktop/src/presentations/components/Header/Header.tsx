@@ -1,7 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home } from 'lucide-react';
-import { ICON_SIZES } from '@constants';
 import { DownloaderModal } from '@components';
 import { SearchOverlay } from './SearchOverlay';
 import { useHeader } from './useHeader';
@@ -31,23 +29,19 @@ const Header: React.FC = () => {
         </div>
 
         <div className="header-center">
-          <button className="icon-button nav-controls" onClick={() => navigate('/playlist/0')} title={t('header.home')}>
-            <Home size={ICON_SIZES.XLARGE} />
-          </button>
-          
           <div className="search-bar-wrapper">
             <SearchInput
-                searchQuery={state.searchQuery}
-                isSearchFocused={state.isSearchFocused}
-                onSearchChange={(val) => {
-                    actions.setSearchQuery(val);
-                    actions.setSelectedIndex(0);
-                    actions.setIsSearchFocused(true);
-                }}
-                onFocus={() => actions.setIsSearchFocused(true)}
-                onClear={() => actions.setSearchQuery('')}
-                searchRef={refs.searchRef}
-                t={t}
+              searchQuery={state.searchQuery}
+              isSearchFocused={state.isSearchFocused}
+              onSearchChange={(val) => {
+                actions.setSearchQuery(val);
+                actions.setSelectedIndex(0);
+                actions.setIsSearchFocused(true);
+              }}
+              onFocus={() => actions.setIsSearchFocused(true)}
+              onClear={() => actions.setSearchQuery('')}
+              searchRef={refs.searchRef}
+              t={t}
             />
 
             {state.isSearchFocused && (
@@ -83,10 +77,10 @@ const Header: React.FC = () => {
         </div>
       </header>
 
-      <DownloaderModal 
-        key={state.showDownloader ? 'open' : 'closed'} 
-        isOpen={state.showDownloader} 
-        onClose={() => actions.setShowDownloader(false)} 
+      <DownloaderModal
+        key={state.showDownloader ? 'open' : 'closed'}
+        isOpen={state.showDownloader}
+        onClose={() => actions.setShowDownloader(false)}
       />
     </>
   );

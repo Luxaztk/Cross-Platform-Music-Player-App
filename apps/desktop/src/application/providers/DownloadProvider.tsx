@@ -112,6 +112,18 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
     }, [downloads, downloadState, t]);
 
+    const resetDownload = React.useCallback(() => {
+        setDownloadState(DOWNLOAD_STATUS.IDLE);
+        setDownloadError(null);
+        _setUrl('');
+        setPreviewItems([]);
+        setDownloads(new Map());
+        setDuplicateInfo(initialDuplicateInfo);
+        setInitiator(null);
+        setPlaylistTitle(null);
+        setAuthRequired(false);
+    }, []);
+
     const setUrl = React.useCallback((newUrl: string) => {
         if (newUrl === url) return;
 
@@ -135,9 +147,9 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
             setAuthRequired(false);
             setPlaylistTitle(null);
         }
-    }, [url, downloadState]);
+    }, [url, downloadState, resetDownload]);
 
-    const fetchInfo = async (targetUrl?: string, source?: 'modal' | 'section') => {
+    const fetchInfo = async (targetUrl?: string, source?: 'modal' | 'section', mode?: 'video' | 'playlist') => {
         const fetchUrl = targetUrl || url;
         if (!fetchUrl.trim()) return { success: false, hasWarning: false };
 
@@ -147,10 +159,26 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
         setDownloadError(null);
 
         try {
-            // Nhận diện playlist (có list= trong URL)
-            const isPlaylist = fetchUrl.includes('list=');
+            let isPlaylist = false;
+            let isVideo = false;
+            try {
+                const parsedUrl = new URL(fetchUrl);
+                if (parsedUrl.searchParams.has('v') || parsedUrl.pathname.startsWith('/v/')) isVideo = true;
+                if (parsedUrl.searchParams.has('list')) isPlaylist = true;
+            } catch {
+                // Fallback nếu URL không hợp lệ theo chuẩn
+                isPlaylist = fetchUrl.includes('list=');
+                isVideo = fetchUrl.includes('v=');
+            }
+
+            if (isVideo && isPlaylist && !mode) {
+                setDownloadState(DOWNLOAD_STATUS.MODE_SELECTION);
+                return { success: false, hasWarning: false, requiresChoice: true };
+            }
+
+            const targetMode = mode || (isPlaylist && !isVideo ? 'playlist' : 'video');
             
-            if (isPlaylist) {
+            if (targetMode === 'playlist') {
                 const result = await window.electronAPI.fetchPlaylistInfo(fetchUrl);
                 if (!result.success || !result.items) {
                     if (result.error === 'AUTH_REQUIRED') {
@@ -290,17 +318,6 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
         setPreviewItems(prev => prev.map(item => ({ ...item, ...updatedData })));
     }, []);
 
-    const resetDownload = React.useCallback(() => {
-        setDownloadState(DOWNLOAD_STATUS.IDLE);
-        setDownloadError(null);
-        _setUrl('');
-        setPreviewItems([]);
-        setDownloads(new Map());
-        setDuplicateInfo(initialDuplicateInfo);
-        setInitiator(null);
-        setPlaylistTitle(null);
-        setAuthRequired(false);
-    }, []);
 
     const cancelDownload = (id: string) => {
         window.electronAPI.cancelDownload(id);

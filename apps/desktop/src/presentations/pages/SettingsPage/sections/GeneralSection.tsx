@@ -4,6 +4,7 @@ import { ICON_SIZES } from '@constants';
 import { RotateCcw, Languages } from 'lucide-react';
 import { CustomDropdown } from '@components';
 import { LANGUAGE_OPTIONS, type GeneralSectionProps, matchesSearch } from '../utils';
+import type { Language } from '@music/i18n';
 
 export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) => {
   const { t, setLanguage } = useLanguage();
@@ -12,6 +13,34 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
   const [isChecking, setIsChecking] = React.useState(false);
   const [updateStatus, setUpdateStatus] = React.useState<string | null>(null);
   const [updateDownloaded, setUpdateDownloaded] = React.useState(false);
+
+  // Local state for DidYouKnow tips
+  const [showTips, setShowTips] = React.useState(() => {
+    return localStorage.getItem('hide_did_you_know') !== 'true';
+  });
+
+  const handleToggleTips = (checked: boolean) => {
+    setShowTips(checked);
+    if (checked) {
+      localStorage.removeItem('hide_did_you_know');
+      // Dispatch a custom event so DidYouKnow can listen to it without a full app reload
+      window.dispatchEvent(new Event('did_you_know_changed'));
+    } else {
+      localStorage.setItem('hide_did_you_know', 'true');
+      window.dispatchEvent(new Event('did_you_know_changed'));
+    }
+  };
+
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      setShowTips(localStorage.getItem('hide_did_you_know') !== 'true');
+    };
+    
+    window.addEventListener('did_you_know_changed', handleStorageChange);
+    return () => {
+      window.removeEventListener('did_you_know_changed', handleStorageChange);
+    };
+  }, []);
 
   React.useEffect(() => {
     const unbindAvailable = window.electronAPI.onUpdateAvailable((version: string) => {
@@ -59,7 +88,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
     setUpdateStatus(t('settings.general.checkingUpdates'));
     try {
       await window.electronAPI.checkForUpdatesManual();
-    } catch (err) {
+    } catch {
       setIsChecking(false);
       setUpdateStatus(t('common.error') || 'Lỗi kết nối');
     }
@@ -76,8 +105,12 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
   const showsReset = 
     matchesSearch(t('settings.general.reset'), searchQuery) || 
     matchesSearch(t('settings.general.resetDesc'), searchQuery);
+    
+  const showsTipsToggle = 
+    matchesSearch(t('settings.general.showTips'), searchQuery) || 
+    matchesSearch(t('settings.general.showTipsDesc'), searchQuery);
 
-  if (searchQuery && !showsLanguage && !showsAutoUpdate && !showsReset) return null;
+  if (searchQuery && !showsLanguage && !showsAutoUpdate && !showsReset && !showsTipsToggle) return null;
 
   return (
     <div className="settings-section">
@@ -97,7 +130,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
               <CustomDropdown
                 value={settings.general.language}
                 onChange={(val) => {
-                  setLanguage(val as any);
+                  setLanguage(val as Language);
                   updateSettings({ general: { language: val } });
                 }}
                 options={LANGUAGE_OPTIONS}
@@ -189,6 +222,57 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
                       : t('settings.general.checkUpdates')}
                 </span>
               </button>
+            </div>
+          </div>
+        )}
+
+        {showsTipsToggle && (
+          <div className="setting-item">
+            <div className="setting-info">
+              <h3>{t('settings.general.showTips')}</h3>
+              <p>{t('settings.general.showTipsDesc')}</p>
+            </div>
+            <div className="setting-control" style={{ display: 'flex', alignItems: 'center' }}>
+              <label 
+                className="switch-container"
+                style={{
+                  position: 'relative',
+                  display: 'inline-block',
+                  width: '44px',
+                  height: '22px',
+                  cursor: 'pointer'
+                }}
+              >
+                <input 
+                  type="checkbox" 
+                  checked={showTips} 
+                  onChange={(e) => handleToggleTips(e.target.checked)}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span 
+                  className="slider" 
+                  style={{
+                    position: 'absolute',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: showTips ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)',
+                    transition: '.3s',
+                    borderRadius: '22px'
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute',
+                    height: '18px',
+                    width: '18px',
+                    left: '2px',
+                    bottom: '2px',
+                    backgroundColor: 'white',
+                    transition: '.3s',
+                    borderRadius: '50%',
+                    transform: showTips ? 'translateX(22px)' : 'translateX(0)',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }} />
+                </span>
+              </label>
             </div>
           </div>
         )}

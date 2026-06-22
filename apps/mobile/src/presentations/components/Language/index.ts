@@ -1,3 +1,3 @@
 export { LanguageProvider, useLanguage } from './LanguageProvider'
-export { translations } from './translations'
-export type { LanguageCode, Translations } from './translations'
+export { mobileTranslations as translations } from '@music/i18n'
+export type { LanguageCode, Translations } from '@music/i18n'

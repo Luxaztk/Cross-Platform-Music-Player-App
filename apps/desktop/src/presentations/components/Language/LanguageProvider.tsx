@@ -1,13 +1,6 @@
-import React, { createContext, useState, type ReactNode } from 'react';
-import { translations, type Language } from '@constants';
-
-interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (keyPath: string, variables?: Record<string, any>) => string;
-}
-
-export const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+import React, { useState, type ReactNode } from 'react';
+import { desktopTranslations as translations, type Language } from '@music/i18n';
+import { LanguageContext } from './LanguageContext';
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
@@ -19,13 +12,13 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     localStorage.setItem('app_language', lang);
   };
 
-  const t = (keyPath: string, variables?: Record<string, any>): string => {
+  const t = (keyPath: string, variables?: Record<string, string | number>): string => {
     const keys = keyPath.split('.');
-    let result: any = translations[language];
+    let result: unknown = translations[language];
 
     for (const key of keys) {
-      if (result && result[key]) {
-        result = result[key];
+      if (result && typeof result === 'object' && key in result) {
+        result = (result as Record<string, unknown>)[key];
       } else {
         return keyPath; // Fallback to key if not found
       }

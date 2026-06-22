@@ -55,9 +55,9 @@ export class AudioEngine {
     
     // Web Audio API approach (Standard for modern browsers)
     // This affects ALL sounds playing through the Howler global context
-    if (typeof window !== 'undefined' && Howler.ctx && typeof (Howler.ctx as any).setSinkId === 'function') {
+    if (typeof window !== 'undefined' && Howler.ctx && typeof (Howler.ctx as unknown as { setSinkId: unknown }).setSinkId === 'function') {
       try {
-        await (Howler.ctx as any).setSinkId(deviceId === 'default' ? '' : deviceId);
+        await (Howler.ctx as unknown as { setSinkId: (id: string) => Promise<void> }).setSinkId(deviceId === 'default' ? '' : deviceId);
       } catch (e) {
         console.error('Failed to set sinkId on Howler.ctx:', e);
       }

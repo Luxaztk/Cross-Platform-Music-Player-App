@@ -20,9 +20,13 @@
       "@music/hooks/*": ["packages/hooks/*"],
       "@music/hooks/types": ["packages/hooks/src/types"],
       "@music/hooks/constants": ["packages/hooks/src/constants"],
+      "@music/i18n": ["packages/i18n"],
+      "@music/i18n/*": ["packages/i18n/*"],
       
       "@components": ["apps/desktop/src/presentations/components"],
       "@components/*": ["apps/desktop/src/presentations/components/*"],
+      "@application": ["apps/desktop/src/application"],
+      "@application/*": ["apps/desktop/src/application/*"],
       "@hooks": ["apps/desktop/src/application/hooks"],
       "@hooks/*": ["apps/desktop/src/application/hooks/*"],
       "@infrastructure": ["apps/desktop/src/infrastructure"],

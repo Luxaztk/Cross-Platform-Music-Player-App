@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
   // 1. Cấu hình các thư mục bị loại bỏ (Global Ignores)
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/dist-electron/**', '**/build/**', '**/.expo/**', 'test/**'],
+    ignores: ['**/node_modules/**', '**/dist/**', '**/dist-electron/**', '**/build/**', '**/.expo/**', 'test/**', '**/coverage/**'],
   },
 
   // 2. Cấu hình chung cho file TypeScript & React
@@ -25,6 +25,10 @@ export default tseslint.config(
     },
     languageOptions: {
       ecmaVersion: 2020,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
       globals: {
         ...globals.browser,
         ...globals.node, // Thêm node nếu bạn làm việc với cả server/config

@@ -1,16 +1,13 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { useLyricsPanel } from './useLyricsPanel';
-import { LyricsHeader } from './components/LyricsHeader';
-import { LyricsContent } from './components/LyricsContent';
-import { LyricsSearch } from './components/LyricsSearch';
-import { EmptyLyrics } from './components/EmptyLyrics';
+import { LyricsHeader, LyricsContent, LyricsSearch, EmptyLyrics } from './components';
 import './LyricsPanel.scss';
 
 export const LyricsPanel: React.FC = () => {
   const {
     state,
-    refs,
+    refs: { scrollRef, activeLineRef },
     actions,
     utils
   } = useLyricsPanel();
@@ -36,7 +33,7 @@ export const LyricsPanel: React.FC = () => {
         t={t}
       />
 
-      <main className="lyrics-body" ref={refs.scrollRef}>
+      <main className="lyrics-body" ref={scrollRef}>
         {isBusy && !showSearch ? (
           <div className="lyrics-status">
             <Loader2 className="spinner" size={32} />
@@ -64,7 +61,7 @@ export const LyricsPanel: React.FC = () => {
             progress={state.progress}
             onLineClick={actions.handleLineClick}
             onSyncNow={actions.setOffset}
-            activeLineRef={refs.activeLineRef}
+            activeLineRef={activeLineRef}
             t={t}
           />
         ) : (

@@ -5,6 +5,7 @@ import { ICON_SIZES } from '@constants';
 import { SettingsSearch } from './components/SettingsSearch';
 import { GeneralSection, AppearanceSection, DownloadSection, AudioSection } from './sections';
 import { Save, Check, Settings, Palette, Download, Volume2, Info } from 'lucide-react';
+import { AvtHoang, AvtLoc, AvtMinh } from '@music/brand/dev-avt';
 import './SettingsPage.scss';
 
 export const SettingsPage: React.FC = () => {
@@ -61,7 +62,8 @@ export const SettingsPage: React.FC = () => {
                                 <h1>Melovista</h1>
                                 <p>Version {__APP_VERSION__} (Desktop)</p>
                             </div>
-                            <p>{t('settings.about.desc')}</p>
+
+                            <p style={{ marginTop: '20px' }}>{t('settings.about.desc')}</p>
                             <div className="footer-links">
                                 <a
                                     href="https://github.com/Luxaztk/Cross-Platform-Music-Player-App"
@@ -72,6 +74,65 @@ export const SettingsPage: React.FC = () => {
                                 </a>
                                 <span>•</span>
                                 <a>License</a>
+                            </div>
+                            <div className="course-info-card">
+                                <h3>{t('settings.about.courseInfo')}</h3>
+
+                                <div className="info-grid">
+                                    <div className="info-item">
+                                        <div className="label">{t('settings.about.course')}</div>
+                                        <div className="value">Phát triển ứng dụng</div>
+                                    </div>
+                                    <div className="info-item">
+                                        <div className="label">{t('settings.about.semesterGroup')}</div>
+                                        <div className="value">2025.2 - {t('settings.about.group')} 9</div>
+                                    </div>
+                                </div>
+
+                                <div className="members-section">
+                                    <span className="label">{t('settings.about.members')}</span>
+                                    <div className="members-list">
+                                        <div className="member-item">
+                                            <div className="member-avatar">
+                                                <span>L</span>
+                                                <img src={AvtLoc} alt="Chử Văn Lộc" onError={(e) => e.currentTarget.style.display = 'none'} />
+                                            </div>
+                                            <div className="member-details">
+                                                <span className="name">Chử Văn Lộc</span>
+                                                <span className="role">20221860</span>
+                                            </div>
+                                        </div>
+                                        <div className="member-item">
+                                            <div className="member-avatar">
+                                                <span>V</span>
+                                            </div>
+                                            <div className="member-details">
+                                                <span className="name">Nguyễn Hồng Vân</span>
+                                                <span className="role">20231649</span>
+                                            </div>
+                                        </div>
+                                        <div className="member-item">
+                                            <div className="member-avatar">
+                                                <span>M</span>
+                                                <img src={AvtMinh} alt="Trần Công Minh" onError={(e) => e.currentTarget.style.display = 'none'} />
+                                            </div>
+                                            <div className="member-details">
+                                                <span className="name">Trần Công Minh</span>
+                                                <span className="role">20231611</span>
+                                            </div>
+                                        </div>
+                                        <div className="member-item">
+                                            <div className="member-avatar">
+                                                <span>H</span>
+                                                <img src={AvtHoang} alt="Đỗ Nguyễn Việt Hoàng" onError={(e) => e.currentTarget.style.display = 'none'} />
+                                            </div>
+                                            <div className="member-details">
+                                                <span className="name">Đỗ Nguyễn Việt Hoàng</span>
+                                                <span className="role">20231590</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

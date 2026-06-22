@@ -38,27 +38,6 @@
       img { height: 100%; width: auto; object-fit: contain; }
     }
 
-    .sidebar-toggle {
-      background: transparent;
-      border: none;
-      color: var(--color-text-main);
-      font-size: var(--font-size-lg);
-      cursor: pointer;
-      padding: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      transition: background var(--transition-fast);
-      &:hover { background: var(--bg-surface-hover); }
-    }
-
-    .app-name {
-      font-size: var(--font-size-lg);
-      font-weight: bold;
-      color: var(--color-primary);
-      letter-spacing: 0.5px;
-    }
   }
 
   .header-center {
@@ -68,26 +47,6 @@
     align-items: center;
     gap: 2vw;
     height: 100%;
-
-    .icon-button {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      background-color: var(--bg-surface);
-      color: var(--color-text-main);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-
-      &:hover {
-        background-color: var(--bg-surface-hover);
-        color: var(--color-primary);
-        transform: translateY(-2px);
-      }
-    }
 
     .search-bar-wrapper {
       flex: 1;
@@ -155,11 +114,6 @@
     box-sizing: border-box;
     gap: var(--spacing-sm);
 
-    .nav-controls {
-      display: flex;
-      gap: var(--spacing-sm);
-    }
-
     .profile-container {
       position: relative;
       height: 100%;
@@ -205,7 +159,7 @@
         width: 250px;
         overflow: hidden;
         max-height: 80vh;
-        z-index: 9998;
+        z-index: var(--z-dropdown);
         padding: 0;
 
         .drilldown-slider {
@@ -312,6 +266,7 @@
           cursor: pointer;
 
           .lang-label {
+            position: relative;
             font-size: 9px;
             font-weight: 900;
             color: var(--color-text-dim);
@@ -323,7 +278,7 @@
           }
 
           &.vi .lang-label.vi,
-          &.en .lang-label.en { color: var(--color-inverse); }
+          &.en .lang-label.en { color: var(--color-on-primary); }
 
           .toggle-handle {
             position: absolute;

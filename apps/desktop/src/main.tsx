@@ -9,30 +9,13 @@ import {
   UpdateNotification,
   ErrorBoundary,
 } from '@components'
-import { PlayerProvider, UIProvider, useLibraryContext } from '@music/hooks'
+import { UIProvider } from '@music/hooks'
 import { ElectronStorageAdapter } from './infrastructure/services/ElectronStorageAdapter'
-import { useNotification, useLanguage } from '@hooks'
 import { SettingsProvider, DownloadProvider } from './application/providers'
+import { HotkeysProvider } from './application/context/HotkeysProvider'
+import { PlayerWithLibrary } from './application/providers/PlayerWithLibrary'
 
 const storage = new ElectronStorageAdapter()
-
-const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) => {
-  const { songs } = useLibraryContext()
-  const { showNotification } = useNotification()
-  const { t } = useLanguage()
-
-  return (
-    <PlayerProvider
-      storage={storage}
-      allSongs={songs}
-      onFileError={(song) => {
-        showNotification('error', t('player.fileNotFound').replace('{title}', song.title))
-      }}
-    >
-      {children}
-    </PlayerProvider>
-  )
-}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -44,9 +27,11 @@ createRoot(document.getElementById('root')!).render(
               <SettingsProvider>
                 <LibraryProvider>
                   <DownloadProvider>
-                    <PlayerWithLibrary>
-                      <App />
-                    </PlayerWithLibrary>
+                    <HotkeysProvider>
+                      <PlayerWithLibrary>
+                        <App />
+                      </PlayerWithLibrary>
+                    </HotkeysProvider>
                   </DownloadProvider>
                 </LibraryProvider>
               </SettingsProvider>

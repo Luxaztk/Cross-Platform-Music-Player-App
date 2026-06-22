@@ -40,6 +40,7 @@ web-build/
 apps/*/dist/
 apps/*/build/
 packages/*/dist/
+packages/media
 
 # =========================
 # Tooling (Monorepo)

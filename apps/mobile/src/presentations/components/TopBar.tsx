@@ -10,11 +10,34 @@ import { useAppShell } from './AppShell'
 
 type FeatherName = ComponentProps<typeof Feather>['name']
 
+import type { ThemeTokens } from './Theme/tokens'
+
 type IconButtonProps = {
   icon: FeatherName
   onPress: () => void
   label: string
+  theme: ThemeTokens
 }
+
+const IconButton = ({ icon, onPress, label, theme }: IconButtonProps) => (
+  <Pressable
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityLabel={label}
+    hitSlop={10}
+    style={({ pressed }) => [
+      styles.iconBtn,
+      {
+        backgroundColor: theme.colors.surfaceSolid,
+        borderColor: theme.colors.subtleBorder,
+        opacity: pressed ? 0.75 : 1,
+        transform: [{ scale: pressed ? 0.96 : 1 }],
+      },
+    ]}
+  >
+    <Feather name={icon} size={21} color={theme.colors.text} />
+  </Pressable>
+)
 
 export function TopBar() {
   const { theme } = useTheme()
@@ -52,25 +75,6 @@ export function TopBar() {
     router.push('/search')
   }
 
-  const IconButton = ({ icon, onPress, label }: IconButtonProps) => (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      hitSlop={10}
-      style={({ pressed }) => [
-        styles.iconBtn,
-        {
-          backgroundColor: theme.colors.surfaceSolid,
-          borderColor: theme.colors.subtleBorder,
-          opacity: pressed ? 0.75 : 1,
-          transform: [{ scale: pressed ? 0.96 : 1 }],
-        },
-      ]}
-    >
-      <Feather name={icon} size={21} color={theme.colors.text} />
-    </Pressable>
-  )
 
   return (
     <View
@@ -86,9 +90,9 @@ export function TopBar() {
       <View style={[styles.pageInner, { justifyContent: 'space-between' }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           {showBackButton ? (
-            <IconButton icon="arrow-left" onPress={handleBack} label="Back" />
+            <IconButton icon="arrow-left" onPress={handleBack} label="Back" theme={theme} />
           ) : (
-            <IconButton icon="upload" onPress={triggerImport} label="Import songs" />
+            <IconButton icon="upload" onPress={triggerImport} label="Import songs" theme={theme} />
           )}
         </View>
 
@@ -102,8 +106,8 @@ export function TopBar() {
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {!isSearch && <IconButton icon="search" onPress={handleSearch} label="Search" />}
-          {navigationLayout === 'sidebar' && <IconButton icon="menu" onPress={openSidebar} label="Sidebar menu" />}
+          {!isSearch && <IconButton icon="search" onPress={handleSearch} label="Search" theme={theme} />}
+          {navigationLayout === 'sidebar' && <IconButton icon="menu" onPress={openSidebar} label="Sidebar menu" theme={theme} />}
         </View>
       </View>
     </View>

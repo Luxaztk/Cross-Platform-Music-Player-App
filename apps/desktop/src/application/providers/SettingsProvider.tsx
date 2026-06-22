@@ -8,13 +8,13 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   useEffect(() => {
     const loadSettings = async () => {
-      const savedSettings = await window.electronAPI.getSettings();
+      const savedSettings = await window.electronAPI.getSettings() as AppSettings;
       setSettings(savedSettings);
     };
     loadSettings();
   }, []);
 
-  const updateSettings = async (newSettings: any) => {
+  const updateSettings = async (newSettings: Partial<AppSettings>) => {
     if (!settings) return;
 
     setIsSaving(true);
@@ -39,7 +39,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsSaving(true);
     try {
       await window.electronAPI.saveSettings({});
-      const defaults = await window.electronAPI.getSettings();
+      const defaults = await window.electronAPI.getSettings() as AppSettings;
       setSettings(defaults);
     } catch (err) {
       console.error('[Settings] Failed to reset settings:', err);

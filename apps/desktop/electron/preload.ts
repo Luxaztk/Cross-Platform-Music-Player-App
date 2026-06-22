@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { IpcRendererEvent } from 'electron'
 import type {
   Song,
@@ -41,7 +41,7 @@ export interface ElectronAPI {
     id?: string,
   ) => Promise<DuplicateCheckResult>
   scanMissingFiles: () => Promise<void>
-  runAutoImportScan: (paths: string[]) => Promise<{ added: number; migrated: number; totalScanned: number; details: string[] }>
+  runAutoImportScan: (paths: string[]) => Promise<{ added: number; migrated: number; totalScanned: number; details: string[]; inputFoldersCount: number; inputFilesCount: number }>
   getLyrics: (songId: string) => Promise<string | null>
   saveLyrics: (songId: string, lyrics: string, lyricId?: number) => Promise<void>
   searchLyrics: (query: string) => Promise<LyricSearchResult[]>
@@ -71,8 +71,8 @@ export interface ElectronAPI {
   openItemPath: (filePath: string) => Promise<void>
   openDownloadsFolder: () => Promise<void>
   deleteFile: (filePath: string) => Promise<void>
-  getSettings: () => Promise<any>
-  saveSettings: (settings: any) => Promise<void>
+  getSettings: () => Promise<unknown>
+  saveSettings: (settings: unknown) => Promise<void>
   selectDirectory: (title?: string) => Promise<string | null>
   resetCache: () => Promise<{ success: boolean; message?: string }>
 
@@ -94,6 +94,8 @@ export interface ElectronAPI {
   logoutYoutube: () => Promise<void>
   getYoutubeAuthStatus: () => Promise<boolean>
   onYoutubeAuthRequired: (callback: (data: { url: string; id?: string }) => void) => () => void
+  getPathForFile: (file: File) => string
+  quitApp: () => Promise<void>
 }
 
 // Expose safe APIs to the renderer process
@@ -147,7 +149,7 @@ const electronAPI: ElectronAPI = {
   patchSong: (songId: string, updates: Partial<Song>) =>
     ipcRenderer.invoke('storage:patchSong', songId, updates),
   getSettings: () => ipcRenderer.invoke('storage:getSettings'),
-  saveSettings: (settings: any) => ipcRenderer.invoke('storage:saveSettings', settings),
+  saveSettings: (settings: unknown) => ipcRenderer.invoke('storage:saveSettings', settings),
   selectDirectory: (title?: string) => ipcRenderer.invoke('dialog:openDirectory', title),
 
   // Downloader operations
@@ -199,7 +201,7 @@ const electronAPI: ElectronAPI = {
   resetCache: () => ipcRenderer.invoke('library:reset-cache'),
   getSyncHistory: () => ipcRenderer.invoke('library:getSyncHistory'),
   clearSyncHistory: () => ipcRenderer.invoke('library:clearSyncHistory'),
-  logSyncEvent: (stats: any, details: string[]) => ipcRenderer.invoke('library:logSyncEvent', stats, details),
+  logSyncEvent: (stats: SyncStats, details: string[]) => ipcRenderer.invoke('library:logSyncEvent', stats, details),
 
   // YouTube Authentication
   openYoutubeAuth: () => ipcRenderer.invoke('open-youtube-auth'),
@@ -210,6 +212,15 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.on('youtube-auth-required', listener)
     return () => ipcRenderer.off('youtube-auth-required', listener)
   },
+  getPathForFile: (file: File) => {
+    try {
+      return webUtils.getPathForFile(file)
+    } catch (err) {
+      console.error('getPathForFile error:', err)
+      return ''
+    }
+  },
+  quitApp: () => ipcRenderer.invoke('quit-app'),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

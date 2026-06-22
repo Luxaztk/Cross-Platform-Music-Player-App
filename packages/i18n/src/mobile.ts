@@ -105,7 +105,7 @@ export type Translations = {
   }
 }
 
-export const translations: Record<LanguageCode, Translations> = {
+export const mobileTranslations: Record<LanguageCode, Translations> = {
   en: {
     tabs: {
       library: 'Library',
@@ -129,7 +129,7 @@ export const translations: Record<LanguageCode, Translations> = {
     library: {
       title: 'Library',
       yourLibrary: 'Your Library',
-      allSongs: 'All Songs',
+      allSongs: 'Library',
       importSongs: 'Import songs',
       importCanceled: 'Import canceled',
       importPicked: (count) => `Picked ${count} file(s)`,
@@ -234,7 +234,7 @@ export const translations: Record<LanguageCode, Translations> = {
     library: {
       title: 'Thư viện',
       yourLibrary: 'Thư viện của bạn',
-      allSongs: 'Tất cả bài hát',
+      allSongs: 'Thư viện',
       importSongs: 'Nhập bài hát',
       importCanceled: 'Đã hủy nhập',
       importPicked: (count) => `Đã chọn ${count} tệp`,
@@ -314,6 +314,18 @@ export const translations: Record<LanguageCode, Translations> = {
       clear: 'Xóa',
       recentSearches: 'Tìm kiếm gần đây',
       clearAll: 'Xóa tất cả lịch sử',
+    },
+    songs: {
+      playNext: 'Phát tiếp theo',
+      addToQueue: 'Thêm vào hàng đợi',
+      editMetadata: 'Chỉnh sửa thông tin',
+      viewArtist: 'Xem nghệ sĩ',
+      viewAlbum: 'Xem album',
+      remove: 'Xóa khỏi danh sách phát',
+      delete: 'Xóa khỏi thư viện',
+      addedToQueue: 'Đã thêm vào hàng đợi',
+      playNow: 'Phát ngay',
+      shufflePlay: 'Phát ngẫu nhiên',
     },
   },
 }

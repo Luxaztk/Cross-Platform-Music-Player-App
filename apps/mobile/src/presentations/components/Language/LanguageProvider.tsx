@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 import { loadLanguagePreference, saveLanguagePreference } from './storage'
-import { translations, type LanguageCode, type Translations } from './translations'
+import { mobileTranslations as translations, type LanguageCode, type Translations } from '@music/i18n'
 
 type LanguageContextValue = {
   language: LanguageCode

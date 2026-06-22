@@ -21,7 +21,7 @@ export interface ILibraryRepository {
   saveLyrics(songId: string, lyrics: string, lyricId?: number): Promise<boolean>;
   searchLyrics(query: string): Promise<LyricSearchResult[]>;
   patchSong(songId: string, updates: Partial<Song>): Promise<Song | null>;
-  getSettings(): Promise<any>;
+  getSettings(): Promise<unknown>;
   getSyncHistory(): Promise<SyncHistoryEntry[]>;
   clearSyncHistory(): Promise<void>;
   logSyncEvent(stats: SyncStats, details: string[]): Promise<void>;

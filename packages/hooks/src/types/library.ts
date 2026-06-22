@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Song, Playlist, PlaylistDetail, DuplicateSongInfo, SyncHistoryEntry, SyncStats } from '@music/types';
+import type { Song, Playlist, PlaylistDetail, DuplicateSongInfo, SyncHistoryEntry, SyncStats, ImportResult } from '@music/types';
 import type { ILibraryRepository } from '@music/core';
 
 export interface SyncOptions {
@@ -16,12 +16,13 @@ export interface LibraryDataContextType {
   isSyncing: boolean;
   missingSongs: Song[];
   showCleanupModal: boolean;
+  isImporting: boolean;
 }
 
 export interface LibraryActionsContextType {
   setLibraryFilter: (filter: { type: 'artist' | 'album' | 'none'; values: string[] }) => void;
-  handleImportFiles: () => Promise<any>;
-  handleImportFolder: () => Promise<any>;
+  handleImportFiles: () => Promise<ImportResult>;
+  handleImportFolder: () => Promise<ImportResult>;
   handleAddSongs: (songs: Song[]) => Promise<{ success: boolean; count: number }>;
   clearDuplicates: () => void;
   handleCreatePlaylist: (name?: string) => Promise<Playlist | null>;
@@ -55,5 +56,5 @@ export interface SharedLibraryProviderProps {
     actions: { setShowCleanupModal: (show: boolean) => void }
   ) => void;
   onSyncStart?: (options: SyncOptions) => void;
-  onSyncError?: (error: any, actions: { setShowCleanupModal: (show: boolean) => void }) => void;
+  onSyncError?: (error: unknown, actions: { setShowCleanupModal: (show: boolean) => void }) => void;
 }

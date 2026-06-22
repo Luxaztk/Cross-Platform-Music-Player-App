@@ -30,6 +30,7 @@ export const useDownloaderModal = (isOpen: boolean, onClose: () => void) => {
       }
     }
     prevIsOpen.current = isOpen;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, manager.downloadState, manager.initiator, manager.resetDownload]);
 
   useEffect(() => {
@@ -46,6 +47,7 @@ export const useDownloaderModal = (isOpen: boolean, onClose: () => void) => {
       manager.clearAbandoned();
     }
     onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isBusy, manager.initiator, manager.clearAbandoned, onClose]);
 
   const handlePaste = async () => {
@@ -81,7 +83,7 @@ export const useDownloaderModal = (isOpen: boolean, onClose: () => void) => {
     },
     actions: {
       setUrl: manager.setUrl,
-      fetchInfo: () => manager.fetchInfo(manager.url, 'modal'),
+      fetchInfo: (mode?: 'video' | 'playlist') => manager.fetchInfo(manager.url, 'modal', mode),
       handlePaste,
       handleClose,
       setEditingItem,

@@ -1,0 +1,99 @@
+.did-you-know-container {
+  margin: 16px;
+  padding: 12px;
+  background: rgba(var(--color-primary-rgb), 0.05);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+  border-radius: var(--radius-md);
+  position: relative;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(var(--color-primary-rgb), 0.08);
+    border-color: rgba(var(--color-primary-rgb), 0.3);
+
+    .close-btn {
+      opacity: 1;
+    }
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--color-text-dim);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--bg-surface-hover);
+      color: var(--color-text-main);
+    }
+  }
+
+  .tip-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+
+    .bulb-icon {
+      color: var(--color-primary);
+    }
+
+    .tip-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-primary);
+    }
+  }
+
+  .tip-content {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--color-text-dim);
+    margin: 0;
+  }
+
+  .tip-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+
+    .tip-indicator {
+      font-size: 0.7rem;
+      color: var(--color-text-dim);
+      font-weight: 500;
+      user-select: none;
+    }
+
+    .control-btn {
+      background: transparent;
+      border: none;
+      color: var(--color-text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(var(--color-primary-rgb), 0.1);
+        color: var(--color-primary);
+      }
+    }
+  }
+}

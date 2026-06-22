@@ -10,24 +10,21 @@ import {
 } from '@components'
 import { useUI, useLibraryContext } from '@music/hooks'
 import { useLanguage, useNotification, useGlobalHotkeys } from '@hooks'
+import { useHotkeysModal } from '@application/context/HotkeysContext'
 import './MainLayout.scss'
 
 const MainLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isHotkeysModalOpen, setIsHotkeysModalOpen] = useState(false)
   const { duplicateSongs, handleAddSongs, clearDuplicates } = useLibraryContext()
   const { showNotification } = useNotification()
   const { isLyricsOpen } = useUI()
   const { t } = useLanguage()
+  const { isHotkeysModalOpen, closeHotkeysModal } = useHotkeysModal()
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed)
 
   // Global hotkeys
-  useGlobalHotkeys({
-    onOpenHotkeysModal: () => setIsHotkeysModalOpen(true),
-    onCloseHotkeysModal: () => setIsHotkeysModalOpen(false),
-    isHotkeysModalOpen,
-  })
+  useGlobalHotkeys()
 
   // Show notification when duplicates are detected
   useEffect(() => {
@@ -60,7 +57,7 @@ const MainLayout: React.FC = () => {
         onResolve={handleAddSongs}
       />
 
-      <HotkeysModal isOpen={isHotkeysModalOpen} onClose={() => setIsHotkeysModalOpen(false)} />
+      <HotkeysModal isOpen={isHotkeysModalOpen} onClose={closeHotkeysModal} />
     </div>
   )
 }

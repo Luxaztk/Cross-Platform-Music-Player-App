@@ -1,4 +1,4 @@
-import React, { type ReactNode, useEffect } from 'react';
+import React, { type ReactNode, useEffect, useCallback } from 'react';
 import { SharedLibraryProvider, useLibrary } from '@music/hooks';
 import type { SyncOptions } from '@music/hooks/types';
 
@@ -50,16 +50,16 @@ export const LibraryProvider: React.FC<{ children: ReactNode }> = ({ children })
   const { showNotification, updateNotification, removeNotification } = useNotification();
   const { t } = useLanguage();
 
-  const handleSyncStart = (options: SyncOptions) => {
+  const handleSyncStart = useCallback((options: SyncOptions) => {
     if (options.isSilent) {
       showNotification('info', t('libraryCleanup.checking'), { 
         id: 'sync-toast', 
         duration: 0 
       });
     }
-  };
+  }, [showNotification, t]);
 
-  const handleSyncComplete = (
+  const handleSyncComplete = useCallback((
     result: { added: number; migrated: number; missingCount: number },
     actions: { setShowCleanupModal: (show: boolean) => void }
   ) => {
@@ -99,14 +99,15 @@ export const LibraryProvider: React.FC<{ children: ReactNode }> = ({ children })
         duration: 3000
       });
     }
-  };
+  }, [showNotification, updateNotification, removeNotification, t]);
 
-  const handleSyncError = (err: any) => {
-    showNotification('error', `[Library] Sync failed: ${err.message || 'Unknown error'}`, { 
+  const handleSyncError = useCallback((err: unknown) => {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    showNotification('error', `[Library] Sync failed: ${errorMessage || 'Unknown error'}`, { 
       id: 'sync-toast',
       duration: 5000 
     });
-  };
+  }, [showNotification]);
 
   return (
     <SharedLibraryProvider 

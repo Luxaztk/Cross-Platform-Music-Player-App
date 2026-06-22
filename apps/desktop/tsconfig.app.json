@@ -7,6 +7,7 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "types": ["vite/client", "node", "@testing-library/jest-dom/vitest"],
+    "baseUrl": ".",
 
     "skipLibCheck": true,
 
@@ -45,6 +46,8 @@
       "@music/ui": ["../../packages/ui"],
       "@music/ui/*": ["../../packages/ui/*"],
       "@music/brand": ["../../packages/brand"],
+      "@music/i18n": ["../../packages/i18n"],
+      "@music/i18n/*": ["../../packages/i18n/*"],
       "@components": ["./src/presentations/components"],
       "@components/*": ["./src/presentations/components/*"],
       "@application": ["./src/application"],

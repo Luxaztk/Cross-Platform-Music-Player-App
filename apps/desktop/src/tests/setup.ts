@@ -13,6 +13,12 @@ const electronAPIMock = {
   selectDirectory: vi.fn().mockResolvedValue('C:/NewPath'),
   scanMissingFiles: vi.fn().mockResolvedValue(undefined),
   onThemeChanged: vi.fn().mockReturnValue(() => {}),
+  onUpdateAvailable: vi.fn().mockReturnValue(() => {}),
+  onUpdateNotAvailable: vi.fn().mockReturnValue(() => {}),
+  onUpdateError: vi.fn().mockReturnValue(() => {}),
+  onUpdateDownloaded: vi.fn().mockReturnValue(() => {}),
+  checkForUpdates: vi.fn().mockResolvedValue(undefined),
+  quitAndInstallUpdate: vi.fn().mockResolvedValue(undefined),
 };
 
 // @ts-expect-error - mock global electronAPI for testing
@@ -25,8 +31,15 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
     disconnect: vi.fn(),
 }));
 
+interface MockAudioContextType {
+  createOscillator: unknown;
+  createGain: unknown;
+  currentTime: number;
+  destination: unknown;
+}
+
 // Mock for window.AudioContext
-const mockAudioContext = vi.fn().mockImplementation(function (this: any) {
+const mockAudioContext = vi.fn().mockImplementation(function (this: MockAudioContextType) {
   this.createOscillator = vi.fn().mockReturnValue({
     type: '',
     frequency: { setValueAtTime: vi.fn() },
@@ -47,14 +60,14 @@ const mockAudioContext = vi.fn().mockImplementation(function (this: any) {
   return this;
 });
 
-window.AudioContext = mockAudioContext as any;
+window.AudioContext = mockAudioContext as unknown as typeof window.AudioContext;
 // @ts-expect-error - mock global webkitAudioContext for testing
 window.webkitAudioContext = mockAudioContext;
 global.AudioContext = mockAudioContext;
 
 // Mock lucide-react
 vi.mock('lucide-react', async (importOriginal) => {
-  const actual = await importOriginal<any>();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     ChevronDown: () => 'ChevronDown',

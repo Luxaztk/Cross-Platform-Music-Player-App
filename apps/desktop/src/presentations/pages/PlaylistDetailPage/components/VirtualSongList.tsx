@@ -1,9 +1,10 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { SongRow } from './SongRow';
+import { EmptyState } from './EmptyState';
 import { type VirtualSongListProps } from '../types';
 
-export const VirtualSongList: React.FC<VirtualSongListProps> = ({
+export const VirtualSongList: React.FC<VirtualSongListProps> = React.memo(({
     isDebouncing,
     filteredSongs,
     visibleSongs,
@@ -25,6 +26,9 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = ({
     onDelete,
     onToggleFilter,
     onToggleMenu,
+    onImportFiles,
+    onImportFolder,
+    isImporting,
     t
 }) => {
     return (
@@ -35,7 +39,12 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = ({
                         <Loader2 size={24} className="animate-spin" />
                     </div>
                 ) : filteredSongs.length === 0 ? (
-                    <p className="no-songs">{t('playlist.noSongs')}</p>
+                    <EmptyState 
+                      onImportFiles={onImportFiles}
+                      onImportFolder={onImportFolder}
+                      isImporting={isImporting}
+                      t={t}
+                    />
                 ) : (
                     visibleSongs.map((song, i) => (
                         <SongRow
@@ -65,4 +74,39 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = ({
             </div>
         </div>
     );
-};
+}, (prev, next) => {
+    // Only compare relevant props that require a re-render.
+    // We intentionally ignore 't' (language changes) and inline function props
+    // to prevent unnecessary unmounts/re-renders of the entire virtual list.
+    const isDebouncingEq = prev.isDebouncing === next.isDebouncing;
+    const filteredSongsEq = prev.filteredSongs === next.filteredSongs;
+    const startIndexEq = prev.startIndex === next.startIndex;
+    const totalHeightEq = prev.totalHeight === next.totalHeight;
+    const paddingOffsetEq = prev.paddingOffset === next.paddingOffset;
+    const selectedIdsEq = prev.selectedIds === next.selectedIds;
+    const currentSongIdEq = prev.currentSongId === next.currentSongId;
+    const activeMenuIdEq = prev.activeMenuId === next.activeMenuId;
+    const playlistsEq = prev.playlists === next.playlists;
+    const currentPlaylistIdEq = prev.currentPlaylistId === next.currentPlaylistId;
+    const isImportingEq = prev.isImporting === next.isImporting;
+
+    const isEqual = isDebouncingEq && filteredSongsEq && startIndexEq && totalHeightEq && paddingOffsetEq && selectedIdsEq && currentSongIdEq && activeMenuIdEq && playlistsEq && currentPlaylistIdEq && isImportingEq;
+
+    if (!isEqual) {
+        console.log('VirtualSongList re-render! Changed props:', {
+            isDebouncing: !isDebouncingEq,
+            filteredSongs: !filteredSongsEq,
+            startIndex: !startIndexEq,
+            totalHeight: !totalHeightEq,
+            paddingOffset: !paddingOffsetEq,
+            selectedIds: !selectedIdsEq,
+            currentSongId: !currentSongIdEq,
+            activeMenuId: !activeMenuIdEq,
+            playlists: !playlistsEq,
+            currentPlaylistId: !currentPlaylistIdEq,
+            isImporting: !isImportingEq,
+        });
+    }
+
+    return isEqual;
+});

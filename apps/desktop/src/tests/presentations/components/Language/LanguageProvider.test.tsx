@@ -3,10 +3,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useContext } from 'react';
-import { LanguageProvider, LanguageContext } from '@components/Language/LanguageProvider';
+import { LanguageProvider } from '../../../../presentations/components/Language/LanguageProvider';
+import { LanguageContext } from '../../../../presentations/components/Language/LanguageContext';
 
-vi.mock('@constants', () => ({
-  translations: {
+vi.mock('@music/i18n', () => ({
+  desktopTranslations: {
     en: {
       greeting: 'Hello {name}',
       simple: 'Hi',

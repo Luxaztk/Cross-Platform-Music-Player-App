@@ -6,7 +6,7 @@
   background-color: var(--bg-surface-solid);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg, var(--shadow-md));
-  z-index: 1000;
+  z-index: var(--z-overlay);
   overflow: visible; // Chuyển thành visible để không bị cắt Menu Popup
   display: flex;
   flex-direction: column;
@@ -209,7 +209,7 @@
           box-shadow: var(--shadow-md);
           padding: 4px;
           min-width: 180px;
-          z-index: 9997;
+          z-index: var(--z-tooltip);
           border: 1px solid var(--border-color);
 
           &.open-down {

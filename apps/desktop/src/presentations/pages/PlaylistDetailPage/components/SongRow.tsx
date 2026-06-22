@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { CheckSquare, Play, MoreVertical } from 'lucide-react';
+import { CheckSquare, Square, Play, MoreVertical } from 'lucide-react';
 import type { Song, Playlist } from '@music/types';
 import { ICON_SIZES } from '@constants';
 import { formatTime } from '@music/utils';
@@ -14,7 +14,7 @@ interface SongRowProps {
   playlists: Playlist[];
   currentPlaylistId: string | undefined;
   hasActiveSelection: boolean;
-  t: (key: string, options?: any) => string;
+  t: (key: string, options?: Record<string, string | number>) => string;
   appIcon: string;
   onToggleSelect: (id: string, e?: React.MouseEvent) => void;
   onPlay: () => void;
@@ -49,40 +49,49 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
       return rawArtist.split(/(\s(?:ft\.?|x|&|and)\s|,\s?)/i);
     }, [song.artist]);
 
-    // 2. Handler click tiêu đề
-    const handleTitleClick = useCallback(
+    // 2. Handler click row
+    const handleRowClick = useCallback(
       (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onPlay();
-      },
-      [onPlay],
-    );
-
-    const handleFirstColumnClick = useCallback(
-      (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (hasActiveSelection) {
+        if (e.button === 2) return; // Bỏ qua click chuột phải
+        if (e.ctrlKey || e.metaKey || e.shiftKey) {
           onToggleSelect(song.id, e);
         } else {
           onPlay();
         }
       },
-      [hasActiveSelection, song.id, onToggleSelect, onPlay],
+      [song.id, onToggleSelect, onPlay],
+    );
+
+    const handleIndexClick = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onToggleSelect(song.id, e);
+      },
+      [song.id, onToggleSelect],
     );
 
     return (
       <div
-        className={`song-row ${isSelected ? 'selected' : ''} ${isActiveMenu ? 'menu-open' : ''} ${isPlaying ? 'playing' : ''}`}
-        onClick={() => onToggleSelect(song.id)}
+        className={`song-row ${isSelected ? 'selected' : ''} ${isActiveMenu ? 'menu-open' : ''} ${isPlaying ? 'playing' : ''} ${hasActiveSelection ? 'has-selection' : ''}`}
+        onClick={handleRowClick}
       >
-        <div className="col-idx" onClick={handleFirstColumnClick}>
+        <div className="col-idx" onClick={handleIndexClick}>
           <div className="checkbox-cell">
-            {isSelected ? (
+            {hasActiveSelection ? (
+              isSelected ? (
+                <CheckSquare size={ICON_SIZES.XSMALL} className="text-primary" />
+              ) : (
+                <Square size={ICON_SIZES.XSMALL} />
+              )
+            ) : isSelected ? (
               <CheckSquare size={ICON_SIZES.XSMALL} className="text-primary" />
             ) : isPlaying ? (
               <Play size={ICON_SIZES.TINY} className="playing-icon" />
             ) : (
-              index + 1
+              <>
+                <span className="row-number">{index + 1}</span>
+                <Play size={ICON_SIZES.TINY} className="row-play-btn" onClick={(e) => { e.stopPropagation(); onPlay(); }} />
+              </>
             )}
           </div>
         </div>
@@ -103,7 +112,6 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
               <span
                 className="title-text"
                 style={{ color: isPlaying ? 'var(--color-primary)' : undefined }}
-                onClick={handleTitleClick}
               >
                 {song.title}
               </span>
@@ -117,7 +125,12 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
                     <span
                       key={i}
                       className="clickable-artist"
+                      title={`💡 ${t('common.filterByArtist', { defaultValue: `Click để lọc bài hát của ${part.trim()}` })}`}
                       onClick={(e) => {
+                        if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                          // Allow bubbling to handleRowClick for selection
+                          return;
+                        }
                         e.stopPropagation();
                         onToggleFilter('artist', part.trim());
                       }}
@@ -130,7 +143,6 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
             </div>
           </div>
         </div>
-
 
         <div className="col-album">{song.album || '-'}</div>
         <div className="col-duration">{formatTime(song.duration || 0)}</div>
@@ -150,14 +162,14 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
   (prev, next) => {
     // 3. FIX so sánh Playlists: So sánh độ dài hoặc ID cuối thay vì tham chiếu mảng
     return (
-      prev.song.id === next.song.id &&
-      prev.song.lyricId === next.song.lyricId &&
+      prev.song === next.song &&
       prev.isSelected === next.isSelected &&
       prev.isPlaying === next.isPlaying &&
       prev.isActiveMenu === next.isActiveMenu &&
       prev.hasActiveSelection === next.hasActiveSelection &&
       prev.index === next.index &&
-      prev.playlists.length === next.playlists.length // So sánh nông (Shallow) một cách thông minh
+      prev.playlists === next.playlists &&
+      prev.currentPlaylistId === next.currentPlaylistId
     );
   },
 );

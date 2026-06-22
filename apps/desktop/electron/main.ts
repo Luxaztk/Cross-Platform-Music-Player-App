@@ -108,7 +108,7 @@ async function setupAutoUpdate() {
   const isUnpackedTest = app.getAppPath().includes('unpacked');
   const isDev = !app.isPackaged || isUnpackedTest;
 
-  const broadcast = (channel: string, data?: any) => {
+  const broadcast = (channel: string, data?: unknown) => {
     BrowserWindow.getAllWindows().forEach((w) => {
       w.webContents.send(channel, data)
     })
@@ -242,6 +242,10 @@ ipcMain.handle('restart-app', async () => {
 
 // Lắng nghe lệnh kiểm tra cập nhật thủ công đã được chuyển vào trong setupAutoUpdate
 // ------------------------------------
+
+ipcMain.handle('quit-app', () => {
+  app.quit()
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

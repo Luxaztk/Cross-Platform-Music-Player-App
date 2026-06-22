@@ -1,4 +1,4 @@
-import { router, usePathname } from 'expo-router'
+import { router } from 'expo-router'
 import React, { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -25,7 +25,6 @@ export function PlayerBar() {
   const { theme } = useTheme()
   const { currentSong, togglePlayPause, next } = usePlayerState()
   const progress = usePlayerProgress()
-  const pathname = usePathname()
   const insets = useSafeAreaInsets()
   const { navigationLayout } = useAppShell()
 
@@ -60,7 +59,7 @@ export function PlayerBar() {
             styles.progressFill,
             {
               backgroundColor: theme.colors.primary,
-              width: `${progressPercent}%` as any,
+              width: `${progressPercent}%` as import('react-native').DimensionValue,
             },
           ]}
         />

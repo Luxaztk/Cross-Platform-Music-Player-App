@@ -17,7 +17,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             <Search className="search-icon" size={ICON_SIZES.SMALL} />
             <input
                 type="text"
-                placeholder={t('header.searchPlaceholder')}
+                placeholder={t('header.searchPlaceholder', { defaultValue: 'Tìm kiếm bài hát... (Bấm ? để xem phím tắt)' })}
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 onFocus={onFocus}

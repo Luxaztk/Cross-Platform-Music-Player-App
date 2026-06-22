@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { usePlayer } from './usePlayer';
 
 const STORAGE_KEY_PREFIX = 'lyric_offset_';
@@ -6,16 +6,18 @@ const STORAGE_KEY_PREFIX = 'lyric_offset_';
 export const useLyricSync = () => {
   const { currentSong } = usePlayer();
   const [offset, setOffsetState] = useState(0);
+  const [prevOriginId, setPrevOriginId] = useState<string | undefined>(currentSong?.originId);
 
-  // Load offset from localStorage when song changes
-  useEffect(() => {
+  // Sync offset when song changes (Render phase state update pattern)
+  if (currentSong?.originId !== prevOriginId) {
+    setPrevOriginId(currentSong?.originId);
     if (currentSong?.originId) {
       const saved = localStorage.getItem(STORAGE_KEY_PREFIX + currentSong.originId);
       setOffsetState(saved ? parseFloat(saved) : 0);
     } else {
       setOffsetState(0);
     }
-  }, [currentSong?.originId]);
+  }
 
   const setOffset = useCallback((value: number) => {
     const numericValue = typeof value === 'string' ? parseFloat(value) : value;
@@ -25,7 +27,7 @@ export const useLyricSync = () => {
     if (currentSong?.originId) {
       localStorage.setItem(STORAGE_KEY_PREFIX + currentSong.originId, finalValue.toString());
     }
-  }, [currentSong?.originId]);
+  }, [currentSong]);
 
   const adjustOffset = useCallback((amount: number) => {
     setOffsetState((prev) => {
@@ -35,7 +37,7 @@ export const useLyricSync = () => {
       }
       return newVal;
     });
-  }, [currentSong?.originId]);
+  }, [currentSong]);
 
   const resetOffset = useCallback(() => {
     setOffset(0);

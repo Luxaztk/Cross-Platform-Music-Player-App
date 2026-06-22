@@ -5,7 +5,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { Sidebar } from '../../../../presentations/components/Sidebar';
 
 import { useLibraryContext } from '@music/hooks';
-import { useLanguage, useTheme } from '@hooks';
+import { useLanguage, useTheme } from '../../../../application/hooks';
 import { BrowserRouter } from 'react-router-dom';
 
 // Mock dependencies
@@ -26,8 +26,8 @@ vi.mock('@hooks', () => ({
   useLanguage: vi.fn(),
   useTheme: vi.fn(),
   useLocalFilter: vi.fn((items, query) => {
-    const filtered = !query ? items : items.filter((item: any) => 
-      item.name.toLowerCase().includes(query.toLowerCase())
+    const filtered = !query ? items : items.filter((item: Record<string, unknown>) => 
+      String(item.name).toLowerCase().includes(query.toLowerCase())
     );
     return [filtered, false];
   }),
@@ -35,12 +35,12 @@ vi.mock('@hooks', () => ({
 }));
 
 vi.mock('../../../../presentations/components/EditModal', () => ({
-  EditModal: ({ isOpen, onClose, onSave }: any) => 
+  EditModal: ({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: () => void, onSave: (data: Record<string, unknown>) => void }) => 
     isOpen ? <div data-testid="edit-modal"><button onClick={() => onSave({ name: 'Updated' })}>Save</button><button onClick={onClose}>Close</button></div> : null,
 }));
 
 vi.mock('../../../../presentations/components/DeleteConfirmationModal', () => ({
-  DeleteConfirmationModal: ({ isOpen, onConfirm, onClose }: any) => 
+  DeleteConfirmationModal: ({ isOpen, onConfirm, onClose }: { isOpen: boolean, onConfirm: () => void, onClose: () => void }) => 
     isOpen ? <div data-testid="delete-modal"><button onClick={onConfirm}>Confirm</button><button onClick={onClose}>Cancel</button></div> : null,
 }));
 
@@ -88,7 +88,7 @@ describe('Sidebar', () => {
 
   it('renders correctly when expanded', () => {
     renderSidebar();
-    expect(screen.getByText('sidebar.yourLibrary')).toBeInTheDocument();
+    expect(screen.getByText('sidebar.playlists')).toBeInTheDocument();
     expect(screen.getByText('sidebar.allSongs')).toBeInTheDocument();
     expect(screen.getByText('My Playlist 1')).toBeInTheDocument();
     expect(screen.getByText('My Playlist 2')).toBeInTheDocument();
@@ -96,7 +96,7 @@ describe('Sidebar', () => {
 
   it('renders correctly when collapsed', () => {
     renderSidebar(true);
-    expect(screen.queryByText('sidebar.yourLibrary')).not.toBeInTheDocument();
+    expect(screen.queryByText('sidebar.playlists')).not.toBeInTheDocument();
     expect(screen.getAllByRole('link')).toHaveLength(3); // All Songs + 2 playlists
   });
 

@@ -1,7 +1,115 @@
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { Animated, Easing, Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
 import { useAppShell } from '../../presentations/components/AppShell'
+
+type SegmentedOption<T extends string> = {
+  label: string
+  value: T
+}
+
+type SegmentedToggleProps<T extends string> = {
+  options: SegmentedOption<T>[]
+  value: T
+  onChange: (value: T) => void
+  itemWidth?: number
+  colors: {
+    itemWidth?: number
+    primary: string
+    text: string
+    mutedText: string
+    surfaceSolid: string
+    subtleBorder: string
+    inverseText: string
+  }
+}
+
+const SEGMENT_ITEM_WIDTH = 55
+const SEGMENT_HEIGHT = 40
+
+function SegmentedToggle<T extends string>({
+  options,
+  value,
+  onChange,
+  itemWidth = SEGMENT_ITEM_WIDTH,
+  colors,
+}: SegmentedToggleProps<T>) {
+  const [translateX] = useState(() => new Animated.Value(0))
+
+  const activeIndex = Math.max(
+    0,
+    options.findIndex((option) => option.value === value),
+  )
+
+  useEffect(() => {
+    Animated.timing(translateX, {
+      toValue: activeIndex * itemWidth,
+      duration: 180,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start()
+  }, [activeIndex, translateX])
+
+  return (
+    <View
+      style={[
+        styles.segmentTrack,
+        {
+          width: itemWidth * options.length,
+          height: SEGMENT_HEIGHT,
+          backgroundColor: colors.surfaceSolid,
+          borderColor: colors.subtleBorder,
+        },
+      ]}
+    >
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.segmentThumb,
+          {
+            width: itemWidth - 4,
+            backgroundColor: colors.primary,
+            transform: [{ translateX }],
+          },
+        ]}
+      />
+
+      {options.map((option) => {
+        const isActive = option.value === value
+
+        return (
+          <Pressable
+            key={option.value}
+            onPress={() => onChange(option.value)}
+            accessibilityRole="button"
+            accessibilityLabel={option.label}
+            style={({ pressed }) => [
+              styles.segmentItem,
+              {
+                width: itemWidth,
+                opacity: pressed ? 0.72 : 1,
+              },
+            ]}
+          >
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.segmentText,
+                {
+                  color: isActive ? colors.inverseText : colors.text,
+                  fontWeight: isActive ? '800' : '700',
+                },
+              ]}
+            >
+              {option.label}
+            </Text>
+          </Pressable>
+        )
+      })}
+    </View>
+  )
+}
 
 export default function SettingsScreen() {
   const { theme, themeName, toggleTheme, isHydrated } = useTheme()
@@ -40,42 +148,16 @@ export default function SettingsScreen() {
             {isLanguageHydrated ? t.common.savedToDevice : t.common.loadingPreference}
           </Text>
         </View>
-        <View style={styles.langPills}>
-          <Pressable
-            onPress={() => setLanguage('en')}
-            style={[
-              styles.pill,
-              language === 'en' && {
-                backgroundColor: theme.colors.primary,
-                borderColor: theme.colors.primary,
-              },
-              language !== 'en' && { borderColor: theme.colors.border },
-            ]}
-          >
-            <Text
-              style={[styles.pillText, { color: language === 'en' ? '#fff' : theme.colors.text }]}
-            >
-              {t.settings.english}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setLanguage('vi')}
-            style={[
-              styles.pill,
-              language === 'vi' && {
-                backgroundColor: theme.colors.primary,
-                borderColor: theme.colors.primary,
-              },
-              language !== 'vi' && { borderColor: theme.colors.border },
-            ]}
-          >
-            <Text
-              style={[styles.pillText, { color: language === 'vi' ? '#fff' : theme.colors.text }]}
-            >
-              {t.settings.vietnamese}
-            </Text>
-          </Pressable>
-        </View>
+        <SegmentedToggle
+          options={[
+            { value: 'en', label: 'ENG' },
+            { value: 'vi', label: 'VIE' },
+          ]}
+          value={language}
+          onChange={setLanguage}
+          itemWidth={55}
+          colors={theme.colors}
+        />
       </View>
 
       <View
@@ -90,42 +172,16 @@ export default function SettingsScreen() {
             Choose Tab Bar or Sidebar
           </Text>
         </View>
-        <View style={styles.langPills}>
-          <Pressable
-            onPress={() => setNavigationLayout('tabs')}
-            style={[
-              styles.pill,
-              navigationLayout === 'tabs' && {
-                backgroundColor: theme.colors.primary,
-                borderColor: theme.colors.primary,
-              },
-              navigationLayout !== 'tabs' && { borderColor: theme.colors.border },
-            ]}
-          >
-            <Text
-              style={[styles.pillText, { color: navigationLayout === 'tabs' ? '#fff' : theme.colors.text }]}
-            >
-              Tab Bar
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setNavigationLayout('sidebar')}
-            style={[
-              styles.pill,
-              navigationLayout === 'sidebar' && {
-                backgroundColor: theme.colors.primary,
-                borderColor: theme.colors.primary,
-              },
-              navigationLayout !== 'sidebar' && { borderColor: theme.colors.border },
-            ]}
-          >
-            <Text
-              style={[styles.pillText, { color: navigationLayout === 'sidebar' ? '#fff' : theme.colors.text }]}
-            >
-              Sidebar
-            </Text>
-          </Pressable>
-        </View>
+        <SegmentedToggle
+          options={[
+            { value: 'tabs', label: 'Tab Bar' },
+            { value: 'sidebar', label: 'Sidebar' },
+          ]}
+          value={navigationLayout}
+          onChange={setNavigationLayout}
+          itemWidth={86}
+          colors={theme.colors}
+        />
       </View>
     </View>
   )
@@ -176,5 +232,31 @@ const styles = StyleSheet.create({
   pillText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  segmentTrack: {
+  position: 'relative',
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderRadius: 999,
+  borderWidth: StyleSheet.hairlineWidth,
+  padding: 2,
+  overflow: 'hidden',
+  },
+  segmentThumb: {
+    position: 'absolute',
+    left: 2,
+    top: 2,
+    bottom: 2,
+    borderRadius: 999,
+  },
+  segmentItem: {
+    height: SEGMENT_HEIGHT - 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    zIndex: 1,
+  },
+  segmentText: {
+    fontSize: 13,
   },
 })
