@@ -1,7 +1,4 @@
-feat(desktop): refactor downloader mode selection and polish About page
+docs: rewrite README and add Desktop project analysis
 
-- **Downloader Mode Selection**: Tái cấu trúc cơ chế phân tích URL bằng `URLSearchParams` thay vì `includes('list=')` để phát hiện chính xác liên kết chứa cả Video và Danh sách phát. Thêm trạng thái `DOWNLOAD_STATUS.MODE_SELECTION` và hiển thị liền mạch 2 nút chọn (Tải 1 Video / Tải Danh sách phát) ngay dưới ô nhập liên kết ở cả Modal và phần Cài đặt, loại bỏ hoàn toàn Dialog gây gián đoạn UX.
-- **About Page Refinement**: Cập nhật thông tin thực tế cho nhóm 4 thành viên, gom nhóm tab Semester và Group thành một màn hình chung, đồng thời sử dụng ảnh đại diện thực tế từ `packages/brand/dev-avt` kết hợp cơ chế fallback nếu lỗi ảnh.
-- **i18n & UI Polishing**: Bổ sung các bản dịch ngôn ngữ bị thiếu cho trạng thái tải (`success`, `downloading`) trong `desktop.ts`, giải quyết triệt để lỗi hiển thị Literal Key (ví dụ: `DOWNLOADER.STATUS.SUCCESS`) trong `DownloadPreviewCard`.
-- **TypeScript & Linter Hardening**: Đạt chuẩn Zero Red-Squiggles. Khắc phục lỗi khai báo biến trong `switch/case`, sửa lỗi hoisting biến `resetDownload`, loại bỏ hoàn toàn các ép kiểu `any` nguy hiểm và khắc phục false-positive dependency trong Hook.
-- **Documentation**: Cập nhật `____ROADMAP.md` và `Bao_Cao_MVP_Draft.md` để ghi nhận các lỗi Code Smell đã được refactor và tiến độ hoàn thành các hạng mục tính năng.
+- **README Overhaul**: Completely rewrote `README.md` to accurately reflect the current scale and architecture of the project. Clearly separated features into Shared Core, Desktop, and Mobile categories. Added detailed installation instructions, the Monorepo directory structure, and the rigorous Testing standards of the project.
+- **Project Analysis**: Added the `docs/_DESKTOP_analysis.md` document for an in-depth analysis of the Desktop platform. Highlighted architectural strengths (IPC Security, Virtualization), evaluated realistic production weaknesses (Bundle Size, RAM usage, Web Scraper stability), and outlined future directions (deep OS integration, Plugin Architecture, local AI processing).
