@@ -11,19 +11,20 @@ export interface SearchResults {
   albums: { id: string; name: string; artist: string; coverArt?: string | null }[];
   artists: { id: string; name: string; avatar?: string }[];
   isSearching: boolean;
+  debouncedQuery: string;
 }
 
 /**
  * Helper to safely get value from object by path (string or array).
  */
-const getObjectValue = (obj: any, path: string | string[]): any => {
+const getObjectValue = (obj: unknown, path: string | string[]): unknown => {
   if (Array.isArray(path)) {
-    return path.reduce((acc, key) => acc?.[key], obj);
+    return path.reduce((acc: unknown, key) => (acc as Record<string, unknown>)?.[key], obj);
   }
-  return obj[path];
+  return (obj as Record<string, unknown>)[path];
 };
 
-export const useSearch = (songs: Song[], playlists: Playlist[], query: string): SearchResults => {
+export const useSearch = (songs: Song[], playlists: Playlist[], query: string, limit: number = 10): SearchResults => {
   const [debouncedQuery, isSearching] = useDebounce(query, 250);
 
   // 1. Khởi tạo Fuse cho Songs với logic chuẩn hóa tiếng Việt
@@ -58,6 +59,7 @@ export const useSearch = (songs: Song[], playlists: Playlist[], query: string): 
         albums: [],
         artists: [],
         isSearching: false,
+        debouncedQuery: '',
       };
     }
 
@@ -68,7 +70,8 @@ export const useSearch = (songs: Song[], playlists: Playlist[], query: string): 
         playlists: [],
         albums: [],
         artists: [],
-        isSearching
+        isSearching,
+        debouncedQuery
       };
     }
 
@@ -78,7 +81,7 @@ export const useSearch = (songs: Song[], playlists: Playlist[], query: string): 
     // Thực hiện tìm kiếm + Hậu kiểm Smart Intent để cưỡng chế tính nhất quán và triệt tiêu Fuzzy Overreach
     const matchedSongs = songFuse.search(normalizedQuery)
       .filter(({ item }) => {
-        const songTitle = (item as any).title || (item as any).name;
+        const songTitle = item.title;
         const artists = splitArtists(item.artist);
         
         return textMatches(songTitle, debouncedQuery) || 
@@ -91,8 +94,8 @@ export const useSearch = (songs: Song[], playlists: Playlist[], query: string): 
       .filter(({ item }) => textMatches(item.name, debouncedQuery));
 
     // 2. Phân loại kết quả từ Songs (Albums/Artists)
-    const albumMap = new Map<string, any>();
-    const artistMap = new Map<string, any>();
+    const albumMap = new Map<string, { id: string; name: string; artist: string; coverArt?: string | null }>();
+    const artistMap = new Map<string, { id: string; name: string; avatar?: string }>();
 
     matchedSongs.forEach(({ item }) => {
       // Collect albums
@@ -122,11 +125,12 @@ export const useSearch = (songs: Song[], playlists: Playlist[], query: string): 
     });
 
     return {
-      songs: matchedSongs.map(res => res.item).slice(0, 10),
-      playlists: matchedPlaylists.map(res => res.item).slice(0, 10),
+      songs: matchedSongs.map(res => res.item).slice(0, limit),
+      playlists: matchedPlaylists.map(res => res.item).slice(0, limit),
       albums: Array.from(albumMap.values()).slice(0, 5),
       artists: Array.from(artistMap.values()).slice(0, 5),
-      isSearching
+      isSearching,
+      debouncedQuery
     };
-  }, [songFuse, playlistFuse, query, debouncedQuery, isSearching]);
+  }, [songFuse, playlistFuse, query, debouncedQuery, isSearching, limit]);
 };

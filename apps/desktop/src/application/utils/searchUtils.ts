@@ -23,8 +23,9 @@ export const normalizeText = (text: string | null | undefined): string => {
  * Checks if a piece of text matches a query string using Smart Intent Detection.
  */
 export const textMatches = (text: string | null | undefined, query: string | null | undefined): boolean => {
-  const cleanQuery = query?.trim().toLowerCase() || '';
-  const cleanText = text?.trim().toLowerCase() || '';
+  // Normalize to NFC first to unify macOS NFD and standard NFC formats
+  const cleanQuery = query?.trim().normalize('NFC').toLowerCase() || '';
+  const cleanText = text?.trim().normalize('NFC').toLowerCase() || '';
   
   if (!cleanQuery) return true;
   if (!cleanText) return false;
@@ -59,7 +60,7 @@ export const groupAndSortSongs = (songs: Song[], query: string): ClusteredSongs 
   const albums: Song[] = [];
 
   songs.forEach((song) => {
-    const songTitle = (song as any).title || (song as any).name;
+    const songTitle = song.title;
     
     if (textMatches(songTitle, query)) {
       titles.push(song);
@@ -74,13 +75,13 @@ export const groupAndSortSongs = (songs: Song[], query: string): ClusteredSongs 
   });
 
   const sortFn = (key: keyof Song) => (a: Song, b: Song) => {
-    // Đặc biệt xử lý cho tiêu đề vì có thể là .title hoặc .name
+    // Đặc biệt xử lý cho tiêu đề
     const valA = key === 'title' 
-      ? ((a as any).title || (a as any).name || '') 
+      ? (a.title || '') 
       : ((a[key] as string) || '');
       
     const valB = key === 'title' 
-      ? ((b as any).title || (b as any).name || '') 
+      ? (b.title || '') 
       : ((b[key] as string) || '');
 
     return valA.localeCompare(valB, 'vi');

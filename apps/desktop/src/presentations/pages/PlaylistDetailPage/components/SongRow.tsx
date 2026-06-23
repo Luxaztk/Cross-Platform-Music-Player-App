@@ -148,13 +148,15 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
         <div className="col-duration">{formatTime(song.duration || 0)}</div>
 
         <div className="col-more">
-          <button
-            className={`row-more-btn ${isActiveMenu ? 'active' : ''} ${isPlaying ? 'visible' : ''}`}
-            onClick={(e) => onToggleMenu(song.id, e)}
-            title={t('common.moreActions')}
-          >
-            <MoreVertical size={ICON_SIZES.SMALL} />
-          </button>
+          {!hasActiveSelection && (
+            <button
+              className={`row-more-btn ${isActiveMenu ? 'active' : ''} ${isPlaying ? 'visible' : ''}`}
+              onClick={(e) => onToggleMenu(song.id, e)}
+              title={t('common.moreActions')}
+            >
+              <MoreVertical size={ICON_SIZES.SMALL} />
+            </button>
+          )}
         </div>
       </div>
     );

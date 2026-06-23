@@ -23,15 +23,17 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                 </div>
                 <div className="bulk-btns">
                     {!isLibrary && (
-                        <button className="bulk-btn secondary" onClick={() => onBulkDelete('playlist')}>
+                        <button className="bulk-btn delete" onClick={() => onBulkDelete('playlist')}>
                             <X size={ICON_SIZES.XSMALL} />
                             {t('playlist.removeFromPlaylist') || 'Gỡ khỏi playlist'}
                         </button>
                     )}
-                    <button className="bulk-btn delete" onClick={() => onBulkDelete('library')}>
-                        <Trash size={ICON_SIZES.XSMALL} />
-                        {t('playlist.deleteFromLibrary') || 'Xóa khỏi thư viện'}
-                    </button>
+                    {isLibrary && (
+                        <button className="bulk-btn delete" onClick={() => onBulkDelete('library')}>
+                            <Trash size={ICON_SIZES.XSMALL} />
+                            {t('playlist.deleteFromLibrary') || 'Xóa khỏi thư viện'}
+                        </button>
+                    )}
                     <div className="bulk-divider" />
                     <button className="bulk-btn secondary" onClick={onBulkAddToQueue}>
                         <ListPlus size={ICON_SIZES.XSMALL} />

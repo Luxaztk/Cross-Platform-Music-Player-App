@@ -1,9 +1,1 @@
-fix(player): resolve critical playback, streaming, and state synchronization bugs
-
-- Add CORS preflight and Access-Control-Allow-Origin to melovista custom protocol
-- Disable Chromium Autoplay Policy (no-user-gesture-required) in BrowserWindow
-- Enable HTML5 streaming (html5: true) in HowlerJS for instant zero-delay playback
-- Implement custom Web Audio API routing from HTMLMediaElement to AnalyserNode to preserve visualizer support
-- Fix React dependency loop in PlayerProvider caused by progress state triggering AudioEngine re-instantiation
-- Add volumeRef in PlayerProvider to inject hydrated volume state during AudioEngine initialization instead of hardcoding to 100%
-- Add missing setProgress dependency to React hooks to resolve ESLint exhaustive-deps warnings
+feat: implement advanced text search utilities and playlist management hooks

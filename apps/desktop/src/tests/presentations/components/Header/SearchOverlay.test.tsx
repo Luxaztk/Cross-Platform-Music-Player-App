@@ -48,6 +48,7 @@ describe('SearchOverlay', () => {
       albums: [],
       artists: [],
       isSearching: false,
+      debouncedQuery: '',
     },
     recentSearches: [],
     selectedIndex: -1,
@@ -133,12 +134,12 @@ describe('SearchOverlay', () => {
     };
 
     render(<SearchOverlay {...props} />);
-    
+
     expect(screen.getByText('search.songs')).toBeInTheDocument();
     expect(screen.getByText('Song Title 1')).toBeInTheDocument();
     expect(screen.getByText('Another Song')).toBeInTheDocument();
     expect(screen.getByText('Song Album 3')).toBeInTheDocument();
-    
+
     // There should be two dividers because we have titles, artists, and albums
     const dividers = document.querySelectorAll('.search-cluster-divider');
     expect(dividers.length).toBe(2);
@@ -147,7 +148,7 @@ describe('SearchOverlay', () => {
   it('renders artist results correctly and allows selection', async () => {
     const user = userEvent.setup();
     const artist = { id: 'a1', name: 'Cool Artist', avatar: 'avatar.png' };
-    
+
     const props = {
       ...defaultProps,
       query: 'Cool',
@@ -158,21 +159,21 @@ describe('SearchOverlay', () => {
     };
 
     render(<SearchOverlay {...props} />);
-    
+
     expect(screen.getAllByText('search.artists')[0]).toBeInTheDocument();
     expect(screen.getByText('Cool Artist')).toBeInTheDocument();
-    
+
     // Click on artist
     const artistElement = screen.getByText('Cool Artist').closest('.search-item');
     await user.click(artistElement!);
-    
+
     expect(props.onSelect).toHaveBeenCalledWith({ type: 'artist', item: artist });
   });
 
   it('renders album results correctly and allows selection', async () => {
     const user = userEvent.setup();
     const album = { id: 'al1', name: 'Cool Album', artist: 'Cool Artist', coverArt: 'cover.png' };
-    
+
     const props = {
       ...defaultProps,
       query: 'Cool',
@@ -183,21 +184,21 @@ describe('SearchOverlay', () => {
     };
 
     render(<SearchOverlay {...props} />);
-    
+
     expect(screen.getByText('search.albums')).toBeInTheDocument();
     expect(screen.getByText('Cool Album')).toBeInTheDocument();
     expect(screen.getByText('Cool Artist')).toBeInTheDocument();
-    
+
     // Click on album
     const albumElement = screen.getByText('Cool Album').closest('.search-item');
     await user.click(albumElement!);
-    
+
     expect(props.onSelect).toHaveBeenCalledWith({ type: 'album', item: album });
   });
-  
+
   it('applies active class based on selectedIndex for albums', () => {
     const album = { id: 'al1', name: 'Cool Album', artist: 'Cool Artist' };
-    
+
     const props = {
       ...defaultProps,
       query: 'Cool',
@@ -209,7 +210,7 @@ describe('SearchOverlay', () => {
     };
 
     render(<SearchOverlay {...props} />);
-    
+
     const activeItem = document.querySelector('.search-item.active');
     expect(activeItem).toBeInTheDocument();
     expect(activeItem).toHaveTextContent('Cool Album');
@@ -232,12 +233,12 @@ describe('SearchOverlay', () => {
     };
 
     render(<SearchOverlay {...props} />);
-    
+
     const moreBtn = screen.getByRole('button', { name: /more/i, hidden: true }).closest('button') || screen.getByTestId('icon-more').closest('button');
     expect(moreBtn).toBeInTheDocument();
-    
+
     await user.click(moreBtn!);
-    
+
     // Check if the menu opens (it should render floating menu)
     expect(screen.getByText('playlist.playNext')).toBeInTheDocument();
     expect(screen.getByText('playlist.addToQueue')).toBeInTheDocument();

@@ -23,7 +23,7 @@ export class MainStorageAdapter implements IStorageAdapter {
     let defaultDownloadPath = '';
     try {
       defaultDownloadPath = path.join(app.getPath('music'), 'Melovista Downloads');
-    } catch (_e) {
+    } catch {
       console.warn('[Storage] Failed to get music path, using empty default');
     }
 
@@ -137,7 +137,7 @@ export class MainStorageAdapter implements IStorageAdapter {
     if (!settings.downloads.downloadPath) {
       try {
         settings.downloads.downloadPath = path.join(app.getPath('music'), 'Melovista Downloads');
-      } catch (_e) {
+      } catch {
         console.warn('[Storage] Failed to resolve default download path in getSettings');
       }
     }

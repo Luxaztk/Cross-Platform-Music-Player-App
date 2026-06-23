@@ -76,7 +76,13 @@ export const usePlaylistData = (id: string | undefined) => {
 
   const confirmDeleteSong = useCallback(async () => {
     if (!deletingSong) return;
-    const success = await handleDeleteSong(deletingSong.id);
+    let success = false;
+    if (isLibrary) {
+      success = await handleDeleteSong(deletingSong.id);
+    } else if (id) {
+      success = await handleRemoveSongsFromPlaylist(id, [deletingSong.id]);
+    }
+    
     if (success) {
       setLocalSongs((prev) => prev.filter((s) => s.id !== deletingSong.id));
       showNotification('success', t('playlist.deleteSongSuccess'));
@@ -84,7 +90,7 @@ export const usePlaylistData = (id: string | undefined) => {
       return true;
     }
     return false;
-  }, [deletingSong, handleDeleteSong, showNotification, t]);
+  }, [deletingSong, isLibrary, id, handleDeleteSong, handleRemoveSongsFromPlaylist, showNotification, t]);
 
   const confirmBulkDelete = useCallback(async (selectedIds: Set<string>) => {
     if (!bulkDeleteMode || selectedIds.size === 0) return false;

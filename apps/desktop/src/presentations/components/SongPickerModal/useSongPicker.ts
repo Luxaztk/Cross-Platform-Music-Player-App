@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import type { Song } from '@music/types';
-import { useTheme, useLanguage, useClusteredSearch } from '@hooks';
+import { useTheme, useLanguage, useSearch } from '@hooks';
+import { groupAndSortSongs } from '../../../application/utils/searchUtils';
 
 export const useSongPicker = (
   allSongs: Song[],
@@ -18,8 +19,18 @@ export const useSongPicker = (
     return allSongs.filter((song) => !existingSongIds.includes(song.id));
   }, [allSongs, existingSongIds]);
 
-  // Use the new clustered search hook which handles debounce, filter and group
-  const { clusteredResults, debouncedQuery, isDebouncing } = useClusteredSearch(availableSongs, searchQuery);
+  // Use the robust useSearch from the Header (limit 100 for picker)
+  const searchResults = useSearch(availableSongs, [], searchQuery, 100);
+
+  const clusteredResults = useMemo(() => {
+    if (!searchResults.debouncedQuery.trim()) {
+      return { titles: availableSongs, artists: [], albums: [] };
+    }
+    return groupAndSortSongs(searchResults.songs, searchResults.debouncedQuery);
+  }, [availableSongs, searchResults.songs, searchResults.debouncedQuery]);
+
+  const debouncedQuery = searchResults.debouncedQuery;
+  const isDebouncing = searchResults.isSearching;
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {

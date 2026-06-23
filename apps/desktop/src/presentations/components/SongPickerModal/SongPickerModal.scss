@@ -128,13 +128,6 @@
           margin: 12px 12px;
           opacity: 0.4;
         }
-      }
-
-      .song-list {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-
         .song-item {
           display: flex;
           align-items: center;
@@ -223,8 +216,8 @@
             flex-shrink: 0;
             transition: all 0.2s ease;
           }
-        }
       }
+    }
     }
 
     .modal-footer {
