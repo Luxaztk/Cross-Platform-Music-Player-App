@@ -99,7 +99,7 @@ export class AudioEngine {
 
     this.howl = new Howl({
       src: [url],
-      html5: false, // Use Web Audio for visualization support
+      html5: true, // Use HTML5 Audio for INSTANT streaming playback (zero delay)
       autoplay: autoplay,
       format: ['mp3', 'flac', 'wav', 'm4a', 'aac', 'ogg'],
       onplay: () => {
@@ -270,7 +270,31 @@ export class AudioEngine {
       }
     }
 
-    // ALWAYS RE-CONNECT to guarantee we aren't listening to a dead node
+    // Check if we are using HTML5 Audio node
+    const sounds = (this.howl as HowlInternal)?._sounds;
+    const audioNode = sounds && sounds.length > 0 ? sounds[0]._node : null;
+
+    if (audioNode instanceof HTMLMediaElement) {
+      try {
+        const nodeWithSource = audioNode as HTMLMediaElement & { _sourceNode?: MediaElementAudioSourceNode };
+        if (!nodeWithSource._sourceNode) {
+          nodeWithSource._sourceNode = Howler.ctx.createMediaElementSource(audioNode);
+        }
+        
+        // Connect HTML5 Source -> Analyser -> Howler.masterGain
+        if (Howler.masterGain) {
+          nodeWithSource._sourceNode.disconnect();
+          nodeWithSource._sourceNode.connect(this.analyser);
+          this.analyser.disconnect();
+          this.analyser.connect(Howler.masterGain);
+        }
+        return this.analyser;
+      } catch (e) {
+        console.warn('Failed to route HTML5 audio to analyser:', e);
+      }
+    }
+
+    // Fallback: Web Audio API mode routing (html5: false)
     if (Howler.masterGain && this.analyser) {
       try {
         // Disconnect first to prevent memory leaks/infinite routing loops

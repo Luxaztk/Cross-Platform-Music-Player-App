@@ -87,6 +87,7 @@ function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC as string, 'logo.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
+      autoplayPolicy: 'no-user-gesture-required',
     },
   })
 
@@ -215,7 +216,23 @@ async function setupAutoUpdate() {
 
   autoUpdater.on('error', (err) => {
     log.error('[Updater] Lỗi nghiêm trọng khi cập nhật:', err)
-    broadcast('update-error', err.message)
+    
+    let uiMessage = err.message || 'Đã có lỗi xảy ra khi kiểm tra cập nhật.';
+    
+    // Nếu lỗi là 404 khi tìm latest.yml (do chưa publish release)
+    if (uiMessage.includes('latest.yml') && uiMessage.includes('404')) {
+      uiMessage = 'Chưa có bản phân phối phát hành cho phiên bản này (Lỗi 404 Not Found). Vui lòng đợi bản Build hoàn tất!';
+    } 
+    // Lỗi mạng
+    else if (uiMessage.includes('net::ERR_INTERNET_DISCONNECTED') || uiMessage.includes('net::ERR_NAME_NOT_RESOLVED')) {
+      uiMessage = 'Không thể kết nối đến máy chủ cập nhật. Vui lòng kiểm tra kết nối mạng của bạn.';
+    }
+    // Rút gọn nếu log quá dài
+    else if (uiMessage.length > 150) {
+      uiMessage = uiMessage.substring(0, 150) + '... (Xem log để biết thêm)';
+    }
+
+    broadcast('update-error', uiMessage)
   })
 
   // IPC handler đã được đăng ký ở trên để dùng chung
@@ -263,6 +280,19 @@ app.on('activate', () => {
 app.whenReady().then(() => {
   // Protocol handler for melovista://app/{encodedFilePath}
   protocol.handle('melovista', async (request) => {
+    // Xử lý CORS Preflight request
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Allow-Headers': 'Range, Accept, Content-Type',
+          'Access-Control-Max-Age': '86400',
+        },
+      })
+    }
+
     const url = new URL(request.url)
     let filePath = decodeURIComponent(url.pathname)
     if (process.platform === 'win32' && filePath.startsWith('/')) {
@@ -325,6 +355,7 @@ app.whenReady().then(() => {
               'Accept-Ranges': 'bytes',
               'Content-Length': String(chunkSize),
               'Content-Type': contentType,
+              'Access-Control-Allow-Origin': '*',
             },
           })
         }
@@ -344,13 +375,17 @@ app.whenReady().then(() => {
           'Accept-Ranges': 'bytes',
           'Content-Length': String(fileSize),
           'Content-Type': contentType,
+          'Access-Control-Allow-Origin': '*',
         },
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       logFileTrace('melovistaProtocol', filePath, 'FAIL', message)
       console.error('melovista:// protocol error:', err)
-      return new Response('File not found', { status: 404 })
+      return new Response('File not found', { 
+        status: 404,
+        headers: { 'Access-Control-Allow-Origin': '*' }
+      })
     }
   })
 

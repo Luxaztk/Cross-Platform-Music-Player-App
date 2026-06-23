@@ -29,7 +29,12 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgressState] = useState(0);
+  const progressRef = useRef(0);
+  const setProgress = useCallback((val: number) => {
+    progressRef.current = val;
+    setProgressState(val);
+  }, []);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(1);
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -53,6 +58,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   const repeatModeRef = useRef(repeatMode);
   const isShuffleRef = useRef(isShuffle);
   const onFileErrorRef = useRef(onFileError);
+  const volumeRef = useRef(volume);
 
   React.useLayoutEffect(() => {
     queueRef.current = queue;
@@ -62,6 +68,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     repeatModeRef.current = repeatMode;
     isShuffleRef.current = isShuffle;
     onFileErrorRef.current = onFileError;
+    volumeRef.current = volume;
   });
 
   const pushToHistory = useCallback((song: Song) => {
@@ -80,7 +87,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     if (engineRef.current) {
       engineRef.current.load(song.filePath, true);
     }
-  }, []);
+  }, [setProgress]);
 
   // ==========================================
   // ITERATOR PATTERN (Playback Iterator)
@@ -114,7 +121,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     },
 
     prev: () => {
-      if (progress > 3) {
+      if (progressRef.current > 3) {
         engineRef.current?.seek(0);
       } else {
         if (historyRef.current.length > 0) {
@@ -132,7 +139,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         }
       }
     }
-  }), [playSong, pushToHistory, generateUid, progress]);
+  }), [playSong, pushToHistory, generateUid]);
   // ==========================================
 
   // Engine initialization effect
@@ -180,13 +187,13 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
       },
     });
 
-    engine.setVolume(1);
+    engine.setVolume(volumeRef.current);
     engineRef.current = engine;
 
     return () => {
       engine.stop();
     };
-  }, [playbackIterator]);
+  }, [playbackIterator, setProgress]);
 
   useEffect(() => {
     if (engineRef.current && currentDeviceId) {
@@ -384,7 +391,7 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
       engineRef.current.seek(time);
       setProgress(time);
     }
-  }, []);
+  }, [setProgress]);
 
   const setVolume = useCallback((vol: number) => {
     setVolumeState(vol);
