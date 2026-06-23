@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { type PlaylistItemProps } from '../types';
@@ -16,11 +16,22 @@ export const PlaylistItem: React.FC<PlaylistItemProps> = ({
     appIcon,
     t
 }) => {
+    const navigate = useNavigate();
+
+    const handleNavigate = (e: React.MouseEvent) => {
+        // Only navigate if it's not a click on the more-btn or menu
+        if ((e.target as HTMLElement).closest('.col-more')) {
+            return;
+        }
+        navigate(`/playlist/${playlist.id}`);
+    };
+
     return (
         <li className={isMenuOpen ? 'menu-open' : ''}>
-            <NavLink
-                to={`/playlist/${playlist.id}`}
+            <div
+                onClick={handleNavigate}
                 className={`nav-item ${isActive ? 'active' : ''}`}
+                style={{ cursor: 'pointer' }}
             >
                 <img src={appIcon} alt="" className="icon brand-icon-small" />
                 <span className="text">{playlist.name}</span>
@@ -38,18 +49,18 @@ export const PlaylistItem: React.FC<PlaylistItemProps> = ({
                             className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`}
                             ref={menuRef}
                         >
-                            <button className="menu-item" onClick={(e) => onEdit(e, playlist)}>
+                            <button className="menu-item" onClick={(e) => { e.stopPropagation(); onEdit(e, playlist); }}>
                                 <Edit2 size={ICON_SIZES.TINY} />
                                 <span>{t('common.edit')}</span>
                             </button>
-                            <button className="menu-item delete" onClick={(e) => onDelete(e, playlist)}>
+                            <button className="menu-item delete" onClick={(e) => { e.stopPropagation(); onDelete(e, playlist); }}>
                                 <Trash2 size={ICON_SIZES.TINY} />
                                 <span>{t('common.delete')}</span>
                             </button>
                         </div>
                     )}
                 </div>
-            </NavLink>
+            </div>
         </li>
     );
 };

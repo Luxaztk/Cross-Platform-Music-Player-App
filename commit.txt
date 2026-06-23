@@ -1,1 +1,1 @@
-feat: implement advanced text search utilities and playlist management hooks
+feat: implement sidebar layout with playlist management components and search functionality

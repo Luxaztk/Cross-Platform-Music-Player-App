@@ -43,9 +43,9 @@ export const useSidebar = (): UseSidebarReturn => {
       }
     };
     if (activeMenuId || isSortMenuOpen) {
-      document.addEventListener('click', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
-    return () => document.removeEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeMenuId, isSortMenuOpen]);
 
   const onCreatePlaylist = useCallback(async () => {

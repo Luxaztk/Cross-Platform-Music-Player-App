@@ -1,4 +1,3 @@
-import { NavLink } from 'react-router-dom';
 import { Plus, Search, ArrowUpDown, Loader2, ChevronLeft, MoreVertical, ListMusic } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { type PlaylistSectionProps } from '../types';
@@ -108,11 +107,13 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
 
             <ul>
                 <li>
-                    <NavLink
-                        to="/playlist/0"
-                        className={({ isActive }) =>
-                            `nav-item ${isActive ? 'active' : ''} ${isActive || activeMenuId === '0' ? 'menu-open' : ''}`
-                        }
+                    <div
+                        onClick={(e) => {
+                            if ((e.target as HTMLElement).closest('.col-more')) return;
+                            window.location.hash = '#/playlist/0';
+                        }}
+                        className={`nav-item ${window.location.hash.includes('/playlist/0') ? 'active' : ''} ${window.location.hash.includes('/playlist/0') || activeMenuId === '0' ? 'menu-open' : ''}`}
+                        style={{ cursor: 'pointer' }}
                     >
                         <img src={appIcon} alt="" className="icon brand-icon-small" />
                         <span className="text">{t('sidebar.library')}</span>
@@ -127,18 +128,18 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
 
                             {activeMenuId === '0' && (
                                 <div className={`more-menu ${menuPlacement === 'top' ? 'open-up' : 'open-down'}`} ref={menuRef}>
-                                    <button className="menu-item" onClick={onImportFiles}>
+                                    <button className="menu-item" onClick={(e) => { e.stopPropagation(); onImportFiles(e); }}>
                                         <img src={appIcon} alt="" className="brand-icon-tiny" />
                                         <span>{t('playlist.importFiles')}</span>
                                     </button>
-                                    <button className="menu-item" onClick={onImportFolder}>
+                                    <button className="menu-item" onClick={(e) => { e.stopPropagation(); onImportFolder(e); }}>
                                         <ListMusic size={ICON_SIZES.TINY} />
                                         <span>{t('playlist.importFolder')}</span>
                                     </button>
                                 </div>
                             )}
                         </div>
-                    </NavLink>
+                    </div>
                 </li>
                 {!isDebouncing && playlists.length > 0 && playlists.map((playlist) => (
                     <PlaylistItem
