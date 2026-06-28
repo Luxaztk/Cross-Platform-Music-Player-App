@@ -3,6 +3,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "skipLibCheck": true
   },
   "include": ["src/**/*"]

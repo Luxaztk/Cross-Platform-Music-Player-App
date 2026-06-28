@@ -11,7 +11,8 @@
       "@music/hooks/types": ["./src/types/index.ts"],
       "@music/hooks/constants": ["./src/constants/index.ts"],
       "@music/hooks/utils": ["./src/utils"]
-    }
+    },
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*", "index.ts"]
 }
