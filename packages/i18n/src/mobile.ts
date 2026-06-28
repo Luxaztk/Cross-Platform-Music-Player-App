@@ -129,7 +129,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
     library: {
       title: 'Library',
       yourLibrary: 'Your Library',
-      allSongs: 'Library',
+      allSongs: 'All songs',
       importSongs: 'Import songs',
       importCanceled: 'Import canceled',
       importPicked: (count) => `Picked ${count} file(s)`,
@@ -234,7 +234,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
     library: {
       title: 'Thư viện',
       yourLibrary: 'Thư viện của bạn',
-      allSongs: 'Thư viện',
+      allSongs: 'Tất cả bài hát',
       importSongs: 'Nhập bài hát',
       importCanceled: 'Đã hủy nhập',
       importPicked: (count) => `Đã chọn ${count} tệp`,

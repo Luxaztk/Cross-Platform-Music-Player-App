@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   FlatList,
   Image,
@@ -20,6 +20,7 @@ import { useNotifications } from '../../presentations/components/Notification'
 import { SongActions } from '../../presentations/components/SongActions'
 import { useLibrary } from '../../application'
 import { usePlayer } from '../../application/player'
+import { useAppShell } from '../../presentations/components/AppShell'
 
 // ── Utilities ───────────────────────────────────────────────────
 
@@ -213,6 +214,11 @@ export default function PlaylistDetailScreen() {
   const { notify } = useNotifications()
   const insets = useSafeAreaInsets()
 
+  const { setCustomTitle } = useAppShell()
+  useEffect(() => {
+    setCustomTitle(playlist?.name || t.playlists.title) // Reset custom title when entering the screen
+  }, [setCustomTitle])
+
   const {
     playlistsById,
     songsById,
@@ -375,30 +381,9 @@ export default function PlaylistDetailScreen() {
     <View
       style={[
         styles.container,
-        { backgroundColor: theme.colors.background, paddingTop: insets.top },
+        { backgroundColor: theme.colors.background},
       ]}
     >
-      {/* Header with title and duration */}
-      <View style={styles.header}>
-        <View style={styles.headerInfo}>
-          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
-            {playlist.name}
-          </Text>
-          <View style={styles.headerMeta}>
-            <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-              {t.playlists.songCount(playlistSongs.length)}
-            </Text>
-            {playlistSongs.length > 0 && (
-              <>
-                <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>•</Text>
-                <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-                  {formatDuration(totalDuration)}
-                </Text>
-              </>
-            )}
-          </View>
-        </View>
-      </View>
 
       {/* Action buttons and sort options */}
       <View style={styles.actions}>
@@ -430,6 +415,7 @@ export default function PlaylistDetailScreen() {
           </Pressable>
         )}
 
+        {/* Sort button */}
         {playlistSongs.length > 0 && (
           <Pressable
             onPress={() => setSortMenuVisible(!sortMenuVisible)}
@@ -565,6 +551,7 @@ export default function PlaylistDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 24
   },
   header: {
     flexDirection: 'row',
@@ -597,7 +584,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mainBtn: {
-    flex: 2,
+    flex: 1.5,
     height: 44,
     borderRadius: 22,
     alignItems: 'center',

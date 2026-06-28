@@ -48,7 +48,7 @@ export function NameModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable style={styles.overlay} onPress={onCancel}>
-        <Pressable style={[styles.modal, { backgroundColor: colors.surface }]} onPress={() => {}}>
+        <Pressable style={[styles.modal, { backgroundColor: colors.surface }]}>
           <Text style={[styles.modalTitle, { color: colors.text }]}>{title}</Text>
 
           <TextInput

@@ -16,6 +16,7 @@ import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
 import { useLibrary } from '../../application'
 import { usePlayer } from '../../application/player'
+import { PLAYER_BAR_HEIGHT } from '../../presentations/player/PlayerBar'
 import { NameModal } from '../../presentations/components/NameModal'
 import { PlaylistRow } from '../../presentations/components/PlaylistRow'
 import { PlaylistActions } from '../../presentations/components/PlaylistActions'
@@ -24,10 +25,12 @@ const shuffleArray = <T,>(arr: T[]): T[] => {
   const newArr = [...arr]
   for (let i = newArr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[newArr[i], newArr[j]] = [newArr[j], newArr[i]]
+      ;[newArr[i], newArr[j]] = [newArr[j], newArr[i]]
   }
   return newArr
 }
+
+const CREATE_PLAYLIST_BTN_HEIGHT = 42;
 
 export default function PlaylistsScreen() {
   const { theme } = useTheme()
@@ -203,19 +206,13 @@ export default function PlaylistsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
-        <View>
-          <Text style={[styles.title, { color: theme.colors.text }]}>{t.playlists.title}</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
+        {/* <View>
+          <Text style={[styles.title, { color: theme.colors.mutedText }]}>
             {isHydrated ? t.playlists.playlistCount(playlistCount) : t.common.loadingPreference}
           </Text>
-        </View>
+        </View> */}
 
-        <Pressable
-          onPress={onPressCreate}
-          style={[styles.createBtn, { backgroundColor: theme.colors.primary }]}
-        >
-          <Text style={styles.createBtnText}>＋</Text>
-        </Pressable>
+
       </View>
 
       <FlatList
@@ -262,15 +259,22 @@ export default function PlaylistsScreen() {
           onShuffle={handleShuffle}
         />
       )}
+      <Pressable
+        onPress={onPressCreate}
+        style={[styles.createBtn, { backgroundColor: theme.colors.primary, position: 'absolute', bottom: PLAYER_BAR_HEIGHT + 20, right: 12 }]}
+      >
+        <Text style={styles.createBtnText}>＋</Text>
+      </Pressable>
     </View>
   )
 }
 
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingLeft: 12,
   },
   header: {
     flexDirection: 'row',
@@ -287,9 +291,9 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   createBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: CREATE_PLAYLIST_BTN_HEIGHT,
+    height: CREATE_PLAYLIST_BTN_HEIGHT,
+    borderRadius: "50%",
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -300,11 +304,10 @@ const styles = StyleSheet.create({
     marginTop: -1,
   },
   list: {
-    marginTop: 18,
     flex: 1,
   },
   listContent: {
-    gap: 10,
+    paddingBottom: CREATE_PLAYLIST_BTN_HEIGHT + PLAYER_BAR_HEIGHT
   },
   rowWrap: {
     position: 'relative',

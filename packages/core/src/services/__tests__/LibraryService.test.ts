@@ -90,7 +90,7 @@ describe('LibraryService', () => {
     // Mock ID generation for deterministic testing
     let idCounter = 0;
     const mockIds = ['1', '2', 'dup1', 'dup2', 'not-dup', 'd1', 'new', 'vi1', 'vi2', 'e1', 'e2', 'orig', 'new-id-from-scan', 'w1', 'w2', 's1', 'Favorites', 'To Delete', 'Playlist 1', 'P1'];
-    
+
     vi.stubGlobal('crypto', {
       randomUUID: vi.fn().mockImplementation(() => {
         return mockIds[idCounter++] || `generated-id-${idCounter}`;
@@ -123,7 +123,7 @@ describe('LibraryService', () => {
 
       expect(result.addedCount).toBe(1);
       expect(result.duplicatePaths).toHaveLength(0);
-      
+
       const addedSong = Object.values(adapter.songs)[0];
       expect(addedSong).toMatchObject({
         ...mockSong,
@@ -319,12 +319,12 @@ describe('LibraryService', () => {
 
     it('should detect duplicate with dynamic tolerance for long mixtapes (10m vs 10m 10s)', async () => {
       const baseHash = 'p2:' + 'a'.repeat(64);
-      const mixtape: Song = { 
-        ...mockSong, 
-        id: 'mix1', 
+      const mixtape: Song = {
+        ...mockSong,
+        id: 'mix1',
         filePath: 'C:/music/mix1.mp3',
         duration: 600, // 10 minutes
-        hash: baseHash 
+        hash: baseHash
       };
       await service.processAndAddSongs([mixtape]);
 
@@ -344,18 +344,18 @@ describe('LibraryService', () => {
 
     it('should respect the 60s cap for extremely long mixtapes', async () => {
       const baseHash = 'p2:' + 'a'.repeat(64);
-      const longMix: Song = { 
-        ...mockSong, 
-        id: 'mix3', 
+      const longMix: Song = {
+        ...mockSong,
+        id: 'mix3',
         filePath: 'C:/music/mix3.mp3',
         duration: 2000, // 33.3 minutes
-        hash: baseHash 
+        hash: baseHash
       };
       await service.processAndAddSongs([longMix]);
 
       // 5% of 2000 is 100s, but cap is 60s.
       // So 2059s should be duplicate, 2061s should NOT.
-      
+
       const duplicateMix: Song = {
         ...mockSong,
         id: 'mix4',
@@ -382,11 +382,11 @@ describe('LibraryService', () => {
       const cleanUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
       const dirtyUrl = 'https://youtu.be/dQw4w9WgXcQ?si=abcdef&t=5';
 
-      const original: Song = { 
-        ...mockSong, 
-        id: 'yt1', 
+      const original: Song = {
+        ...mockSong,
+        id: 'yt1',
         filePath: 'C:/music/yt1.mp3',
-        sourceUrl: cleanUrl 
+        sourceUrl: cleanUrl
       };
       await service.processAndAddSongs([original]);
 
@@ -405,14 +405,14 @@ describe('LibraryService', () => {
     it('should scrub URLs at the earliest entry point (importFromPath)', async () => {
       const dirtyUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&si=trackingparams';
       const cleanUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-      
+
       const spy = vi.spyOn(metadataService, 'extract');
-      
+
       await service.importFromPath('C:/music/test.mp3', 'TEST', dirtyUrl);
-      
+
       // Verify extract was called with cleaned URL
       expect(spy).toHaveBeenCalledWith(expect.any(String), cleanUrl, undefined);
-      
+
       // Verify URL saved in adapter is also clean
       const addedSong = Object.values(adapter.songs)[0];
       expect(addedSong.sourceUrl).toBe(cleanUrl);
