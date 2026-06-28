@@ -163,7 +163,7 @@ const SelectionRow = React.memo(function SelectionRow({
           },
         ]}
       >
-        {isSelected && <Text style={styles.checkboxText}>✓</Text>}
+        {isSelected && <Text style={styles.checkboxText}></Text>}
       </View>
     </Pressable>
   )
@@ -187,9 +187,9 @@ const PlaylistTargetRow = React.memo(function PlaylistTargetRow({
       onPress={() => onSelect(item.id)}
       style={[
         styles.selectionRow,
-        {
-          backgroundColor: isSelected ? colors.primary : 'transparent',
+        { 
           borderColor: isSelected ? colors.primary : colors.border,
+          backgroundColor: isSelected ? colors.primary + '10' : 'transparent',
         },
       ]}
     >
@@ -202,7 +202,17 @@ const PlaylistTargetRow = React.memo(function PlaylistTargetRow({
         </Text>
       </View>
 
-      <Text style={[styles.chooseText, { color: colors.primary }]}>{chooseLabel}</Text>
+      <View
+        style={[
+          styles.checkbox,
+          {
+            borderColor: isSelected ? colors.primary : colors.border,
+            backgroundColor: isSelected ? colors.primary : 'transparent',
+          },
+        ]}
+      >
+        {isSelected && <Text style={styles.checkboxText}></Text>}
+      </View>
     </Pressable>
   )
 })
@@ -237,6 +247,7 @@ export default function PlaylistDetailScreen() {
   const [sortMenuVisible, setSortMenuVisible] = useState(false)
 
   const [addCurrentSongToPlaylistsModalVisible, setAddCurrentSongToPlaylistsModalVisible] = useState(false)
+  const [addingToPlaylists, setAddingToPlaylists] = useState(false)
 
   // SongActions state
   const [selectedSongForActions, setSelectedSongForActions] = useState<Song | null>(null)
@@ -354,11 +365,31 @@ export default function PlaylistDetailScreen() {
 
   const onAddToPlaylist = useCallback(() => {
     if (selectedSongForActions) {
+      // Open the "add to other playlists" picker for the selected song
       setSelectedSongsIds([selectedSongForActions.id])
-      setAddSongsToPlaylistModalVisible(true)
+      setAddCurrentSongToPlaylistsModalVisible(true)
       onCloseSongActions()
     }
   }, [selectedSongForActions, onCloseSongActions])
+
+  const onConfirmAddToOtherPlaylists = useCallback(async () => {
+    if (selectedSongsIds.length === 0 || selectedPlaylistsIds.length === 0) return
+    try {
+      setAddingToPlaylists(true)
+      // Add the selected songs to all chosen playlists in parallel
+      await Promise.all(
+        selectedPlaylistsIds.map((pid) => addSongsToPlaylist(pid, selectedSongsIds)),
+      )
+      notify({ message: t.playlists.songsAdded(selectedSongsIds.length), kind: 'success' })
+      setAddCurrentSongToPlaylistsModalVisible(false)
+      setSelectedPlaylistsIds([])
+      setSelectedSongsIds([])
+    } catch (err) {
+      notify({ message: t.playlists.addToPlaylistFailed, kind: 'error' })
+    } finally {
+      setAddingToPlaylists(false)
+    }
+  }, [selectedSongsIds, selectedPlaylistsIds, addSongsToPlaylist, notify, t])
 
   const onMoveToPlaylist = useCallback(() => {
     notify({ message: 'Move to playlist coming soon', kind: 'info' })
@@ -581,17 +612,21 @@ export default function PlaylistDetailScreen() {
             <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
               {t.playlists.addToOtherPlaylist}
             </Text>
-            <Pressable onPress={onAddToPlaylist} disabled={selectedSongsIds.length === 0} hitSlop={15}>
+            <Pressable
+              onPress={onConfirmAddToOtherPlaylists}
+              disabled={selectedPlaylistsIds.length === 0 || addingToPlaylists}
+              hitSlop={15}
+            >
               <Text
                 style={[
                   styles.modalConfirm,
                   {
                     color: theme.colors.primary,
-                    opacity: selectedSongsIds.length === 0 ? 0.4 : 1,
+                    opacity: selectedPlaylistsIds.length === 0 || addingToPlaylists ? 0.4 : 1,
                   },
                 ]}
               >
-                {t.playlists.addToOtherPlaylist} ({selectedSongsIds.length})
+                {t.playlists.addShortened} ({selectedPlaylistsIds.length})
               </Text>
             </Pressable>
           </View>

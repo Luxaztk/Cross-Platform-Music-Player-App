@@ -1,10 +1,20 @@
 import { File, Directory, Paths } from 'expo-file-system'
-
+import { createAudioPlayer } from 'expo-audio'
+// import * as MediaLibrary from 'expo-media-library'
 import type { Song } from '@music/types'
 
 type PickedAsset = {
   uri: string
   name?: string | null
+}
+
+type AudioMetadata = {
+  title?: string
+  artist?: string
+  album?: string
+  genre?: string
+  year?: number
+  duration?: number
 }
 
 function sanitizeBaseName(name: string) {
@@ -27,6 +37,35 @@ async function ensureDir(dir: Directory) {
 
 function nowId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+async function extractAudioMetadata(fileUri: string): Promise<AudioMetadata> {
+  // try {
+  //   // Try to get metadata from MediaLibrary first
+  //   const asset = await MediaLibrary.getAssetInfoAsync(fileUri)
+  //   if (asset) {
+  //     return {
+  //       title: asset.filename?.replace(/\.[^/.]+$/, ''),
+  //       duration: asset.duration ? Math.round(asset.duration * 1000) : undefined,
+  //     }
+  //   }
+  // } catch (err) {
+  //   console.warn(`[metadata] MediaLibrary extraction failed for ${fileUri}:`, err)
+  // }
+
+  // Fallback: manually calculate duration using expo-audio
+  try {
+    const player = createAudioPlayer({ uri: fileUri })
+    // Wait for the player to load
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    const duration = player.duration ? Math.round(player.duration * 1000) : undefined
+    console.log(`[metadata] Extracted duration for imported file 0511: ${player.duration}ms`)
+    player.remove() // Clean up the player
+    return { duration }
+  } catch (err) {
+    console.warn(`[metadata] Audio duration extraction failed for ${fileUri}:`, err)
+    return {}
+  }
 }
 
 export async function importPickedAudioAssets(
@@ -67,23 +106,29 @@ export async function importPickedAudioAssets(
         console.warn(`[import] File was written but exists property is false: ${destFile.uri}`)
       }
 
-      const title = sanitizeBaseName(originalName || destName)
+      // Extract metadata from the original file
+      const metadata = await extractAudioMetadata(asset.uri)
+
+      const title = metadata.title || sanitizeBaseName(originalName || destName)
+      const duration = metadata.duration || 0
 
       imported.push({
         id,
         filePath: destFile.uri,
         title: title || 'Unknown Title',
-        artist: 'Unknown Artist',
-        artists: ['Unknown Artist'],
-        album: 'Unknown Album',
-        duration: 0,
-        genre: 'Unknown Genre',
-        year: null,
+        artist: metadata.artist || 'Unknown Artist',
+        artists: metadata.artist ? [metadata.artist] : ['Unknown Artist'],
+        album: metadata.album || 'Unknown Album',
+        duration,
+        genre: metadata.genre || 'Unknown Genre',
+        year: metadata.year || null,
         coverArt: null,
         fileSize: destFile.size,
         sourceUrl: asset.uri,
         dateAdded: new Date().toISOString(),
       })
+
+      console.log(`[import] Successfully imported: ${title} (${duration}ms)`)
     } catch (err) {
       console.error(`[import] Failed to import ${asset.uri}:`, err)
       // We skip this file and continue with others

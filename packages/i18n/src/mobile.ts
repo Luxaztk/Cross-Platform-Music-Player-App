@@ -59,8 +59,9 @@ export type Translations = {
     songsAdded: (count: number) => string
     songsRemoved: (count: number) => string
     playlistCount: (count: number) => string
-
     addToOtherPlaylist: string
+    addToPlaylistFailed: string
+    addShortened: string
     moveToOtherPlaylist: string
     removeFromThisPlaylist: string
     songLabel: string
@@ -168,7 +169,9 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       songsRemoved: (count) => `Removed ${count} song(s)`,
       playlistCount: (count) => `${count} playlist${count !== 1 ? 's' : ''}`,
 
+      addToPlaylistFailed: 'Failed to add song to playlist',
       addToOtherPlaylist: 'Add to another playlist',
+      addShortened: 'Add',
       moveToOtherPlaylist: 'Move to another playlist',
       removeFromThisPlaylist: 'Remove from this playlist',
       songLabel: 'Song',
@@ -274,7 +277,9 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       songsRemoved: (count) => `Đã xóa ${count} bài`,
       playlistCount: (count) => `${count} danh sách phát`,
 
+      addToPlaylistFailed: 'Không thể thêm bài hát vào playlist',
       addToOtherPlaylist: 'Thêm vào playlist khác',
+      addShortened: 'Thêm',
       moveToOtherPlaylist: 'Di chuyển sang playlist khác',
       removeFromThisPlaylist: 'Xóa khỏi playlist này',
       songLabel: 'Bài hát',
