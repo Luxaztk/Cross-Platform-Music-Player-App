@@ -28,7 +28,6 @@
     "url": "https://github.com/Luxaztk/Cross-Platform-Music-Player-App/issues"
   },
   "homepage": "https://github.com/Luxaztk/Cross-Platform-Music-Player-App#readme",
-  "dependencies": {},
   "overrides": {
     "js-yaml": "^4.2.0",
     "uuid": "^11.1.1"

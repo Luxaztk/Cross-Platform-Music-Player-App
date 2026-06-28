@@ -24,10 +24,10 @@ import { useAppShell } from '../../presentations/components/AppShell'
 
 // ── Utilities ───────────────────────────────────────────────────
 
-const formatDuration = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${mins}:${secs.toString().padStart(2, '0')}`
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
 }
 
 type SortOption = 'sortTitle' | 'sortArtist' | 'sortDuration' | 'sortDateAdded'

@@ -58,8 +58,8 @@ async function extractAudioMetadata(fileUri: string): Promise<AudioMetadata> {
     const player = createAudioPlayer({ uri: fileUri })
     // Wait for the player to load
     await new Promise(resolve => setTimeout(resolve, 1000))
-    const duration = player.duration ? Math.round(player.duration * 1000) : undefined
-    console.log(`[metadata] Extracted duration for imported file 0511: ${player.duration}ms`)
+    const duration = player.duration ?? undefined
+    console.log(`[metadata] Extracted duration for imported file: ${player.duration}ms`)
     player.remove() // Clean up the player
     return { duration }
   } catch (err) {
