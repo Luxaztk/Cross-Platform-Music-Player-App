@@ -68,6 +68,7 @@ async function extractAudioMetadata(fileUri: string): Promise<AudioMetadata> {
   }
 }
 
+// -- daijoubu
 function syncSafeInt(bytes: Uint8Array) {
   return ((bytes[0] & 0x7f) << 21) | ((bytes[1] & 0x7f) << 14) | ((bytes[2] & 0x7f) << 7) | (bytes[3] & 0x7f)
 }
@@ -76,6 +77,7 @@ function parseInt32(bytes: Uint8Array) {
   return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]
 }
 
+// notes for subsequent functions: replace(/\0+$/, '') removes trailing null characters from the decoded string, which is common in ID3 tags. The decodeText function uses TextDecoder to handle different encodings, falling back to Latin1 if decoding fails. The normalizeArtists function splits artist strings by common delimiters and trims whitespace. The base64FromBytes function converts a byte array to a Base64 string, which is useful for embedding images in metadata. The parseId3v2Tags and parseId3v1Tags functions extract metadata from ID3v2 and ID3v1 tags, respectively, returning a partial Song object with the extracted information.
 function decodeAscii(bytes: Uint8Array) {
   return String.fromCharCode(...bytes).replace(/\0+$/, '')
 }
@@ -90,18 +92,16 @@ function decodeText(bytes: Uint8Array, encoding: number) {
   try {
     switch (encoding) {
       case 1:
-        return new TextDecoder('utf-16le').decode(bytes).replace(/\u0000/g, '').replace(/\uFEFF/g, '')
       case 2:
-        return new TextDecoder('utf-16be').decode(bytes).replace(/\u0000/g, '').replace(/\uFEFF/g, '')
+        return new TextDecoder('utf-16').decode(bytes).replace(/\0+$/, '')
       case 3:
-        return new TextDecoder('utf-8').decode(bytes).replace(/\u0000/g, '').replace(/\uFEFF/g, '')
+        return new TextDecoder('utf-8').decode(bytes).replace(/\0+$/, '')
       default:
-        return new TextDecoder('latin1').decode(bytes).replace(/\u0000/g, '').replace(/\uFEFF/g, '')
+        return new TextDecoder('iso-8859-1').decode(bytes).replace(/\0+$/, '')
     }
   } catch {
     return decodeLatin1(bytes)
   }
-
 }
 
 function normalizeArtists(artistString: string) {
@@ -237,6 +237,21 @@ function parseId3v1Tags(bytes: Uint8Array) {
   return metadata
 }
 
+async function readAudioDuration(fileUri: string): Promise<number | null> {
+  try {
+    const player = createAudioPlayer({ uri: fileUri })
+    // Wait for the player to load
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    const duration = player.duration ?? undefined // returns duration in seconds
+    console.log(`[metadata] Extracted duration for imported file: ${player.duration} seconds`)
+    player.remove() // Clean up the player
+    return duration
+  } catch (err) {
+    console.warn(`[metadata] Audio duration extraction failed for ${fileUri}:`, err)
+    return null
+  }
+}
+
 async function readAudioMetadata(file: File): Promise<Partial<Song>> {
   try {
     const bytes = await file.bytes()
@@ -246,10 +261,10 @@ async function readAudioMetadata(file: File): Promise<Partial<Song>> {
     const id3v1 = parseId3v1Tags(bytes)
     const metadata: Partial<Song> = { ...id3v1, ...id3v2 }
 
-    // const duration = parseMp3Duration(bytes)
-    // if (duration !== null) {
-    //   metadata.duration = Math.round(duration)
-    // }
+    const duration = await readAudioDuration(file.uri)
+    if (duration !== null) {
+      metadata.duration = duration
+    }
     console.log(`[importAudio] Read metadata for ${file.uri}:`, metadata.title, metadata.artist, metadata.duration)
 
     return metadata
@@ -300,7 +315,7 @@ export async function importPickedAudioAssets(
       // Extract metadata from the original file
       // const metadata = await extractAudioMetadata(destFile.uri)
       const metadata = await readAudioMetadata(destFile)
-      console.log("aish: ", metadata.title)
+      console.log("Playing i-i-i-immortal")
       const title = metadata.title || sanitizeBaseName(originalName || destName)
       const duration = metadata.duration || 0
 
