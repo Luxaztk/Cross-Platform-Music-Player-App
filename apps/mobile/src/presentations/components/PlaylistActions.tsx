@@ -109,6 +109,9 @@ export const PlaylistActions = ({
             <Text style={[styles.actionText, { color: colors.text }]}>{t.playlists.shuffle}</Text>
           </Pressable>
 
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          {/* Duplicate */}
           <Pressable
             style={({ pressed }) => [
               styles.actionItem,
@@ -126,6 +129,7 @@ export const PlaylistActions = ({
           {/* Editing actions (hidden for special playlists) */}
           {!isLibraryPlaylist && (
             <>
+              {/* Rename */}
               <Pressable
                 style={({ pressed }) => [
                   styles.actionItem,
@@ -140,6 +144,7 @@ export const PlaylistActions = ({
                 <Text style={[styles.actionText, { color: colors.text }]}>{t.playlists.rename}</Text>
               </Pressable>
 
+              {/* Delete */}
               <Pressable
                 style={({ pressed }) => [
                   styles.actionItem,

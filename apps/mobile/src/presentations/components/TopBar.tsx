@@ -67,7 +67,7 @@ export function TopBar() {
     if (router.canGoBack()) {
       router.back()
     } else {
-      router.replace('/library')
+      router.replace('/playlists')
     }
   }
 

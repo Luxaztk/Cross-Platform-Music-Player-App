@@ -190,7 +190,7 @@ export default function NowPlayingScreen() {
             {formatTime(positionMs)}
           </Text>
           <Text style={[styles.time, { color: theme.colors.mutedText }]}>
-            {formatTime(progress.durationMs)} wah
+            {formatTime(progress.durationMs)}
           </Text>
         </View>
       </View>

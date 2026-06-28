@@ -95,6 +95,7 @@ export type Translations = {
     moveToPlaylist: string
     removeFromPlaylist: string
     deleteFromLibrary: string
+    dismissQueue: string
     addedToQueue: string
     addedToPlayNext: string
     sortBy: string
@@ -149,8 +150,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
     playlists: {
       title: 'Playlists',
       create: 'New Playlist',
-      rename: 'Rename',
-      delete: 'Delete',
+      rename: 'Rename playlist',
+      delete: 'Delete playlist',
       emptyState: 'No playlists yet — tap + to create one',
       confirmDelete: (name) => `Delete "${name}"?`,
       cancel: 'Cancel',
@@ -159,7 +160,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       renamed: (name) => `Renamed to "${name}"`,
       deleted: (name) => `Deleted "${name}"`,
       enterName: 'Playlist name',
-      addSongs: 'Add songs',
+      addSongs: 'Add song',
       removeSong: 'Remove',
       playAll: 'Play All',
       emptyPlaylist: 'This playlist is empty. Add some songs!',
@@ -202,8 +203,9 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       moveToPlaylist: 'Move to playlist',
       removeFromPlaylist: 'Remove from playlist',
       deleteFromLibrary: 'Delete from library',
+      dismissQueue: 'Dismiss queue',
       addedToQueue: 'Added to queue',
-      addedToPlayNext: 'Will play next',
+      addedToPlayNext: 'This song will play next',
       sortBy: 'Sort by',
       sortTitle: 'Title',
       sortArtist: 'Artist',
@@ -254,8 +256,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
     playlists: {
       title: 'Danh sách phát',
       create: 'Tạo danh sách phát',
-      rename: 'Đổi tên',
-      delete: 'Xóa',
+      rename: 'Đổi tên danh sách',
+      delete: 'Xóa danh sách',
       emptyState: 'Chưa có playlist — nhấn + để tạo',
       confirmDelete: (name) => `Xóa "${name}"?`,
       cancel: 'Hủy',
@@ -307,8 +309,9 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       moveToPlaylist: 'Di chuyển sang playlist',
       removeFromPlaylist: 'Xóa khỏi playlist',
       deleteFromLibrary: 'Xóa khỏi thư viện',
+      dismissQueue: 'Xóa hàng đợi',
       addedToQueue: 'Đã thêm vào hàng đợi',
-      addedToPlayNext: 'Sẽ phát tiếp theo',
+      addedToPlayNext: 'Bài hát này sẽ được phát tiếp theo',
       sortBy: 'Sắp xếp',
       sortTitle: 'Tên bài',
       sortArtist: 'Nghệ sĩ',

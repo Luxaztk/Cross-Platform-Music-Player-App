@@ -30,22 +30,22 @@ const formatDuration = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-type SortOption = 'title' | 'artist' | 'duration' | 'dateAdded'
+type SortOption = 'sortTitle' | 'sortArtist' | 'sortDuration' | 'sortDateAdded'
 
 const sortSongs = (songs: Song[], option: SortOption): Song[] => {
   const sorted = [...songs]
   switch (option) {
-    case 'artist':
+    case 'sortArtist':
       return sorted.sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title))
-    case 'duration':
+    case 'sortDuration':
       return sorted.sort((a, b) => a.duration - b.duration)
-    case 'dateAdded':
+    case 'sortDateAdded':
       return sorted.sort((a, b) => {
         const aDate = new Date(a.dateAdded || 0).getTime()
         const bDate = new Date(b.dateAdded || 0).getTime()
         return bDate - aDate
       })
-    case 'title':
+    case 'sortTitle':
     default:
       return sorted.sort((a, b) => a.title.localeCompare(b.title))
   }
@@ -172,11 +172,13 @@ const SelectionRow = React.memo(function SelectionRow({
 const PlaylistTargetRow = React.memo(function PlaylistTargetRow({
   item,
   onSelect,
+  isSelected,
   colors,
   chooseLabel,
 }: {
   item: Playlist
   onSelect: (id: string) => void
+  isSelected: boolean
   colors: { surface: string; border: string; text: string; mutedText: string; primary: string }
   chooseLabel: string
 }) {
@@ -186,8 +188,8 @@ const PlaylistTargetRow = React.memo(function PlaylistTargetRow({
       style={[
         styles.selectionRow,
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
+          backgroundColor: isSelected ? colors.primary : 'transparent',
+          borderColor: isSelected ? colors.primary : colors.border,
         },
       ]}
     >
@@ -226,12 +228,15 @@ export default function PlaylistDetailScreen() {
     addSongsToPlaylist,
     removeSongsFromPlaylist,
   } = useLibrary()
-  const { playList, state: playerState } = usePlayer()
+  const { playNextSongs, addSongsToQueue, playList, state: playerState } = usePlayer()
 
-  const [addModalVisible, setAddModalVisible] = useState(false)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [sortBy, setSortBy] = useState<SortOption>('title')
+  const [addSongsToPlaylistModalVisible, setAddSongsToPlaylistModalVisible] = useState(false)
+  const [selectedSongsIds, setSelectedSongsIds] = useState<string[]>([])
+  const [selectedPlaylistsIds, setSelectedPlaylistsIds] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState<SortOption>('sortTitle')
   const [sortMenuVisible, setSortMenuVisible] = useState(false)
+
+  const [addCurrentSongToPlaylistsModalVisible, setAddCurrentSongToPlaylistsModalVisible] = useState(false)
 
   // SongActions state
   const [selectedSongForActions, setSelectedSongForActions] = useState<Song | null>(null)
@@ -305,18 +310,24 @@ export default function PlaylistDetailScreen() {
   )
 
   const onToggleSelect = useCallback((sid: string) => {
-    setSelectedIds((prev) =>
+    setSelectedSongsIds((prev) =>
       prev.includes(sid) ? prev.filter((x) => x !== sid) : [...prev, sid],
     )
   }, [])
 
+    const onTogglePlaylistSelect = useCallback((pid: string) => {
+    setSelectedPlaylistsIds((prev) =>
+      prev.includes(pid) ? prev.filter((x) => x !== pid) : [...prev, pid],
+    )
+  }, [])
+
   const onConfirmAdd = useCallback(async () => {
-    if (selectedIds.length === 0) return
-    await addSongsToPlaylist(id, selectedIds)
-    notify({ message: t.playlists.songsAdded(selectedIds.length), kind: 'success' })
-    setAddModalVisible(false)
-    setSelectedIds([])
-  }, [id, selectedIds, addSongsToPlaylist, notify, t])
+    if (selectedSongsIds.length === 0) return
+    await addSongsToPlaylist(id, selectedSongsIds)
+    notify({ message: t.playlists.songsAdded(selectedSongsIds.length), kind: 'success' })
+    setAddSongsToPlaylistModalVisible(false)
+    setSelectedSongsIds([])
+  }, [id, selectedSongsIds, addSongsToPlaylist, notify, t])
 
   // SongActions handlers
   const onOpenSongActions = useCallback((song: Song) => {
@@ -329,18 +340,22 @@ export default function PlaylistDetailScreen() {
     setSelectedSongForActions(null)
   }, [])
 
-  const onPlayNext = useCallback(() => {
-    notify({ message: 'Play next coming soon', kind: 'info' })
-  }, [notify])
+  const onPlayNext = useCallback(async () => {
+    if (!selectedSongForActions) return
+    await playNextSongs([selectedSongForActions.id])
+    notify({ message: t.songs.addedToPlayNext, kind: 'success' })
+  }, [selectedSongForActions, playNextSongs, notify, t])
 
-  const onAddToQueue = useCallback(() => {
-    notify({ message: 'Add to queue coming soon', kind: 'info' })
-  }, [notify])
+  const onAddToQueue = useCallback(async () => {
+    if (!selectedSongForActions) return
+    await addSongsToQueue([selectedSongForActions.id])
+    notify({ message: t.songs.addedToQueue, kind: 'success' })
+  }, [selectedSongForActions, addSongsToQueue, notify, t])
 
   const onAddToPlaylist = useCallback(() => {
     if (selectedSongForActions) {
-      setSelectedIds([selectedSongForActions.id])
-      setAddModalVisible(true)
+      setSelectedSongsIds([selectedSongForActions.id])
+      setAddSongsToPlaylistModalVisible(true)
       onCloseSongActions()
     }
   }, [selectedSongForActions, onCloseSongActions])
@@ -385,7 +400,7 @@ export default function PlaylistDetailScreen() {
       ]}
     >
 
-      {/* Action buttons and sort options */}
+      {/* Playlist actions */}
       <View style={styles.actions}>
         <Pressable
           onPress={onPlayAll}
@@ -404,8 +419,8 @@ export default function PlaylistDetailScreen() {
         {id !== 'all' && id !== '0' && (
           <Pressable
             onPress={() => {
-              setSelectedIds([])
-              setAddModalVisible(true)
+              setSelectedSongsIds([])
+              setAddSongsToPlaylistModalVisible(true)
             }}
             style={[styles.outlineBtn, { borderColor: theme.colors.border }]}
           >
@@ -428,8 +443,8 @@ export default function PlaylistDetailScreen() {
 
       {/* Sort menu */}
       {sortMenuVisible && (
-        <View style={[styles.sortMenu, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-          {(['title', 'artist', 'duration', 'dateAdded'] as SortOption[]).map((option) => (
+        <View style={[styles.sortMenu, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+          {(['sortTitle', 'sortArtist', 'sortDuration', 'sortDateAdded'] as SortOption[]).map((option) => (
             <Pressable
               key={option}
               onPress={() => {
@@ -438,11 +453,11 @@ export default function PlaylistDetailScreen() {
               }}
               style={styles.sortMenuItem}
             >
-              <Feather
+              {/* <Feather
                 name={sortBy === option ? 'check' : 'circle'}
                 size={16}
                 color={sortBy === option ? theme.colors.primary : theme.colors.mutedText}
-              />
+              /> */}
               <Text
                 style={[
                   styles.sortMenuText,
@@ -452,7 +467,7 @@ export default function PlaylistDetailScreen() {
                   },
                 ]}
               >
-                {option.charAt(0).toUpperCase() + option.slice(1)}
+                {t.songs[option]}
               </Text>
             </Pressable>
           ))}
@@ -482,8 +497,8 @@ export default function PlaylistDetailScreen() {
         }
       />
 
-      {/* Add songs modal */}
-      <Modal visible={addModalVisible} animationType="slide" transparent={false}>
+      {/* Add songs to playlist modal */}
+      <Modal visible={addSongsToPlaylistModalVisible} animationType="slide" transparent={false}>
         <View
           style={[
             styles.modalContainer,
@@ -491,7 +506,7 @@ export default function PlaylistDetailScreen() {
           ]}
         >
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => setAddModalVisible(false)} hitSlop={15}>
+            <Pressable onPress={() => setAddSongsToPlaylistModalVisible(false)} hitSlop={15}>
               <Text style={[styles.modalClose, { color: theme.colors.text }]}>
                 {t.playlists.cancel}
               </Text>
@@ -499,17 +514,17 @@ export default function PlaylistDetailScreen() {
             <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
               {t.playlists.addSongs}
             </Text>
-            <Pressable onPress={onConfirmAdd} disabled={selectedIds.length === 0} hitSlop={15}>
+            <Pressable onPress={onConfirmAdd} disabled={selectedSongsIds.length === 0} hitSlop={15}>
               <Text
                 style={[
                   styles.modalConfirm,
                   {
                     color: theme.colors.primary,
-                    opacity: selectedIds.length === 0 ? 0.4 : 1,
+                    opacity: selectedSongsIds.length === 0 ? 0.4 : 1,
                   },
                 ]}
               >
-                {t.playlists.addSongs} ({selectedIds.length})
+                {t.playlists.addSongs} ({selectedSongsIds.length})
               </Text>
             </Pressable>
           </View>
@@ -520,7 +535,7 @@ export default function PlaylistDetailScreen() {
             renderItem={({ item }) => (
               <SelectionRow
                 item={item}
-                isSelected={selectedIds.includes(item.id)}
+                isSelected={selectedSongsIds.includes(item.id)}
                 onToggle={onToggleSelect}
                 colors={theme.colors}
               />
@@ -544,6 +559,59 @@ export default function PlaylistDetailScreen() {
         onRemoveFromPlaylist={onRemoveFromPlaylist}
         onDeleteFromLibrary={onDeleteFromLibrary}
       />
+      
+      {/* Add current song to playlists modal */}
+      <Modal
+        visible={addCurrentSongToPlaylistsModalVisible}
+        animationType="slide"
+        transparent={false}
+      >
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.background, paddingTop: insets.top },
+          ]}
+        >
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setAddCurrentSongToPlaylistsModalVisible(false)} hitSlop={15}>
+              <Text style={[styles.modalClose, { color: theme.colors.text }]}>
+                {t.playlists.cancel}
+              </Text>
+            </Pressable>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {t.playlists.addToOtherPlaylist}
+            </Text>
+            <Pressable onPress={onAddToPlaylist} disabled={selectedSongsIds.length === 0} hitSlop={15}>
+              <Text
+                style={[
+                  styles.modalConfirm,
+                  {
+                    color: theme.colors.primary,
+                    opacity: selectedSongsIds.length === 0 ? 0.4 : 1,
+                  },
+                ]}
+              >
+                {t.playlists.addToOtherPlaylist} ({selectedSongsIds.length})
+              </Text>
+            </Pressable>
+          </View>
+
+          <FlatList
+            data={otherPlaylists}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <PlaylistTargetRow
+                item={item}
+                isSelected={selectedPlaylistsIds.includes(item.id)}
+                onSelect={onTogglePlaylistSelect}
+                colors={theme.colors}
+                chooseLabel={t.playlists.choose}
+              />
+            )}
+            contentContainerStyle={[styles.modalListContent, { paddingBottom: insets.bottom + 20 }]}
+          />
+        </View>
+      </Modal>
     </View>
   )
 }
@@ -551,13 +619,12 @@ export default function PlaylistDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 24
+    paddingTop: 12
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
     gap: 16,
   },
   headerInfo: {
@@ -571,15 +638,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 4,
+    marginTop: 0,
   },
   subtitle: {
     fontSize: 13,
   },
   actions: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 48,
+    paddingBottom: 12,
     gap: 12,
     alignItems: 'center',
   },
@@ -620,6 +687,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 12,
     borderWidth: 1,
+    alignSelf: 'flex-end', // => Container will shrink to fit the content
+    position: 'absolute',
+    top: 60,
+    zIndex: 1000,
     overflow: 'hidden',
   },
   sortMenuItem: {

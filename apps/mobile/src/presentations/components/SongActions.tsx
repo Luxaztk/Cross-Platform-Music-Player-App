@@ -4,6 +4,7 @@ import Feather from '@expo/vector-icons/Feather'
 import type { Song } from '@music/types'
 import { useTheme } from './Theme'
 import { useLanguage } from './Language'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 interface SongActionsProps {
   visible: boolean
@@ -21,6 +22,7 @@ interface SongActionsProps {
   onDeleteFromLibrary: () => void
 }
 
+
 export const SongActions = ({
   visible,
   onClose,
@@ -34,6 +36,7 @@ export const SongActions = ({
   onRemoveFromPlaylist,
   onDeleteFromLibrary,
 }: SongActionsProps) => {
+  const insets = useSafeAreaInsets()
   const { theme } = useTheme()
   const { t } = useLanguage()
   const { colors } = theme
@@ -50,7 +53,7 @@ export const SongActions = ({
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
+        <View style={[styles.sheet, { backgroundColor: colors.surface, paddingBottom: insets.bottom + 20 }]}>
           {/* Handle */}
           <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
@@ -76,12 +79,14 @@ export const SongActions = ({
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           {/* Playback actions */}
+          {/* Play next */}
           <ActionItem
             icon="corner-down-right"
             label={t.songs.playNext}
             colors={colors}
             onPress={action(onPlayNext)}
           />
+          {/* Add to queue */}
           <ActionItem
             icon="plus-circle"
             label={t.songs.addToQueue}
