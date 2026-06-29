@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Song, PlayerState } from '@music/types';
-import { AudioEngine } from '@music/player';
 import { shuffleArray } from '@music/utils';
+import type { IAudioEngine } from '@music/core';
+import { AudioEngine } from '@music/player';
 
 import { useAudioDevices } from '../useAudioDevices';
 import { PlayerContext } from '../PlayerContext';
@@ -21,6 +22,7 @@ import type {
 export const PlayerProvider: React.FC<PlayerProviderProps> = ({ 
   children, 
   storage, 
+  engine: externalEngine,
   allSongs = [] as Song[], 
   onFileError 
 }) => {
@@ -48,7 +50,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   const [isHydrated, setIsHydrated] = useState(false);
   const { currentDeviceId } = useAudioDevices();
 
-  const engineRef = useRef<AudioEngine | null>(null);
+  const engineRef = useRef<IAudioEngine | null>(null);
 
   // We need refs to latest state for the AudioEngine callbacks
   const queueRef = useRef(queue);
@@ -144,7 +146,8 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
 
   // Engine initialization effect
   useEffect(() => {
-    const engine = new AudioEngine({
+    const engine = externalEngine || new AudioEngine();
+    engine.setEvents({
       onProgress: (p, d) => {
         setProgress(p);
         setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
@@ -193,10 +196,10 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     return () => {
       engine.stop();
     };
-  }, [playbackIterator, setProgress]);
+  }, [playbackIterator, setProgress, externalEngine]);
 
   useEffect(() => {
-    if (engineRef.current && currentDeviceId) {
+    if (engineRef.current && engineRef.current.setSinkId && currentDeviceId) {
       engineRef.current.setSinkId(currentDeviceId);
     }
   }, [currentDeviceId]);

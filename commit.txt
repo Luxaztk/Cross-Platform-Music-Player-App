@@ -1,1 +1,0 @@
-feat: implement sidebar layout with playlist management components and search functionality

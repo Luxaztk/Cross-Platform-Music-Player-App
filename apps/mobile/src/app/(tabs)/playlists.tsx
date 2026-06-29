@@ -9,13 +9,12 @@ import {
 } from 'react-native'
 import { router } from 'expo-router'
 
-import type { Playlist } from '@music/types'
+import type { Playlist, Song } from '@music/types'
 
 import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
-import { useLibrary } from '../../application'
-import { usePlayer } from '../../application/player'
+import { useLibraryContext, usePlayer } from '@music/hooks'
 import { NameModal } from '../../presentations/components/NameModal'
 import { PlaylistRow } from '../../presentations/components/PlaylistRow'
 import { PlaylistActions } from '../../presentations/components/PlaylistActions'
@@ -34,16 +33,16 @@ export default function PlaylistsScreen() {
   const { t } = useLanguage()
   const { notify } = useNotifications()
   const {
-    isHydrated,
     library,
-    playlistsById,
-    createPlaylist,
-    duplicatePlaylist,
-    renamePlaylist,
-    deletePlaylist,
-  } = useLibrary()
+    playlists: playlistsArray,
+    songs,
+    handleCreatePlaylist,
+    handleUpdatePlaylist,
+    handleAddSongsToPlaylist,
+    handleDeletePlaylist
+  } = useLibraryContext()
 
-  const { playNextSongs, addSongsToQueue, playList } = usePlayer()
+  const { addSongsToQueue, playList } = usePlayer()
 
   const [modalMode, setModalMode] = useState<'create' | 'rename' | null>(null)
   const [renameTarget, setRenameTarget] = useState<{ id: string; name: string } | null>(null)
@@ -51,7 +50,7 @@ export default function PlaylistsScreen() {
   const [actionsVisible, setActionsVisible] = useState(false)
 
   const playlists = useMemo(() => {
-    const customPlaylists = Object.values(playlistsById)
+    const customPlaylists = playlistsArray
       .filter((p) => p.id !== '0')
       .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
 
@@ -63,9 +62,9 @@ export default function PlaylistsScreen() {
     } as Playlist
 
     return [allSongsPlaylist, ...customPlaylists]
-  }, [playlistsById, library, t])
+  }, [playlistsArray, library, t])
 
-  const playlistCount = Object.values(playlistsById).filter((p) => p.id !== '0').length
+  const playlistCount = playlistsArray.filter((p) => p.id !== '0').length
 
   const onPressCreate = useCallback(() => {
     setModalMode('create')
@@ -79,16 +78,16 @@ export default function PlaylistsScreen() {
   const onModalConfirm = useCallback(
     async (value: string) => {
       if (modalMode === 'create') {
-        await createPlaylist(value)
+        if (handleCreatePlaylist) await handleCreatePlaylist(value)
         notify({ message: t.playlists.created(value), kind: 'success' })
       } else if (modalMode === 'rename' && renameTarget) {
-        await renamePlaylist(renameTarget.id, value)
+        if (handleUpdatePlaylist) await handleUpdatePlaylist({ ...playlists.find(p => p.id === renameTarget.id)!, name: value })
         notify({ message: t.playlists.renamed(value), kind: 'success' })
       }
       setModalMode(null)
       setRenameTarget(null)
     },
-    [modalMode, renameTarget, createPlaylist, renamePlaylist, notify, t],
+    [modalMode, renameTarget, handleCreatePlaylist, handleUpdatePlaylist, playlists, notify, t],
   )
 
   const onModalCancel = useCallback(() => {
@@ -118,9 +117,10 @@ export default function PlaylistsScreen() {
       notify({ message: t.playlists.emptyPlaylist, kind: 'info' })
       return
     }
-    await playNextSongs(selectedPlaylist.songIds)
+    const playlistSongs = selectedPlaylist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean) as Song[]
+    await addSongsToQueue(playlistSongs) // fallback to queue for MVP
     notify({ message: t.playlists.addedToPlayNext, kind: 'success' })
-  }, [selectedPlaylist, playNextSongs, notify, t])
+  }, [selectedPlaylist, songs, addSongsToQueue, notify, t])
 
   const handleAddToQueue = useCallback(async () => {
     if (!selectedPlaylist) return
@@ -128,9 +128,10 @@ export default function PlaylistsScreen() {
       notify({ message: t.playlists.emptyPlaylist, kind: 'info' })
       return
     }
-    await addSongsToQueue(selectedPlaylist.songIds)
+    const playlistSongs = selectedPlaylist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean) as Song[]
+    await addSongsToQueue(playlistSongs)
     notify({ message: t.playlists.addedToQueue, kind: 'success' })
-  }, [selectedPlaylist, addSongsToQueue, notify, t])
+  }, [selectedPlaylist, songs, addSongsToQueue, notify, t])
 
   const handleShuffle = useCallback(async () => {
     if (!selectedPlaylist) return
@@ -138,10 +139,11 @@ export default function PlaylistsScreen() {
       notify({ message: t.playlists.emptyPlaylist, kind: 'info' })
       return
     }
-    const shuffled = shuffleArray(selectedPlaylist.songIds)
+    const playlistSongs = selectedPlaylist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean) as Song[]
+    const shuffled = shuffleArray(playlistSongs)
     await playList(shuffled, 0)
     notify({ message: t.playlists.shuffling, kind: 'success' })
-  }, [selectedPlaylist, playList, notify, t])
+  }, [selectedPlaylist, songs, playList, notify, t])
 
   const handleDuplicate = useCallback(async () => {
     if (!selectedPlaylist) return
@@ -150,13 +152,19 @@ export default function PlaylistsScreen() {
       const suffix = t.playlists.rename === 'Đổi tên' ? ' (Sao chép)' : ' (Copy)'
       const name = `${sourceName}${suffix}`
 
-      const copy = await duplicatePlaylist(selectedPlaylist.id, name)
-      notify({ message: t.playlists.duplicated(copy.name), kind: 'success' })
+      // Create a new playlist
+      if (handleCreatePlaylist && handleAddSongsToPlaylist) {
+        const copy = await handleCreatePlaylist(name)
+        if (copy) {
+          await handleAddSongsToPlaylist(copy.id, selectedPlaylist.songIds)
+          notify({ message: t.playlists.duplicated(copy.name), kind: 'success' })
+        }
+      }
     } catch (err) {
       console.error(err)
       notify({ message: 'Không thể sao chép playlist', kind: 'error' })
     }
-  }, [selectedPlaylist, duplicatePlaylist, notify, t])
+  }, [selectedPlaylist, handleCreatePlaylist, handleAddSongsToPlaylist, notify, t])
 
   const handleRename = useCallback(() => {
     if (!selectedPlaylist) return
@@ -175,13 +183,15 @@ export default function PlaylistsScreen() {
         style: 'destructive',
         onPress: () => {
           void (async () => {
-            await deletePlaylist(id)
-            notify({ message: t.playlists.deleted(name), kind: 'success' })
+            if (handleDeletePlaylist) {
+              await handleDeletePlaylist(id)
+              notify({ message: t.playlists.deleted(name), kind: 'success' })
+            }
           })()
         },
       },
     ])
-  }, [selectedPlaylist, deletePlaylist, notify, t])
+  }, [selectedPlaylist, handleDeletePlaylist, notify, t])
 
   const colors = theme.colors
 
@@ -206,7 +216,7 @@ export default function PlaylistsScreen() {
         <View>
           <Text style={[styles.title, { color: theme.colors.text }]}>{t.playlists.title}</Text>
           <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-            {isHydrated ? t.playlists.playlistCount(playlistCount) : t.common.loadingPreference}
+            {t.playlists.playlistCount(playlistCount)}
           </Text>
         </View>
 
@@ -225,14 +235,14 @@ export default function PlaylistsScreen() {
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          isHydrated ? (
+          (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>📁</Text>
               <Text style={[styles.emptyText, { color: theme.colors.mutedText }]}>
                 {t.playlists.emptyState}
               </Text>
             </View>
-          ) : null
+          )
         }
       />
 

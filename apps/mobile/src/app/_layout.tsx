@@ -4,13 +4,19 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { ThemeProvider } from '../presentations/components/Theme'
 import { LanguageProvider } from '../presentations/components/Language'
 import { NotificationProvider } from '../presentations/components/Notification'
-import { LibraryProvider } from '../application'
-import { PlayerProvider } from '../application/player'
+import { SharedLibraryProvider } from '@music/hooks'
+import { MobileLibraryRepository } from '../infrastructure/repositories/MobileLibraryRepository'
+import { MobileStorageAdapter } from '../infrastructure/storage/MobileStorageAdapter'
+import { PlayerWithLibrary } from '../infrastructure/providers/PlayerWithLibrary'
 import { AppShellProvider, useAppShell } from '../presentations/components/AppShell'
 import { TopBar } from '../presentations/components/TopBar'
 import { BottomNav } from '../presentations/components/BottomNav'
 import { PlayerBar } from '../presentations/player/PlayerBar'
 import { SidebarMenu } from '../presentations/components/SidebarMenu'
+
+const storageAdapter = new MobileStorageAdapter();
+const libraryRepository = new MobileLibraryRepository(storageAdapter);
+
 
 function AppLayout() {
   const pathname = usePathname()
@@ -60,13 +66,13 @@ export default function RootLayout() {
       <ThemeProvider>
         <LanguageProvider>
           <NotificationProvider>
-            <LibraryProvider>
-              <PlayerProvider>
+            <SharedLibraryProvider repository={libraryRepository}>
+              <PlayerWithLibrary>
                 <AppShellProvider>
                   <AppLayout />
                 </AppShellProvider>
-              </PlayerProvider>
-            </LibraryProvider>
+              </PlayerWithLibrary>
+            </SharedLibraryProvider>
           </NotificationProvider>
         </LanguageProvider>
       </ThemeProvider>

@@ -18,8 +18,7 @@ import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
 import { SongActions } from '../../presentations/components/SongActions'
-import { useLibrary } from '../../application'
-import { usePlayer } from '../../application/player'
+import { useLibraryContext, usePlayer } from '@music/hooks'
 
 // ── Utilities ───────────────────────────────────────────────────
 
@@ -214,13 +213,13 @@ export default function PlaylistDetailScreen() {
   const insets = useSafeAreaInsets()
 
   const {
-    playlistsById,
-    songsById,
+    playlists,
+    songs,
     library,
-    addSongsToPlaylist,
-    removeSongsFromPlaylist,
-  } = useLibrary()
-  const { playList, state: playerState } = usePlayer()
+    handleRemoveSongsFromPlaylist,
+    handleAddSongsToPlaylist
+  } = useLibraryContext()
+  const { playList, currentSong } = usePlayer()
 
   const [addModalVisible, setAddModalVisible] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -236,21 +235,21 @@ export default function PlaylistDetailScreen() {
       return {
         id: 'all',
         name: t.library.allSongs,
-        songIds: library.songIds,
+        songIds: library?.songIds || [],
       } as Playlist
     }
-    return playlistsById[id]
-  }, [id, playlistsById, library, t])
+    return playlists.find(p => p.id === id) || null
+  }, [id, playlists, library, t])
 
   const playlistSongs = useMemo(() => {
     if (!playlist) return []
-    const songs = playlist.songIds.map((sid) => songsById[sid]).filter(Boolean) as Song[]
-    return sortSongs(songs, sortBy)
-  }, [playlist, songsById, sortBy])
+    const mappedSongs = playlist.songIds.map((sid) => songs.find(s => s.id === sid)).filter(Boolean) as Song[]
+    return sortSongs(mappedSongs, sortBy)
+  }, [playlist, songs, sortBy])
 
   const allLibrarySongs = useMemo(() => {
-    return Object.values(songsById).sort((a, b) => a.title.localeCompare(b.title))
-  }, [songsById])
+    return [...songs].sort((a, b) => a.title.localeCompare(b.title))
+  }, [songs])
 
   const availableToAdd = useMemo(() => {
     if (!playlist) return allLibrarySongs
@@ -258,10 +257,10 @@ export default function PlaylistDetailScreen() {
   }, [allLibrarySongs, playlist])
 
   const otherPlaylists = useMemo(() => {
-    return Object.values(playlistsById)
+    return playlists
       .filter((p) => p.id !== '0' && p.id !== id)
       .sort((a, b) => a.name.localeCompare(b.name))
-  }, [playlistsById, id])
+  }, [playlists, id])
 
   // Calculate total duration
   const totalDuration = useMemo(() => {
@@ -271,7 +270,7 @@ export default function PlaylistDetailScreen() {
   const onPlayAll = useCallback(async () => {
     if (!playlist || playlistSongs.length === 0) return
     try {
-      await playList(playlist.songIds, 0)
+      playList(playlistSongs, 0)
     } catch {
       notify({ message: t.library.playbackFailed, kind: 'error' })
     }
@@ -279,23 +278,25 @@ export default function PlaylistDetailScreen() {
 
   const onRemoveSong = useCallback(
     async (songId: string) => {
-      await removeSongsFromPlaylist(id, [songId])
-      notify({ message: t.playlists.songsRemoved(1), kind: 'success' })
+      if (handleRemoveSongsFromPlaylist) {
+        await handleRemoveSongsFromPlaylist(id, [songId])
+        notify({ message: t.playlists.songsRemoved(1), kind: 'success' })
+      }
     },
-    [id, removeSongsFromPlaylist, notify, t],
+    [id, handleRemoveSongsFromPlaylist, notify, t],
   )
 
   const onPlaySong = useCallback(
     async (songId: string) => {
       if (!playlist) return
       try {
-        const idx = playlist.songIds.indexOf(songId)
-        await playList(playlist.songIds, idx >= 0 ? idx : 0)
+        const idx = playlistSongs.findIndex(s => s.id === songId)
+        playList(playlistSongs, idx >= 0 ? idx : 0)
       } catch {
         notify({ message: t.library.playbackFailed, kind: 'error' })
       }
     },
-    [playlist, playList, notify, t],
+    [playlist, playlistSongs, playList, notify, t],
   )
 
   const onToggleSelect = useCallback((sid: string) => {
@@ -306,11 +307,13 @@ export default function PlaylistDetailScreen() {
 
   const onConfirmAdd = useCallback(async () => {
     if (selectedIds.length === 0) return
-    await addSongsToPlaylist(id, selectedIds)
-    notify({ message: t.playlists.songsAdded(selectedIds.length), kind: 'success' })
+    if (handleAddSongsToPlaylist) {
+      await handleAddSongsToPlaylist(id, selectedIds)
+      notify({ message: t.playlists.songsAdded(selectedIds.length), kind: 'success' })
+    }
     setAddModalVisible(false)
     setSelectedIds([])
-  }, [id, selectedIds, addSongsToPlaylist, notify, t])
+  }, [id, selectedIds, handleAddSongsToPlaylist, notify, t])
 
   // SongActions handlers
   const onOpenSongActions = useCallback((song: Song) => {
@@ -480,7 +483,7 @@ export default function PlaylistDetailScreen() {
         renderItem={({ item }) => (
           <PlaylistSongRow
             item={item}
-            isActive={item.id === playerState.currentSongId}
+            isActive={item.id === currentSong?.id}
             onPress={onPlaySong}
             onOpenActions={onOpenSongActions}
             colors={theme.colors}

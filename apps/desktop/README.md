@@ -1,75 +1,39 @@
-# React + TypeScript + Vite
+# MeloVista - Desktop App (Electron)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Đây là mã nguồn của ứng dụng MeloVista dành cho nền tảng Desktop (Windows). Ứng dụng được xây dựng bằng React kết hợp với Electron để tương tác trực tiếp với File System của hệ điều hành.
 
-Currently, two official plugins are available:
+## Công nghệ sử dụng
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Frontend:** React 18, TypeScript, SCSS.
+- **Desktop Runtime:** Electron.
+- **Build Tool:** Vite, Electron-Builder.
+- **Kiến trúc dữ liệu:** Giao tiếp qua Electron IPC (Inter-Process Communication) để đọc/ghi file `.json` trực tiếp vào thư mục hệ thống cục bộ.
 
-## React Compiler
+## Cách chạy môi trường Development
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+Từ thư mục gốc (root) của dự án Monorepo, bạn chạy lệnh:
 
-Note: This will impact Vite dev & build performances.
+```bash
+npm run desktop
+```
+*(Lệnh này sẽ gọi `npm run dev --workspace=apps/desktop`, khởi chạy cùng lúc Vite server cho UI và Electron cho main process).*
 
-## Expanding the ESLint configuration
+## Cách Build ra file thực thi (.exe)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Để đóng gói ứng dụng thành file `.exe` cài đặt cho người dùng cuối:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Đứng tại thư mục gốc, hoặc di chuyển vào apps/desktop
+cd apps/desktop
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Quá trình build sẽ tạo ra thư mục `release/` chứa file `MeloVista_Setup.exe`. Bạn có thể gửi file này cho bất kỳ ai dùng Windows để cài đặt.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Ghi chú lỗi thường gặp trên Desktop
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| Lỗi | Cách xử lý |
+|---|---|
+| Màn hình ứng dụng trắng xóa hoặc DevTools báo lỗi CSP | Kiểm tra xem cổng Vite (5173) có đang bị ứng dụng khác chiếm dụng không. |
+| Import nhạc thành công nhưng không có âm thanh phát ra | Đảm bảo máy tính đang không bị Mute hoặc chưa chọn đúng thiết bị âm thanh đầu ra (Sink Audio Device) trong Cài đặt Windows. |
+| Báo lỗi `Cannot find module 'music-metadata'` | Chạy lại `npm install` ở thư mục gốc để tải lại các module dùng chung (packages). |

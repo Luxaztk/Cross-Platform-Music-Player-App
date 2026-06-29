@@ -1,17 +1,8 @@
 import { Howl, Howler } from 'howler';
-
-export interface AudioEngineEvents {
-  onProgress?: (progress: number, duration: number) => void;
-  onEnd?: () => void;
-  onPlay?: () => void;
-  onPause?: () => void;
-  onStop?: () => void;
-  onLoad?: (duration: number) => void;
-  onLoadError?: (error: unknown) => void;
-  onPlayError?: (error: unknown) => void;
-}
+import type { IAudioEngine, AudioEngineEvents } from '@music/core';
 
 interface SoundInternal {
+
   _node?: {
     setSinkId?: (deviceId: string) => Promise<void>;
   };
@@ -32,7 +23,7 @@ export interface AudioEvents {
   onPlayError?: (error: unknown) => void;
 }
 
-export class AudioEngine {
+export class AudioEngine implements IAudioEngine {
   private howl: Howl | null = null;
   private analyser: AnalyserNode | null = null;
   private animationFrameId: number | null = null;

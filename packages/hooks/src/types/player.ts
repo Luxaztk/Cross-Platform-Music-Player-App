@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Song } from '@music/types';
-import type { IStorageAdapter } from '@music/core';
+import type { IStorageAdapter, IAudioEngine } from '@music/core';
 
 export type RepeatMode = 'OFF' | 'ALL' | 'ONE';
 
@@ -44,6 +44,7 @@ export interface PlayerContextProps {
 export interface PlayerProviderProps {
   children: ReactNode;
   storage?: IStorageAdapter;
+  engine?: IAudioEngine;
   allSongs?: Song[];
   onFileError?: (song: Song) => void;
 }

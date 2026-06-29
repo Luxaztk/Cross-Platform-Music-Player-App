@@ -58,8 +58,11 @@ export const useAudioDevices = () => {
         setCurrentDeviceId(customEvent.detail);
       }
     };
-    window.addEventListener('audiodevicechange', handleExternalChange);
-    return () => window.removeEventListener('audiodevicechange', handleExternalChange);
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('audiodevicechange', handleExternalChange);
+      return () => window.removeEventListener('audiodevicechange', handleExternalChange);
+    }
+    return () => {};
   }, []);
 
   const setAudioDevice = useCallback((deviceId: string) => {
@@ -67,7 +70,9 @@ export const useAudioDevices = () => {
     if (typeof localStorage !== 'undefined') {
         localStorage.setItem('app_audio_device', deviceId);
     }
-    window.dispatchEvent(new CustomEvent('audiodevicechange', { detail: deviceId }));
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('audiodevicechange', { detail: deviceId }));
+    }
   }, []);
 
   return { devices, currentDeviceId, setAudioDevice, fetchDevices };

@@ -1,5 +1,5 @@
 import { router } from 'expo-router'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState, useEffect } from 'react'
 import {
   FlatList,
   Pressable,
@@ -15,9 +15,44 @@ import type { Playlist, RecentSearch, Song } from '@music/types'
 import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
-import { useLibrary } from '../../application'
-import { usePlayerState } from '../../application/player'
+import { useLibraryContext, usePlayer } from '@music/hooks'
+import { MobileStorageAdapter } from '../../infrastructure/storage/MobileStorageAdapter'
 import { Feather } from '@expo/vector-icons'
+
+const storageAdapter = new MobileStorageAdapter()
+
+function useRecentSearches() {
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([])
+
+  useEffect(() => {
+    storageAdapter.getRecentSearches().then(setRecentSearches).catch(console.error)
+  }, [])
+
+  const addRecentSearch = useCallback(async (query: string) => {
+    const text = query.trim()
+    if (!text) return
+    let next = [
+      { type: 'query' as const, text, timestamp: Date.now() },
+      ...recentSearches.filter((s) => s.type !== 'query' || s.text !== text),
+    ]
+    if (next.length > 20) next = next.slice(0, 20)
+    setRecentSearches(next)
+    await storageAdapter.saveRecentSearches(next)
+  }, [recentSearches])
+
+  const removeRecentSearch = useCallback(async (text: string) => {
+    const next = recentSearches.filter((s) => s.type !== 'query' || s.text !== text)
+    setRecentSearches(next)
+    await storageAdapter.saveRecentSearches(next)
+  }, [recentSearches])
+
+  const clearRecentSearches = useCallback(async () => {
+    setRecentSearches([])
+    await storageAdapter.saveRecentSearches([])
+  }, [])
+
+  return { recentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches }
+}
 
 // ── Search Result Rows ──────────────────────────────────────────
 
@@ -113,14 +148,17 @@ export default function SearchScreen() {
   const { t } = useLanguage()
   const { notify } = useNotifications()
   const {
-    songsById,
-    playlistsById,
+    songs,
+    playlists
+  } = useLibraryContext()
+  const { playList } = usePlayer()
+
+  const {
     recentSearches,
     addRecentSearch,
     removeRecentSearch,
     clearRecentSearches
-  } = useLibrary()
-  const { playList } = usePlayerState()
+  } = useRecentSearches()
 
   const [query, setQuery] = useState('')
   const trimmedQuery = query.trim().toLowerCase()
@@ -129,13 +167,13 @@ export default function SearchScreen() {
 
   const filteredSongs = useMemo(() => {
     if (!trimmedQuery) return []
-    return Object.values(songsById).filter(
+    return songs.filter(
       (s) =>
         s.title.toLowerCase().includes(trimmedQuery) ||
         s.artist.toLowerCase().includes(trimmedQuery) ||
         (s.album && s.album.toLowerCase().includes(trimmedQuery)),
     )
-  }, [trimmedQuery, songsById])
+  }, [trimmedQuery, songs])
 
   const onPlaySong = useCallback(
     async (songId: string) => {
@@ -143,9 +181,8 @@ export default function SearchScreen() {
         void addRecentSearch(query)
       }
       try {
-        const songIds = filteredSongs.map(s => s.id)
-        const idx = songIds.indexOf(songId)
-        await playList(songIds, idx >= 0 ? idx : 0)
+        const idx = filteredSongs.findIndex(s => s.id === songId)
+        playList(filteredSongs, idx >= 0 ? idx : 0)
       } catch {
         notify({ message: t.library.playbackFailed, kind: 'error' })
       }
@@ -173,7 +210,7 @@ export default function SearchScreen() {
   const results = useMemo(() => {
     if (!trimmedQuery) return []
 
-    const filteredPlaylists = Object.values(playlistsById).filter(
+    const filteredPlaylists = playlists.filter(
       (p) => p.name.toLowerCase().includes(trimmedQuery) && p.id !== '0',
     )
 
@@ -186,7 +223,7 @@ export default function SearchScreen() {
     }
 
     return sections
-  }, [trimmedQuery, filteredSongs, playlistsById, t])
+  }, [trimmedQuery, filteredSongs, playlists, t])
 
   // ── Render ──────────────────────────────────────
 

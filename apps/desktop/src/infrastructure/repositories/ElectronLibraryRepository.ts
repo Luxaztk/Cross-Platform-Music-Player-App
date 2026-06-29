@@ -122,7 +122,7 @@ export class ElectronLibraryRepository implements ILibraryRepository {
     return window.electronAPI.patchSong(songId, updates);
   }
 
-  async getSettings(): Promise<any> {
+  async getSettings(): Promise<unknown> {
     return window.electronAPI.getSettings();
   }
 
