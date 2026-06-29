@@ -6,6 +6,7 @@ import { PlaylistItem } from './PlaylistItem';
 export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
     isVisible,
     playlists,
+    currentPlaylistId,
     query,
     isSearchExpanded,
     isDebouncing,
@@ -106,13 +107,13 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
             </div>
 
             <ul>
-                <li>
+                <li className={activeMenuId === '0' ? 'menu-open' : ''}>
                     <div
                         onClick={(e) => {
                             if ((e.target as HTMLElement).closest('.col-more')) return;
                             window.location.hash = '#/playlist/0';
                         }}
-                        className={`nav-item ${window.location.hash.includes('/playlist/0') ? 'active' : ''} ${window.location.hash.includes('/playlist/0') || activeMenuId === '0' ? 'menu-open' : ''}`}
+                        className={`nav-item ${currentPlaylistId === '0' ? 'active' : ''}`}
                         style={{ cursor: 'pointer' }}
                     >
                         <img src={appIcon} alt="" className="icon brand-icon-small" />
@@ -145,7 +146,7 @@ export const PlaylistSection: React.FC<PlaylistSectionProps> = ({
                     <PlaylistItem
                         key={playlist.id}
                         playlist={playlist}
-                        isActive={window.location.hash.includes(`/playlist/${playlist.id}`)}
+                        isActive={currentPlaylistId === playlist.id}
                         isMenuOpen={activeMenuId === playlist.id}
                         menuPlacement={menuPlacement}
                         menuRef={menuRef}

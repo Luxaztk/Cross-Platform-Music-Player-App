@@ -31,6 +31,10 @@ export const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) =
           },
         ]);
       }}
+      onSavePlaybackPosition={(songId, position) => {
+        // Direct DB update to prevent UI re-renders (fixes stutter)
+        void storageAdapter.patchSong(songId, { lastPlaybackPosition: position });
+      }}
     >
       {children}
     </SharedPlayerProvider>

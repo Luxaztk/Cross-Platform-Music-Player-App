@@ -89,7 +89,7 @@ describe('Sidebar', () => {
   it('renders correctly when expanded', () => {
     renderSidebar();
     expect(screen.getByText('sidebar.playlists')).toBeInTheDocument();
-    expect(screen.getByText('sidebar.allSongs')).toBeInTheDocument();
+    expect(screen.getByText('sidebar.library')).toBeInTheDocument();
     expect(screen.getByText('My Playlist 1')).toBeInTheDocument();
     expect(screen.getByText('My Playlist 2')).toBeInTheDocument();
   });

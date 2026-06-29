@@ -8,7 +8,8 @@ describe('formatTime', () => {
     expect(formatTime(60)).toBe('1:00');
     expect(formatTime(65)).toBe('1:05');
     expect(formatTime(3599)).toBe('59:59');
-    expect(formatTime(3600)).toBe('60:00');
+    expect(formatTime(3600)).toBe('1:00:00');
+    expect(formatTime(4025)).toBe('1:07:05');
   });
 
   it('should handle invalid inputs', () => {

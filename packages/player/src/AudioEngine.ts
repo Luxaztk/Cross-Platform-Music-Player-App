@@ -221,7 +221,7 @@ export class AudioEngine implements IAudioEngine {
 
     const track = () => {
       if (this.howl && this.howl.playing()) {
-        const progress = this.howl.seek() as number;
+        const progress = this.pendingSeek !== null ? this.pendingSeek : (this.howl.seek() as number);
         const duration = this.howl.duration();
         if (this.events.onProgress) {
           this.events.onProgress(progress, duration);

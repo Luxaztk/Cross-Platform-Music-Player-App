@@ -24,7 +24,8 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   storage, 
   engine: externalEngine,
   allSongs = [] as Song[], 
-  onFileError 
+  onFileError,
+  onSavePlaybackPosition
 }) => {
 
 
@@ -60,7 +61,32 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   const repeatModeRef = useRef(repeatMode);
   const isShuffleRef = useRef(isShuffle);
   const onFileErrorRef = useRef(onFileError);
+  const onSavePlaybackPositionRef = useRef(onSavePlaybackPosition);
   const volumeRef = useRef(volume);
+
+  const lastSavedTimeRef = useRef(0);
+
+  const savePlaybackPosition = useCallback((force = false) => {
+    const song = currentSongRef.current;
+    if (!song || !onSavePlaybackPositionRef.current) return;
+    if ((song.duration || 0) <= 600) return; // Only save for songs > 10 mins
+
+    const pos = progressRef.current;
+    if (!force) {
+      const now = Date.now();
+      // Throttle: max 1 save per 15 seconds
+      if (now - lastSavedTimeRef.current < 15000) return;
+      lastSavedTimeRef.current = Date.now();
+      onSavePlaybackPositionRef.current(song.id, pos);
+    } else {
+      // Defer the save when changing tracks to prevent synchronous IO (like electron-store)
+      // from blocking the main thread while the new track's audio is trying to load.
+      lastSavedTimeRef.current = Date.now();
+      setTimeout(() => {
+        onSavePlaybackPositionRef.current?.(song.id, pos);
+      }, 500);
+    }
+  }, []);
 
   React.useLayoutEffect(() => {
     queueRef.current = queue;
@@ -70,6 +96,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     repeatModeRef.current = repeatMode;
     isShuffleRef.current = isShuffle;
     onFileErrorRef.current = onFileError;
+    onSavePlaybackPositionRef.current = onSavePlaybackPosition;
     volumeRef.current = volume;
   });
 
@@ -84,12 +111,24 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   }, []);
 
   const playSong = useCallback((song: Song) => {
+    savePlaybackPosition(true);
+
     setCurrentSong(song);
     setProgress(0);
+    lastSavedTimeRef.current = 0;
+    
     if (engineRef.current) {
       engineRef.current.load(song.filePath, true);
+      
+      // Auto resume logic
+      if ((song.duration || 0) > 600 && song.lastPlaybackPosition) {
+        if (song.lastPlaybackPosition > 10 && song.lastPlaybackPosition < (song.duration || 0) - 10) {
+          engineRef.current.seek(song.lastPlaybackPosition);
+          setProgress(song.lastPlaybackPosition);
+        }
+      }
     }
-  }, [setProgress]);
+  }, [setProgress, savePlaybackPosition]);
 
   // ==========================================
   // ITERATOR PATTERN (Playback Iterator)
@@ -151,15 +190,26 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
       onProgress: (p, d) => {
         setProgress(p);
         setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
+        savePlaybackPosition(false);
       },
       onPlay: () => setIsPlaying(true),
-      onPause: () => setIsPlaying(false),
+      onPause: () => {
+        setIsPlaying(false);
+        savePlaybackPosition(true);
+      },
       onStop: () => {
         setIsPlaying(false);
+        savePlaybackPosition(true);
         setProgress(0);
       },
       onEnd: () => {
         setIsPlaying(false);
+        if (currentSongRef.current && (currentSongRef.current.duration || 0) > 600 && onSavePlaybackPositionRef.current) {
+          const idToSave = currentSongRef.current.id;
+          setTimeout(() => {
+            onSavePlaybackPositionRef.current?.(idToSave, 0);
+          }, 500);
+        }
         setProgress(0);
         if (repeatModeRef.current === 'ONE') {
           engineRef.current?.seek(0);
@@ -196,7 +246,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     return () => {
       engine.stop();
     };
-  }, [playbackIterator, setProgress, externalEngine]);
+  }, [playbackIterator, setProgress, externalEngine, savePlaybackPosition]);
 
   useEffect(() => {
     if (engineRef.current && engineRef.current.setSinkId && currentDeviceId) {

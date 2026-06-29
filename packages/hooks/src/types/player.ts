@@ -47,4 +47,5 @@ export interface PlayerProviderProps {
   engine?: IAudioEngine;
   allSongs?: Song[];
   onFileError?: (song: Song) => void;
+  onSavePlaybackPosition?: (songId: string, position: number) => void;
 }

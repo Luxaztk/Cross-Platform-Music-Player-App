@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { type PlaylistItemProps } from '../types';
+import type { Song } from '@music/types';
 
 export const PlaylistItem: React.FC<PlaylistItemProps> = ({
     playlist,
@@ -33,7 +34,7 @@ export const PlaylistItem: React.FC<PlaylistItemProps> = ({
                 className={`nav-item ${isActive ? 'active' : ''}`}
                 style={{ cursor: 'pointer' }}
             >
-                <img src={appIcon} alt="" className="icon brand-icon-small" />
+                <img src={playlist.thumbnail || appIcon} alt="" className="icon brand-icon-small" style={{ borderRadius: playlist.thumbnail ? '4px' : '0' }} />
                 <span className="text">{playlist.name}</span>
                 <div className="col-more">
                     <button

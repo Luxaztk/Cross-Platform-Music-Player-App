@@ -99,6 +99,7 @@ export interface SongListHeaderProps {
 }
 
 export interface VirtualSongListProps {
+    isLoading: boolean;
     isDebouncing: boolean;
     filteredSongs: Song[];
     visibleSongs: Song[];

@@ -67,6 +67,7 @@ export const PlaylistDetailPage: React.FC = () => {
         />
 
         <VirtualSongList
+          isLoading={state.isLoading}
           isDebouncing={state.isDebouncing}
           filteredSongs={state.filteredSongs}
           visibleSongs={state.visibleSongs}
