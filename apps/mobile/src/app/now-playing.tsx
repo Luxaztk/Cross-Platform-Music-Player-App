@@ -249,7 +249,7 @@ export default function NowPlayingScreen() {
       </View>
 
       {/* Volume */}
-      <View
+      {/* <View
         style={[
           styles.volumeCard,
           {
@@ -273,7 +273,7 @@ export default function NowPlayingScreen() {
         />
 
         <Text style={[styles.volumeIcon, { color: theme.colors.mutedText }]}>🔊</Text>
-      </View>
+      </View> */}
 
       <QueueModal
         visible={isQueueVisible}
@@ -437,8 +437,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    display: "none"
+    gap: 8
   },
   volumeIcon: {
     fontSize: 16,
