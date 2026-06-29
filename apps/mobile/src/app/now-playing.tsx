@@ -123,7 +123,7 @@ export default function NowPlayingScreen() {
       <View style={styles.info}>
         <Text
           style={[styles.title, { color: theme.colors.text }]}
-          numberOfLines={2}
+          numberOfLines={1}
         >
           {currentSong?.title ?? 'Chưa chọn bài hát'}
         </Text>
@@ -135,14 +135,14 @@ export default function NowPlayingScreen() {
           {currentSong?.artist ?? 'Unknown Artist'}
         </Text>
 
-        {currentSong?.album ? (
+        {/* {currentSong?.album ? (
           <Text
             style={[styles.album, { color: theme.colors.mutedText }]}
             numberOfLines={1}
           >
             {currentSong.album}
           </Text>
-        ) : null}
+        ) : null} */}
       </View>
 
       {/* Action buttons */}

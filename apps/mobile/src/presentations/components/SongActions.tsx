@@ -16,6 +16,7 @@ interface SongActionsProps {
   canDelete: boolean
   onPlayNext: () => void
   onAddToQueue: () => void
+  onEditSong: () => void
   onAddToPlaylist: () => void
   onMoveToPlaylist: () => void
   onRemoveFromPlaylist: () => void
@@ -35,6 +36,7 @@ export const SongActions = ({
   onMoveToPlaylist,
   onRemoveFromPlaylist,
   onDeleteFromLibrary,
+  onEditSong
 }: SongActionsProps) => {
   const insets = useSafeAreaInsets()
   const { theme } = useTheme()
@@ -92,6 +94,12 @@ export const SongActions = ({
             label={t.songs.addToQueue}
             colors={colors}
             onPress={action(onAddToQueue)}
+          />
+          <ActionItem
+            icon="edit"
+            label={t.songs.editMetadata}
+            colors={colors}
+            onPress={action(onEditSong)}
           />
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />

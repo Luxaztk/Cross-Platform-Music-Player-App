@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -237,6 +238,7 @@ export default function PlaylistDetailScreen() {
     library,
     addSongsToPlaylist,
     removeSongsFromPlaylist,
+    patchSong,
   } = useLibrary()
   const { playNextSongs, addSongsToQueue, playList, state: playerState } = usePlayer()
 
@@ -251,7 +253,15 @@ export default function PlaylistDetailScreen() {
 
   // SongActions state
   const [selectedSongForActions, setSelectedSongForActions] = useState<Song | null>(null)
+  const [songBeingEdited, setSongBeingEdited] = useState<Song | null>(null);
   const [songActionsVisible, setSongActionsVisible] = useState(false)
+
+  const [editSongModalVisible, setEditSongModalVisible] = useState(false)
+  const [editSongTitle, setEditSongTitle] = useState('')
+  const [editSongArtist, setEditSongArtist] = useState('')
+  const [editSongAlbum, setEditSongAlbum] = useState('')
+  const [editSongGenre, setEditSongGenre] = useState('')
+  const [editSongYear, setEditSongYear] = useState('')
 
   const playlist = useMemo(() => {
     if (id === 'all' || id === '0') {
@@ -371,6 +381,61 @@ export default function PlaylistDetailScreen() {
       onCloseSongActions()
     }
   }, [selectedSongForActions, onCloseSongActions])
+
+  const onEditSong = useCallback(() => {
+    if (!selectedSongForActions) return
+
+    setSongBeingEdited(selectedSongForActions)
+    setEditSongTitle(selectedSongForActions.title)
+    setEditSongArtist(selectedSongForActions.artist)
+    setEditSongAlbum(selectedSongForActions.album ?? '')
+    setEditSongGenre(selectedSongForActions.genre ?? '')
+    setEditSongYear(selectedSongForActions.year ? String(selectedSongForActions.year) : '')
+    setEditSongModalVisible(true)
+    setSongActionsVisible(false)
+  }, [selectedSongForActions, onCloseSongActions])
+
+  const onConfirmEditSong = useCallback(async () => {
+    if (!songBeingEdited) return
+  
+
+    const title = editSongTitle.trim()
+    const artist = editSongArtist.trim()
+    if (!title || !artist) return
+
+    const updates: Partial<Song> = {
+      title,
+      artist,
+      album: editSongAlbum.trim(),
+      genre: editSongGenre.trim(),
+    }
+
+    const parsedYear = editSongYear.trim()
+    if (parsedYear) {
+      const yearNumber = Number(parsedYear)
+      if (!Number.isNaN(yearNumber)) {
+        updates.year = yearNumber
+      }
+    }
+
+    const updatedSong = await patchSong(songBeingEdited.id, updates)
+    if (updatedSong) {
+      setSongBeingEdited(null)
+    }
+
+    notify({ message: t.songs.editMetadataSuccess, kind: 'success' })
+    setEditSongModalVisible(false)
+  }, [
+    songBeingEdited,
+    editSongTitle,
+    editSongArtist,
+    editSongAlbum,
+    editSongGenre,
+    editSongYear,
+    patchSong,
+    notify,
+    t,
+  ])
 
   const onConfirmAddToOtherPlaylists = useCallback(async () => {
     if (selectedSongsIds.length === 0 || selectedPlaylistsIds.length === 0) return
@@ -585,11 +650,97 @@ export default function PlaylistDetailScreen() {
         canDelete={false}
         onPlayNext={onPlayNext}
         onAddToQueue={onAddToQueue}
+        onEditSong={onEditSong}
         onAddToPlaylist={onAddToPlaylist}
         onMoveToPlaylist={onMoveToPlaylist}
         onRemoveFromPlaylist={onRemoveFromPlaylist}
         onDeleteFromLibrary={onDeleteFromLibrary}
       />
+
+      <Modal visible={editSongModalVisible} animationType="slide" transparent={false}>
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.background, paddingTop: insets.top },
+          ]}
+        >
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setEditSongModalVisible(false)} hitSlop={15}>
+              <Text style={[styles.modalClose, { color: theme.colors.text }]}> 
+                {t.playlists.cancel}
+              </Text>
+            </Pressable>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {t.songs.editMetadata}
+            </Text>
+            <Pressable
+              onPress={onConfirmEditSong}
+              disabled={!editSongTitle.trim() || !editSongArtist.trim()}
+              hitSlop={15}
+            >
+              <Text
+                style={[
+                  styles.modalConfirm,
+                  {
+                    color: theme.colors.primary,
+                    opacity: !editSongTitle.trim() || !editSongArtist.trim() ? 0.4 : 1,
+                  },
+                ]}
+              >
+                Save
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.editForm}>
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Title</Text>
+            <TextInput
+              value={editSongTitle}
+              onChangeText={setEditSongTitle}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Title"
+              placeholderTextColor={theme.colors.mutedText}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Artist</Text>
+            <TextInput
+              value={editSongArtist}
+              onChangeText={setEditSongArtist}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Artist"
+              placeholderTextColor={theme.colors.mutedText}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Album</Text>
+            <TextInput
+              value={editSongAlbum}
+              onChangeText={setEditSongAlbum}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Album"
+              placeholderTextColor={theme.colors.mutedText}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Genre</Text>
+            <TextInput
+              value={editSongGenre}
+              onChangeText={setEditSongGenre}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Genre"
+              placeholderTextColor={theme.colors.mutedText}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Year</Text>
+            <TextInput
+              value={editSongYear}
+              onChangeText={setEditSongYear}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Year"
+              placeholderTextColor={theme.colors.mutedText}
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+      </Modal>
       
       {/* Add current song to playlists modal */}
       <Modal
@@ -814,6 +965,21 @@ const styles = StyleSheet.create({
   modalConfirm: {
     fontSize: 15,
     fontWeight: 'bold',
+  },
+  editForm: {
+    padding: 20,
+    gap: 12,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  inputField: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
   },
   modalListContent: {
     padding: 20,

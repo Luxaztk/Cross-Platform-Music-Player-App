@@ -1,12 +1,15 @@
-import React, { type ComponentProps, useRef } from 'react'
+import React, { type ComponentProps, useRef, useCallback, useEffect } from 'react'
 import { Pressable, StyleSheet, Text, View, Animated } from 'react-native'
 import { router, usePathname } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as DocumentPicker from 'expo-document-picker'
 import Feather from '@expo/vector-icons/Feather'
 
 import { useTheme } from './Theme'
 import { useLanguage } from './Language'
 import { useAppShell } from './AppShell'
+import { useLibrary } from '../../application'
+import { useNotifications } from '../../presentations/components/Notification'
 
 type FeatherName = ComponentProps<typeof Feather>['name']
 
@@ -44,7 +47,40 @@ export function TopBar() {
   const { t } = useLanguage()
   const insets = useSafeAreaInsets()
   const pathname = usePathname()
-  const { navigationLayout, customTitle, openSidebar, triggerImport } = useAppShell()
+  const { navigationLayout, customTitle, openSidebar, triggerImport, registerImportHandler } = useAppShell()
+  
+  const { notify } = useNotifications()
+  const { importPickedAudio } = useLibrary()
+    const pickAudioFiles = useCallback(async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: 'audio/*',
+      multiple: true,
+      copyToCacheDirectory: false,
+    })
+
+    if (result.canceled) {
+      notify({ message: t.library.importCanceled, kind: 'info' })
+      return
+    }
+
+    try {
+      const { imported, skippedDuplicates } = await importPickedAudio(result.assets)
+      notify({
+        message:
+          skippedDuplicates > 0
+            ? t.library.importSuccessWithSkipped(imported, skippedDuplicates)
+            : t.library.importSuccess(imported),
+        kind: 'success',
+      })
+    } catch {
+      notify({ message: t.library.importFailed, kind: 'error' })
+    }
+  }, [importPickedAudio, notify, t])
+
+  useEffect(() => {
+    registerImportHandler(pickAudioFiles)
+    return () => registerImportHandler(null)
+  }, [registerImportHandler, pickAudioFiles])
 
   const isSearch = pathname === '/search'
   const isSettings = pathname === '/settings'
@@ -74,7 +110,6 @@ export function TopBar() {
   const handleSearch = () => {
     router.push('/search')
   }
-
 
   return (
     <View

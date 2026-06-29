@@ -27,6 +27,7 @@ type LibraryContextValue = LibraryState & {
   addSongsToPlaylist: (playlistId: string, songIds: string[]) => Promise<void>
   removeSongsFromPlaylist: (playlistId: string, songIds: string[]) => Promise<void>
   deleteSongs: (songIds: string[]) => Promise<void>
+  patchSong: (songId: string, updates: Partial<Song>) => Promise<Song | null>
   addRecentSearch: (query: string) => Promise<void>
   removeRecentSearch: (text: string) => Promise<void>
   clearRecentSearches: () => Promise<void>
@@ -269,6 +270,24 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     [state.songsById, state.library, state.playlistsById],
   )
 
+  const patchSong = useCallback(
+    async (songId: string, updates: Partial<Song>) => {
+      const patched = await storage.patchSong(songId, updates)
+      if (!patched) return null
+
+      setState((prev) => ({
+        ...prev,
+        songsById: {
+          ...prev.songsById,
+          [songId]: patched,
+        },
+      }))
+
+      return patched
+    },
+    [],
+  )
+
   const addRecentSearch = useCallback(
     async (query: string) => {
       const text = query.trim()
@@ -316,6 +335,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       addSongsToPlaylist,
       removeSongsFromPlaylist,
       deleteSongs,
+      patchSong,
       addRecentSearch,
       removeRecentSearch,
       clearRecentSearches,
@@ -331,6 +351,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       addSongsToPlaylist,
       removeSongsFromPlaylist,
       deleteSongs,
+      patchSong,
       addRecentSearch,
       removeRecentSearch,
       clearRecentSearches,

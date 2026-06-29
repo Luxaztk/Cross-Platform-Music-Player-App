@@ -4,7 +4,7 @@ import {
   FlatList,
   Modal,
   Pressable,
-  StyleSheet,
+  StyleSheet, 
   Text,
   View,
 } from 'react-native'
@@ -176,36 +176,36 @@ export default function LibraryScreen() {
   const songCount = songs.length
   const colors = theme.colors
 
-  const pickAudioFiles = useCallback(async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: 'audio/*',
-      multiple: true,
-      copyToCacheDirectory: false,
-    })
+  // const pickAudioFiles = useCallback(async () => {
+  //   const result = await DocumentPicker.getDocumentAsync({
+  //     type: 'audio/*',
+  //     multiple: true,
+  //     copyToCacheDirectory: false,
+  //   })
 
-    if (result.canceled) {
-      notify({ message: t.library.importCanceled, kind: 'info' })
-      return
-    }
+  //   if (result.canceled) {
+  //     notify({ message: t.library.importCanceled, kind: 'info' })
+  //     return
+  //   }
 
-    try {
-      const { imported, skippedDuplicates } = await importPickedAudio(result.assets)
-      notify({
-        message:
-          skippedDuplicates > 0
-            ? t.library.importSuccessWithSkipped(imported, skippedDuplicates)
-            : t.library.importSuccess(imported),
-        kind: 'success',
-      })
-    } catch {
-      notify({ message: t.library.importFailed, kind: 'error' })
-    }
-  }, [importPickedAudio, notify, t])
+  //   try {
+  //     const { imported, skippedDuplicates } = await importPickedAudio(result.assets)
+  //     notify({
+  //       message:
+  //         skippedDuplicates > 0
+  //           ? t.library.importSuccessWithSkipped(imported, skippedDuplicates)
+  //           : t.library.importSuccess(imported),
+  //       kind: 'success',
+  //     })
+  //   } catch {
+  //     notify({ message: t.library.importFailed, kind: 'error' })
+  //   }
+  // }, [importPickedAudio, notify, t])
 
-  useEffect(() => {
-    registerImportHandler(pickAudioFiles)
-    return () => registerImportHandler(null)
-  }, [registerImportHandler, pickAudioFiles])
+  // useEffect(() => {
+  //   registerImportHandler(pickAudioFiles)
+  //   return () => registerImportHandler(null)
+  // }, [registerImportHandler, pickAudioFiles])
 
   const onLongPressSong = useCallback(
     (songId: string, title: string) => {

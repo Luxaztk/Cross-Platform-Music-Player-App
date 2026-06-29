@@ -104,6 +104,8 @@ export type Translations = {
     sortArtist: string
     sortDuration: string
     sortDateAdded: string
+    editMetadata: string
+    editMetadataSuccess: string
   }
 }
 
@@ -209,6 +211,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       dismissQueue: 'Dismiss queue',
       addedToQueue: 'Added to queue',
       addedToPlayNext: 'This song will play next',
+      editMetadata: 'Edit song info',
+      editMetadataSuccess: 'Song info edited',
       sortBy: 'Sort by',
       sortTitle: 'Title',
       sortArtist: 'Artist',
@@ -317,6 +321,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       dismissQueue: 'Xóa hàng đợi',
       addedToQueue: 'Đã thêm vào hàng đợi',
       addedToPlayNext: 'Bài hát này sẽ được phát tiếp theo',
+      editMetadata: 'Chỉnh sửa bài hát',
+      editMetadataSuccess: 'Đã chỉnh sửa thông tin bài hát',
       sortBy: 'Sắp xếp',
       sortTitle: 'Tên bài',
       sortArtist: 'Nghệ sĩ',
