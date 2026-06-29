@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import * as FileSystem from 'expo-file-system'
+import * as FileSystem from 'expo-file-system/legacy'
 
 import type { Playlist, RecentSearch, Song } from '@music/types'
 

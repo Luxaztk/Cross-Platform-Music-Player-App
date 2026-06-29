@@ -25,12 +25,12 @@ export function BottomNav() {
   const pathname = usePathname()
 
   const items: BottomNavItem[] = [
-    {
-      label: t.tabs.library,
-      icon: 'home',
-      route: '/library',
-      matchPaths: ['/', '/library'],
-    },
+    // {
+    //   label: t.tabs.library,
+    //   icon: 'home',
+    //   route: '/library',
+    //   matchPaths: ['/', '/library'],
+    // },
     {
       label: t.tabs.playlists,
       icon: 'list',

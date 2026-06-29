@@ -95,7 +95,7 @@ export default function NowPlayingScreen() {
             },
           ]}
         >
-          <Feather name="more-vertical" size={20} color={theme.colors.text} />
+          <MaterialIcons name="queue-music" size={20} color={theme.colors.text} />
         </Pressable>
       </View>
 
@@ -146,7 +146,7 @@ export default function NowPlayingScreen() {
       </View>
 
       {/* Action buttons */}
-      <View style={styles.actionButtons}>
+      {/* <View style={styles.actionButtons}>
         <Pressable
           style={[styles.actionBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
           hitSlop={10}
@@ -162,7 +162,7 @@ export default function NowPlayingScreen() {
           <Feather name="plus" size={18} color={theme.colors.primary} />
           <Text style={[styles.actionBtnText, { color: theme.colors.text }]}>Add to Playlist</Text>
         </Pressable>
-      </View>
+      </View> */}
 
       {/* Seek bar */}
       <View style={styles.seekSection}>

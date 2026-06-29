@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
   View,
+  Alert
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Feather from '@expo/vector-icons/Feather'
@@ -239,6 +240,7 @@ export default function PlaylistDetailScreen() {
     addSongsToPlaylist,
     removeSongsFromPlaylist,
     patchSong,
+    deleteSongs
   } = useLibrary()
   const { playNextSongs, addSongsToQueue, playList, state: playerState } = usePlayer()
 
@@ -467,9 +469,26 @@ export default function PlaylistDetailScreen() {
     }
   }, [selectedSongForActions, id, onRemoveSong, onCloseSongActions])
 
-  const onDeleteFromLibrary = useCallback(() => {
-    notify({ message: 'Delete from library coming soon', kind: 'info' })
-  }, [notify])
+  const onDeleteFromLibrary = useCallback(
+      () => {
+        if (!selectedSongForActions) return
+        Alert.alert(t.library.confirmDeleteSong(selectedSongForActions.title), 'This action cannot be undone!', [
+          { text: t.playlists.cancel, style: 'cancel' },
+          {
+            text: t.playlists.delete,
+            style: 'destructive',
+            onPress: () => {
+              void (async () => {
+                await deleteSongs([selectedSongForActions.id])
+                notify({ message: t.library.songDeleted(selectedSongForActions.title), kind: 'success' })
+              })()
+            },
+          },
+        ])
+        onCloseSongActions()
+      },
+      [selectedSongForActions, deleteSongs, notify, t],
+    )
 
   if (!playlist) {
     return (
@@ -512,6 +531,7 @@ export default function PlaylistDetailScreen() {
           <Text style={styles.mainBtnText}>▶ {t.playlists.playAll}</Text>
         </Pressable>
 
+        {/* Add songs */}
         {id !== 'all' && id !== '0' && (
           <Pressable
             onPress={() => {
@@ -647,7 +667,7 @@ export default function PlaylistDetailScreen() {
         onClose={onCloseSongActions}
         song={selectedSongForActions}
         inPlaylist={id !== 'all' && id !== '0'}
-        canDelete={false}
+        canDelete={true}
         onPlayNext={onPlayNext}
         onAddToQueue={onAddToQueue}
         onEditSong={onEditSong}
@@ -798,6 +818,8 @@ export default function PlaylistDetailScreen() {
           />
         </View>
       </Modal>
+
+      {/* Delete song modal */}
     </View>
   )
 }

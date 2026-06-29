@@ -34,6 +34,7 @@ export type Translations = {
     playbackFailed: string
     deleteSong: string
     confirmDeleteSong: (title: string) => string
+    cannotUndoDeleteSong: string
     songDeleted: (title: string) => string
     fileNotFound: string
     fileNotFoundMessage: string
@@ -144,7 +145,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       playbackUnavailable: 'Audio playback is not available in this client.',
       playbackFailed: 'Could not start playback.',
       deleteSong: 'Delete from Library',
-      confirmDeleteSong: (title) => `Delete "${title}" from your library?`,
+      confirmDeleteSong: (title) => `Delete "${title}" from this app?`,
+      cannotUndoDeleteSong: `This action cannot be undone!`,
       songDeleted: (title) => `Deleted "${title}"`,
       fileNotFound: 'File not found',
       fileNotFoundMessage: 'The audio file for this song is missing or has been moved.',
@@ -254,7 +256,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       playbackUnavailable: 'Thiết bị/ứng dụng hiện tại không hỗ trợ phát nhạc.',
       playbackFailed: 'Không thể bắt đầu phát nhạc.',
       deleteSong: 'Xóa khỏi thư viện',
-      confirmDeleteSong: (title) => `Xóa "${title}" khỏi thư viện của bạn?`,
+      confirmDeleteSong: (title) => `Xóa "${title}" khỏi ứng dụng?`,
+      cannotUndoDeleteSong: 'Bạn sẽ không thể hoàn tác hành động này?',
       songDeleted: (title) => `Đã xóa "${title}"`,
       fileNotFound: 'Không tìm thấy tệp',
       fileNotFoundMessage: 'Tệp âm thanh của bài hát này bị thiếu hoặc đã bị di chuyển.',
