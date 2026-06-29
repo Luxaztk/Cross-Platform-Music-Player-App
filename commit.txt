@@ -1,8 +1,6 @@
-feat(player,downloader): optimize playback transition and prevent duplicate downloads
+fix(desktop,build): resolve React cascading renders and electron-builder ajv conflicts
 
-- Downloader: Add duplicate filtering logic in `DownloadProvider` to skip downloading songs that already exist in the library when fetching YouTube playlists.
-- Player: Defer synchronous `electron-store` updates (`savePlaybackPosition`) using `setTimeout` in `PlayerProvider` to prevent UI thread blocking and resolve playback stuttering during song transitions.
-- Types: Fix missing `songCount` property assignment in `usePlaylistData` hook.
-- Tests: Fix broken `useSearch` mocks and typing issues in `SongPickerModal.test.tsx`.
-- Workspace: Add missing `test` script in `@music/brand` package to resolve `npm run test --workspaces` failure.
-- i18n: Add translation keys for skipping existing downloaded items.
+- Build: Add `"DOM"` to `tsconfig.node.json` `lib` array to resolve `AnalyserNode` type error in `IAudioEngine` during `tsc -b`.
+- Build: Add `ajv` and `ajv-keywords` overrides for `@develar/schema-utils` in root `package.json` to fix `electron-builder` `_formatLimit.js` crash when packaging for Windows.
+- Desktop: Refactor `usePlaylistData` to use during-render state updates, resolving ESLint cascading render warnings and removing unnecessary `useEffect` hooks.
+- Desktop: Remove unused `useEffect` imports in `usePlaylistData.ts` to keep the workspace clean.
