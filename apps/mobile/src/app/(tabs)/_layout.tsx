@@ -13,7 +13,7 @@ export default function TabsLayout() {
         tabBarStyle: { display: 'none' },
       }}
     >
-      <Tabs.Screen name="library" />
+      {/* <Tabs.Screen name="library" /> */}
       <Tabs.Screen name="search" />
       <Tabs.Screen name="playlists" />
       <Tabs.Screen name="settings" />

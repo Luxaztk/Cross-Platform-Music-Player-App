@@ -65,7 +65,7 @@ export const PlaylistRow = React.memo(function PlaylistRow({
           hitSlop={12}
           style={styles.moreBtn}
         >
-          <Feather name="more-horizontal" size={20} color={colors.mutedText} />
+          <Feather name="more-vertical" size={20} color={colors.mutedText} />
         </Pressable>
       )}
     </Pressable>

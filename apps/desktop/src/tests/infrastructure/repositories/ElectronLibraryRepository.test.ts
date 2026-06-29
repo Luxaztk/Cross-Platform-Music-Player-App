@@ -64,6 +64,32 @@ describe('ElectronLibraryRepository', () => {
     expect(result).toEqual(mockPlaylist);
   });
 
+  it('createPlaylist returns a playlist with a unique UUID each call', async () => {
+    // Simulate what the Main Process does: generate a fresh UUID per playlist.
+    // We use a call-through to crypto.randomUUID so each invocation
+    // produces a distinct value — exactly what generateId() does in LibraryService.
+    const api = (window as unknown as { electronAPI: Record<string, ReturnType<typeof vi.fn>> }).electronAPI;
+
+    vi.mocked(api.createPlaylist).mockImplementation(async (name: string) => ({
+      id: crypto.randomUUID(),
+      name,
+      description: '',
+      songIds: [],
+      createdAt: new Date().toISOString(),
+    } as unknown as Playlist));
+
+    const playlist1 = await repository.createPlaylist('My Mix');
+    const playlist2 = await repository.createPlaylist('My Mix');
+
+    // Both calls must return a string that looks like a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    expect(playlist1.id).toMatch(uuidRegex);
+    expect(playlist2.id).toMatch(uuidRegex);
+
+    // And each call must yield a DIFFERENT ID
+    expect(playlist1.id).not.toBe(playlist2.id);
+  });
+
   it('updatePlaylist calls updatePlaylist', async () => {
     const mockPlaylist = { id: 'p1', title: 'Updated' } as unknown as Playlist;
     vi.mocked((window as unknown as { electronAPI: Record<string, ReturnType<typeof vi.fn>> }).electronAPI.updatePlaylist).mockResolvedValue(mockPlaylist);

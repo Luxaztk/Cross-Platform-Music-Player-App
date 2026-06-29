@@ -4,14 +4,14 @@ import {
   FlatList,
   Modal,
   Pressable,
-  StyleSheet,
+  StyleSheet, 
   Text,
   View,
 } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
 
 import Feather from '@expo/vector-icons/Feather'
-
+ 
 import type { Playlist, Song } from '@music/types'
 
 import { useTheme } from '../../presentations/components/Theme'
@@ -185,10 +185,10 @@ export default function LibraryScreen() {
     }
   }, [handleImportFiles, notify, t])
 
-  useEffect(() => {
-    registerImportHandler(pickAudioFiles)
-    return () => registerImportHandler(null)
-  }, [registerImportHandler, pickAudioFiles])
+  // useEffect(() => {
+  //   registerImportHandler(pickAudioFiles)
+  //   return () => registerImportHandler(null)
+  // }, [registerImportHandler, pickAudioFiles])
 
   const onLongPressSong = useCallback(
     (songId: string, title: string) => {

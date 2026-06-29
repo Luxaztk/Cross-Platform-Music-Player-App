@@ -101,7 +101,7 @@ export default function NowPlayingScreen() {
             },
           ]}
         >
-          <Feather name="more-vertical" size={20} color={theme.colors.text} />
+          <MaterialIcons name="queue-music" size={20} color={theme.colors.text} />
         </Pressable>
       </View>
 
@@ -129,7 +129,7 @@ export default function NowPlayingScreen() {
       <View style={styles.info}>
         <Text
           style={[styles.title, { color: theme.colors.text }]}
-          numberOfLines={2}
+          numberOfLines={1}
         >
           {currentSong?.title ?? 'Chưa chọn bài hát'}
         </Text>
@@ -141,18 +141,18 @@ export default function NowPlayingScreen() {
           {currentSong?.artist ?? 'Unknown Artist'}
         </Text>
 
-        {currentSong?.album ? (
+        {/* {currentSong?.album ? (
           <Text
             style={[styles.album, { color: theme.colors.mutedText }]}
             numberOfLines={1}
           >
             {currentSong.album}
           </Text>
-        ) : null}
+        ) : null} */}
       </View>
 
       {/* Action buttons */}
-      <View style={styles.actionButtons}>
+      {/* <View style={styles.actionButtons}>
         <Pressable
           style={[styles.actionBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
           hitSlop={10}
@@ -168,7 +168,7 @@ export default function NowPlayingScreen() {
           <Feather name="plus" size={18} color={theme.colors.primary} />
           <Text style={[styles.actionBtnText, { color: theme.colors.text }]}>Add to Playlist</Text>
         </Pressable>
-      </View>
+      </View> */}
 
       {/* Seek bar */}
       <View style={styles.seekSection}>
@@ -255,7 +255,7 @@ export default function NowPlayingScreen() {
       </View>
 
       {/* Volume */}
-      <View
+      {/* <View
         style={[
           styles.volumeCard,
           {
@@ -279,7 +279,7 @@ export default function NowPlayingScreen() {
         />
 
         <Text style={[styles.volumeIcon, { color: theme.colors.mutedText }]}>🔊</Text>
-      </View>
+      </View> */}
 
       <QueueModal
         visible={isQueueVisible}
@@ -443,8 +443,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    display: "none"
+    gap: 8
   },
   volumeIcon: {
     fontSize: 16,

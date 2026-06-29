@@ -34,6 +34,7 @@ export type Translations = {
     playbackFailed: string
     deleteSong: string
     confirmDeleteSong: (title: string) => string
+    cannotUndoDeleteSong: string
     songDeleted: (title: string) => string
     fileNotFound: string
     fileNotFoundMessage: string
@@ -59,8 +60,9 @@ export type Translations = {
     songsAdded: (count: number) => string
     songsRemoved: (count: number) => string
     playlistCount: (count: number) => string
-
     addToOtherPlaylist: string
+    addToPlaylistFailed: string
+    addShortened: string
     moveToOtherPlaylist: string
     removeFromThisPlaylist: string
     songLabel: string
@@ -95,6 +97,7 @@ export type Translations = {
     moveToPlaylist: string
     removeFromPlaylist: string
     deleteFromLibrary: string
+    dismissQueue: string
     addedToQueue: string
     addedToPlayNext: string
     sortBy: string
@@ -102,6 +105,8 @@ export type Translations = {
     sortArtist: string
     sortDuration: string
     sortDateAdded: string
+    editMetadata: string
+    editMetadataSuccess: string
   }
 }
 
@@ -129,7 +134,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
     library: {
       title: 'Library',
       yourLibrary: 'Your Library',
-      allSongs: 'Library',
+      allSongs: 'All songs',
       importSongs: 'Import songs',
       importCanceled: 'Import canceled',
       importPicked: (count) => `Picked ${count} file(s)`,
@@ -140,7 +145,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       playbackUnavailable: 'Audio playback is not available in this client.',
       playbackFailed: 'Could not start playback.',
       deleteSong: 'Delete from Library',
-      confirmDeleteSong: (title) => `Delete "${title}" from your library?`,
+      confirmDeleteSong: (title) => `Delete "${title}" from this app?`,
+      cannotUndoDeleteSong: `This action cannot be undone!`,
       songDeleted: (title) => `Deleted "${title}"`,
       fileNotFound: 'File not found',
       fileNotFoundMessage: 'The audio file for this song is missing or has been moved.',
@@ -149,8 +155,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
     playlists: {
       title: 'Playlists',
       create: 'New Playlist',
-      rename: 'Rename',
-      delete: 'Delete',
+      rename: 'Rename playlist',
+      delete: 'Delete playlist',
       emptyState: 'No playlists yet — tap + to create one',
       confirmDelete: (name) => `Delete "${name}"?`,
       cancel: 'Cancel',
@@ -159,7 +165,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       renamed: (name) => `Renamed to "${name}"`,
       deleted: (name) => `Deleted "${name}"`,
       enterName: 'Playlist name',
-      addSongs: 'Add songs',
+      addSongs: 'Add song',
       removeSong: 'Remove',
       playAll: 'Play All',
       emptyPlaylist: 'This playlist is empty. Add some songs!',
@@ -167,7 +173,9 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       songsRemoved: (count) => `Removed ${count} song(s)`,
       playlistCount: (count) => `${count} playlist${count !== 1 ? 's' : ''}`,
 
+      addToPlaylistFailed: 'Failed to add song to playlist',
       addToOtherPlaylist: 'Add to another playlist',
+      addShortened: 'Add',
       moveToOtherPlaylist: 'Move to another playlist',
       removeFromThisPlaylist: 'Remove from this playlist',
       songLabel: 'Song',
@@ -202,8 +210,11 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       moveToPlaylist: 'Move to playlist',
       removeFromPlaylist: 'Remove from playlist',
       deleteFromLibrary: 'Delete from library',
+      dismissQueue: 'Dismiss queue',
       addedToQueue: 'Added to queue',
-      addedToPlayNext: 'Will play next',
+      addedToPlayNext: 'This song will play next',
+      editMetadata: 'Edit song info',
+      editMetadataSuccess: 'Song info edited',
       sortBy: 'Sort by',
       sortTitle: 'Title',
       sortArtist: 'Artist',
@@ -234,7 +245,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
     library: {
       title: 'Thư viện',
       yourLibrary: 'Thư viện của bạn',
-      allSongs: 'Thư viện',
+      allSongs: 'Tất cả bài hát',
       importSongs: 'Nhập bài hát',
       importCanceled: 'Đã hủy nhập',
       importPicked: (count) => `Đã chọn ${count} tệp`,
@@ -245,7 +256,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       playbackUnavailable: 'Thiết bị/ứng dụng hiện tại không hỗ trợ phát nhạc.',
       playbackFailed: 'Không thể bắt đầu phát nhạc.',
       deleteSong: 'Xóa khỏi thư viện',
-      confirmDeleteSong: (title) => `Xóa "${title}" khỏi thư viện của bạn?`,
+      confirmDeleteSong: (title) => `Xóa "${title}" khỏi ứng dụng?`,
+      cannotUndoDeleteSong: 'Bạn sẽ không thể hoàn tác hành động này?',
       songDeleted: (title) => `Đã xóa "${title}"`,
       fileNotFound: 'Không tìm thấy tệp',
       fileNotFoundMessage: 'Tệp âm thanh của bài hát này bị thiếu hoặc đã bị di chuyển.',
@@ -254,8 +266,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
     playlists: {
       title: 'Danh sách phát',
       create: 'Tạo danh sách phát',
-      rename: 'Đổi tên',
-      delete: 'Xóa',
+      rename: 'Đổi tên danh sách',
+      delete: 'Xóa danh sách',
       emptyState: 'Chưa có playlist — nhấn + để tạo',
       confirmDelete: (name) => `Xóa "${name}"?`,
       cancel: 'Hủy',
@@ -272,7 +284,9 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       songsRemoved: (count) => `Đã xóa ${count} bài`,
       playlistCount: (count) => `${count} danh sách phát`,
 
+      addToPlaylistFailed: 'Không thể thêm bài hát vào playlist',
       addToOtherPlaylist: 'Thêm vào playlist khác',
+      addShortened: 'Thêm',
       moveToOtherPlaylist: 'Di chuyển sang playlist khác',
       removeFromThisPlaylist: 'Xóa khỏi playlist này',
       songLabel: 'Bài hát',
@@ -307,8 +321,11 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       moveToPlaylist: 'Di chuyển sang playlist',
       removeFromPlaylist: 'Xóa khỏi playlist',
       deleteFromLibrary: 'Xóa khỏi thư viện',
+      dismissQueue: 'Xóa hàng đợi',
       addedToQueue: 'Đã thêm vào hàng đợi',
-      addedToPlayNext: 'Sẽ phát tiếp theo',
+      addedToPlayNext: 'Bài hát này sẽ được phát tiếp theo',
+      editMetadata: 'Chỉnh sửa bài hát',
+      editMetadataSuccess: 'Đã chỉnh sửa thông tin bài hát',
       sortBy: 'Sắp xếp',
       sortTitle: 'Tên bài',
       sortArtist: 'Nghệ sĩ',

@@ -21,6 +21,16 @@ import { BOTTOM_NAV_HEIGHT } from '../components/BottomNav'
  * When no song is loaded, shows a blank cover + "No song is being played".
  * Tapping the bar navigates to the Now Playing screen.
  */
+
+export const PLAYER_BAR_HEIGHT = 70;
+
+export function usePlayerBarBottomOffset() {
+  const insets = useSafeAreaInsets()
+  const { navigationLayout } = useAppShell()
+
+  return navigationLayout === 'tabs' ? BOTTOM_NAV_HEIGHT + 8 : insets.bottom + 16;
+}
+
 export function PlayerBar() {
   const { theme } = useTheme()
   const { currentSong, isPlaying, play, pause, next, progress: progressSecs, duration: durationSecs } = usePlayer()
@@ -32,7 +42,7 @@ export function PlayerBar() {
   const { navigationLayout } = useAppShell()
 
   // Position: sit above the custom bottom navigation if tabs are used
-  const bottomOffset = navigationLayout === 'tabs' ? BOTTOM_NAV_HEIGHT + 8 : insets.bottom + 16
+  const bottomOffset = usePlayerBarBottomOffset();
 
   const hasSong = !!currentSong
   const title = currentSong?.title ?? ''
@@ -69,7 +79,7 @@ export function PlayerBar() {
       </View>
 
       {/* ── Main content row ── */}
-      <View style={styles.row}>
+      <View style={[styles.row]}>
         {/* Cover placeholder */}
         <View style={[styles.cover, { backgroundColor: theme.colors.primary + '18' }]}>
           {hasSong ? (
@@ -141,6 +151,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     zIndex: 1,
+    height: PLAYER_BAR_HEIGHT,
   },
 
   progressTrack: {

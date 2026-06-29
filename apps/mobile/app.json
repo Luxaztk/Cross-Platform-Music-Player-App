@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
-    "version": "1.0.0",
+    "name": "melovista",
+    "slug": "melovista",
+    "version": "26.06.28",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "melovista",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"

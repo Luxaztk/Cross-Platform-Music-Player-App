@@ -100,3 +100,11 @@ export function useAppShell() {
   if (!ctx) throw new Error('useAppShell must be used within AppShellProvider')
   return ctx
 }
+
+
+
+
+
+
+
+

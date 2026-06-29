@@ -64,12 +64,12 @@ export function SidebarMenu() {
       route: '/search',
       matchPaths: ['/search'],
     },
-    {
-      label: t.tabs.library,
-      icon: 'home',
-      route: '/library',
-      matchPaths: ['/', '/library'],
-    },
+    // {
+    //   label: t.tabs.library,
+    //   icon: 'home',
+    //   route: '/library',
+    //   matchPaths: ['/', '/library'],
+    // },
     {
       label: t.tabs.playlists,
       icon: 'list',

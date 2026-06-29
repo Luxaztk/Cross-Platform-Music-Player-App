@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   FlatList,
   Image,
@@ -7,7 +7,9 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
+  Alert
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Feather from '@expo/vector-icons/Feather'
@@ -19,31 +21,32 @@ import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
 import { SongActions } from '../../presentations/components/SongActions'
 import { useLibraryContext, usePlayer } from '@music/hooks'
+import { useAppShell } from '../../presentations/components/AppShell'
 
 // ── Utilities ───────────────────────────────────────────────────
 
-const formatDuration = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${mins}:${secs.toString().padStart(2, '0')}`
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-type SortOption = 'title' | 'artist' | 'duration' | 'dateAdded'
+type SortOption = 'sortTitle' | 'sortArtist' | 'sortDuration' | 'sortDateAdded'
 
 const sortSongs = (songs: Song[], option: SortOption): Song[] => {
   const sorted = [...songs]
   switch (option) {
-    case 'artist':
+    case 'sortArtist':
       return sorted.sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title))
-    case 'duration':
+    case 'sortDuration':
       return sorted.sort((a, b) => a.duration - b.duration)
-    case 'dateAdded':
+    case 'sortDateAdded':
       return sorted.sort((a, b) => {
         const aDate = new Date(a.dateAdded || 0).getTime()
         const bDate = new Date(b.dateAdded || 0).getTime()
         return bDate - aDate
       })
-    case 'title':
+    case 'sortTitle':
     default:
       return sorted.sort((a, b) => a.title.localeCompare(b.title))
   }
@@ -161,7 +164,7 @@ const SelectionRow = React.memo(function SelectionRow({
           },
         ]}
       >
-        {isSelected && <Text style={styles.checkboxText}>✓</Text>}
+        {isSelected && <Text style={styles.checkboxText}></Text>}
       </View>
     </Pressable>
   )
@@ -170,11 +173,13 @@ const SelectionRow = React.memo(function SelectionRow({
 const PlaylistTargetRow = React.memo(function PlaylistTargetRow({
   item,
   onSelect,
+  isSelected,
   colors,
   chooseLabel,
 }: {
   item: Playlist
   onSelect: (id: string) => void
+  isSelected: boolean
   colors: { surface: string; border: string; text: string; mutedText: string; primary: string }
   chooseLabel: string
 }) {
@@ -183,9 +188,9 @@ const PlaylistTargetRow = React.memo(function PlaylistTargetRow({
       onPress={() => onSelect(item.id)}
       style={[
         styles.selectionRow,
-        {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
+        { 
+          borderColor: isSelected ? colors.primary : colors.border,
+          backgroundColor: isSelected ? colors.primary + '10' : 'transparent',
         },
       ]}
     >
@@ -198,7 +203,17 @@ const PlaylistTargetRow = React.memo(function PlaylistTargetRow({
         </Text>
       </View>
 
-      <Text style={[styles.chooseText, { color: colors.primary }]}>{chooseLabel}</Text>
+      <View
+        style={[
+          styles.checkbox,
+          {
+            borderColor: isSelected ? colors.primary : colors.border,
+            backgroundColor: isSelected ? colors.primary : 'transparent',
+          },
+        ]}
+      >
+        {isSelected && <Text style={styles.checkboxText}></Text>}
+      </View>
     </Pressable>
   )
 })
@@ -212,23 +227,42 @@ export default function PlaylistDetailScreen() {
   const { notify } = useNotifications()
   const insets = useSafeAreaInsets()
 
+  const { setCustomTitle } = useAppShell()
+  useEffect(() => {
+    setCustomTitle(playlist?.name || t.playlists.title) // Reset custom title when entering the screen
+  }, [setCustomTitle])
+
   const {
     playlists,
     songs,
     library,
     handleRemoveSongsFromPlaylist,
-    handleAddSongsToPlaylist
+    handleAddSongsToPlaylist,
+    handlePatchSong,
+    handleDeleteSongs
   } = useLibraryContext()
-  const { playList, currentSong } = usePlayer()
+  const { playNext, addSongsToQueue, playList, currentSong } = usePlayer()
 
-  const [addModalVisible, setAddModalVisible] = useState(false)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [sortBy, setSortBy] = useState<SortOption>('title')
+  const [addSongsToPlaylistModalVisible, setAddSongsToPlaylistModalVisible] = useState(false)
+  const [selectedSongsIds, setSelectedSongsIds] = useState<string[]>([])
+  const [selectedPlaylistsIds, setSelectedPlaylistsIds] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState<SortOption>('sortTitle')
   const [sortMenuVisible, setSortMenuVisible] = useState(false)
+
+  const [addCurrentSongToPlaylistsModalVisible, setAddCurrentSongToPlaylistsModalVisible] = useState(false)
+  const [addingToPlaylists, setAddingToPlaylists] = useState(false)
 
   // SongActions state
   const [selectedSongForActions, setSelectedSongForActions] = useState<Song | null>(null)
+  const [songBeingEdited, setSongBeingEdited] = useState<Song | null>(null);
   const [songActionsVisible, setSongActionsVisible] = useState(false)
+
+  const [editSongModalVisible, setEditSongModalVisible] = useState(false)
+  const [editSongTitle, setEditSongTitle] = useState('')
+  const [editSongArtist, setEditSongArtist] = useState('')
+  const [editSongAlbum, setEditSongAlbum] = useState('')
+  const [editSongGenre, setEditSongGenre] = useState('')
+  const [editSongYear, setEditSongYear] = useState('')
 
   const playlist = useMemo(() => {
     if (id === 'all' || id === '0') {
@@ -300,20 +334,26 @@ export default function PlaylistDetailScreen() {
   )
 
   const onToggleSelect = useCallback((sid: string) => {
-    setSelectedIds((prev) =>
+    setSelectedSongsIds((prev) =>
       prev.includes(sid) ? prev.filter((x) => x !== sid) : [...prev, sid],
     )
   }, [])
 
+    const onTogglePlaylistSelect = useCallback((pid: string) => {
+    setSelectedPlaylistsIds((prev) =>
+      prev.includes(pid) ? prev.filter((x) => x !== pid) : [...prev, pid],
+    )
+  }, [])
+
   const onConfirmAdd = useCallback(async () => {
-    if (selectedIds.length === 0) return
+    if (selectedSongsIds.length === 0) return
     if (handleAddSongsToPlaylist) {
-      await handleAddSongsToPlaylist(id, selectedIds)
-      notify({ message: t.playlists.songsAdded(selectedIds.length), kind: 'success' })
+      await handleAddSongsToPlaylist(id, selectedSongsIds)
+      notify({ message: t.playlists.songsAdded(selectedSongsIds.length), kind: 'success' })
     }
-    setAddModalVisible(false)
-    setSelectedIds([])
-  }, [id, selectedIds, handleAddSongsToPlaylist, notify, t])
+    setAddSongsToPlaylistModalVisible(false)
+    setSelectedSongsIds([])
+  }, [id, selectedSongsIds, handleAddSongsToPlaylist, notify, t])
 
   // SongActions handlers
   const onOpenSongActions = useCallback((song: Song) => {
@@ -326,21 +366,100 @@ export default function PlaylistDetailScreen() {
     setSelectedSongForActions(null)
   }, [])
 
-  const onPlayNext = useCallback(() => {
-    notify({ message: 'Play next coming soon', kind: 'info' })
-  }, [notify])
+  const onPlayNext = useCallback(async () => {
+    if (!selectedSongForActions) return
+    await playNext(selectedSongForActions)
+    notify({ message: t.songs.addedToPlayNext, kind: 'success' })
+  }, [selectedSongForActions, playNext, notify, t])
 
-  const onAddToQueue = useCallback(() => {
-    notify({ message: 'Add to queue coming soon', kind: 'info' })
-  }, [notify])
+  const onAddToQueue = useCallback(async () => {
+    if (!selectedSongForActions) return
+    await addSongsToQueue([selectedSongForActions])
+    notify({ message: t.songs.addedToQueue, kind: 'success' })
+  }, [selectedSongForActions, addSongsToQueue, notify, t])
 
   const onAddToPlaylist = useCallback(() => {
     if (selectedSongForActions) {
-      setSelectedIds([selectedSongForActions.id])
-      setAddModalVisible(true)
+      // Open the "add to other playlists" picker for the selected song
+      setSelectedSongsIds([selectedSongForActions.id])
+      setAddCurrentSongToPlaylistsModalVisible(true)
       onCloseSongActions()
     }
   }, [selectedSongForActions, onCloseSongActions])
+
+  const onEditSong = useCallback(() => {
+    if (!selectedSongForActions) return
+
+    setSongBeingEdited(selectedSongForActions)
+    setEditSongTitle(selectedSongForActions.title)
+    setEditSongArtist(selectedSongForActions.artist)
+    setEditSongAlbum(selectedSongForActions.album ?? '')
+    setEditSongGenre(selectedSongForActions.genre ?? '')
+    setEditSongYear(selectedSongForActions.year ? String(selectedSongForActions.year) : '')
+    setEditSongModalVisible(true)
+    setSongActionsVisible(false)
+  }, [selectedSongForActions, onCloseSongActions])
+
+  const onConfirmEditSong = useCallback(async () => {
+    if (!songBeingEdited) return
+  
+
+    const title = editSongTitle.trim()
+    const artist = editSongArtist.trim()
+    if (!title || !artist) return
+
+    const updates: Partial<Song> = {
+      title,
+      artist,
+      album: editSongAlbum.trim(),
+      genre: editSongGenre.trim(),
+    }
+
+    const parsedYear = editSongYear.trim()
+    if (parsedYear) {
+      const yearNumber = Number(parsedYear)
+      if (!Number.isNaN(yearNumber)) {
+        updates.year = yearNumber
+      }
+    }
+
+    const updatedSong = await handlePatchSong?.(songBeingEdited.id, updates)
+    if (updatedSong) {
+      setSongBeingEdited(null)
+    }
+
+    notify({ message: t.songs.editMetadataSuccess, kind: 'success' })
+    setEditSongModalVisible(false)
+  }, [
+    songBeingEdited,
+    editSongTitle,
+    editSongArtist,
+    editSongAlbum,
+    editSongGenre,
+    editSongYear,
+    handlePatchSong,
+    notify,
+    t,
+  ])
+
+  const onConfirmAddToOtherPlaylists = useCallback(async () => {
+    if (selectedSongsIds.length === 0 || selectedPlaylistsIds.length === 0) return
+    try {
+      setAddingToPlaylists(true)
+      // Add the selected songs to all chosen playlists in parallel
+      await Promise.all(
+        selectedPlaylistsIds.map((pid) => handleAddSongsToPlaylist?.(pid, selectedSongsIds)),
+      )
+      notify({ message: t.playlists.songsAdded(selectedSongsIds.length), kind: 'success' })
+      setAddCurrentSongToPlaylistsModalVisible(false)
+      setSelectedPlaylistsIds([])
+      setSelectedSongsIds([])
+    } catch (err) {
+      notify({ message: t.playlists.addToPlaylistFailed, kind: 'error' })
+    } finally {
+      setAddingToPlaylists(false)
+    }
+  }, [selectedSongsIds, selectedPlaylistsIds, handleAddSongsToPlaylist, notify, t])
 
   const onMoveToPlaylist = useCallback(() => {
     notify({ message: 'Move to playlist coming soon', kind: 'info' })
@@ -353,9 +472,26 @@ export default function PlaylistDetailScreen() {
     }
   }, [selectedSongForActions, id, onRemoveSong, onCloseSongActions])
 
-  const onDeleteFromLibrary = useCallback(() => {
-    notify({ message: 'Delete from library coming soon', kind: 'info' })
-  }, [notify])
+  const onDeleteFromLibrary = useCallback(
+      () => {
+        if (!selectedSongForActions) return
+        Alert.alert(t.library.confirmDeleteSong(selectedSongForActions.title), 'This action cannot be undone!', [
+          { text: t.playlists.cancel, style: 'cancel' },
+          {
+            text: t.playlists.delete,
+            style: 'destructive',
+            onPress: () => {
+              void (async () => {
+                await handleDeleteSongs?.([selectedSongForActions.id])
+                notify({ message: t.library.songDeleted(selectedSongForActions.title), kind: 'success' })
+              })()
+            },
+          },
+        ])
+        onCloseSongActions()
+      },
+      [selectedSongForActions, handleDeleteSongs, notify, t],
+    )
 
   if (!playlist) {
     return (
@@ -378,32 +514,11 @@ export default function PlaylistDetailScreen() {
     <View
       style={[
         styles.container,
-        { backgroundColor: theme.colors.background, paddingTop: insets.top },
+        { backgroundColor: theme.colors.background},
       ]}
     >
-      {/* Header with title and duration */}
-      <View style={styles.header}>
-        <View style={styles.headerInfo}>
-          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
-            {playlist.name}
-          </Text>
-          <View style={styles.headerMeta}>
-            <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-              {t.playlists.songCount(playlistSongs.length)}
-            </Text>
-            {playlistSongs.length > 0 && (
-              <>
-                <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>•</Text>
-                <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
-                  {formatDuration(totalDuration)}
-                </Text>
-              </>
-            )}
-          </View>
-        </View>
-      </View>
 
-      {/* Action buttons and sort options */}
+      {/* Playlist actions */}
       <View style={styles.actions}>
         <Pressable
           onPress={onPlayAll}
@@ -419,11 +534,12 @@ export default function PlaylistDetailScreen() {
           <Text style={styles.mainBtnText}>▶ {t.playlists.playAll}</Text>
         </Pressable>
 
+        {/* Add songs */}
         {id !== 'all' && id !== '0' && (
           <Pressable
             onPress={() => {
-              setSelectedIds([])
-              setAddModalVisible(true)
+              setSelectedSongsIds([])
+              setAddSongsToPlaylistModalVisible(true)
             }}
             style={[styles.outlineBtn, { borderColor: theme.colors.border }]}
           >
@@ -433,6 +549,7 @@ export default function PlaylistDetailScreen() {
           </Pressable>
         )}
 
+        {/* Sort button */}
         {playlistSongs.length > 0 && (
           <Pressable
             onPress={() => setSortMenuVisible(!sortMenuVisible)}
@@ -445,8 +562,8 @@ export default function PlaylistDetailScreen() {
 
       {/* Sort menu */}
       {sortMenuVisible && (
-        <View style={[styles.sortMenu, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-          {(['title', 'artist', 'duration', 'dateAdded'] as SortOption[]).map((option) => (
+        <View style={[styles.sortMenu, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+          {(['sortTitle', 'sortArtist', 'sortDuration', 'sortDateAdded'] as SortOption[]).map((option) => (
             <Pressable
               key={option}
               onPress={() => {
@@ -455,11 +572,11 @@ export default function PlaylistDetailScreen() {
               }}
               style={styles.sortMenuItem}
             >
-              <Feather
+              {/* <Feather
                 name={sortBy === option ? 'check' : 'circle'}
                 size={16}
                 color={sortBy === option ? theme.colors.primary : theme.colors.mutedText}
-              />
+              /> */}
               <Text
                 style={[
                   styles.sortMenuText,
@@ -469,7 +586,7 @@ export default function PlaylistDetailScreen() {
                   },
                 ]}
               >
-                {option.charAt(0).toUpperCase() + option.slice(1)}
+                {t.songs[option]}
               </Text>
             </Pressable>
           ))}
@@ -499,8 +616,8 @@ export default function PlaylistDetailScreen() {
         }
       />
 
-      {/* Add songs modal */}
-      <Modal visible={addModalVisible} animationType="slide" transparent={false}>
+      {/* Add songs to playlist modal */}
+      <Modal visible={addSongsToPlaylistModalVisible} animationType="slide" transparent={false}>
         <View
           style={[
             styles.modalContainer,
@@ -508,7 +625,7 @@ export default function PlaylistDetailScreen() {
           ]}
         >
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => setAddModalVisible(false)} hitSlop={15}>
+            <Pressable onPress={() => setAddSongsToPlaylistModalVisible(false)} hitSlop={15}>
               <Text style={[styles.modalClose, { color: theme.colors.text }]}>
                 {t.playlists.cancel}
               </Text>
@@ -516,17 +633,17 @@ export default function PlaylistDetailScreen() {
             <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
               {t.playlists.addSongs}
             </Text>
-            <Pressable onPress={onConfirmAdd} disabled={selectedIds.length === 0} hitSlop={15}>
+            <Pressable onPress={onConfirmAdd} disabled={selectedSongsIds.length === 0} hitSlop={15}>
               <Text
                 style={[
                   styles.modalConfirm,
                   {
                     color: theme.colors.primary,
-                    opacity: selectedIds.length === 0 ? 0.4 : 1,
+                    opacity: selectedSongsIds.length === 0 ? 0.4 : 1,
                   },
                 ]}
               >
-                {t.playlists.addSongs} ({selectedIds.length})
+                {t.playlists.addSongs} ({selectedSongsIds.length})
               </Text>
             </Pressable>
           </View>
@@ -537,7 +654,7 @@ export default function PlaylistDetailScreen() {
             renderItem={({ item }) => (
               <SelectionRow
                 item={item}
-                isSelected={selectedIds.includes(item.id)}
+                isSelected={selectedSongsIds.includes(item.id)}
                 onToggle={onToggleSelect}
                 colors={theme.colors}
               />
@@ -553,14 +670,159 @@ export default function PlaylistDetailScreen() {
         onClose={onCloseSongActions}
         song={selectedSongForActions}
         inPlaylist={id !== 'all' && id !== '0'}
-        canDelete={false}
+        canDelete={true}
         onPlayNext={onPlayNext}
         onAddToQueue={onAddToQueue}
+        onEditSong={onEditSong}
         onAddToPlaylist={onAddToPlaylist}
         onMoveToPlaylist={onMoveToPlaylist}
         onRemoveFromPlaylist={onRemoveFromPlaylist}
         onDeleteFromLibrary={onDeleteFromLibrary}
       />
+
+      <Modal visible={editSongModalVisible} animationType="slide" transparent={false}>
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.background, paddingTop: insets.top },
+          ]}
+        >
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setEditSongModalVisible(false)} hitSlop={15}>
+              <Text style={[styles.modalClose, { color: theme.colors.text }]}> 
+                {t.playlists.cancel}
+              </Text>
+            </Pressable>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {t.songs.editMetadata}
+            </Text>
+            <Pressable
+              onPress={onConfirmEditSong}
+              disabled={!editSongTitle.trim() || !editSongArtist.trim()}
+              hitSlop={15}
+            >
+              <Text
+                style={[
+                  styles.modalConfirm,
+                  {
+                    color: theme.colors.primary,
+                    opacity: !editSongTitle.trim() || !editSongArtist.trim() ? 0.4 : 1,
+                  },
+                ]}
+              >
+                Save
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.editForm}>
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Title</Text>
+            <TextInput
+              value={editSongTitle}
+              onChangeText={setEditSongTitle}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Title"
+              placeholderTextColor={theme.colors.mutedText}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Artist</Text>
+            <TextInput
+              value={editSongArtist}
+              onChangeText={setEditSongArtist}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Artist"
+              placeholderTextColor={theme.colors.mutedText}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Album</Text>
+            <TextInput
+              value={editSongAlbum}
+              onChangeText={setEditSongAlbum}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Album"
+              placeholderTextColor={theme.colors.mutedText}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Genre</Text>
+            <TextInput
+              value={editSongGenre}
+              onChangeText={setEditSongGenre}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Genre"
+              placeholderTextColor={theme.colors.mutedText}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.colors.mutedText }]}>Year</Text>
+            <TextInput
+              value={editSongYear}
+              onChangeText={setEditSongYear}
+              style={[styles.inputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              placeholder="Year"
+              placeholderTextColor={theme.colors.mutedText}
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Add current song to playlists modal */}
+      <Modal
+        visible={addCurrentSongToPlaylistsModalVisible}
+        animationType="slide"
+        transparent={false}
+      >
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.background, paddingTop: insets.top },
+          ]}
+        >
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setAddCurrentSongToPlaylistsModalVisible(false)} hitSlop={15}>
+              <Text style={[styles.modalClose, { color: theme.colors.text }]}>
+                {t.playlists.cancel}
+              </Text>
+            </Pressable>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {t.playlists.addToOtherPlaylist}
+            </Text>
+            <Pressable
+              onPress={onConfirmAddToOtherPlaylists}
+              disabled={selectedPlaylistsIds.length === 0 || addingToPlaylists}
+              hitSlop={15}
+            >
+              <Text
+                style={[
+                  styles.modalConfirm,
+                  {
+                    color: theme.colors.primary,
+                    opacity: selectedPlaylistsIds.length === 0 || addingToPlaylists ? 0.4 : 1,
+                  },
+                ]}
+              >
+                {t.playlists.addShortened} ({selectedPlaylistsIds.length})
+              </Text>
+            </Pressable>
+          </View>
+
+          <FlatList
+            data={otherPlaylists}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <PlaylistTargetRow
+                item={item}
+                isSelected={selectedPlaylistsIds.includes(item.id)}
+                onSelect={onTogglePlaylistSelect}
+                colors={theme.colors}
+                chooseLabel={t.playlists.choose}
+              />
+            )}
+            contentContainerStyle={[styles.modalListContent, { paddingBottom: insets.bottom + 20 }]}
+          />
+        </View>
+      </Modal>
+
+      {/* Delete song modal */}
     </View>
   )
 }
@@ -568,12 +830,12 @@ export default function PlaylistDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 12
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
     gap: 16,
   },
   headerInfo: {
@@ -587,20 +849,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 4,
+    marginTop: 0,
   },
   subtitle: {
     fontSize: 13,
   },
   actions: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 48,
+    paddingBottom: 12,
     gap: 12,
     alignItems: 'center',
   },
   mainBtn: {
-    flex: 2,
+    flex: 1.5,
     height: 44,
     borderRadius: 22,
     alignItems: 'center',
@@ -636,6 +898,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 12,
     borderWidth: 1,
+    alignSelf: 'flex-end', // => Container will shrink to fit the content
+    position: 'absolute',
+    top: 60,
+    zIndex: 1000,
     overflow: 'hidden',
   },
   sortMenuItem: {
@@ -724,6 +990,21 @@ const styles = StyleSheet.create({
   modalConfirm: {
     fontSize: 15,
     fontWeight: 'bold',
+  },
+  editForm: {
+    padding: 20,
+    gap: 12,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  inputField: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
   },
   modalListContent: {
     padding: 20,
