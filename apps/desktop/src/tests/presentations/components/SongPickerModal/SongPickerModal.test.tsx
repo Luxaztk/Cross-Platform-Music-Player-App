@@ -33,6 +33,14 @@ vi.mock('@hooks', () => ({
       debouncedQuery: query,
       isDebouncing: false
     };
+  },
+  useSearch: (items: Song[], _keys: (keyof Song)[], query: string) => {
+    const q = query.toLowerCase();
+    return {
+        songs: items.filter(item => item.title?.toLowerCase().includes(q) || item.artist?.toLowerCase().includes(q)),
+        debouncedQuery: query,
+        isSearching: false
+    };
   }
 }));
 

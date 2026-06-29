@@ -1,0 +1,8 @@
+feat(player,downloader): optimize playback transition and prevent duplicate downloads
+
+- Downloader: Add duplicate filtering logic in `DownloadProvider` to skip downloading songs that already exist in the library when fetching YouTube playlists.
+- Player: Defer synchronous `electron-store` updates (`savePlaybackPosition`) using `setTimeout` in `PlayerProvider` to prevent UI thread blocking and resolve playback stuttering during song transitions.
+- Types: Fix missing `songCount` property assignment in `usePlaylistData` hook.
+- Tests: Fix broken `useSearch` mocks and typing issues in `SongPickerModal.test.tsx`.
+- Workspace: Add missing `test` script in `@music/brand` package to resolve `npm run test --workspaces` failure.
+- i18n: Add translation keys for skipping existing downloaded items.

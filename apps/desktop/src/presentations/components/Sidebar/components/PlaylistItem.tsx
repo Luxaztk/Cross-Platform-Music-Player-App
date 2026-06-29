@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { type PlaylistItemProps } from '../types';
-import type { Song } from '@music/types';
 
 export const PlaylistItem: React.FC<PlaylistItemProps> = ({
     playlist,

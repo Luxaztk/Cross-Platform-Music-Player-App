@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, type ReactNode } from 'react';
 import { useNotification, useLibrary, useLanguage } from '@hooks';
-import { getErrorMessage } from '@music/utils';
+import { getErrorMessage, normalizeString } from '@music/utils';
+import { extractYoutubeId } from '@music/core';
 import { DOWNLOAD_STATUS, type DownloadItem, type DownloadStatus } from '@music/types';
 import {
     DownloadContext,
@@ -11,7 +12,7 @@ import {
 export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
-    const { refreshLibrary, refreshPlaylists } = useLibrary();
+    const { refreshLibrary, refreshPlaylists, songs } = useLibrary();
 
     const [url, _setUrl] = useState('');
     const [downloadState, setDownloadState] = useState<DownloadStatus>(DOWNLOAD_STATUS.IDLE);
@@ -188,7 +189,31 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
                     throw new Error(result.error || t('downloader.error'));
                 }
                 
-                const items: DownloadItem[] = result.items.map(info => ({
+                const filteredItems = result.items.filter(info => {
+                    const originMatch = songs.some(s => s.originId === info.id || (s.sourceUrl && extractYoutubeId(s.sourceUrl) === info.id));
+                    if (originMatch) return false;
+
+                    const normalizedTitle = normalizeString(info.title);
+                    const normalizedArtist = normalizeString(info.artist);
+                    
+                    const metadataMatch = songs.some(s => {
+                        const titleMatch = normalizeString(s.title) === normalizedTitle;
+                        const storedArtist = normalizeString(s.artist);
+                        const artistMatch = storedArtist === normalizedArtist ||
+                                            storedArtist.includes(normalizedArtist) ||
+                                            normalizedArtist.includes(storedArtist);
+                        return titleMatch && artistMatch;
+                    });
+                    
+                    return !metadataMatch;
+                });
+
+                const skippedCount = result.items.length - filteredItems.length;
+                if (skippedCount > 0) {
+                    showNotification('info', t('downloader.skippedExisting').replace('{{count}}', skippedCount.toString()));
+                }
+                
+                const items: DownloadItem[] = filteredItems.map(info => ({
                     ...info,
                     url: `https://www.youtube.com/watch?v=${info.id}`,
                     status: DOWNLOAD_STATUS.PREVIEW,

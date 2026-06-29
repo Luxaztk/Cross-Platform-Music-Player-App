@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { useLibraryContext } from '@music/hooks';
 import { useNotification, useLanguage } from '@hooks';
@@ -27,7 +27,6 @@ export const usePlaylistData = (id: string | undefined) => {
     playlists,
     songs,
     library,
-    libraryVersion,
     isImporting,
   } = useLibraryContext();
 
@@ -35,17 +34,25 @@ export const usePlaylistData = (id: string | undefined) => {
   const { t } = useLanguage();
   const isLibrary = id === '0';
 
-  useEffect(() => {
+  const [prevDeps, setPrevDeps] = useState({ id, library, playlists, songs });
+
+  if (
+    id !== prevDeps.id ||
+    library !== prevDeps.library ||
+    playlists !== prevDeps.playlists ||
+    songs !== prevDeps.songs
+  ) {
+    setPrevDeps({ id, library, playlists, songs });
     if (id) {
       if (id === '0' && library) {
-        setPlaylist({ ...library, songs });
+        setPlaylist({ ...library, songs, songCount: songs.length });
         setLocalSongs(songs);
         setIsLoading(false);
       } else {
         const p = playlists.find(p => p.id === id);
         if (p) {
           const pSongs = p.songIds.map(sid => songs.find(s => s.id === sid)).filter(Boolean) as Song[];
-          setPlaylist({ ...p, songs: pSongs });
+          setPlaylist({ ...p, songs: pSongs, songCount: pSongs.length });
           setLocalSongs(pSongs);
         } else {
           setPlaylist(null);
@@ -54,7 +61,7 @@ export const usePlaylistData = (id: string | undefined) => {
         setIsLoading(false);
       }
     }
-  }, [id, library, playlists, songs]);
+  }
 
   const onSaveMetadata = useCallback(async (updated: Song | Playlist) => {
     if (editingSong) {
