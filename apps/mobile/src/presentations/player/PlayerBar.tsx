@@ -72,7 +72,7 @@ export function PlayerBar() {
             styles.progressFill,
             {
               backgroundColor: theme.colors.primary,
-              width: `${progressPercent}%` as import('react-native').DimensionValue,
+              width: `${progressPercent}%` as any,
             },
           ]}
         />
@@ -110,6 +110,7 @@ export function PlayerBar() {
         {/* Controls */}
         <View style={styles.controls}>
           <Pressable
+            testID="play-pause-btn"
             onPress={(e) => {
               e.stopPropagation()
               void togglePlayPause()
@@ -126,6 +127,7 @@ export function PlayerBar() {
           </Pressable>
 
           <Pressable
+            testID="next-btn"
             onPress={(e) => {
               e.stopPropagation()
               void next()

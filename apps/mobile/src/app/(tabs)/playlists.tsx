@@ -59,6 +59,7 @@ export default function PlaylistsScreen() {
 
     const allSongsPlaylist = {
       ...library,
+      songIds: library?.songIds || [],
       id: '0',
       name: t.library.allSongs,
       isSpecial: true,

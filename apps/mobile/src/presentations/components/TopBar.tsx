@@ -8,7 +8,7 @@ import Feather from '@expo/vector-icons/Feather'
 import { useTheme } from './Theme'
 import { useLanguage } from './Language'
 import { useAppShell } from './AppShell'
-import { useLibrary } from '../../application'
+import { useLibraryContext } from '@music/hooks'
 import { useNotifications } from '../../presentations/components/Notification'
 
 type FeatherName = ComponentProps<typeof Feather>['name']
@@ -50,32 +50,18 @@ export function TopBar() {
   const { navigationLayout, customTitle, openSidebar, triggerImport, registerImportHandler } = useAppShell()
   
   const { notify } = useNotifications()
-  const { importPickedAudio } = useLibrary()
-    const pickAudioFiles = useCallback(async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: 'audio/*',
-      multiple: true,
-      copyToCacheDirectory: false,
-    })
+  const { handleImportFiles } = useLibraryContext()
 
-    if (result.canceled) {
-      notify({ message: t.library.importCanceled, kind: 'info' })
-      return
-    }
-
+  const pickAudioFiles = useCallback(async () => {
     try {
-      const { imported, skippedDuplicates } = await importPickedAudio(result.assets)
-      notify({
-        message:
-          skippedDuplicates > 0
-            ? t.library.importSuccessWithSkipped(imported, skippedDuplicates)
-            : t.library.importSuccess(imported),
-        kind: 'success',
-      })
+      if (handleImportFiles) {
+        await handleImportFiles();
+        notify({ message: 'Đã nhập bài hát', kind: 'success' })
+      }
     } catch {
       notify({ message: t.library.importFailed, kind: 'error' })
     }
-  }, [importPickedAudio, notify, t])
+  }, [handleImportFiles, notify, t])
 
   useEffect(() => {
     registerImportHandler(pickAudioFiles)
