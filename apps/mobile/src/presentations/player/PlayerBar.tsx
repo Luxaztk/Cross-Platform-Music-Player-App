@@ -123,6 +123,7 @@ export function PlayerBar() {
               name={isPlaying ? 'pause' : 'play'}
               size={18}
               color={theme.colors.background}
+              style={!isPlaying ? { marginLeft: 2 } : undefined}
             />
           </Pressable>
 

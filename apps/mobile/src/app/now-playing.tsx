@@ -232,8 +232,9 @@ export default function NowPlayingScreen() {
         >
           <MaterialIcons
             name={isPlaying ? 'pause' : 'play-arrow'}
-            size={24}
+            size={32}
             color={theme.colors.background}
+            style={!isPlaying ? { marginLeft: 4 } : undefined}
           />
         </Pressable>
 
