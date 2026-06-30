@@ -40,15 +40,15 @@ const sortSongs = (songs: Song[], option: SortOption): Song[] => {
       return sorted.sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title))
     case 'sortDuration':
       return sorted.sort((a, b) => a.duration - b.duration)
+    case 'sortTitle':
+      return sorted.sort((a, b) => a.title.localeCompare(b.title))
     case 'sortDateAdded':
+    default:
       return sorted.sort((a, b) => {
         const aDate = new Date(a.dateAdded || 0).getTime()
         const bDate = new Date(b.dateAdded || 0).getTime()
-        return bDate - aDate
+        return aDate - bDate
       })
-    case 'sortTitle':
-    default:
-      return sorted.sort((a, b) => a.title.localeCompare(b.title))
   }
 }
 
@@ -246,7 +246,7 @@ export default function PlaylistDetailScreen() {
   const [addSongsToPlaylistModalVisible, setAddSongsToPlaylistModalVisible] = useState(false)
   const [selectedSongsIds, setSelectedSongsIds] = useState<string[]>([])
   const [selectedPlaylistsIds, setSelectedPlaylistsIds] = useState<string[]>([])
-  const [sortBy, setSortBy] = useState<SortOption>('sortTitle')
+  const [sortBy, setSortBy] = useState<SortOption>('sortDateAdded')
   const [sortMenuVisible, setSortMenuVisible] = useState(false)
 
   const [addCurrentSongToPlaylistsModalVisible, setAddCurrentSongToPlaylistsModalVisible] = useState(false)
@@ -477,9 +477,9 @@ export default function PlaylistDetailScreen() {
       () => {
         if (!selectedSongForActions) return
         Alert.alert(t.library.confirmDeleteSong(selectedSongForActions.title), 'This action cannot be undone!', [
-          { text: t.playlists.cancel, style: 'cancel' },
+          { text: t.songs.cancelDelete, style: 'cancel' },
           {
-            text: t.playlists.delete,
+            text: t.songs.delete,
             style: 'destructive',
             onPress: () => {
               void (async () => {

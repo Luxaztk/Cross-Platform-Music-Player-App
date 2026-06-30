@@ -16,6 +16,10 @@
       "@music/utils/*": ["../../packages/utils/src/*"],
       "@music/core": ["../../packages/core/src/index.ts"],
       "@music/core/*": ["../../packages/core/src/*"],
+      "@music/hooks": ["../../packages/hooks/src/index.ts"],
+      "@music/hooks/*": ["../../packages/hooks/src/*"],
+      "@music/player": ["../../packages/player/src/index.ts"],
+      "@music/player/*": ["../../packages/player/src/*"],
       "@music/i18n": ["../../packages/i18n"],
       "@music/i18n/*": ["../../packages/i18n/*"]
     }

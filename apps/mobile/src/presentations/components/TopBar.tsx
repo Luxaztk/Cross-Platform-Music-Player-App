@@ -48,7 +48,7 @@ export function TopBar() {
   const insets = useSafeAreaInsets()
   const pathname = usePathname()
   const { navigationLayout, customTitle, openSidebar, triggerImport, registerImportHandler } = useAppShell()
-  
+
   const { notify } = useNotifications()
   const { handleImportFiles } = useLibraryContext()
 

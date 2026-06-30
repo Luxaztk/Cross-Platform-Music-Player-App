@@ -218,7 +218,7 @@ export default function PlaylistsScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
         <View>
-          <Text style={[styles.title, { color: theme.colors.text }]}>{t.playlists.title}</Text>
+          {/* <Text style={[styles.title, { color: theme.colors.text }]}>{t.playlists.title}</Text> */}
           <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>
             {t.playlists.playlistCount(playlistCount)}
           </Text>
@@ -298,7 +298,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   subtitle: {
-    marginTop: 6,
+    marginTop: 12,
+    marginLeft: 6,
     fontSize: 13,
     opacity: 0.8,
   },

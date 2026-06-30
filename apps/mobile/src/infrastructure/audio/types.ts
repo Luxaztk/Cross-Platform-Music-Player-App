@@ -1,3 +1,5 @@
+import { AudioLockScreenOptions } from "expo-audio"
+
 export type EngineProgress = {
   isLoaded: boolean
   isPlaying: boolean
@@ -34,5 +36,5 @@ export interface PlayerEngine {
 
   subscribe(listener: ProgressListener): () => void
 
-  setActiveForLockScreen(active: boolean, metadata?: LockScreenMetadata): Promise<void>
+  setActiveForLockScreen(active: boolean, metadata?: LockScreenMetadata, options?: AudioLockScreenOptions): Promise<void>
 }
