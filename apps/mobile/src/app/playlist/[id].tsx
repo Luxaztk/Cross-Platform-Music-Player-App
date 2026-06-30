@@ -241,7 +241,7 @@ export default function PlaylistDetailScreen() {
     handlePatchSong,
     handleDeleteSongs
   } = useLibraryContext()
-  const { playNext, addSongsToQueue, playList, currentSong } = usePlayer()
+  const { playNext, addSongsToQueue, playList, currentSong, isShuffle } = usePlayer()
 
   const [addSongsToPlaylistModalVisible, setAddSongsToPlaylistModalVisible] = useState(false)
   const [selectedSongsIds, setSelectedSongsIds] = useState<string[]>([])
@@ -304,11 +304,12 @@ export default function PlaylistDetailScreen() {
   const onPlayAll = useCallback(async () => {
     if (!playlist || playlistSongs.length === 0) return
     try {
-      playList(playlistSongs, 0)
+      const startIndex = isShuffle ? Math.floor(Math.random() * playlistSongs.length) : 0
+      playList(playlistSongs, startIndex)
     } catch {
       notify({ message: t.library.playbackFailed, kind: 'error' })
     }
-  }, [playlist, playlistSongs, playList, notify, t])
+  }, [playlist, playlistSongs, playList, isShuffle, notify, t])
 
   const onRemoveSong = useCallback(
     async (songId: string) => {
