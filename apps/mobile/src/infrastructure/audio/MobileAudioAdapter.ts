@@ -6,6 +6,7 @@ export class MobileAudioAdapter implements IAudioEngine {
   private currentUrl: string | null = null;
   private events: AudioEngineEvents = {};
   private currentVolume = 1;
+  private lastIsPlaying = false;
 
   constructor() {
     this.engine = new ExpoAudioEngine();
@@ -17,6 +18,16 @@ export class MobileAudioAdapter implements IAudioEngine {
       if (this.events.onProgress) {
         // IAudioEngine expects seconds
         this.events.onProgress(p.positionMs / 1000, p.durationMs / 1000);
+      }
+
+      // Sync play/pause state dynamically
+      if (p.isPlaying !== this.lastIsPlaying) {
+        this.lastIsPlaying = p.isPlaying;
+        if (p.isPlaying) {
+          if (this.events.onPlay) this.events.onPlay();
+        } else {
+          if (this.events.onPause) this.events.onPause();
+        }
       }
       
       if (p.isLoaded && p.didJustFinish) {
@@ -47,12 +58,10 @@ export class MobileAudioAdapter implements IAudioEngine {
     this.engine.play().catch(err => {
       if (this.events.onPlayError) this.events.onPlayError(err);
     });
-    if (this.events.onPlay) this.events.onPlay();
   }
 
   pause(): void {
     this.engine.pause().catch(err => console.error(err));
-    if (this.events.onPause) this.events.onPause();
   }
 
   stop(): void {
