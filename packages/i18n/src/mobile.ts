@@ -107,6 +107,8 @@ export type Translations = {
     sortDateAdded: string
     editMetadata: string
     editMetadataSuccess: string
+    cancelDelete: string
+    delete: string
   }
 }
 
@@ -220,6 +222,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       sortArtist: 'Artist',
       sortDuration: 'Duration',
       sortDateAdded: 'Date added',
+      cancelDelete: 'Cancel',
+      delete: 'Delete'
     },
   },
   vi: {
@@ -331,6 +335,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       sortArtist: 'Nghệ sĩ',
       sortDuration: 'Thời lượng',
       sortDateAdded: 'Ngày thêm',
+      cancelDelete: 'Hủy',
+      delete: 'Xóa'
     },
   },
 }

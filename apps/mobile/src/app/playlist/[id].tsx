@@ -477,9 +477,9 @@ export default function PlaylistDetailScreen() {
       () => {
         if (!selectedSongForActions) return
         Alert.alert(t.library.confirmDeleteSong(selectedSongForActions.title), 'This action cannot be undone!', [
-          { text: t.playlists.cancel, style: 'cancel' },
+          { text: t.songs.cancelDelete, style: 'cancel' },
           {
-            text: t.playlists.delete,
+            text: t.songs.delete,
             style: 'destructive',
             onPress: () => {
               void (async () => {
