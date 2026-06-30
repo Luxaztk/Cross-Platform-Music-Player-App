@@ -1,3 +1,4 @@
+import { AudioLockScreenOptions } from 'expo-audio'
 import { ExpoAudioEngine } from './engine/ExpoAudioEngine'
 import type { EngineProgress, PlayerEngine, ProgressListener } from './engine/types'
 import type { LockScreenMetadata } from './engine/types'
@@ -70,7 +71,7 @@ export class PlayerService {
     await this.engine.setLoop(loop)
   }
 
-  async setActiveForLockScreen(active: boolean, metadata?: LockScreenMetadata) {
-    await this.engine.setActiveForLockScreen(active, metadata)
+  async setActiveForLockScreen(active: boolean, metadata?: LockScreenMetadata, options?: AudioLockScreenOptions) {
+    await this.engine.setActiveForLockScreen(active, metadata, options)
   }
 }

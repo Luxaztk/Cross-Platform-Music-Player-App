@@ -48,10 +48,12 @@ export function TopBar() {
   const insets = useSafeAreaInsets()
   const pathname = usePathname()
   const { navigationLayout, customTitle, openSidebar, triggerImport, registerImportHandler } = useAppShell()
-  
+
   const { notify } = useNotifications()
   const { importPickedAudio } = useLibrary()
-    const pickAudioFiles = useCallback(async () => {
+  const pickAudioFiles = useCallback(async () => {
+    notify({ message: "Importing...", kind: 'info' })
+
     const result = await DocumentPicker.getDocumentAsync({
       type: 'audio/*',
       multiple: true,

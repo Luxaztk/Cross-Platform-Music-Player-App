@@ -1,5 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio'
-import type { AudioStatus } from 'expo-audio'
+import type { AudioLockScreenOptions, AudioStatus } from 'expo-audio'
 import Constants, { ExecutionEnvironment } from 'expo-constants'
 
 import { File } from 'expo-file-system'
@@ -166,8 +166,11 @@ export class ExpoAudioEngine implements PlayerEngine {
     this.player.loop = loop
   }
 
-  async setActiveForLockScreen(active: boolean, metadata?: LockScreenMetadata) {
+  async setActiveForLockScreen(active: boolean, metadata?: LockScreenMetadata, options?: AudioLockScreenOptions) {
     if (!this.player || isExpoGo) return
-    this.player.setActiveForLockScreen(active, metadata)
+    this.player.setActiveForLockScreen(active, metadata, {
+      "showSeekBackward": true,
+      "showSeekForward": true
+    })
   }
 }

@@ -41,15 +41,15 @@ const sortSongs = (songs: Song[], option: SortOption): Song[] => {
       return sorted.sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title))
     case 'sortDuration':
       return sorted.sort((a, b) => a.duration - b.duration)
+    case 'sortTitle':
+      return sorted.sort((a, b) => a.title.localeCompare(b.title))
     case 'sortDateAdded':
+    default:
       return sorted.sort((a, b) => {
         const aDate = new Date(a.dateAdded || 0).getTime()
         const bDate = new Date(b.dateAdded || 0).getTime()
-        return bDate - aDate
+        return aDate - bDate
       })
-    case 'sortTitle':
-    default:
-      return sorted.sort((a, b) => a.title.localeCompare(b.title))
   }
 }
 
@@ -247,7 +247,7 @@ export default function PlaylistDetailScreen() {
   const [addSongsToPlaylistModalVisible, setAddSongsToPlaylistModalVisible] = useState(false)
   const [selectedSongsIds, setSelectedSongsIds] = useState<string[]>([])
   const [selectedPlaylistsIds, setSelectedPlaylistsIds] = useState<string[]>([])
-  const [sortBy, setSortBy] = useState<SortOption>('sortTitle')
+  const [sortBy, setSortBy] = useState<SortOption>('sortDateAdded')
   const [sortMenuVisible, setSortMenuVisible] = useState(false)
 
   const [addCurrentSongToPlaylistsModalVisible, setAddCurrentSongToPlaylistsModalVisible] = useState(false)
