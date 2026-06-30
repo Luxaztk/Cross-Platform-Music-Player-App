@@ -19,6 +19,7 @@ export type Translations = {
     language: string
     english: string
     vietnamese: string
+    navigationLayout: string
   }
   library: {
     title: string
@@ -132,6 +133,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       language: 'Language',
       english: 'English',
       vietnamese: 'Vietnamese',
+      navigationLayout: 'Navigation layout'
     },
     library: {
       title: 'Library',
@@ -245,6 +247,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       language: 'Ngôn ngữ',
       english: 'Tiếng Anh',
       vietnamese: 'Tiếng Việt',
+      navigationLayout: 'Điều hướng'
     },
     library: {
       title: 'Thư viện',

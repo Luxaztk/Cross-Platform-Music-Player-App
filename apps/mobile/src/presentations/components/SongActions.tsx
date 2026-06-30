@@ -113,12 +113,12 @@ export const SongActions = ({
           />
           {inPlaylist && (
             <>
-              <ActionItem
+              {/* <ActionItem
                 icon="shuffle"
                 label={t.songs.moveToPlaylist}
                 colors={colors}
                 onPress={action(onMoveToPlaylist)}
-              />
+              /> */}
               <ActionItem
                 icon="x-circle"
                 label={t.songs.removeFromPlaylist}

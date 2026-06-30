@@ -129,9 +129,9 @@ export default function SettingsScreen() {
       >
         <View style={styles.rowText}>
           <Text style={[styles.rowTitle, { color: theme.colors.text }]}>{t.settings.darkMode}</Text>
-          <Text style={[styles.rowSubtitle, { color: theme.colors.mutedText }]}>
+          {/* <Text style={[styles.rowSubtitle, { color: theme.colors.mutedText }]}>
             {isHydrated ? t.common.savedToDevice : t.common.loadingPreference}
-          </Text>
+          </Text> */}
         </View>
         <Switch value={isDark} onValueChange={toggleTheme} />
       </View>
@@ -144,9 +144,9 @@ export default function SettingsScreen() {
       >
         <View style={styles.rowText}>
           <Text style={[styles.rowTitle, { color: theme.colors.text }]}>{t.settings.language}</Text>
-          <Text style={[styles.rowSubtitle, { color: theme.colors.mutedText }]}>
+          {/* <Text style={[styles.rowSubtitle, { color: theme.colors.mutedText }]}>
             {isLanguageHydrated ? t.common.savedToDevice : t.common.loadingPreference}
-          </Text>
+          </Text> */}
         </View>
         <SegmentedToggle
           options={[
@@ -168,9 +168,6 @@ export default function SettingsScreen() {
       >
         <View style={styles.rowText}>
           <Text style={[styles.rowTitle, { color: theme.colors.text }]}>Navigation Layout</Text>
-          <Text style={[styles.rowSubtitle, { color: theme.colors.mutedText }]}>
-            Choose Tab Bar or Sidebar
-          </Text>
         </View>
         <SegmentedToggle
           options={[

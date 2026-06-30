@@ -462,9 +462,9 @@ export default function PlaylistDetailScreen() {
     }
   }, [selectedSongsIds, selectedPlaylistsIds, handleAddSongsToPlaylist, notify, t])
 
-  const onMoveToPlaylist = useCallback(() => {
-    notify({ message: 'Move to playlist coming soon', kind: 'info' })
-  }, [notify])
+  // const onMoveToPlaylist = useCallback(() => {
+  //   notify({ message: 'Move to playlist coming soon', kind: 'info' })
+  // }, [notify])
 
   const onRemoveFromPlaylist = useCallback(() => {
     if (selectedSongForActions && id !== 'all' && id !== '0') {
@@ -676,7 +676,7 @@ export default function PlaylistDetailScreen() {
         onAddToQueue={onAddToQueue}
         onEditSong={onEditSong}
         onAddToPlaylist={onAddToPlaylist}
-        onMoveToPlaylist={onMoveToPlaylist}
+        onMoveToPlaylist={onAddToPlaylist}
         onRemoveFromPlaylist={onRemoveFromPlaylist}
         onDeleteFromLibrary={onDeleteFromLibrary}
       />
