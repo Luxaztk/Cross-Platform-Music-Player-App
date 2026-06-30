@@ -142,6 +142,10 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         pushToHistory(currentSongRef.current);
       }
 
+      if (repeatModeRef.current === 'ONE') {
+        return engineRef.current?.seek(0);
+      }
+
       if (queueRef.current.length > 0) {
         const nextItem = queueRef.current[0];
         setQueue(prev => prev.slice(1));
