@@ -72,6 +72,8 @@ export type Translations = {
     songMovedToOtherPlaylist: (title: string) => string
     close: string
     choose: string
+    duplicateSuffix: string
+    unableToDuplicate: string
 
     duplicate: string
     playNext: string
@@ -188,6 +190,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       songMovedToOtherPlaylist: (title) => `Moved "${title}" to another playlist`,
       close: 'Close',
       choose: 'Choose',
+      unableToDuplicate: 'Unable to duplicate playlist',
 
       duplicate: 'Duplicate playlist',
       playNext: 'Play next',
@@ -197,6 +200,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       addedToQueue: 'Playlist added to queue',
       addedToPlayNext: 'Playlist will play next',
       shuffling: 'Shuffling playlist…',
+
+      duplicateSuffix: '(Copy)'
     },
     search: {
       placeholder: 'Songs, artists, or playlists',
@@ -302,6 +307,7 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       songMovedToOtherPlaylist: (title) => `Đã chuyển "${title}" sang playlist khác`,
       close: 'Đóng',
       choose: 'Chọn',
+      unableToDuplicate: `Không thể sao chép playlist`,
 
       duplicate: 'Sao chép playlist',
       playNext: 'Phát tiếp theo',
@@ -311,6 +317,8 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       addedToQueue: 'Đã thêm playlist vào hàng chờ',
       addedToPlayNext: 'Playlist sẽ được phát tiếp theo',
       shuffling: 'Đang phát ngẫu nhiên playlist…',
+
+      duplicateSuffix: '(Bản sao)'
     },
     search: {
       placeholder: 'Bài hát, nghệ sĩ hoặc playlist',

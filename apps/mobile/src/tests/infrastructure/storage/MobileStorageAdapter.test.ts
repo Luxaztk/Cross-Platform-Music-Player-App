@@ -4,7 +4,7 @@ import { MobileStorageAdapter } from '../../../infrastructure/storage/MobileStor
 import { LIBRARY_PLAYLIST_KEY, SONGS_BY_ID_KEY, PLAYLISTS_BY_ID_KEY, PLAYER_STATE_KEY, RECENT_SEARCHES_KEY, STORAGE_VERSION_KEY, STORAGE_VERSION } from '../../../infrastructure/storage/keys';
 import type { Song, Playlist } from '@music/types';
 
-describe('MobileStorageAdapter', () => {
+describe('MobileStorageAdapter', () => { 
   let adapter: MobileStorageAdapter;
 
   beforeEach(() => {

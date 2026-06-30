@@ -42,7 +42,7 @@ export function PlayerBar() {
   const { navigationLayout } = useAppShell()
 
   // Position: sit above the custom bottom navigation if tabs are used
-  const bottomOffset = usePlayerBarBottomOffset();
+  const bottomOffset = navigationLayout === 'tabs' ? BOTTOM_NAV_HEIGHT + 8 : insets.bottom + 16;
 
   const hasSong = !!currentSong
   const title = currentSong?.title ?? ''

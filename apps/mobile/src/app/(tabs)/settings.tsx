@@ -167,7 +167,7 @@ export default function SettingsScreen() {
         ]}
       >
         <View style={styles.rowText}>
-          <Text style={[styles.rowTitle, { color: theme.colors.text }]}>Navigation Layout</Text>
+          <Text style={[styles.rowTitle, { color: theme.colors.text }]}>{t.settings.navigationLayout}</Text>
         </View>
         <SegmentedToggle
           options={[

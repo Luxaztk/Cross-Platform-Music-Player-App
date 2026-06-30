@@ -19,6 +19,8 @@ import { PLAYER_BAR_HEIGHT } from '../../presentations/player/PlayerBar'
 import { NameModal } from '../../presentations/components/NameModal'
 import { PlaylistRow } from '../../presentations/components/PlaylistRow'
 import { PlaylistActions } from '../../presentations/components/PlaylistActions'
+import { useAppShell } from '../../presentations/components/AppShell'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const shuffleArray = <T,>(arr: T[]): T[] => {
   const newArr = [...arr]
@@ -46,6 +48,10 @@ export default function PlaylistsScreen() {
   } = useLibraryContext()
 
   const { addSongsToQueue, playList } = usePlayer()
+
+  const insets = useSafeAreaInsets()
+  const { navigationLayout } = useAppShell()
+  const CREATE_PLAYLIST_BTN_BTTM = navigationLayout === 'tabs' ? PLAYER_BAR_HEIGHT + 30 : PLAYER_BAR_HEIGHT + insets.bottom + 30;
 
   const [modalMode, setModalMode] = useState<'create' | 'rename' | null>(null)
   const [renameTarget, setRenameTarget] = useState<{ id: string; name: string } | null>(null)
@@ -122,7 +128,7 @@ export default function PlaylistsScreen() {
       return
     }
     const playlistSongs = selectedPlaylist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean) as Song[]
-    await addSongsToQueue(playlistSongs) // fallback to queue for MVP
+    addSongsToQueue(playlistSongs) // fallback to queue for MVP
     notify({ message: t.playlists.addedToPlayNext, kind: 'success' })
   }, [selectedPlaylist, songs, addSongsToQueue, notify, t])
 
@@ -133,7 +139,7 @@ export default function PlaylistsScreen() {
       return
     }
     const playlistSongs = selectedPlaylist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean) as Song[]
-    await addSongsToQueue(playlistSongs)
+    addSongsToQueue(playlistSongs)
     notify({ message: t.playlists.addedToQueue, kind: 'success' })
   }, [selectedPlaylist, songs, addSongsToQueue, notify, t])
 
@@ -153,7 +159,7 @@ export default function PlaylistsScreen() {
     if (!selectedPlaylist) return
     try {
       const sourceName = selectedPlaylist.id === '0' ? t.library.allSongs : selectedPlaylist.name
-      const suffix = t.playlists.rename === 'Đổi tên' ? ' (Sao chép)' : ' (Copy)'
+      const suffix = t.playlists.duplicateSuffix
       const name = `${sourceName}${suffix}`
 
       // Create a new playlist
@@ -166,7 +172,7 @@ export default function PlaylistsScreen() {
       }
     } catch (err) {
       console.error(err)
-      notify({ message: 'Không thể sao chép playlist', kind: 'error' })
+      notify({ message: t.playlists.unableToDuplicate, kind: 'error' })
     }
   }, [selectedPlaylist, handleCreatePlaylist, handleAddSongsToPlaylist, notify, t])
 
@@ -273,7 +279,7 @@ export default function PlaylistsScreen() {
       )}
       <Pressable
         onPress={onPressCreate}
-        style={[styles.createBtn, { backgroundColor: theme.colors.primary, position: 'absolute', bottom: PLAYER_BAR_HEIGHT + 20, right: 12 }]}
+        style={[styles.createBtn, { backgroundColor: theme.colors.primary, position: 'absolute', bottom: CREATE_PLAYLIST_BTN_BTTM, right: 12 }]}
       >
         <Text style={styles.createBtnText}>＋</Text>
       </Pressable>

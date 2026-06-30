@@ -9,7 +9,7 @@ import {
   PLAYLISTS_BY_ID_KEY,
   RECENT_SEARCHES_KEY,
   SONGS_BY_ID_KEY,
-  STORAGE_VERSION,
+  STORAGE_VERSION, 
   STORAGE_VERSION_KEY,
 } from './keys'
 import { composePlaylists } from './composePlaylists'
