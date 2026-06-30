@@ -185,13 +185,26 @@ Mục tiêu: Bổ sung các trải nghiệm nâng cao và liên kết đám mây
 Mục tiêu: Đưa trải nghiệm Melovista lên nền tảng di động (Offline-first).
 
 - [x] **Core & Architecture**: Khởi tạo Expo app, cấu trúc Monorepo để tái sử dụng `@music/core`, cấu hình TypeScript/ESLint chặt chẽ.
-- [x] **App Shell Parity**: Hệ thống Navigation đa tầng (Bottom Bar + Sidebar), đồng bộ Theme system (Dark/Light) và i18n với Desktop.
+- [x] **App Shell Parity**: Hệ thống Navigation đa tầng (Bottom Bar + Sidebar), đồng bộ Theme system (Dark/Light), i18n và Global Notifications với Desktop.
 - [x] **Data Persistence**: Triển khai `MobileStorageAdapter` với `AsyncStorage` cho dữ liệu Library, Playlists, PlayerState.
 - [x] **Trình phát Audio Engine**: Trừu tượng hóa `PlayerEngine` và triển khai tích hợp `expo-audio` để phát nhạc offline trơn tru.
-- [x] **Quản lý Thư viện**: Tích hợp Document Picker cho phép người dùng import file MP3, quản lý Playlist (Tạo/Sửa/Xóa).
-- [x] **Mobile UI/UX Refinement**: Giao diện Bottom Bar navigation, màn hình Search dạng Top Bar, Toggle Language dạng segmented animated, và các tinh chỉnh "pixel-perfect" giống hệ thống Desktop.
+- [x] **Quản lý Thư viện**: Tích hợp Document Picker cho phép người dùng import file MP3, xử lý trùng lặp và lưu trữ vào app, quản lý Playlist (Tạo/Sửa/Xóa).
+- [x] **Core Screens Parity (UX)**: Hoàn thiện các màn hình Library (sắp xếp A-Z), Playlists list, Playlist detail và màn hình Global Search.
+- [x] **Mobile Hardening**: Xử lý mượt mà danh sách bài hát lớn (Performance pass), quản lý file nhạc bị lỗi/mất.
 - [ ] **Phát nhạc dưới nền (Background Audio)**: Thiết lập EAS dev build để duy trì âm thanh khi đưa app vào Background.
 - [ ] **Lock Screen Controls**: Cấu hình Media controls trực tiếp vào giao diện màn hình khóa (System UI) của thiết bị.
+
+### ☁️ GIAI ĐOẠN 7: MeloVista Cloud (Google Drive Sync)
+
+Mục tiêu: Sử dụng Google Drive làm "Kho chứa" (Storage) và "Cơ sở dữ liệu Serverless" (Database) để đồng bộ và stream nhạc xuyên nền tảng, loại bỏ hoàn toàn giới hạn mạng LAN.
+
+- [ ] **Giai đoạn 1: Thiết lập Cầu nối (Google Cloud Console)**: Khởi tạo Project, kích hoạt Google Drive API và tạo OAuth 2.0 Client IDs riêng biệt cho Desktop và Mobile.
+- [ ] **Desktop Auth & Quản lý File**: Tích hợp Google OAuth 2.0. Xây dựng cơ chế Upload file âm thanh & ảnh bìa lên thư mục `MeloVista_Data` và lưu trữ `fileId`.
+- [ ] **Desktop DB Serverless (`database.json`)**: Chuyển đổi dữ liệu (Song, Playlist) thành `database.json` chứa `fileId`. Đồng bộ cục bộ và ghi đè file này lên Drive mỗi khi có thay đổi.
+- [ ] **Bảo vệ Rate Limit (Desktop)**: Tích hợp kỹ thuật Hàng đợi (Queue) với delay 1-2s giữa mỗi lần upload file để tránh lỗi 429 Too Many Requests từ Google.
+- [ ] **Mobile Silent Login & Fetch DB**: Tích hợp Google Sign-in để âm thầm cấp lại Access_Token (Silent Login). Kéo `database.json` vào RAM để render UI tức thì.
+- [ ] **Mobile Cloud Streaming**: Cấu hình `expo-audio` gắn Header `Authorization: Bearer <Access_Token>` vào URL stream API của Google để nghe nhạc trực tiếp (hỗ trợ Range Requests).
+- [ ] **Xử lý Token Expiration (Mobile)**: Triển khai logic sử dụng `Refresh_Token` âm thầm xin cấp mới Access_Token trước hạn 1 giờ, đảm bảo trải nghiệm nghe nhạc không bị đứt đoạn.
 
 ---
 

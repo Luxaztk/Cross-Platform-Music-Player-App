@@ -33,7 +33,7 @@ export const PlaylistItem: React.FC<PlaylistItemProps> = ({
                 className={`nav-item ${isActive ? 'active' : ''}`}
                 style={{ cursor: 'pointer' }}
             >
-                <img src={appIcon} alt="" className="icon brand-icon-small" />
+                <img src={playlist.thumbnail || appIcon} alt="" className="icon brand-icon-small" style={{ borderRadius: playlist.thumbnail ? '4px' : '0' }} />
                 <span className="text">{playlist.name}</span>
                 <div className="col-more">
                     <button

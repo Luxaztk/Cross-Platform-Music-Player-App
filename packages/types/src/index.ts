@@ -20,6 +20,7 @@ export interface Song {
   dateAdded?: string; // ISO timestamp
   createdAt?: string; // ISO string
   updatedAt?: string; // ISO string
+  lastPlaybackPosition?: number; // Last saved position in seconds
 }
 
 export type DuplicateReason = 'URL' | 'HASH' | 'PATH' | 'METADATA';

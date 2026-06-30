@@ -5,6 +5,7 @@ import { EmptyState } from './EmptyState';
 import { type VirtualSongListProps } from '../types';
 
 export const VirtualSongList: React.FC<VirtualSongListProps> = React.memo(({
+    isLoading,
     isDebouncing,
     filteredSongs,
     visibleSongs,
@@ -34,7 +35,7 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = React.memo(({
     return (
         <div className="virtual-list-viewport" style={{ height: totalHeight, position: 'relative' }}>
             <div className="virtual-list-content" style={{ transform: `translateY(${paddingOffset}px)` }}>
-                {isDebouncing ? (
+                {isLoading || isDebouncing ? (
                     <div className="searching-state-inline">
                         <Loader2 size={24} className="animate-spin" />
                     </div>
@@ -79,6 +80,7 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = React.memo(({
     // We intentionally ignore 't' (language changes) and inline function props
     // to prevent unnecessary unmounts/re-renders of the entire virtual list.
     const isDebouncingEq = prev.isDebouncing === next.isDebouncing;
+    const isLoadingEq = prev.isLoading === next.isLoading;
     const filteredSongsEq = prev.filteredSongs === next.filteredSongs;
     const startIndexEq = prev.startIndex === next.startIndex;
     const totalHeightEq = prev.totalHeight === next.totalHeight;
@@ -90,10 +92,11 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = React.memo(({
     const currentPlaylistIdEq = prev.currentPlaylistId === next.currentPlaylistId;
     const isImportingEq = prev.isImporting === next.isImporting;
 
-    const isEqual = isDebouncingEq && filteredSongsEq && startIndexEq && totalHeightEq && paddingOffsetEq && selectedIdsEq && currentSongIdEq && activeMenuIdEq && playlistsEq && currentPlaylistIdEq && isImportingEq;
+    const isEqual = isDebouncingEq && isLoadingEq && filteredSongsEq && startIndexEq && totalHeightEq && paddingOffsetEq && selectedIdsEq && currentSongIdEq && activeMenuIdEq && playlistsEq && currentPlaylistIdEq && isImportingEq;
 
     if (!isEqual) {
         console.log('VirtualSongList re-render! Changed props:', {
+            isLoading: !isLoadingEq,
             isDebouncing: !isDebouncingEq,
             filteredSongs: !filteredSongsEq,
             startIndex: !startIndexEq,

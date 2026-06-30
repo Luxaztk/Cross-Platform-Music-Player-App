@@ -17,8 +17,7 @@ import type { Playlist, Song } from '@music/types'
 import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
 import { useNotifications } from '../../presentations/components/Notification'
-import { useLibrary } from '../../application'
-import { usePlayerState } from '../../application/player'
+import { useLibraryContext, usePlayer } from '@music/hooks'
 import { useAppShell } from '../../presentations/components/AppShell'
 
 type SortField = 'title' | 'artist' | 'album' | 'dateAdded'
@@ -142,15 +141,14 @@ export default function LibraryScreen() {
   const { t } = useLanguage()
   const { notify } = useNotifications()
   const {
-    isHydrated,
-    songsById,
+    songs: songsArray,
     library,
-    playlistsById,
-    importPickedAudio,
-    deleteSongs,
-    addSongsToPlaylist,
-  } = useLibrary()
-  const { playList, state: playerState } = usePlayerState()
+    playlists,
+    handleImportFiles,
+    handleDeleteSong,
+    handleAddSongsToPlaylist
+  } = useLibraryContext()
+  const { playList, currentSong, isPlaying } = usePlayer()
   const { registerImportHandler } = useAppShell()
 
   const [sortField, setSortField] = useState<SortField | null>(null)
@@ -160,47 +158,32 @@ export default function LibraryScreen() {
   const [selectedSong, setSelectedSong] = useState<Song | null>(null)
 
   const songs = useMemo(() => {
-    const list = library.songIds.map((id) => songsById[id]).filter(Boolean) as Song[]
+    const list = songsArray;
     if (!sortField) return list
     return [...list].sort((a, b) => compareSongs(a, b, sortField, sortDir))
-  }, [library.songIds, songsById, sortField, sortDir])
+  }, [songsArray, sortField, sortDir])
 
-  const sortedIds = useMemo(() => songs.map((s) => s.id), [songs])
+  const sortedSongs = useMemo(() => songs, [songs])
 
-  const playlists = useMemo(() => {
-    return Object.values(playlistsById)
+  const playlistsList = useMemo(() => {
+    return playlists
       .filter((p) => p.id !== '0')
       .sort((a, b) => a.name.localeCompare(b.name))
-  }, [playlistsById])
+  }, [playlists])
 
   const songCount = songs.length
   const colors = theme.colors
 
-  // const pickAudioFiles = useCallback(async () => {
-  //   const result = await DocumentPicker.getDocumentAsync({
-  //     type: 'audio/*',
-  //     multiple: true,
-  //     copyToCacheDirectory: false,
-  //   })
-
-  //   if (result.canceled) {
-  //     notify({ message: t.library.importCanceled, kind: 'info' })
-  //     return
-  //   }
-
-  //   try {
-  //     const { imported, skippedDuplicates } = await importPickedAudio(result.assets)
-  //     notify({
-  //       message:
-  //         skippedDuplicates > 0
-  //           ? t.library.importSuccessWithSkipped(imported, skippedDuplicates)
-  //           : t.library.importSuccess(imported),
-  //       kind: 'success',
-  //     })
-  //   } catch {
-  //     notify({ message: t.library.importFailed, kind: 'error' })
-  //   }
-  // }, [importPickedAudio, notify, t])
+  const pickAudioFiles = useCallback(async () => {
+    try {
+      if (handleImportFiles) {
+        await handleImportFiles();
+        notify({ message: 'Đã nhập bài hát', kind: 'success' })
+      }
+    } catch {
+      notify({ message: t.library.importFailed, kind: 'error' })
+    }
+  }, [handleImportFiles, notify, t])
 
   // useEffect(() => {
   //   registerImportHandler(pickAudioFiles)
@@ -216,22 +199,24 @@ export default function LibraryScreen() {
           style: 'destructive',
           onPress: () => {
             void (async () => {
-              await deleteSongs([songId])
-              notify({ message: t.library.songDeleted(title), kind: 'success' })
+              if (handleDeleteSong) {
+                await handleDeleteSong(songId)
+                notify({ message: t.library.songDeleted(title), kind: 'success' })
+              }
             })()
           },
         },
       ])
     },
-    [deleteSongs, notify, t],
+    [handleDeleteSong, notify, t],
   )
 
   const onPressSong = useCallback(
     (songId: string) => {
       void (async () => {
         try {
-          const idx = sortedIds.indexOf(songId)
-          await playList(sortedIds, idx >= 0 ? idx : 0)
+          const idx = sortedSongs.findIndex(s => s.id === songId)
+          playList(sortedSongs, idx >= 0 ? idx : 0)
         } catch (err: any) {
           notify({
             message:
@@ -243,7 +228,7 @@ export default function LibraryScreen() {
         }
       })()
     },
-    [playList, sortedIds, notify, t],
+    [playList, sortedSongs, notify, t],
   )
 
   const onOpenAddToPlaylist = useCallback(
@@ -263,14 +248,16 @@ export default function LibraryScreen() {
     async (playlistId: string) => {
       if (!selectedSong) return
 
-      await addSongsToPlaylist(playlistId, [selectedSong.id])
-      notify({
-        message: `"${selectedSong.title}" đã được thêm vào playlist`,
-        kind: 'success',
-      })
+      if (handleAddSongsToPlaylist) {
+        await handleAddSongsToPlaylist(playlistId, [selectedSong.id])
+        notify({
+          message: `"${selectedSong.title}" đã được thêm vào playlist`,
+          kind: 'success',
+        })
+      }
       onClosePlaylistModal()
     },
-    [addSongsToPlaylist, notify, onClosePlaylistModal, selectedSong],
+    [handleAddSongsToPlaylist, notify, onClosePlaylistModal, selectedSong],
   )
 
   const toggleSort = useCallback(
@@ -296,14 +283,14 @@ export default function LibraryScreen() {
     ({ item }: { item: Song }) => (
       <SongRow
         item={item}
-        isActive={item.id === playerState.currentSongId}
+        isActive={item.id === currentSong?.id}
         onPress={onPressSong}
         onLongPress={onLongPressSong}
         onAddToPlaylist={onOpenAddToPlaylist}
         colors={colors}
       />
     ),
-    [playerState.currentSongId, onPressSong, onLongPressSong, onOpenAddToPlaylist, colors],
+    [currentSong?.id, onPressSong, onLongPressSong, onOpenAddToPlaylist, colors],
   )
 
   const keyExtractor = useCallback((item: Song) => item.id, [])
@@ -315,7 +302,7 @@ export default function LibraryScreen() {
           <Text style={[styles.title, { color: colors.text }]}>{t.library.title}</Text>
 
           <Text style={[styles.subtitle, { color: colors.mutedText }]}>
-            {isHydrated ? `${songCount} songs` : t.common.loadingPreference}
+            {`${songCount} songs`}
           </Text>
         </View>
       </View>
@@ -392,14 +379,14 @@ export default function LibraryScreen() {
           index,
         })}
         ListEmptyComponent={
-          isHydrated ? (
+          (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>🎶</Text>
               <Text style={[styles.emptyText, { color: colors.mutedText }]}>
                 No songs yet — tap Import to add music
               </Text>
             </View>
-          ) : null
+          )
         }
       />
 
@@ -424,7 +411,7 @@ export default function LibraryScreen() {
               </Text>
             ) : null}
 
-            {playlists.length === 0 ? (
+            {playlistsList.length === 0 ? (
               <View style={styles.modalEmptyWrap}>
                 <Text style={[styles.modalEmptyText, { color: colors.mutedText }]}>
                   Chưa có playlist nào. Hãy tạo playlist trước ở mục Playlists.
@@ -432,7 +419,7 @@ export default function LibraryScreen() {
               </View>
             ) : (
               <FlatList
-                data={playlists}
+                data={playlistsList}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.modalListContent}
                 renderItem={({ item }) => (

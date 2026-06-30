@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useTheme } from '../presentations/components/Theme'
-import { usePlayerState, usePlayerProgress } from '../application/player'
+import { usePlayer } from '@music/hooks'
 import { useLanguage } from '../presentations/components/Language'
 import { formatTime } from '../presentations/player/format'
 import { QueueModal } from '../presentations/player/QueueModal'
@@ -20,40 +20,46 @@ export default function NowPlayingScreen() {
 
   const {
     currentSong,
-    state,
-    togglePlayPause,
+    isPlaying,
+    progress,
+    duration,
+    volume,
+    repeatMode,
+    isShuffle,
+    play,
+    pause,
     next,
     prev,
-    seekTo,
+    seek,
     setVolume,
     toggleShuffle,
     setRepeatMode,
-  } = usePlayerState()
+  } = usePlayer()
 
-  const progress = usePlayerProgress()
+  const togglePlayPause = () => { isPlaying ? pause() : play() }
+
+  const positionMs = progress * 1000
+  const durationMs = (duration || 1) * 1000
 
   const [isSeeking, setIsSeeking] = useState(false)
   const [seekValue, setSeekValue] = useState(0)
   const [isQueueVisible, setIsQueueVisible] = useState(false)
 
-  const durationMs = progress.durationMs || 1
-  const positionMs = isSeeking ? seekValue : progress.positionMs
+  const currentPositionMs = isSeeking ? seekValue : positionMs
 
   const cycleRepeat = useCallback(() => {
     const modes = ['OFF', 'ALL', 'ONE'] as const
-    const idx = modes.indexOf(state.repeatMode)
-    const next = modes[(idx + 1) % modes.length]
-    void setRepeatMode(next)
-  }, [state.repeatMode, setRepeatMode])
+    const idx = modes.indexOf(repeatMode)
+    const nextMode = modes[(idx + 1) % modes.length]
+    void setRepeatMode(nextMode)
+  }, [repeatMode, setRepeatMode])
 
   const repeatLabel =
-    state.repeatMode === 'ONE'
+    repeatMode === 'ONE'
       ? 'repeat-one'
-      : state.repeatMode === 'ALL'
-        ? 'repeat'
-        : 'repeat'
+      : 'repeat'
 
-  const isLoopOne = state.repeatMode === 'ONE'
+  const isLoopOne = repeatMode === 'ONE'
 
   return (
     <View
@@ -176,21 +182,21 @@ export default function NowPlayingScreen() {
           thumbTintColor={theme.colors.primary}
           onSlidingStart={() => {
             setIsSeeking(true)
-            setSeekValue(progress.positionMs)
+            setSeekValue(positionMs)
           }}
           onValueChange={setSeekValue}
           onSlidingComplete={(v) => {
             setIsSeeking(false)
-            void seekTo(v)
+            void seek(v / 1000)
           }}
         />
 
         <View style={styles.timeRow}>
           <Text style={[styles.time, { color: theme.colors.mutedText }]}>
-            {formatTime(positionMs)}
+            {formatTime(currentPositionMs)}
           </Text>
           <Text style={[styles.time, { color: theme.colors.mutedText }]}>
-            {formatTime(progress.durationMs)}
+            {formatTime(durationMs)}
           </Text>
         </View>
       </View>
@@ -207,7 +213,7 @@ export default function NowPlayingScreen() {
             name="shuffle"
             size={24}
             color={
-              state.isShuffle ? theme.colors.primary : theme.colors.mutedText
+              isShuffle ? theme.colors.primary : theme.colors.mutedText
             }
           />
         </Pressable>
@@ -225,7 +231,7 @@ export default function NowPlayingScreen() {
           style={[styles.playBtn, { backgroundColor: theme.colors.text }]}
         >
           <MaterialIcons
-            name={progress.isPlaying ? 'pause' : 'play-arrow'}
+            name={isPlaying ? 'pause' : 'play-arrow'}
             size={24}
             color={theme.colors.background}
           />
@@ -240,7 +246,7 @@ export default function NowPlayingScreen() {
             name={repeatLabel}
             size={24}
             color={
-              state.repeatMode !== 'OFF'
+              repeatMode !== 'OFF'
                 ? theme.colors.primary
                 : theme.colors.mutedText
             }
@@ -265,7 +271,7 @@ export default function NowPlayingScreen() {
           style={styles.volumeSlider}
           minimumValue={0}
           maximumValue={1}
-          value={state.volume}
+          value={volume}
           minimumTrackTintColor={theme.colors.primary}
           maximumTrackTintColor={theme.colors.border}
           thumbTintColor={theme.colors.primary}

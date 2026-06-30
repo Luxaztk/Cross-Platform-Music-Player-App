@@ -4,7 +4,6 @@ import { getCanonicalYoutubeUrl } from '../utils/youtube';
 import type { IStorageAdapter } from '../interfaces/IStorageAdapter';
 import type { IMetadataService } from '../interfaces/IMetadataService';
 import { Mutex } from '../utils/Mutex';
-import path from 'node:path';
 
 type EventCallback = (...args: unknown[]) => void;
 
@@ -57,7 +56,7 @@ export class LibraryService {
     duplicateSongs: DuplicateSongInfo[];
     reason?: string;
   } | null> {
-    const normalizedPath = path.normalize(filePath).toLowerCase();
+    const normalizedPath = filePath.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/\/+$/, '').toLowerCase();
 
     // 1. Synchronous Mutex Locking at the absolute entry point
     if (this.processingPaths.has(normalizedPath)) {
@@ -355,7 +354,8 @@ export class LibraryService {
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
         logger.error(`[Library] Failed to process song: ${song.filePath}`, err);
-        details.push(`[Error] ${song.title || path.basename(song.filePath)}: ${errorMsg}`);
+        const basename = song.filePath.split(/[/\\]/).pop() || 'Unknown';
+        details.push(`[Error] ${song.title || basename}: ${errorMsg}`);
       }
     }
 

@@ -18,6 +18,7 @@ export interface UseSidebarReturn {
         sortMode: SortMode;
         isSortMenuOpen: boolean;
         isDebouncing: boolean;
+        currentPlaylistId: string | null;
     };
     playlists: {
         all: Playlist[];
@@ -71,6 +72,7 @@ export interface LibrarySectionProps extends BaseSidebarSectionProps {
 
 export interface PlaylistSectionProps extends BaseSidebarSectionProps {
     playlists: Playlist[];
+    currentPlaylistId: string | null;
     query: string;
     isSearchExpanded: boolean;
     isDebouncing: boolean;
@@ -112,6 +114,7 @@ export interface PlaylistItemProps {
 
 export interface SidebarMiniProps extends BaseSidebarSectionProps {
     playlists: Playlist[];
+    currentPlaylistId: string | null;
     onToggle: () => void;
     onCreatePlaylist: () => Promise<void>;
     appIcon: string;

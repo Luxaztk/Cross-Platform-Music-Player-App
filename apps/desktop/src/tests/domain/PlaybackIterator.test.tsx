@@ -20,6 +20,7 @@ vi.mock('@music/player', () => ({
     on = vi.fn();
     off = vi.fn();
     destroy = vi.fn();
+    setEvents = vi.fn();
   }
 }));
 

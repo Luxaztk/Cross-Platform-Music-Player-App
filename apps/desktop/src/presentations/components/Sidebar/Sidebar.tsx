@@ -27,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
                     <PlaylistSection
                         isVisible={true}
                         playlists={playlists.sorted}
+                        currentPlaylistId={state.currentPlaylistId}
                         query={state.playlistQuery}
                         isSearchExpanded={state.isSearchExpanded}
                         isDebouncing={state.isDebouncing}
@@ -63,6 +64,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isCollapsed, onToggle }) =
             <SidebarMini
                 isVisible={isCollapsed}
                 playlists={playlists.sorted}
+                currentPlaylistId={state.currentPlaylistId}
                 onToggle={onToggle}
                 onCreatePlaylist={actions.onCreatePlaylist}
                 appIcon={appIcon}

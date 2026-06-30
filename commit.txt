@@ -1,1 +1,6 @@
-feat: implement sidebar layout with playlist management components and search functionality
+fix(desktop,build): resolve React cascading renders and electron-builder ajv conflicts
+
+- Build: Add `"DOM"` to `tsconfig.node.json` `lib` array to resolve `AnalyserNode` type error in `IAudioEngine` during `tsc -b`.
+- Build: Add `ajv` and `ajv-keywords` overrides for `@develar/schema-utils` in root `package.json` to fix `electron-builder` `_formatLimit.js` crash when packaging for Windows.
+- Desktop: Refactor `usePlaylistData` to use during-render state updates, resolving ESLint cascading render warnings and removing unnecessary `useEffect` hooks.
+- Desktop: Remove unused `useEffect` imports in `usePlaylistData.ts` to keep the workspace clean.

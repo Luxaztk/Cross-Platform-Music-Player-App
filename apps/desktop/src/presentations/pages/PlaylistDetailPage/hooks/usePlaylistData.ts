@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { useLibraryContext } from '@music/hooks';
 import { useNotification, useLanguage } from '@hooks';
@@ -25,7 +25,8 @@ export const usePlaylistData = (id: string | undefined) => {
     handleRemoveSongsFromPlaylist,
     handleAddSongsToPlaylist,
     playlists,
-    libraryVersion,
+    songs,
+    library,
     isImporting,
   } = useLibraryContext();
 
@@ -33,29 +34,34 @@ export const usePlaylistData = (id: string | undefined) => {
   const { t } = useLanguage();
   const isLibrary = id === '0';
 
-  const [prevId, setPrevId] = useState(id);
-  if (id !== prevId) {
-    setPrevId(id);
-    setIsLoading(true);
-    setPlaylist(null);
-    setLocalSongs([]);
-  }
+  const [prevDeps, setPrevDeps] = useState({ id, library, playlists, songs });
 
-  useEffect(() => {
+  if (
+    id !== prevDeps.id ||
+    library !== prevDeps.library ||
+    playlists !== prevDeps.playlists ||
+    songs !== prevDeps.songs
+  ) {
+    setPrevDeps({ id, library, playlists, songs });
     if (id) {
-      handleGetPlaylistDetail(id)
-        .then((data: PlaylistDetail | null) => {
-          if (data) {
-            setPlaylist(data);
-            setLocalSongs(data.songs || []);
-          }
-          setIsLoading(false);
-        })
-        .catch(() => {
-          setIsLoading(false);
-        });
+      if (id === '0' && library) {
+        setPlaylist({ ...library, songs, songCount: songs.length });
+        setLocalSongs(songs);
+        setIsLoading(false);
+      } else {
+        const p = playlists.find(p => p.id === id);
+        if (p) {
+          const pSongs = p.songIds.map(sid => songs.find(s => s.id === sid)).filter(Boolean) as Song[];
+          setPlaylist({ ...p, songs: pSongs, songCount: pSongs.length });
+          setLocalSongs(pSongs);
+        } else {
+          setPlaylist(null);
+          setLocalSongs([]);
+        }
+        setIsLoading(false);
+      }
     }
-  }, [id, libraryVersion, handleGetPlaylistDetail]);
+  }
 
   const onSaveMetadata = useCallback(async (updated: Song | Playlist) => {
     if (editingSong) {

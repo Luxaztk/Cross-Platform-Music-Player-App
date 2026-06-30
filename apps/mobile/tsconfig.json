@@ -4,6 +4,9 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-native",
+    "allowSyntheticDefaultImports": true,
     "paths": {
       "@/*": ["./src/*"],
       "@/assets/*": ["./assets/*"],

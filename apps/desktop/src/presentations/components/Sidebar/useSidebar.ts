@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { Playlist } from '@music/types';
 import { useLibraryContext } from '@music/hooks';
 import { useTheme, useLanguage, useLocalFilter } from '@hooks';
@@ -8,6 +8,7 @@ import { type UseSidebarReturn, type SortMode } from './types';
 export const useSidebar = (): UseSidebarReturn => {
   const {
     playlists,
+    songs,
     handleCreatePlaylist,
     handleDeletePlaylist,
     handleUpdatePlaylist,
@@ -18,6 +19,22 @@ export const useSidebar = (): UseSidebarReturn => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { appIcon } = useTheme();
+  
+  const playlistsWithThumbnails = useMemo(() => {
+    return playlists.map((p: Playlist) => {
+      let thumb = p.thumbnail;
+      if (!thumb && p.songIds && p.songIds.length > 0) {
+        const firstSong = songs.find(s => s.id === p.songIds[0]);
+        if (firstSong && firstSong.coverArt) thumb = firstSong.coverArt;
+      }
+      return { ...p, thumbnail: thumb };
+    });
+  }, [playlists, songs]);
+
+  const location = useLocation();
+  const currentPlaylistId = location.pathname.startsWith('/playlist/') 
+    ? location.pathname.split('/')[2] 
+    : null;
 
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
@@ -129,8 +146,8 @@ export const useSidebar = (): UseSidebarReturn => {
   }, [playlistQuery]);
 
   const nonLibraryPlaylists = useMemo(() => 
-    playlists.filter((p: Playlist) => String(p.id) !== '0'), 
-    [playlists]
+    playlistsWithThumbnails.filter((p: Playlist) => String(p.id) !== '0'), 
+    [playlistsWithThumbnails]
   );
 
   const [filteredPlaylists, isDebouncing] = useLocalFilter(nonLibraryPlaylists, playlistQuery, ['name']);
@@ -157,10 +174,11 @@ export const useSidebar = (): UseSidebarReturn => {
       isSearchExpanded,
       sortMode,
       isSortMenuOpen,
-      isDebouncing
+      isDebouncing,
+      currentPlaylistId
     },
     playlists: {
-      all: playlists,
+      all: playlistsWithThumbnails,
       filtered: filteredPlaylists,
       sorted: customPlaylists
     },

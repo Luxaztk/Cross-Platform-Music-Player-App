@@ -6,7 +6,7 @@ import Feather from '@expo/vector-icons/Feather'
 
 import { useTheme } from '../../presentations/components/Theme'
 import { useAppShell } from '../../presentations/components/AppShell'
-import { usePlayerState, usePlayerProgress } from '../../application/player'
+import { usePlayer } from '@music/hooks'
 
 import { BOTTOM_NAV_HEIGHT } from '../components/BottomNav'
 
@@ -33,8 +33,13 @@ export function usePlayerBarBottomOffset() {
 
 export function PlayerBar() {
   const { theme } = useTheme()
-  const { currentSong, togglePlayPause, next } = usePlayerState()
-  const progress = usePlayerProgress()
+  const { currentSong, isPlaying, play, pause, next, progress: progressSecs, duration: durationSecs } = usePlayer()
+  const togglePlayPause = () => isPlaying ? pause() : play()
+  
+  const durationMs = (durationSecs || 1) * 1000
+  const positionMs = progressSecs * 1000
+  const insets = useSafeAreaInsets()
+  const { navigationLayout } = useAppShell()
 
   // Position: sit above the custom bottom navigation if tabs are used
   const bottomOffset = usePlayerBarBottomOffset();
@@ -44,9 +49,9 @@ export function PlayerBar() {
   const artist = currentSong?.artist ?? ''
 
   const progressPercent = useMemo(() => {
-    if (!hasSong || progress.durationMs <= 0) return 0
-    return Math.min((progress.positionMs / progress.durationMs) * 100, 100)
-  }, [hasSong, progress.positionMs, progress.durationMs])
+    if (!hasSong || durationMs <= 0) return 0
+    return Math.min((positionMs / durationMs) * 100, 100)
+  }, [hasSong, positionMs, durationMs])
 
   return (
     <Pressable
@@ -67,7 +72,7 @@ export function PlayerBar() {
             styles.progressFill,
             {
               backgroundColor: theme.colors.primary,
-              width: `${progressPercent}%` as import('react-native').DimensionValue,
+              width: `${progressPercent}%` as any,
             },
           ]}
         />
@@ -105,6 +110,7 @@ export function PlayerBar() {
         {/* Controls */}
         <View style={styles.controls}>
           <Pressable
+            testID="play-pause-btn"
             onPress={(e) => {
               e.stopPropagation()
               void togglePlayPause()
@@ -114,13 +120,14 @@ export function PlayerBar() {
             disabled={!hasSong}
           >
             <Feather
-              name={progress.isPlaying ? 'pause' : 'play'}
+              name={isPlaying ? 'pause' : 'play'}
               size={18}
               color={theme.colors.background}
             />
           </Pressable>
 
           <Pressable
+            testID="next-btn"
             onPress={(e) => {
               e.stopPropagation()
               void next()

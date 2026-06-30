@@ -135,6 +135,34 @@ run(`git tag v${newVersion}`, 'Git Tag');
 run('git push origin HEAD', 'Git Push Origin');
 run('git push origin --tags', 'Git Push Tags');
 
+// Pre-create the GitHub release to avoid electron-builder race condition (422 already_exists)
+log('\n🚀 Creating GitHub Draft Release...', COLORS.blue);
+try {
+    const response = await fetch(`https://api.github.com/repos/Luxaztk/Cross-Platform-Music-Player-App/releases`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': `Bearer ${process.env.GH_TOKEN}`,
+            'User-Agent': 'Melovista-Deploy-Script',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            tag_name: `v${newVersion}`,
+            name: `Melovista v${newVersion}`,
+            body: commitBody,
+            draft: true
+        })
+    });
+    if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        log(`Warning: Failed to pre-create release: ${response.statusText} - ${JSON.stringify(errJson)}`, COLORS.yellow);
+    } else {
+        log(`✅ Pre-created GitHub release v${newVersion}`, COLORS.green);
+    }
+} catch (e) {
+    log(`Warning: Error pre-creating release: ${e.message}`, COLORS.yellow);
+}
+
 // --- PHASE 4: REAL BUILD & AUTO-PUBLISH ---
 log(`\n🏗️  PHASE 4: REAL BUILD & AUTO-PUBLISH (${TARGET.toUpperCase()})...`, COLORS.yellow);
 

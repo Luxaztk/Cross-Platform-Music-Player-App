@@ -12,10 +12,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import Feather from '@expo/vector-icons/Feather'
 
-import { usePlayerState, type QueueItem } from '../../application/player'
+import { usePlayer } from '@music/hooks'
+import type { QueueItem } from '@music/hooks'
 import { useTheme } from '../components/Theme'
 import { useLanguage } from '../components/Language'
-import { useLibrary } from '../../application/library/LibraryProvider'
 
 interface QueueModalProps {
   visible: boolean
@@ -26,15 +26,15 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
   const { theme } = useTheme()
   const { t } = useLanguage()
   const insets = useSafeAreaInsets()
-  const { queueItems, removeFromQueue, reorderQueue, clearQueue } = usePlayerState()
-  const { songsById } = useLibrary()
+  const { queue, removeFromQueue, reorderQueue } = usePlayer()
 
   const handleClearQueue = useCallback(async () => {
-    await clearQueue()
+    for (let i = queue.length - 1; i >= 0; i--) {
+      removeFromQueue(i)
+    }
     onClose()
-    // Navigate back to previous page
     router.back()
-  }, [clearQueue, onClose])
+  }, [queue, removeFromQueue, onClose])
 
   const handlePlaySong = useCallback((index: number) => {
     // Implementation for playing a song from queue at specific index
@@ -42,7 +42,7 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
   }, [])
 
   const renderItem = ({ item, index }: { item: QueueItem; index: number }) => {
-    const song = songsById[item.id]
+    const song = item.song
     if (!song) return null
 
     return (
@@ -69,7 +69,7 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
                 <Feather name="chevron-up" size={16} color={theme.colors.text} />
               </Pressable>
             )}
-            {index < queueItems.length - 1 && (
+            {index < queue.length - 1 && (
               <Pressable
                 onPress={() => void reorderQueue(index, index + 1)}
                 style={[styles.reorderBtn, { backgroundColor: theme.colors.surface }]}
@@ -109,12 +109,12 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
           <View style={styles.headerLeft}>
             <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Up Next</Text>
             <Text style={[styles.queueCount, { color: theme.colors.mutedText }]}>
-              {queueItems.length} {queueItems.length === 1 ? 'song' : 'songs'}
+              {queue.length} {queue.length === 1 ? 'song' : 'songs'}
             </Text>
           </View>
           
           <View style={styles.headerActions}>
-            {queueItems.length > 0 && (
+            {queue.length > 0 && (
               <Pressable onPress={handleClearQueue} style={styles.clearBtn}>
                 <Feather name="trash-2" size={20} color="#ff4444" />
               </Pressable>
@@ -125,7 +125,7 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
           </View>
         </View>
 
-        {queueItems.length === 0 ? (
+        {queue.length === 0 ? (
           <View style={styles.emptyState}>
             <Feather name="list" size={48} color={theme.colors.mutedText} />
             <Text style={[styles.emptyText, { color: theme.colors.mutedText }]}>
@@ -134,7 +134,7 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
           </View>
         ) : (
           <FlatList
-            data={queueItems}
+            data={queue}
             keyExtractor={(item) => item.uid}
             renderItem={renderItem}
             contentContainerStyle={[

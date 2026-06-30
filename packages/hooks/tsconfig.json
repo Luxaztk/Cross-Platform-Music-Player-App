@@ -12,7 +12,7 @@
       "@music/hooks/constants": ["./src/constants/index.ts"],
       "@music/hooks/utils": ["./src/utils"]
     },
-    "ignoreDeprecations": "6.0"
+    "ignoreDeprecations": "5.0"
   },
   "include": ["src/**/*", "index.ts"]
 }

@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 /**
  * Normalizes a string for comparison by removing Vietnamese accents,
  * converting to lowercase, and removing special characters.
@@ -17,14 +15,19 @@ export const normalizeString = (str: string): string => {
 
 /**
  * Standardizes and compares two file paths for equality, 
- * handling Windows/POSIX case sensitivity and slash differences.
+ * handling Windows/POSIX case sensitivity and slash differences
+ * without relying on node:path to remain cross-platform (React Native compatible).
  */
 export const isSamePath = (pathA: string, pathB: string): boolean => {
   if (!pathA || !pathB) return false;
-  try {
-    return path.resolve(pathA).toLowerCase() === path.resolve(pathB).toLowerCase();
-  } catch (_err) {
-    // Fallback for non-standard paths or environments where path.resolve might fail
-    return pathA.toLowerCase() === pathB.toLowerCase();
-  }
+  
+  const normalizePath = (p: string) => {
+    return p
+      .replace(/\\/g, '/') // Convert Windows slashes to POSIX
+      .replace(/\/+/g, '/') // Remove duplicate slashes
+      .replace(/\/+$/, '') // Remove trailing slashes
+      .toLowerCase(); // Case-insensitive for Windows compatibility
+  };
+  
+  return normalizePath(pathA) === normalizePath(pathB);
 };
