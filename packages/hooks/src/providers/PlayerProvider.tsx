@@ -151,6 +151,12 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
           let newSongs = [...originalContextRef.current];
           if (isShuffleRef.current) {
             newSongs = shuffleArray(newSongs);
+            // Prevent playing the same song twice in a row when repeating
+            if (newSongs.length > 1 && currentSongRef.current && newSongs[0].id === currentSongRef.current.id) {
+              const temp = newSongs[0];
+              newSongs[0] = newSongs[newSongs.length - 1];
+              newSongs[newSongs.length - 1] = temp;
+            }
           }
           const nextSong = newSongs[0];
           setQueue(newSongs.slice(1).map(song => ({ uid: generateUid(), song })));
@@ -344,9 +350,12 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
     if (currentSongRef.current) pushToHistory(currentSongRef.current);
 
     const startSong = songs[startIndex];
-    let upcomingSongs = songs.slice(startIndex + 1);
+    let upcomingSongs: Song[];
     if (isShuffleRef.current) {
-      upcomingSongs = shuffleArray(upcomingSongs);
+      const allOtherSongs = [...songs.slice(0, startIndex), ...songs.slice(startIndex + 1)];
+      upcomingSongs = shuffleArray(allOtherSongs);
+    } else {
+      upcomingSongs = songs.slice(startIndex + 1);
     }
     setQueue(upcomingSongs.map(song => ({ uid: generateUid(), song })));
     playSong(startSong);

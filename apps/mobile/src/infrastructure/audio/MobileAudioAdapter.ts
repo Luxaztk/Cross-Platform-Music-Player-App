@@ -7,6 +7,7 @@ export class MobileAudioAdapter implements IAudioEngine {
   private events: AudioEngineEvents = {};
   private currentVolume = 1;
   private lastIsPlaying = false;
+  private lastDidJustFinish = false;
 
   constructor() {
     this.engine = new ExpoAudioEngine();
@@ -31,52 +32,81 @@ export class MobileAudioAdapter implements IAudioEngine {
       }
       
       if (p.isLoaded && p.didJustFinish) {
-        if (this.events.onEnd) {
-          this.events.onEnd();
+        if (!this.lastDidJustFinish) {
+          this.lastDidJustFinish = true;
+          if (this.events.onEnd) {
+            this.events.onEnd();
+          }
         }
+      } else {
+        this.lastDidJustFinish = false;
+      }
+    });
+  }
+
+  private activeCommand: Promise<void> = Promise.resolve();
+
+  private queueCommand(command: () => Promise<void>) {
+    this.activeCommand = this.activeCommand.then(async () => {
+      try {
+        await command();
+      } catch (err) {
+        console.error(err);
       }
     });
   }
 
   load(filePath: string, autoplay?: boolean): void {
     this.currentUrl = filePath;
-    this.engine.load(filePath, { shouldPlay: autoplay })
-      .then(() => {
-        // Since load is async, we simulate onLoad after it completes
+    this.queueCommand(async () => {
+      try {
+        await this.engine.load(filePath, { shouldPlay: autoplay });
         if (this.events.onLoad) {
           this.events.onLoad(0);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (this.events.onLoadError) {
           this.events.onLoadError(err);
         }
-      });
+      }
+    });
   }
 
   play(): void {
-    this.engine.play().catch(err => {
-      if (this.events.onPlayError) this.events.onPlayError(err);
+    this.queueCommand(async () => {
+      try {
+        await this.engine.play();
+      } catch (err) {
+        if (this.events.onPlayError) this.events.onPlayError(err);
+      }
     });
   }
 
   pause(): void {
-    this.engine.pause().catch(err => console.error(err));
+    this.queueCommand(async () => {
+      await this.engine.pause();
+    });
   }
 
   stop(): void {
-    this.engine.unload().catch(err => console.error(err));
     this.currentUrl = null;
-    if (this.events.onStop) this.events.onStop();
+    this.queueCommand(async () => {
+      await this.engine.unload();
+      if (this.events.onStop) this.events.onStop();
+    });
   }
 
   seek(seconds: number): void {
-    this.engine.seekTo(seconds * 1000).catch(err => console.error(err));
+    this.queueCommand(async () => {
+      await this.engine.seekTo(seconds * 1000);
+    });
   }
 
   setVolume(volume: number): void {
     this.currentVolume = volume;
-    this.engine.setVolume(volume).catch(err => console.error(err));
+    this.queueCommand(async () => {
+      await this.engine.setVolume(volume);
+    });
   }
 
   getVolume(): number {
