@@ -111,6 +111,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   }, []);
 
   const playSong = useCallback((song: Song) => {
+    if (!song) return;
     savePlaybackPosition(true);
 
     setCurrentSong(song);
@@ -350,13 +351,27 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
 }, []);
 
   const playList = useCallback((songs: Song[], startIndex: number) => {
-    setOriginalContext(songs);
-    if (currentSongRef.current) pushToHistory(currentSongRef.current);
+    if (!songs || songs.length === 0) return;
+    const safeIndex = (startIndex >= 0 && startIndex < songs.length) ? startIndex : 0;
 
-    const startSong = songs[startIndex];
+    setOriginalContext(songs);
+    
+    // Prepare history: preserve current song, then prepend preceding playlist songs
+    let newHistory: Song[] = [];
+    if (!isShuffleRef.current && safeIndex > 0) {
+      // Reverse preceding songs so the immediately preceding song is at index 0
+      newHistory = songs.slice(0, safeIndex).reverse();
+    }
+    if (currentSongRef.current) {
+      newHistory.push(currentSongRef.current);
+    }
+    // Only keep up to 50 history items
+    setHistory(newHistory.slice(0, 50));
+
+    const startSong = songs[safeIndex];
     let upcomingSongs: Song[];
     if (isShuffleRef.current) {
-      const allOtherSongs = [...songs.slice(0, startIndex), ...songs.slice(startIndex + 1)];
+      const allOtherSongs = [...songs.slice(0, safeIndex), ...songs.slice(safeIndex + 1)];
       upcomingSongs = shuffleArray(allOtherSongs);
     } else {
       upcomingSongs = songs.slice(startIndex + 1);
