@@ -9,6 +9,7 @@ import { PlayerContext } from '../PlayerContext';
 
 
 import type { 
+  PlayerUiState,
   RepeatMode, 
   QueueItem, 
   PlayerProviderProps 
@@ -29,17 +30,22 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
 }) => {
 
 
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const [progress, setProgressState] = useState(0);
+  const [uiState, setUiState] = useState<PlayerUiState>({ currentSong: null, isPlaying: false, progress: 0, duration: 0 });
+  const { currentSong } = uiState;
+  
   const progressRef = useRef(0);
   const setProgress = useCallback((val: number) => {
     progressRef.current = val;
-    setProgressState(val);
+    setUiState((prev: PlayerUiState) => ({ ...prev, progress: val }));
   }, []);
-  const [duration, setDuration] = useState(0);
+  
   const [volume, setVolumeState] = useState(1);
+  const setVolume = useCallback((vol: number) => {
+    setVolumeState(vol);
+    if (engineRef.current) {
+      engineRef.current.setVolume(vol);
+    }
+  }, []);
   const [queue, setQueue] = useState<QueueItem[]>([]);
 
   const generateUid = useCallback(() => Math.random().toString(36).substring(2, 11) + Date.now().toString(36), []);
@@ -114,8 +120,8 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     if (!song) return;
     savePlaybackPosition(true);
 
-    setCurrentSong(song);
-    setProgress(0);
+    progressRef.current = 0;
+    setUiState((prev: PlayerUiState) => ({ ...prev, currentSong: song, progress: 0 }));
     lastSavedTimeRef.current = 0;
     
     if (engineRef.current) {
@@ -193,31 +199,37 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   // Engine initialization effect
   useEffect(() => {
     const engine = externalEngine || new AudioEngine();
+    // eslint-disable-next-line
+    engineRef.current = engine;
     engine.setEvents({
       onProgress: (p, d) => {
-        setProgress(p);
-        setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
+        progressRef.current = p;
+        setUiState((prev: PlayerUiState) => {
+          const newDuration = isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || prev.duration);
+          if (prev.progress === p && prev.duration === newDuration) return prev;
+          return { ...prev, progress: p, duration: newDuration };
+        });
         savePlaybackPosition(false);
       },
-      onPlay: () => setIsPlaying(true),
+      onPlay: () => setUiState((prev: PlayerUiState) => ({ ...prev, isPlaying: true })),
       onPause: () => {
-        setIsPlaying(false);
+        setUiState((prev: PlayerUiState) => ({ ...prev, isPlaying: false }));
         savePlaybackPosition(true);
       },
       onStop: () => {
-        setIsPlaying(false);
+        progressRef.current = 0;
+        setUiState((prev: PlayerUiState) => ({ ...prev, isPlaying: false, progress: 0 }));
         savePlaybackPosition(true);
-        setProgress(0);
       },
       onEnd: () => {
-        setIsPlaying(false);
+        progressRef.current = 0;
+        setUiState((prev: PlayerUiState) => ({ ...prev, isPlaying: false, progress: 0 }));
         if (currentSongRef.current && (currentSongRef.current.duration || 0) > 600 && onSavePlaybackPositionRef.current) {
           const idToSave = currentSongRef.current.id;
           setTimeout(() => {
             onSavePlaybackPositionRef.current?.(idToSave, 0);
           }, 500);
         }
-        setProgress(0);
         if (repeatModeRef.current === 'ONE') {
           engineRef.current?.seek(0);
           engineRef.current?.play();
@@ -226,7 +238,11 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         }
       },
       onLoad: (d) => {
-        setDuration(isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0));
+        setUiState((prev: PlayerUiState) => {
+          const newDuration = isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || prev.duration);
+          if (prev.duration === newDuration) return prev;
+          return { ...prev, duration: newDuration };
+        });
       },
       onLoadError: () => {
         // File not found on disk — notify the consumer and auto-skip
@@ -248,7 +264,6 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     });
 
     engine.setVolume(volumeRef.current);
-    engineRef.current = engine;
 
     return () => {
       engine.stop();
@@ -279,8 +294,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
           if (savedState.currentSongId) {
             const song = findSong(savedState.currentSongId);
             if (song) {
-              setCurrentSong(song);
-              setDuration(song.duration || 0);
+              setUiState((prev: PlayerUiState) => ({ ...prev, currentSong: song, duration: song.duration || 0 }));
             }
           }
 
@@ -288,7 +302,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
           setHistory(savedState.historyIds.map(findSong).filter((s): s is Song => s !== null));
           setOriginalContext(savedState.originalContextIds.map(findSong).filter((s): s is Song => s !== null));
 
-          setVolumeState(savedState.volume);
+          setVolume(savedState.volume);
           setRepeatMode(savedState.repeatMode);
           setIsShuffle(savedState.isShuffle);
 
@@ -306,14 +320,14 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     if (allSongs.length > 0 && !isHydrated) {
       hydrate();
     }
-  }, [storage, allSongs, isHydrated, generateUid]);
+  }, [storage, allSongs, isHydrated, generateUid, setVolume, setRepeatMode, setIsShuffle]);
 
   // Persistence effect
   useEffect(() => {
     if (!storage || !isHydrated) return;
 
     const state: PlayerState = {
-      currentSongId: currentSong?.id || null,
+      currentSongId: uiState.currentSong?.id || null,
       queueIds: queue.map(item => item.song.id),
       historyIds: history.map(s => s.id),
       originalContextIds: originalContext.map(s => s.id),
@@ -322,29 +336,28 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
       isShuffle
     };
 
-  storage.savePlayerState(state).catch(err => console.error('Failed to save player state:', err));
-}, [storage, isHydrated, currentSong, queue, history, originalContext, volume, repeatMode, isShuffle]);
+    storage.savePlayerState(state).catch(err => console.error('Failed to save player state:', err));
+  }, [storage, isHydrated, uiState.currentSong, queue, history, originalContext, volume, repeatMode, isShuffle]);
 
-const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
-  setCurrentSong((prev: Song | null) => prev ? { ...prev, ...partial } : null);
+  const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
+    setUiState((prev: PlayerUiState) => prev.currentSong ? ({ ...prev, currentSong: { ...prev.currentSong, ...partial } }) : prev);
 
-  
-  // Also update in queue
-  setQueue(prevQueue => prevQueue.map(item => {
-    if (currentSongRef.current && item.song.id === currentSongRef.current.id) {
-      return { ...item, song: { ...item.song, ...partial } };
-    }
-    return item;
-  }));
+    // Also update in queue
+    setQueue(prevQueue => prevQueue.map(item => {
+      if (currentSongRef.current && item.song.id === currentSongRef.current.id) {
+        return { ...item, song: { ...item.song, ...partial } };
+      }
+      return item;
+    }));
 
-  // Update in history
-  setHistory(prevHistory => prevHistory.map(song => {
-    if (currentSongRef.current && song.id === currentSongRef.current.id) {
-      return { ...song, ...partial };
-    }
-    return song;
-  }));
-}, []);
+    // Update in history
+    setHistory(prevHistory => prevHistory.map(song => {
+      if (currentSongRef.current && song.id === currentSongRef.current.id) {
+        return { ...song, ...partial };
+      }
+      return song;
+    }));
+  }, []);
 
   const playList = useCallback((songs: Song[], startIndex: number) => {
     if (!songs || songs.length === 0) return;
@@ -374,7 +387,7 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
     }
     setQueue(upcomingSongs.map(song => ({ uid: generateUid(), song })));
     playSong(startSong);
-  }, [playSong, pushToHistory, generateUid]);
+  }, [playSong, generateUid]);
 
   const playNow = useCallback((song: Song) => {
     if (currentSongRef.current) pushToHistory(currentSongRef.current);
@@ -466,26 +479,20 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
       }
       
       engineRef.current.seek(time);
-      setProgress(time);
-    }
-  }, [setProgress]);
-
-  const setVolume = useCallback((vol: number) => {
-    setVolumeState(vol);
-    if (engineRef.current) {
-      engineRef.current.setVolume(vol);
+      setUiState((prev: PlayerUiState) => ({ ...prev, progress: time }));
     }
   }, []);
+
 
   const getAnalyser = useCallback(() => {
     return engineRef.current?.getAnalyser() || null;
   }, []);
 
   const contextValue = useMemo(() => ({
-    currentSong,
-    isPlaying,
-    progress,
-    duration,
+    currentSong: uiState.currentSong,
+    isPlaying: uiState.isPlaying,
+    progress: uiState.progress,
+    duration: uiState.duration,
     volume,
     queue,
     history,
@@ -509,10 +516,10 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
     toggleShuffle,
     getAnalyser
   }), [
-    currentSong, isPlaying, progress, duration, volume, queue, history,
+    uiState.currentSong, uiState.isPlaying, uiState.progress, uiState.duration, volume, queue, history,
     repeatMode, isShuffle, updateCurrentSongMetadata, playNow, playNext, addToQueue, addSongsToQueue, playList,
     removeFromQueue, reorderQueue, play, pause, next, prev, seek,
-    setVolume, toggleShuffle, getAnalyser
+    setVolume, toggleShuffle, getAnalyser, setRepeatMode
   ]);
 
   return (
@@ -521,4 +528,8 @@ const updateCurrentSongMetadata = useCallback((partial: Partial<Song>) => {
     </PlayerContext.Provider>
   );
 };
+
+
+
+
 

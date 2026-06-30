@@ -88,7 +88,7 @@ export class ExpoAudioEngine implements PlayerEngine {
     const p = this.player
     this.player = null
     try {
-      // Remove player from memory (expo-audio API)
+      p.pause() // MUST pause before remove to prevent ghost audio overlapping!
       p.remove()
     } finally {
       this.emit({ isLoaded: false, isPlaying: false, positionMs: 0, durationMs: 0 })

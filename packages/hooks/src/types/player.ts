@@ -9,11 +9,14 @@ export interface QueueItem {
   song: Song;
 }
 
-export interface PlayerContextProps {
+export interface PlayerUiState {
   currentSong: Song | null;
   isPlaying: boolean;
   progress: number;
   duration: number;
+}
+
+export interface PlayerContextProps extends PlayerUiState {
   volume: number;
   queue: QueueItem[];
   history: Song[];
