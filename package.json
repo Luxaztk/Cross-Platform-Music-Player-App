@@ -10,6 +10,7 @@
   "scripts": {
     "desktop": "npm run dev --workspace=apps/desktop",
     "mobile": "npm run start --workspace=apps/mobile",
+    "bot": "npm run start --workspace=apps/bot",
     "test": "npm run test --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "format": "prettier --write .",
