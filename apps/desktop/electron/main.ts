@@ -1,6 +1,6 @@
 process.env.YOUTUBE_DL_SKIP_PYTHON_CHECK = '1'
 
-import { app, BrowserWindow, protocol, session, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, protocol, session, ipcMain, dialog, shell } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import path from 'node:path'
 import fs from 'node:fs/promises'
@@ -90,6 +90,14 @@ function createWindow() {
       autoplayPolicy: 'no-user-gesture-required',
     },
   })
+
+  // Đảm bảo tất cả các liên kết target="_blank" mở trên trình duyệt hệ thống
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://') || url.startsWith('http://')) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)

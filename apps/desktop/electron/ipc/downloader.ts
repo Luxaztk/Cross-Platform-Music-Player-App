@@ -88,9 +88,41 @@ export const setupDownloaderIPC = () => {
         }
     });
 
-    // YouTube Auth IPCs
+    // YouTube Auth IPCs (Flow 2 bước: mở browser → xác nhận → trích cookie)
+
+    // Bước 1: Mở YouTube trong trình duyệt hệ thống thật
     ipcMain.handle('open-youtube-auth', async () => {
         return await authService.openAuthWindow();
+    });
+
+    // Bước 1 (alias rõ nghĩa hơn cho UI mới)
+    ipcMain.handle('open-youtube-browser', async () => {
+        return await authService.openAuthInSystemBrowser();
+    });
+
+    // Bước 2: Sau khi user xác nhận đã login, trích cookie từ trình duyệt
+    ipcMain.handle('extract-youtube-cookies', async (_event, browserHint?: string) => {
+        return await authService.extractCookiesFromBrowser(
+            browserHint as Parameters<typeof authService.extractCookiesFromBrowser>[0]
+        );
+    });
+
+    // Phương thức thủ công: User chọn file cookies.txt xuất từ extension trình duyệt
+    ipcMain.handle('import-youtube-cookies-file', async () => {
+        const win = BrowserWindow.getFocusedWindow();
+        if (!win) return { success: false, error: 'No focused window' };
+
+        const { canceled, filePaths } = await (await import('electron')).dialog.showOpenDialog(win, {
+            title: 'Chọn file cookies.txt từ YouTube',
+            filters: [{ name: 'Cookie Files', extensions: ['txt'] }],
+            properties: ['openFile'],
+        });
+
+        if (canceled || filePaths.length === 0) {
+            return { success: false, error: 'cancelled' };
+        }
+
+        return await authService.importCookiesFromFile(filePaths[0]);
     });
 
     ipcMain.handle('logout-youtube', async () => {

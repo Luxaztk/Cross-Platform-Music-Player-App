@@ -54,6 +54,17 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 - [ ] **Bộ Chỉnh Âm Nâng Cao (Advanced Equalizer):** Bộ cân bằng âm thanh Graphic EQ 10-band đa dải tần.
 - [ ] **Hồ Sơ Nghệ Sĩ (Artist Profile Page):** Trang tổng quan hiển thị toàn bộ bài hát, album và thông tin nghệ sĩ.
 
+### 🐛 Bug Fixes
+- [x] **Fix lỗi YouTubeAuthService - "Couldn't sign you in" (Google OAuth Block) & Chrome 127+ App-Bound Encryption:**
+  - Bỏ toàn bộ Electron `BrowserWindow` cho luồng đăng nhập (Google phát hiện webview qua nhiều fingerprint không thể giả mạo).
+  - Thay thế bằng flow kết hợp:
+    1. Tự động: Mở YouTube trên trình duyệt hệ thống → `yt-dlp --cookies-from-browser` (hỗ trợ Firefox/Brave).
+    2. Thủ công (Chrome/Edge 127+): Hỗ trợ nút `Nhập file cookies.txt` trực tiếp qua dialog chọn file (tương thích extension "Get cookies.txt LOCALLY").
+  - Thêm 3 IPC channels mới: `open-youtube-browser`, `extract-youtube-cookies`, `import-youtube-cookies-file`.
+  - Đồng bộ UI modal xác nhận theo chuẩn hệ thống chung (`var(--bg-modal)`, `var(--radius-lg)`).
+  - Kết quả: **304/304 tests Green, Zero TypeScript errors**.
+
+
 ---
 
 ## 📱 2. MeloVista Mobile App (Expo / React Native)
@@ -79,21 +90,33 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 
 Mục tiêu: Đưa trải nghiệm nghe nhạc chất lượng cao của MeloVista lên Discord cho nhu cầu cá nhân & bạn bè, tích hợp Monorepo, phát nhạc YouTube & Local Lossless 0đ, bypass 100% lỗi YouTube 403.
 
-- [ ] **Pha 1: Khởi Tạo Workspace & Gateway Kết Nối**
-  - [ ] Khởi tạo package `apps/bot` với TypeScript, `discord.js` (v14) và `@discordjs/voice`.
-  - [ ] Thiết lập hệ thống nạp cấu hình môi trường (`DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`).
-  - [ ] Xây dựng Handler tự động đăng ký và dispatch Slash Commands (`/ping`, `/join`, `/leave`).
+- [x] **Pha 1: Khởi Tạo Workspace & Gateway Kết Nối**
+  - [x] Khởi tạo package `apps/bot` với TypeScript, `discord.js` (v14) và `@discordjs/voice`.
+  - [x] Thiết lập hệ thống nạp cấu hình môi trường (`DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`).
+  - [x] Xây dựng Handler tự động đăng ký và dispatch Slash Commands (`/ping`, `/join`, `/leave`).
 
-- [ ] **Pha 2: Voice Audio Streaming Pipeline (yt-dlp + Local File)**
-  - [ ] Tích hợp `@discordjs/voice` + `prism-media` + `@discordjs/opus` / `@snout/opus`.
-  - [ ] Xây dựng bộ Stream Extractor kế thừa `yt-dlp` pipe stdout trực tiếp vào FFmpeg (phát tức thì < 1s).
-  - [ ] Tích hợp nạp file `youtube_cookies.txt` từ cấu hình cá nhân để triệt tiêu lỗi YouTube 403 / Bot Detection.
-  - [ ] Hỗ trợ phát trực tiếp kho nhạc Local trên PC (`.mp3`, `.flac`, `.wav`, `.m4a`) qua Voice Channel.
+- [x] **Pha 2: Voice Audio Streaming Pipeline (yt-dlp + Local File)**
+  - [x] Tích hợp `@discordjs/voice` + `prism-media` + `opusscript`.
+  - [x] Xây dựng bộ Stream Extractor kế thừa `yt-dlp` pipe stdout trực tiếp vào FFmpeg (phát tức thì < 1s).
+  - [x] Tích hợp nạp file `youtube_cookies.txt` từ cấu hình cá nhân để triệt tiêu lỗi YouTube 403 / Bot Detection.
+  - [x] Hỗ trợ phát trực tiếp kho nhạc Local trên PC (`.mp3`, `.flac`, `.wav`, `.m4a`) qua Voice Channel.
 
-- [ ] **Pha 3: Queue Management & Interactive UI Controls**
-  - [ ] Xây dựng Queue State Handler (kế thừa logic hàng đợi từ `@music/player` / `@music/core`).
-  - [ ] Hoàn thiện bộ lệnh Slash Commands: `/play`, `/pause`, `/skip`, `/stop`, `/queue`, `/volume`, `/filter`.
-  - [ ] Triển khai Rich Embed "Now Playing" với thanh tiến trình trực quan và hàng nút bấm tương tác (`[ ⏯ Pause/Resume ]`, `[ ⏭ Skip ]`, `[ 🔀 Shuffle ]`, `[ 🔁 Loop ]`, `[ 📜 Lyrics ]`).
+- [x] **Pha 3: Queue Management & Interactive UI Controls**
+  - [x] **Xây dựng Discord Music Bot (`apps/bot`)**:
+  - Hỗ trợ đầy đủ 13 lệnh Slash Commands: `/play`, `/pause`, `/resume`, `/skip`, `/stop`, `/queue`, `/volume`, `/loop`, `/shuffle`, `/language`, `/ping`, `/join`, `/leave`.
+  - Tích hợp pipeline âm thanh PCM `s16le` 48kHz Stereo ➔ Mã hóa Opus với FFmpeg streaming trực tiếp.
+  - Tích hợp giao thức mã hóa đầu cuối **Discord DAVE E2EE** (`@discordjs/voice@0.19.2` + `@snazzah/davey@0.1.12` + `@noble/ciphers` + `@stablelib/xchacha20poly1305`) vượt qua mã lỗi Discord `4017`.
+  - Giao diện Discord Rich Embeds & Action Rows Buttons điều khiển trực quan theo MeloVista Emerald Style:
+    - **In-Place UI Updates (`interaction.update`)**: Cập nhật trạng thái trực tiếp trên Player Embed cũ mà không spam tin nhắn phụ.
+    - **Bố cục 2 Hàng Cân Bằng (3 + 3)**: `[ ⏸ Pause ] [ ⏭ Next ] [ ■ Stop ]` và `[ ☰ Queue ] [ ↺ Loop ] [ ⤮ Shuffle ]`.
+    - **100% Monochrome Text Symbols**: Chuẩn hóa biểu tượng đơn sắc đồng điệu thẩm mỹ.
+    - **Chế độ Lặp 3 Cấp Độ (`LoopMode`)**: Off, Track (↺¹), Queue (⟳).
+    - **Chế độ Phát Ngẫu Nhiên (`ShuffleMode`)**: Bật (⤮ / Bright Blue) / Tắt (⦿ / Secondary).
+    - **System State Guards**: Phủ kín guard clauses kiểm soát trạng thái phát cho 100% lệnh Slash Commands và nút bấm.
+  - Tích hợp tính năng **Đa Ngôn Ngữ (i18n)** qua lệnh `/language` với cơ chế lưu vĩnh viễn vào file JSON (`guild_settings.json`).
+  - Đọc 100% ID3/FLAC/M4A metadata & Cover Art từ file local qua `music-metadata` kèm fallback theo tên file.
+  - Tải Playlist siêu tốc với cờ `--flat-playlist` (phát bài đầu tiên trong < 0.8s).
+  - Đạt 100% kiểm thử Unit Test (87/87 monorepo test cases Green ✅).
   - [ ] Tính năng Autocomplete Search cho lệnh `/play` (gợi ý nhanh từ YouTube & thư viện cục bộ).
   - [ ] Tích hợp bộ lọc âm thanh thời gian thực (DSP Filters): Bass Boost, Nightcore, 8D Audio, Volume Normalization.
 

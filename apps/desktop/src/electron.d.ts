@@ -104,8 +104,11 @@ declare global {
       clearSyncHistory: () => Promise<void>
       logSyncEvent: (stats: SyncStats, details: string[]) => Promise<void>
 
-      // YouTube Authentication
+      // YouTube Authentication (Flow 2 bước & Import File)
       openYoutubeAuth: () => Promise<boolean>
+      openYoutubeBrowser: () => Promise<{ opened: boolean; error?: string }>
+      extractYoutubeCookies: (browserHint?: string) => Promise<{ success: boolean; browser?: string; error?: string; needManualImport?: boolean }>
+      importYoutubeCookiesFile: () => Promise<{ success: boolean; error?: string }>
       logoutYoutube: () => Promise<void>
       getYoutubeAuthStatus: () => Promise<boolean>
       onYoutubeAuthRequired: (callback: (data: { url: string; id?: string }) => void) => () => void

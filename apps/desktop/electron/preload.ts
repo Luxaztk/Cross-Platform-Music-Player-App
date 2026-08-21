@@ -90,8 +90,11 @@ export interface ElectronAPI {
   clearSyncHistory: () => Promise<void>
   logSyncEvent: (stats: SyncStats, details: string[]) => Promise<void>
   
-  // YouTube Authentication
+  // YouTube Authentication (Flow 2 bước)
   openYoutubeAuth: () => Promise<boolean>
+  openYoutubeBrowser: () => Promise<{ opened: boolean; error?: string }>
+  extractYoutubeCookies: (browserHint?: string) => Promise<{ success: boolean; browser?: string; error?: string; needManualImport?: boolean }>
+  importYoutubeCookiesFile: () => Promise<{ success: boolean; error?: string }>
   logoutYoutube: () => Promise<void>
   getYoutubeAuthStatus: () => Promise<boolean>
   onYoutubeAuthRequired: (callback: (data: { url: string; id?: string }) => void) => () => void
@@ -209,8 +212,11 @@ const electronAPI: ElectronAPI = {
   clearSyncHistory: () => ipcRenderer.invoke('library:clearSyncHistory'),
   logSyncEvent: (stats: SyncStats, details: string[]) => ipcRenderer.invoke('library:logSyncEvent', stats, details),
 
-  // YouTube Authentication
+  // YouTube Authentication (Flow 2 bước: mở browser → xác nhận → trích cookie)
   openYoutubeAuth: () => ipcRenderer.invoke('open-youtube-auth'),
+  openYoutubeBrowser: () => ipcRenderer.invoke('open-youtube-browser'),
+  extractYoutubeCookies: (browserHint?: string) => ipcRenderer.invoke('extract-youtube-cookies', browserHint),
+  importYoutubeCookiesFile: () => ipcRenderer.invoke('import-youtube-cookies-file'),
   logoutYoutube: () => ipcRenderer.invoke('logout-youtube'),
   getYoutubeAuthStatus: () => ipcRenderer.invoke('get-youtube-auth-status'),
   onYoutubeAuthRequired: (callback) => {

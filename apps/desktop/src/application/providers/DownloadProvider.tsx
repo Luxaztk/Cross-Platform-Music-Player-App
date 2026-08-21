@@ -28,6 +28,8 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const [authRequired, setAuthRequired] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isExtractingCookies, setIsExtractingCookies] = useState(false);
+    const [showLoginConfirmDialog, setShowLoginConfirmDialog] = useState(false);
 
     const stateRef = useRef(downloadState);
     useEffect(() => {
@@ -66,14 +68,60 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
         };
     }, []);
 
+    /**
+     * Flow 2 bước:
+     * Bước 1 - Mở YouTube trên trình duyệt hệ thống thật (Chrome/Edge)
+     * Bước 2 - Sau khi user xác nhận đã login, gọi extract-youtube-cookies
+     */
     const handleLogin = async () => {
-        const success = await window.electronAPI.openYoutubeAuth();
-        if (success) {
-            setIsLoggedIn(true);
-            setAuthRequired(false);
-            showNotification('success', t('settings.youtube.loginSuccess'));
+        // Bước 1: Mở trình duyệt thật
+        const result = await window.electronAPI.openYoutubeBrowser();
+        if (!result.opened) {
+            showNotification('error', result.error ?? t('settings.youtube.loginFailed'));
+            return false;
         }
-        return success;
+        // Hiện dialog hướng dẫn user xác nhận đã login
+        setShowLoginConfirmDialog(true);
+        return true;
+    };
+
+    // Gọi khi user bấm "Đã đăng nhập" trong dialog
+    const handleConfirmLogin = async () => {
+        setShowLoginConfirmDialog(false);
+        setIsExtractingCookies(true);
+        try {
+            const result = await window.electronAPI.extractYoutubeCookies();
+            if (result.success) {
+                setIsLoggedIn(true);
+                setAuthRequired(false);
+                showNotification('success', t('settings.youtube.loginSuccess'));
+            } else {
+                showNotification('error', result.error ?? t('settings.youtube.loginFailed'));
+            }
+        } finally {
+            setIsExtractingCookies(false);
+        }
+    };
+
+    const handleCancelLoginDialog = () => {
+        setShowLoginConfirmDialog(false);
+    };
+
+    const handleImportCookieFile = async () => {
+        try {
+            const result = await window.electronAPI.importYoutubeCookiesFile();
+            if (result.success) {
+                setIsLoggedIn(true);
+                setAuthRequired(false);
+                setShowLoginConfirmDialog(false);
+                showNotification('success', t('settings.youtube.importSuccess'));
+            } else if (result.error && result.error !== 'cancelled') {
+                showNotification('error', result.error);
+            }
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            showNotification('error', message);
+        }
     };
 
     const logout = async () => {
@@ -380,7 +428,8 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
             downloads, previewItems, duplicateInfo, initiator, playlistTitle,
             fetchInfo, executeDownload, updateMetadata, bulkUpdateMetadata, resetDownload, cancelDownload, clearAbandoned,
             totalProgress, activeCount,
-            authRequired, isLoggedIn, handleLogin, logout
+            authRequired, isLoggedIn, isExtractingCookies, showLoginConfirmDialog,
+            handleLogin, handleConfirmLogin, handleCancelLoginDialog, handleImportCookieFile, logout
         }}>
             {children}
         </DownloadContext.Provider>

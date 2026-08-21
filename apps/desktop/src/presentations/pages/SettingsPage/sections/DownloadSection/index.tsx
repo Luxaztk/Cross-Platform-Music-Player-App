@@ -2,7 +2,7 @@ import React from 'react';
 import { Download } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { SyncHistoryModal, EditModal } from '@components';
-import { type DownloadItem } from '@music/types';
+import { type DownloadItem, type Song } from '@music/types';
 import { type DownloadSectionProps } from './types';
 import { useDownloadSection } from './useDownloadSection';
 import { PathSettings } from './components/PathSettings';
@@ -65,7 +65,12 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery = 
                 <YoutubeAuth
                     isVisible={visibility.showsDownloader}
                     isLoggedIn={manager.isLoggedIn}
+                    isExtractingCookies={manager.isExtractingCookies}
+                    showLoginConfirmDialog={manager.showLoginConfirmDialog}
                     onLogin={manager.handleLogin}
+                    onConfirmLogin={manager.handleConfirmLogin}
+                    onCancelLoginDialog={manager.handleCancelLoginDialog}
+                    onImportCookies={manager.handleImportCookieFile}
                     onLogout={manager.logout}
                     t={t}
                 />
@@ -126,7 +131,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery = 
                         artist: uiState.editingItem.artist,
                         album: uiState.editingItem.album,
                         coverArt: uiState.editingItem.thumbnail,
-                    } as any}
+                    } as unknown as Song}
                     onClose={() => actions.setEditingItem(null)}
                     onSave={(data: Partial<DownloadItem>) => {
                         manager.updateMetadata(uiState.editingItem!.id, data);
@@ -140,17 +145,17 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ searchQuery = 
                     isOpen={true}
                     isBulk={manager.previewItems.length > 1}
                     type="song"
-                    data={manager.previewItems.length === 1 ? {
+                    data={manager.previewItems.length === 1 ? ({
                         title: manager.previewItems[0].title,
                         artist: manager.previewItems[0].artist,
                         album: manager.previewItems[0].album,
                         coverArt: manager.previewItems[0].thumbnail,
-                    } as any : {
+                    } as unknown as Song) : ({
                         title: t('downloader.bulkEditTitle'),
                         artist: manager.previewItems[0]?.artist || '',
                         album: manager.playlistTitle || manager.previewItems[0]?.album || '',
                         coverArt: '',
-                    } as any}
+                    } as unknown as Song)}
                     onClose={() => {
                         actions.setShowBulkEdit(false);
                         actions.setShowEditMetadata(false);

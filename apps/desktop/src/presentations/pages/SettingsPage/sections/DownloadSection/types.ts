@@ -71,7 +71,12 @@ export interface DownloaderToolProps extends BaseSectionProps {
 
 export interface YoutubeAuthProps extends BaseSectionProps {
     isLoggedIn: boolean;
+    isExtractingCookies: boolean;
+    showLoginConfirmDialog: boolean;
     onLogin: () => Promise<boolean>;
+    onConfirmLogin: () => Promise<void>;
+    onCancelLoginDialog: () => void;
+    onImportCookies: () => Promise<void>;
     onLogout: () => Promise<void>;
     t: (key: string, options?: Record<string, unknown> | string) => string;
 }

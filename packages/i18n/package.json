@@ -2,16 +2,17 @@
   "name": "@music/i18n",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "scripts": {
-    "test": "echo \"No tests specified\"",
-    "test:coverage": "echo \"No tests specified\""
-  },
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     }
+  },
+  "scripts": {
+    "test": "echo \"No tests specified\"",
+    "test:coverage": "echo \"No tests specified\""
   }
 }

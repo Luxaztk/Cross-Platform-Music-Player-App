@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import { builtinModules } from 'node:module'
@@ -65,7 +65,6 @@ export default defineConfig({
   },
   esbuild: {
     // We keep this for development/esbuild-based tools if any
-    // @ts-expect-error - drop is not typed correctly in esbuild options
     drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
   },
   build: {

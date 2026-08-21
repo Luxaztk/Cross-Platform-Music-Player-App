@@ -114,8 +114,11 @@ app-example
 docs/00_Bao_Cao_Mon_Hoc_MVP
 
 # =========================
-# AI Tooling & Prompts
+# Discord Bot Runtime Data
 # =========================
+apps/bot/data/
+data/guild_settings.json
+
 AI_RULES.md
 .cursorrules
 /.agents

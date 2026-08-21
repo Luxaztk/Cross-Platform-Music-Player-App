@@ -43,7 +43,12 @@ export interface DownloadContextType {
     // Authentication
     authRequired: boolean;
     isLoggedIn: boolean;
+    isExtractingCookies: boolean;
+    showLoginConfirmDialog: boolean;
     handleLogin: () => Promise<boolean>;
+    handleConfirmLogin: () => Promise<void>;
+    handleCancelLoginDialog: () => void;
+    handleImportCookieFile: () => Promise<void>;
     logout: () => Promise<void>;
 }
 
