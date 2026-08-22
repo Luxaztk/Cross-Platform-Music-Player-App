@@ -9,7 +9,7 @@ import {
   VoiceConnectionStatus,
   type AudioResource,
 } from '@discordjs/voice';
-import type { GuildTextBasedChannel, VoiceBasedChannel, Message } from 'discord.js';
+import type { GuildTextBasedChannel, VoiceBasedChannel, Message, Guild, GuildBasedChannel } from 'discord.js';
 import type { TrackMetadata } from '../extractors/BaseExtractor.js';
 import { AudioStreamer } from './AudioStreamer.js';
 import { createNowPlayingEmbed, createErrorEmbed } from '../ui/embeds.js';
@@ -24,16 +24,19 @@ export class MusicManager {
   public readonly audioPlayer: AudioPlayer;
   public queue: TrackMetadata[] = [];
   public currentTrack: TrackMetadata | null = null;
+  public previousTrack: TrackMetadata | null = null;  // DESIGN-07: Lưu bài trước
   public volume: number = 100;
   public loopMode: LoopMode = 'off';
   public isShuffle: boolean = false;
   public textChannel: GuildTextBasedChannel | null = null;
+  public lastVoiceChannel: VoiceBasedChannel | null = null;
   public nowPlayingMessage: Message | null = null;
 
   private streamer: AudioStreamer;
   private currentResource: AudioResource<TrackMetadata> | null = null;
   private activeCleanup: (() => void) | null = null;
   private disconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private isDestroyed: boolean = false;
 
   constructor(guildId: string, cookiesPath?: string) {
     this.guildId = guildId;
@@ -48,6 +51,35 @@ export class MusicManager {
     this.setupAudioPlayerListeners();
   }
 
+  public ensureVoiceConnection(guild?: Guild): boolean {
+    if (this.voiceConnection && this.voiceConnection.state.status !== VoiceConnectionStatus.Destroyed) {
+      return true;
+    }
+
+    if (this.lastVoiceChannel && this.lastVoiceChannel.guild) {
+      try {
+        this.join(this.lastVoiceChannel);
+        return true;
+      } catch (err) {
+        console.warn(`[MusicManager ${this.guildId}] Không thể tham gia lại kênh voice cũ:`, err);
+      }
+    }
+
+    if (guild) {
+      // BUG-02 FIX: Filter to VoiceBasedChannel trước để tránh runtime error trên CategoryChannel
+      const voiceChannels = guild.channels.cache.filter((c: GuildBasedChannel) => c.isVoiceBased());
+      const activeChannel =
+        voiceChannels.find((c) => c.isVoiceBased() && c.members.size > 0) ||
+        voiceChannels.first();
+      if (activeChannel && activeChannel.isVoiceBased()) {
+        this.join(activeChannel);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   private setupAudioPlayerListeners() {
     this.audioPlayer.on('debug', (message) => {
       console.log(`[AudioPlayer Debug ${this.guildId}]`, message);
@@ -58,6 +90,8 @@ export class MusicManager {
     });
 
     this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
+      // BUG-06 FIX: Không xử lý track end nếu manager đã bị destroy
+      if (this.isDestroyed) return;
       this.handleTrackEnd();
     });
 
@@ -66,7 +100,7 @@ export class MusicManager {
       if (this.textChannel) {
         this.textChannel.send({
           embeds: [createErrorEmbed(`Lỗi phát âm thanh: ${error.message}`)],
-        }).catch(() => {});
+        }).catch(() => { });
       }
       this.handleTrackEnd();
     });
@@ -144,6 +178,8 @@ export class MusicManager {
   }
 
   public async playNext(): Promise<boolean> {
+    // BUG-06 FIX: Guard chống race condition khi destroy() đã được gọi
+    if (this.isDestroyed) return false;
     if (this.activeCleanup) {
       this.activeCleanup();
       this.activeCleanup = null;
@@ -151,7 +187,7 @@ export class MusicManager {
 
     // Disable buttons on previous message when changing tracks
     if (this.nowPlayingMessage) {
-      this.nowPlayingMessage.edit({ components: [] }).catch(() => {});
+      this.nowPlayingMessage.edit({ components: [] }).catch(() => { });
       this.nowPlayingMessage = null;
     }
 
@@ -184,6 +220,7 @@ export class MusicManager {
     } else {
       nextTrack = this.queue.shift()!;
     }
+    this.previousTrack = this.currentTrack;  // DESIGN-07: Lưu lại bài hiện tại trước khi sang bài mới
     this.currentTrack = nextTrack;
 
     try {
@@ -224,7 +261,7 @@ export class MusicManager {
       if (this.textChannel) {
         this.textChannel.send({
           embeds: [createErrorEmbed(`Failed to play "${nextTrack.title}": ${msg}`, lang)],
-        }).catch(() => {});
+        }).catch(() => { });
       }
 
       // Thử phát bài tiếp theo
@@ -239,7 +276,7 @@ export class MusicManager {
     await this.nowPlayingMessage.edit({
       embeds: [createNowPlayingEmbed(this.currentTrack, this.volume, this.loopMode, this.isShuffle, this.queue.length, lang)],
       components: createPlayerComponents(isPaused, this.loopMode, this.isShuffle, lang),
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   private handleTrackEnd() {
@@ -270,7 +307,7 @@ export class MusicManager {
 
   public stop(): void {
     if (this.nowPlayingMessage) {
-      this.nowPlayingMessage.edit({ components: [] }).catch(() => {});
+      this.nowPlayingMessage.edit({ components: [] }).catch(() => { });
       this.nowPlayingMessage = null;
     }
     this.queue = [];
@@ -291,6 +328,49 @@ export class MusicManager {
       return true;
     }
     return false;
+  }
+
+  public getPlaybackPosition(): number {
+    return Math.floor((this.currentResource?.playbackDuration || 0) / 1000);
+  }
+
+  // DESIGN-07: Phát lại bài trước (Prev Track)
+  public async playPrev(): Promise<boolean> {
+    if (!this.previousTrack) return false;
+    // Đưa bài hiện tại và bài trước trở lại queue đầu
+    if (this.currentTrack) {
+      this.queue.unshift(this.currentTrack);
+    }
+    this.queue.unshift(this.previousTrack);
+    this.previousTrack = null;
+    this.audioPlayer.stop();
+    return true;
+  }
+
+  // DESIGN-06: Seek đến vị trí cụ thể trong bài (tính bằng giây)
+  // Lưu ý: @discordjs/voice không hỗ trợ seek native — cách duy nhất là tạo lại stream từ seek position
+  public async seekTo(seconds: number): Promise<boolean> {
+    if (!this.currentTrack) return false;
+
+    // Dừng stream hiện tại
+    if (this.activeCleanup) {
+      this.activeCleanup();
+      this.activeCleanup = null;
+    }
+
+    try {
+      const { resource, cleanup } = await this.streamer.createAudioResource(this.currentTrack, {
+        volume: this.volume,
+        seek: seconds,
+      });
+      this.currentResource = resource;
+      this.activeCleanup = cleanup;
+      this.audioPlayer.play(resource);
+      return true;
+    } catch (err) {
+      console.error(`[MusicManager] seekTo failed:`, err);
+      return false;
+    }
   }
 
   public setLoop(mode: LoopMode): LoopMode {
@@ -328,7 +408,37 @@ export class MusicManager {
   }
 
   public destroy(): void {
-    this.stop();
+    // BUG-01 FIX: KHÔNG gọi stop() để tránh vòng lặp setTimeout vô hạn
+    // stop() → scheduleDisconnect() → setTimeout(destroy) → destroy() → stop() → ...
+    this.isDestroyed = true;
+
+    // Hủy disconnect timeout trước
+    if (this.disconnectTimeout) {
+      clearTimeout(this.disconnectTimeout);
+      this.disconnectTimeout = null;
+    }
+
+    // Dọn Now Playing message
+    if (this.nowPlayingMessage) {
+      this.nowPlayingMessage.edit({ components: [] }).catch(() => { });
+      this.nowPlayingMessage = null;
+    }
+
+    // Dọn stream cleanup
+    if (this.activeCleanup) {
+      this.activeCleanup();
+      this.activeCleanup = null;
+    }
+
+    // Dừng audio player
+    this.audioPlayer.stop(true);
+
+    // Reset state
+    this.queue = [];
+    this.currentTrack = null;
+    this.currentResource = null;
+
+    // Ngắt kết nối voice
     if (this.voiceConnection) {
       this.voiceConnection.destroy();
       this.voiceConnection = null;

@@ -13,7 +13,7 @@ export const NowPlaying: React.FC<NowPlayingProps> = ({
         <div className="now-playing">
             {song?.coverArt ? (
                 <div className="cover-art">
-                    <img src={song.coverArt} alt={song.title} />
+                    <img src={song.coverArt} alt={song.title || ''} referrerPolicy="no-referrer" />
                 </div>
             ) : (
                 <div className="cover-art-mock">

@@ -68,6 +68,36 @@ export function createPlayerComponents(
   return [row1, row2];
 }
 
+// E-05: Hàng nút điều hướng phân trang Hàng đợi (Queue Pagination)
+export function createQueuePaginationComponents(
+  currentPage: number,
+  totalPages: number,
+  lang: BotLanguage = 'vi'
+): ActionRowBuilder<ButtonBuilder>[] {
+  if (totalPages <= 1) return [];
+
+  const prevBtn = new ButtonBuilder()
+    .setCustomId(`btn_queue_page_${currentPage - 1}`)
+    .setLabel(`◀  ${botT(lang, 'btn.prev')}`)
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(currentPage <= 1);
+
+  const indicatorBtn = new ButtonBuilder()
+    .setCustomId('btn_queue_indicator')
+    .setLabel(`${currentPage} / ${totalPages}`)
+    .setStyle(ButtonStyle.Primary)
+    .setDisabled(true);
+
+  const nextBtn = new ButtonBuilder()
+    .setCustomId(`btn_queue_page_${currentPage + 1}`)
+    .setLabel(`${botT(lang, 'btn.next')}  ▶`)
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(currentPage >= totalPages);
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(prevBtn, indicatorBtn, nextBtn);
+  return [row];
+}
+
 // Backward compatibility helpers
 export function createPlayerActionRow(
   isPaused: boolean = false,

@@ -25,8 +25,8 @@ describe('MusicManager Queue & State Suite', () => {
 
   beforeEach(() => {
     manager = new MusicManager('guild-123');
-    // Mock streamer
-    vi.spyOn(manager as any, 'playNext').mockImplementation(async () => true);
+    // Mock streamer playNext
+    vi.spyOn(manager, 'playNext').mockResolvedValue(true);
   });
 
   it('enqueues single and multiple tracks properly', async () => {
@@ -68,9 +68,30 @@ describe('MusicManager Queue & State Suite', () => {
     }));
 
     manager.queue = [...tracks];
-    const initialOrder = manager.queue.map((t) => t.id);
 
     manager.shuffle();
     expect(manager.queue).toHaveLength(10);
   });
+
+  it('supports playPrev by restoring previousTrack to head of queue', async () => {
+    manager.currentTrack = mockTrack2;
+    manager.previousTrack = mockTrack1;
+    manager.queue = [];
+
+    const result = await manager.playPrev();
+    expect(result).toBe(true);
+    expect(manager.queue[0].id).toBe('track-1');
+    expect(manager.queue[1].id).toBe('track-2');
+  });
+
+  it('safely destroys manager without calling stop or causing loops', () => {
+    manager.currentTrack = mockTrack1;
+    manager.queue = [mockTrack2];
+
+    manager.destroy();
+
+    expect(manager.currentTrack).toBeNull();
+    expect(manager.queue).toHaveLength(0);
+  });
 });
+

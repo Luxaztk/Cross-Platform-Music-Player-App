@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@components": ["../../../desktop/src/presentations/components"],
+      "@components/*": ["../../../desktop/src/presentations/components/*"],
+      "@application/*": ["../../../desktop/src/application/*"],
+      "@hooks": ["../../../desktop/src/application/hooks"],
+      "@hooks/*": ["../../../desktop/src/application/hooks/*"],
+      "@infrastructure/*": ["../../../desktop/src/infrastructure/*"],
+      "@utils/*": ["../../../desktop/src/infrastructure/utils/*"],
+      "@constants": ["../../../desktop/src/presentations/constants"],
+      "@constants/*": ["../../../desktop/src/presentations/constants/*"],
+      "@music/brand/*": ["../../../../packages/brand/*"],
+      "@music/brand": ["../../../../packages/brand"],
+      "@music/utils": ["../../../../packages/utils/src"],
+      "@music/types": ["../../../../packages/types"],
+      "@music/core": ["../../../../packages/core/src"],
+      "@music/player": ["../../../../packages/player/src"],
+      "@music/hooks": ["../../../../packages/hooks/src"],
+      "@music/hooks/*": ["../../../../packages/hooks/src/*"],
+      "@music/ui": ["../../../../packages/ui/src"],
+      "@music/i18n": ["../../../../packages/i18n/src"]
+    }
+  },
+  "include": ["**/*"]
+}

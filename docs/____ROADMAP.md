@@ -5,6 +5,7 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 ---
 
 ## 📑 Mục Lục Điều Hướng Nhanh
+
 1. [🖥️ MeloVista Desktop App (Electron)](#-1-melovista-desktop-app-electron)
 2. [📱 MeloVista Mobile App (Expo / React Native)](#-2-melovista-mobile-app-expo--react-native)
 3. [🤖 MeloVista Discord Music Bot (`apps/bot`)](#-3-melovista-discord-music-bot-appsbot)
@@ -17,6 +18,7 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 ## 🖥️ 1. MeloVista Desktop App (Electron)
 
 ### ✅ Đã Hoàn Thành (Accomplishments)
+
 - [x] **Kiến Trúc & Core Monorepo:**
   - [x] Thiết lập cấu trúc Monorepo (`apps/*`, `packages/*`).
   - [x] Tích hợp Electron + Vite + React + TypeScript.
@@ -51,10 +53,12 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 - [x] **Release Pipeline:** Tự động hóa đóng gói phát hành bản build Windows EXE (`npm run deploy`).
 
 ### ⏳ Hạng Mục Mở Rộng
+
 - [ ] **Bộ Chỉnh Âm Nâng Cao (Advanced Equalizer):** Bộ cân bằng âm thanh Graphic EQ 10-band đa dải tần.
 - [ ] **Hồ Sơ Nghệ Sĩ (Artist Profile Page):** Trang tổng quan hiển thị toàn bộ bài hát, album và thông tin nghệ sĩ.
 
 ### 🐛 Bug Fixes
+
 - [x] **Fix lỗi YouTubeAuthService - "Couldn't sign you in" (Google OAuth Block) & Chrome 127+ App-Bound Encryption:**
   - Bỏ toàn bộ Electron `BrowserWindow` cho luồng đăng nhập (Google phát hiện webview qua nhiều fingerprint không thể giả mạo).
   - Thay thế bằng flow kết hợp:
@@ -64,12 +68,12 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
   - Đồng bộ UI modal xác nhận theo chuẩn hệ thống chung (`var(--bg-modal)`, `var(--radius-lg)`).
   - Kết quả: **304/304 tests Green, Zero TypeScript errors**.
 
-
 ---
 
 ## 📱 2. MeloVista Mobile App (Expo / React Native)
 
 ### ✅ Đã Hoàn Thành (Accomplishments)
+
 - [x] **Core & Architecture:** Khởi tạo Expo app, tích hợp chung `@music/core`, TypeScript và ESLint.
 - [x] **App Shell Parity:** Hệ thống Navigation đa tầng (Bottom Bar + Sidebar), đồng bộ Theme system (Dark/Light) và i18n.
 - [x] **Data Persistence:** Triển khai `MobileStorageAdapter` lưu trữ dữ liệu Library, Playlists, PlayerState qua `AsyncStorage`.
@@ -79,6 +83,7 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 - [x] **Mobile Hardening:** Xử lý hiệu năng danh sách lớn và bỏ qua file hỏng.
 
 ### 🚀 Kế Hoạch Tiếp Theo
+
 - [ ] **Phát Nhạc Dưới Nền (Background Audio):** Cấu hình EAS build duy trì phát âm thanh khi ẩn app.
 - [ ] **Lock Screen Media Controls:** Đồng bộ thanh điều khiển nhạc trên màn hình khóa của iOS và Android.
 
@@ -120,11 +125,17 @@ Mục tiêu: Đưa trải nghiệm nghe nhạc chất lượng cao của MeloVis
   - [ ] Tính năng Autocomplete Search cho lệnh `/play` (gợi ý nhanh từ YouTube & thư viện cục bộ).
   - [ ] Tích hợp bộ lọc âm thanh thời gian thực (DSP Filters): Bass Boost, Nightcore, 8D Audio, Volume Normalization.
 
-- [ ] **Pha 4: Đồng Bộ Thư Viện MeloVista & Đóng Gói Vận Hành (0đ Hosting)**
-  - [ ] Đọc và phát playlist cá nhân từ cấu hình `@music/core`.
-  - [ ] Tích hợp trích xuất lời bài hát đồng bộ (Lyrics) hiển thị trực tiếp trong Discord Embed/Thread.
-  - [ ] Thiết lập script chạy cục bộ `npm run bot` qua `pm2` / `tsx`.
-  - [ ] Cung cấp sẵn Dockerfile / `docker-compose.yml` phục vụ deploy 24/7 trên Oracle Cloud Always Free.
+- [x] **Pha 5: Discord Embedded Activity App & Bot Hardening (Tích hợp 100% trong `apps/bot`)**
+  - [x] **Tích hợp Activity Server & Webview vào `apps/bot`**: Khởi chạy HTTP Web Server + WebSocket RPC Server trong `apps/bot` phục vụ giao diện Web App Spotify-style trực tiếp cho Discord Embedded Activity SDK.
+  - [x] **Tái sử dụng 100% Desktop React UI Components (DRY Protocol)**: Tích hợp Vite React bundle cho `apps/bot`, dùng lại trực tiếp các React Components chuẩn từ Desktop (`Sidebar`, `Header`, `PlayerBar`, `LyricsPanel`, `ThemeProvider`, `App.scss`).
+  - [x] **WebSocket RPC Protocol Engine**: Đồng bộ hai chiều trạng thái phát nhạc (seek, volume, queue, lyrics) thời gian thực giữa Bot Voice Service và Embedded Webview UI.
+  - [x] **Real-time Multi-user Sync**: Đồng bộ tương tác đa người dùng trực quan trong Voice Channel (100% tests Green).
+  - [x] **Bot Deep Audit & Resiliency Hardening (24/24 Items Hoàn Tất)**:
+    - Triệt tiêu lỗi vòng lặp `destroy()` timeout vô hạn và chống memory leak trên `MusicManager` & `BotClient`.
+    - Bảo vệ lỗ hổng SSRF trên endpoint Proxy Image với hostname whitelist.
+    - Hỗ trợ đầy đủ lệnh `SEEK` (FFmpeg `-ss`), `PREV_TRACK` (Previous Track History), và chu kỳ Repeat 3 nấc trên Activity UI.
+    - Bổ sung Interactive Queue Side Panel, WebSocket Auto-Reconnect (Exponential Backoff), và Floating Error Toast.
+    - Nâng cấp điều hướng phân trang tương tác cho lệnh `/queue` trên Discord (`createQueuePaginationComponents`).
 
 ---
 
@@ -147,30 +158,36 @@ Mục tiêu: Sử dụng Google Drive làm kho lưu trữ và cơ sở dữ li�
 Mục tiêu: Đạt 100% Coverage và duy trì trạng thái Clean Build cho toàn bộ Monorepo.
 
 ### 1. `@music/core` (Logic Nghiệp Vụ Lõi)
+
 - [x] **Mutex:** Quản lý hàng đợi và an toàn ghi dữ liệu (100% Coverage).
 - [x] **LibraryService:** Quản lý bài hát, phát hiện trùng lặp 4 lớp (Path, Hash, Metadata, URL), quản lý Playlist (100% Coverage).
 - [x] **UseCases:** Các lớp nghiệp vụ bọc ngoài LibraryService (100% Coverage).
 - [x] **Library Stability V3 & Deduplication V4:** Chống trùng lặp ảo và lọc thời lượng động 2% (100% Coverage).
 
 ### 2. `@music/utils` (Tiện Ích Dùng Chung)
+
 - [x] **formatTime:** Định dạng chuỗi mm:ss (100% Coverage).
 - [x] **splitArtists:** Phân rã danh sách nghệ sĩ kết hợp (100% Coverage).
 - [x] **youtube:** Phân tích cú pháp và trích xuất URL/ID YouTube (100% Coverage).
 
 ### 3. `@music/player` (Trình Phát Nhạc)
+
 - [x] **AudioEngine:** Điều khiển trạng thái phát & Queue management (100% Coverage).
 
 ### 4. `@music/hooks` (React State & Downloader Logic)
+
 - [x] **YoutubeDownloader:** Logic trích xuất thông tin, xử lý binary và download queue (100% Coverage).
 - [x] **LibraryProvider & PlayerProvider:** Đồng bộ trạng thái UI (100% Coverage).
 
 ### 5. Presentations (Giao Diện UI Components)
+
 - [x] **CustomDropdown Component:** Portal + ARIA Accessibility (100% Coverage).
 - [x] **Settings Page Ecosystem:** General, Appearance, Audio, Downloads, About, Fallback Avatar (100% Coverage).
 - [x] **Search System TDD:** Smart Intent (dấu tiếng Việt), SearchOverlay và SongPickerModal (100% Coverage).
 - [x] **Centralized Testing Architecture:** 100% Unit test đặt tại `src/tests/` tập trung.
 
 ### 6. `@music/bot` (Discord Bot Test Suite - Sắp Thực Hiện)
+
 - [ ] **Command Dispatcher:** Kiểm thử parse và điều hướng Slash Commands.
 - [ ] **Stream Extractor Pipe:** Kiểm thử pipe luồng âm thanh từ `yt-dlp` và file Local vào FFmpeg.
 - [ ] **Voice Connection Resilience:** Kiểm thử khả năng chịu lỗi và auto-reconnect của voice channel.

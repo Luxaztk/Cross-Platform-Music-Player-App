@@ -2,6 +2,7 @@ import { SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.j
 import type { SlashCommand, BotClient } from '../services/BotClient.js';
 import { guildLanguageStore } from '../services/GuildLanguageStore.js';
 import { createQueueEmbed } from '../ui/embeds.js';
+import { createQueuePaginationComponents } from '../ui/buttons.js';
 import { botT } from '@music/i18n';
 
 export const queueCommand: SlashCommand = {
@@ -27,6 +28,9 @@ export const queueCommand: SlashCommand = {
       lang
     );
 
-    await interaction.reply({ embeds: [embed] });
+    const totalPages = Math.max(1, Math.ceil(musicManager.queue.length / 10));
+    const components = createQueuePaginationComponents(page, totalPages, lang);
+
+    await interaction.reply({ embeds: [embed], components });
   },
 };

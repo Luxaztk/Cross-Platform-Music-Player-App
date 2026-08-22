@@ -36,11 +36,6 @@ export const playCommand: SlashCommand = {
     const musicManager = client.getMusicManager(interaction.guildId!);
     const textChannel = (interaction.channel as GuildTextBasedChannel) ?? undefined;
 
-    // Kết nối vào voice channel nếu chưa tham gia
-    if (!musicManager.voiceConnection) {
-      musicManager.join(voiceChannel, textChannel);
-    }
-
     try {
       const result = await client.streamer.getTrackInfo(query, member.user.username);
 
@@ -49,6 +44,12 @@ export const playCommand: SlashCommand = {
           embeds: [createErrorEmbed(botT(lang, 'common.no_tracks_found', { query }), lang)],
         });
         return;
+      }
+
+      // BUG-03 FIX: Chỉ join voice SAU KHI getTrackInfo thành công
+      // Tránh bot ngồi im trong kênh khi fetch thất bại (YouTube down, sai URL...)
+      if (!musicManager.voiceConnection) {
+        musicManager.join(voiceChannel, textChannel);
       }
 
       if (result.tracks.length === 1) {

@@ -12,6 +12,7 @@ import { volumeCommand } from './volume.js';
 import { languageCommand } from './language.js';
 import { loopCommand } from './loop.js';
 import { shuffleCommand } from './shuffle.js';
+import { appCommand } from './app.js';
 
 export const allCommands: SlashCommand[] = [
   pingCommand,
@@ -27,4 +28,5 @@ export const allCommands: SlashCommand[] = [
   languageCommand,
   loopCommand,
   shuffleCommand,
+  appCommand,
 ];

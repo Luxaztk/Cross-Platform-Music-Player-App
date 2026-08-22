@@ -21,7 +21,9 @@ export const leaveCommand: SlashCommand = {
       return;
     }
 
-    musicManager.destroy();
+    // DESIGN-09 FIX: Dùng removeMusicManager thay vì destroy() trực tiếp
+    // để xóa instance khỏi Map, tránh zombie instance tích lũy trong memory
+    client.removeMusicManager(interaction.guildId!);
 
     await interaction.reply({
       embeds: [createSuccessEmbed(botT(lang, 'common.success'), botT(lang, 'cmd.leave.success'), lang)],

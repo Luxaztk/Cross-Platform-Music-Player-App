@@ -2,7 +2,7 @@ import type { Interaction } from 'discord.js';
 import type { BotClient } from '../services/BotClient.js';
 import { guildLanguageStore } from '../services/GuildLanguageStore.js';
 import { createErrorEmbed, createQueueEmbed, createSuccessEmbed, createNowPlayingEmbed } from '../ui/embeds.js';
-import { createPlayerComponents } from '../ui/buttons.js';
+import { createPlayerComponents, createQueuePaginationComponents } from '../ui/buttons.js';
 import { botT } from '@music/i18n';
 import type { LoopMode } from '../services/MusicManager.js';
 
@@ -26,12 +26,12 @@ export async function onInteractionCreate(interaction: Interaction, client: BotC
         await interaction.followUp({
           embeds: [createErrorEmbed(errMsg, lang)],
           ephemeral: true,
-        }).catch(() => {});
+        }).catch(() => { });
       } else {
         await interaction.reply({
           embeds: [createErrorEmbed(errMsg, lang)],
           ephemeral: true,
-        }).catch(() => {});
+        }).catch(() => { });
       }
     }
     return;
@@ -93,8 +93,10 @@ export async function onInteractionCreate(interaction: Interaction, client: BotC
       }
 
       case 'btn_queue': {
+        const totalPages = Math.max(1, Math.ceil(musicManager.queue.length / 10));
         const embed = createQueueEmbed(musicManager.currentTrack, musicManager.queue, 1, lang);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        const components = createQueuePaginationComponents(1, totalPages, lang);
+        await interaction.reply({ embeds: [embed], components, ephemeral: true });
         break;
       }
 
@@ -106,8 +108,8 @@ export async function onInteractionCreate(interaction: Interaction, client: BotC
         // Xoay vòng: off → track → queue → off
         const nextMode: LoopMode =
           musicManager.loopMode === 'off' ? 'track'
-          : musicManager.loopMode === 'track' ? 'queue'
-          : 'off';
+            : musicManager.loopMode === 'track' ? 'queue'
+              : 'off';
 
         musicManager.setLoop(nextMode);
         const isPaused = musicManager.audioPlayer.state.status === 'paused';
@@ -152,8 +154,17 @@ export async function onInteractionCreate(interaction: Interaction, client: BotC
         break;
       }
 
-      default:
+      default: {
+        // Xử lý các nút phân trang Queue (btn_queue_page_X)
+        if (interaction.customId.startsWith('btn_queue_page_')) {
+          const targetPage = parseInt(interaction.customId.replace('btn_queue_page_', ''), 10) || 1;
+          const totalPages = Math.max(1, Math.ceil(musicManager.queue.length / 10));
+          const embed = createQueueEmbed(musicManager.currentTrack, musicManager.queue, targetPage, lang);
+          const components = createQueuePaginationComponents(targetPage, totalPages, lang);
+          await interaction.update({ embeds: [embed], components });
+        }
         break;
+      }
     }
   }
 }

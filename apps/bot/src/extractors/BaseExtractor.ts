@@ -21,5 +21,5 @@ export interface BaseExtractor {
   name: string;
   validate(query: string): boolean;
   extract(query: string, requestedBy?: string): Promise<ExtractorResult>;
-  createStream(track: TrackMetadata): Promise<Readable>;
+  createStream(track: TrackMetadata): Promise<Readable> | Readable;
 }

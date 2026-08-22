@@ -36,16 +36,20 @@ export class AudioStreamer {
     if (track.source === 'local') {
       inputStream = await this.localExtractor.createStream(track);
     } else {
-      inputStream = await this.youtubeExtractor.createStream(track);
+      inputStream = this.youtubeExtractor.createStream(track);
     }
 
     const ffmpegArgs = [
       '-analyzeduration', '0',
       '-loglevel', 'error',
-      '-f', 's16le',
-      '-ar', '48000',
-      '-ac', '2',
     ];
+
+    // DESIGN-06: Seek support — thêm -ss trước input để FFmpeg bắt đầu từ vị trí mong muốn
+    if (options.seek && options.seek > 0) {
+      ffmpegArgs.push('-ss', String(options.seek));
+    }
+
+    ffmpegArgs.push('-f', 's16le', '-ar', '48000', '-ac', '2');
 
     if (options.filter) {
       ffmpegArgs.unshift('-af', options.filter);

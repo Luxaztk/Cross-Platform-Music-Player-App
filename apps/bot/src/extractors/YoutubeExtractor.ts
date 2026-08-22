@@ -74,6 +74,12 @@ export class YoutubeExtractor implements BaseExtractor {
       let stdout = '';
       let stderr = '';
 
+      // DESIGN-03 FIX: Kill process nếu chạy quá 60 giây (network hang, geo-block)
+      const timeout = setTimeout(() => {
+        proc.kill('SIGKILL');
+        reject(new Error('yt-dlp extract timeout (60s) — kiểm tra kết nối mạng hoặc URL'));
+      }, 60_000);
+
       proc.stdout.on('data', (chunk: Buffer) => {
         stdout += chunk.toString();
       });
@@ -83,6 +89,7 @@ export class YoutubeExtractor implements BaseExtractor {
       });
 
       proc.on('close', (code) => {
+        clearTimeout(timeout);
         if (code !== 0 || !stdout.trim()) {
           return reject(
             new Error(stderr || `Không thể trích xuất thông tin bài hát từ YouTube (code ${code})`)
@@ -115,27 +122,34 @@ export class YoutubeExtractor implements BaseExtractor {
       });
 
       proc.on('error', (err) => {
+        clearTimeout(timeout);
         reject(new Error(`Không thể khởi chạy yt-dlp: ${err.message}`));
       });
     });
   }
 
   private formatEntry(entry: Record<string, unknown>, requestedBy?: string): TrackMetadata {
+    const videoId = String(entry.id || '');
     const thumbnails = entry.thumbnails as Array<{ url: string }> | undefined;
+    const rawThumb = (entry.thumbnail as string) || (thumbnails && thumbnails[thumbnails.length - 1]?.url);
+    const thumbnail = videoId
+      ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+      : rawThumb;
+
     return {
-      id: String(entry.id || ''),
+      id: videoId,
       title: String(entry.title || 'Unknown Title'),
       artist: String(entry.uploader || entry.channel || entry.artist || 'YouTube Artist'),
       album: String(entry.album || 'YouTube Music'),
       duration: Math.round(Number(entry.duration) || 0),
-      thumbnail: (entry.thumbnail as string) || (thumbnails && thumbnails[0]?.url) || undefined,
-      url: (entry.webpage_url as string) || `https://www.youtube.com/watch?v=${entry.id}`,
+      thumbnail,
+      url: (entry.webpage_url as string) || `https://www.youtube.com/watch?v=${videoId}`,
       source: 'youtube',
       requestedBy,
     };
   }
 
-  public async createStream(track: TrackMetadata): Promise<Readable> {
+  public createStream(track: TrackMetadata): Readable {
     const args = [
       '-o', '-',
       '-f', 'bestaudio/best',
@@ -150,6 +164,25 @@ export class YoutubeExtractor implements BaseExtractor {
     args.push(track.url);
 
     const proc = spawn(this.ytDlpPath, args, { shell: false });
+
+    // DESIGN-03 FIX: Kill yt-dlp sau 30s nếu không có data nào được emit
+    // Ngăn process trước bị treo vô hạn do network issue, geo-block hoặc cookie hết hạn
+    let firstDataReceived = false;
+    const streamTimeout = setTimeout(() => {
+      if (!firstDataReceived) {
+        console.warn(`[YoutubeExtractor] Stream timeout (30s) cho URL: ${track.url}. Kill yt-dlp process.`);
+        proc.kill('SIGKILL');
+      }
+    }, 30_000);
+
+    proc.stdout.once('data', () => {
+      firstDataReceived = true;
+      clearTimeout(streamTimeout);
+    });
+
+    proc.stdout.once('close', () => {
+      clearTimeout(streamTimeout);
+    });
 
     proc.stderr.on('data', (chunk: Buffer) => {
       const msg = chunk.toString();
