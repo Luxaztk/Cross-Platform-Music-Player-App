@@ -9,6 +9,10 @@ import { fileURLToPath } from 'node:url'
 
 // --- CONFIG THE PHYSICAL LOGGER (electron-log) ---
 if (app) {
+  if (process.platform === 'win32') {
+    app.setAppUserModelId('com.melovista.app');
+  }
+
   const logFolder = path.join(app.getPath('userData'), 'logs');
   log.transports.file.resolvePathFn = () => path.join(logFolder, 'main.log');
 

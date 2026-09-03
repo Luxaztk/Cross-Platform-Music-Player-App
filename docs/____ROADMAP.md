@@ -57,7 +57,15 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 - [ ] **Bộ Chỉnh Âm Nâng Cao (Advanced Equalizer):** Bộ cân bằng âm thanh Graphic EQ 10-band đa dải tần.
 - [ ] **Hồ Sơ Nghệ Sĩ (Artist Profile Page):** Trang tổng quan hiển thị toàn bộ bài hát, album và thông tin nghệ sĩ.
 
-### 🐛 Bug Fixes
+### 🐛 Bug Fixes & Cải Tiến
+
+- [x] **Đồng bộ Hardware Media Keys & Nút điều khiển Tai nghe (MediaSession API & OS SMTC):**
+  - Tích hợp chuẩn W3C MediaSession API (`navigator.mediaSession`) xử lý tương tác nút tai nghe (Play/Pause, Next, Prev, Stop, Seek) cả khi app chạy dưới nền.
+  - Đồng bộ `MediaMetadata` (Tên bài, Ca sĩ, Album, Ảnh bìa coverArt) và `playbackState` lên Windows SMTC / Volume Overlay / Lock Screen.
+  - Bổ sung lưới an toàn hai chiều (Bi-directional sync) trong `AudioEngine` gắn trực tiếp native event listeners (`pause`, `play`) lên node `HTMLMediaElement` ngầm của Howler.
+  - Bổ sung các mã phím `MediaPlayPause`, `MediaTrackNext`, `MediaTrackPrevious`, `MediaStop` vào `useGlobalHotkeys` (hoạt động ngay cả khi focus input).
+  - Cấu hình `setAppUserModelId` trên Windows trong Electron Main Process để nhận diện đúng danh tính app.
+  - Kết quả: **314/314 tests Green, Clean Build, Zero TypeScript errors**.
 
 - [x] **Fix lỗi YouTubeAuthService - "Couldn't sign you in" (Google OAuth Block) & Chrome 127+ App-Bound Encryption:**
   - Bỏ toàn bộ Electron `BrowserWindow` cho luồng đăng nhập (Google phát hiện webview qua nhiều fingerprint không thể giả mạo).

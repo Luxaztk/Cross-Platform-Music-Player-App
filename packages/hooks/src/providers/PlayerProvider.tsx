@@ -5,6 +5,7 @@ import type { IAudioEngine } from '@music/core';
 import { AudioEngine } from '@music/player';
 
 import { useAudioDevices } from '../useAudioDevices';
+import { useMediaSession } from '../useMediaSession';
 import { PlayerContext } from '../PlayerContext';
 
 
@@ -491,6 +492,18 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   const getAnalyser = useCallback(() => {
     return engineRef.current?.getAnalyser() || null;
   }, []);
+
+  useMediaSession({
+    currentSong: uiState.currentSong,
+    isPlaying: uiState.isPlaying,
+    progress: uiState.progress,
+    duration: uiState.duration,
+    play,
+    pause,
+    next,
+    prev,
+    seek,
+  });
 
   const contextValue = useMemo(() => ({
     currentSong: uiState.currentSong,

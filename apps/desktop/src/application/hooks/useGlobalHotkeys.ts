@@ -38,18 +38,40 @@ export const useGlobalHotkeys = ({
         activeElement?.tagName === 'TEXTAREA' ||
         activeElement?.contentEditable === 'true';
 
-      if (isInputField && e.key !== 'Escape') {
+      const isMediaKey =
+        e.key === 'MediaPlayPause' ||
+        e.key === 'MediaTrackNext' ||
+        e.key === 'MediaTrackPrevious' ||
+        e.key === 'MediaStop';
+
+      if (isInputField && e.key !== 'Escape' && !isMediaKey) {
         return;
       }
 
       switch (e.key) {
         case ' ':
+        case 'MediaPlayPause':
           e.preventDefault();
           if (isPlaying) {
             pause();
           } else {
             play();
           }
+          break;
+
+        case 'MediaTrackNext':
+          e.preventDefault();
+          next();
+          break;
+
+        case 'MediaTrackPrevious':
+          e.preventDefault();
+          prev();
+          break;
+
+        case 'MediaStop':
+          e.preventDefault();
+          pause();
           break;
 
         case 'ArrowRight':

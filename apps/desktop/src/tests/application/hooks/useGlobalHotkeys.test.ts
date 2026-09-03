@@ -239,6 +239,58 @@ describe('useGlobalHotkeys', () => {
     expect(mockHotkeysModal.openHotkeysModal).toHaveBeenCalled();
   });
 
+  it('should toggle play/pause on MediaPlayPause', () => {
+    renderHook(() => useGlobalHotkeys());
+    
+    // When paused, should play
+    fireKey('MediaPlayPause');
+    expect(mockPlayer.play).toHaveBeenCalled();
+
+    // When playing, should pause
+    mockPlayer.isPlaying = true;
+    vi.mocked(usePlayer).mockReturnValue({ ...mockPlayer, isPlaying: true });
+    const { unmount } = renderHook(() => useGlobalHotkeys());
+    fireKey('MediaPlayPause');
+    expect(mockPlayer.pause).toHaveBeenCalled();
+    unmount();
+  });
+
+  it('should play next on MediaTrackNext', () => {
+    renderHook(() => useGlobalHotkeys());
+    fireKey('MediaTrackNext');
+    expect(mockPlayer.next).toHaveBeenCalled();
+  });
+
+  it('should play prev on MediaTrackPrevious', () => {
+    renderHook(() => useGlobalHotkeys());
+    fireKey('MediaTrackPrevious');
+    expect(mockPlayer.prev).toHaveBeenCalled();
+  });
+
+  it('should pause on MediaStop', () => {
+    renderHook(() => useGlobalHotkeys());
+    fireKey('MediaStop');
+    expect(mockPlayer.pause).toHaveBeenCalled();
+  });
+
+  it('should allow media keys even when focus is in an input field', () => {
+    renderHook(() => useGlobalHotkeys());
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    document.body.appendChild(input);
+    input.focus();
+
+    fireKey('MediaPlayPause');
+    expect(mockPlayer.play).toHaveBeenCalled();
+
+    fireKey('MediaTrackNext');
+    expect(mockPlayer.next).toHaveBeenCalled();
+
+    input.blur();
+    document.body.removeChild(input);
+  });
+
   it('should clean up event listeners on unmount', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
     const { unmount } = renderHook(() => useGlobalHotkeys());
