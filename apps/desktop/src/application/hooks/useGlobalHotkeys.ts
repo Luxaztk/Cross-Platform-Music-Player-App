@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { usePlayer } from '@music/hooks';
 import { useHotkeysModal } from '../context/HotkeysContext';
 
@@ -12,6 +12,7 @@ export const useGlobalHotkeys = ({
   onToggleVisualizer,
 }: UseGlobalHotkeysProps = {}) => {
   const { isHotkeysModalOpen, openHotkeysModal, closeHotkeysModal } = useHotkeysModal();
+  const lastMediaPlayPauseTimeRef = useRef(0);
   const {
     play,
     pause,
@@ -50,14 +51,24 @@ export const useGlobalHotkeys = ({
 
       switch (e.key) {
         case ' ':
-        case 'MediaPlayPause':
+        case 'MediaPlayPause': {
           e.preventDefault();
+          const now = Date.now();
+          if (e.key === 'MediaPlayPause') {
+            // Hardware debounce / OS double-dispatch filter:
+            // Prevents race conditions where Windows SMTC fires both MediaSession and KeyboardEvent
+            if (now - lastMediaPlayPauseTimeRef.current < 300) {
+              break;
+            }
+            lastMediaPlayPauseTimeRef.current = now;
+          }
           if (isPlaying) {
             pause();
           } else {
             play();
           }
           break;
+        }
 
         case 'MediaTrackNext':
           e.preventDefault();

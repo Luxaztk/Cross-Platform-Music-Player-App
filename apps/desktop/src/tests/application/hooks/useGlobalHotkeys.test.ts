@@ -255,6 +255,17 @@ describe('useGlobalHotkeys', () => {
     unmount();
   });
 
+  it('should debounce rapid MediaPlayPause key events to prevent double dispatch', () => {
+    renderHook(() => useGlobalHotkeys());
+    
+    fireKey('MediaPlayPause');
+    expect(mockPlayer.play).toHaveBeenCalledTimes(1);
+
+    // Immediate second press within 300ms should be debounced
+    fireKey('MediaPlayPause');
+    expect(mockPlayer.play).toHaveBeenCalledTimes(1);
+  });
+
   it('should play next on MediaTrackNext', () => {
     renderHook(() => useGlobalHotkeys());
     fireKey('MediaTrackNext');

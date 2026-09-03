@@ -1,18 +1,9 @@
-import React, { createContext, useState, useEffect, type ReactNode } from 'react';
+import React, { useState, useEffect, type ReactNode } from 'react';
 import type { IStorageAdapter } from '@music/core';
 import app_icon_ios_dark from '@music/brand/logos/app_icon_ios_dark.png';
 import app_icon_ios_light from '@music/brand/logos/app_icon_ios_light.png';
+import { ThemeContext, type ThemeType } from './ThemeContext';
 import './ThemeProvider.scss';
-
-export type ThemeType = 'midnight' | 'amoled' | 'nord' | 'rose' | 'ocean' | 'snow';
-
-interface ThemeContextType {
-  theme: ThemeType;
-  setTheme: (theme: ThemeType) => void;
-  appIcon: string;
-}
-
-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode; storage?: IStorageAdapter }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeType>(() => {
@@ -31,6 +22,11 @@ export const ThemeProvider: React.FC<{ children: ReactNode; storage?: IStorageAd
   useEffect(() => {
     document.body.dataset.theme = theme;
     localStorage.setItem('melovista-theme', theme);
+
+    // Sync theme to electron-store so Main Process knows the active theme for the next launch
+    if (typeof window !== 'undefined' && window.electronAPI?.saveSettings) {
+      window.electronAPI.saveSettings({ appearance: { theme } }).catch(() => {});
+    }
   }, [theme]);
 
   const setTheme = (newTheme: ThemeType) => {

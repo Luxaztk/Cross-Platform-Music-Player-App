@@ -1,10 +1,22 @@
-feat(desktop): synchronize headphone controls and hardware media keys via MediaSession API
+fix(audio,desktop): prevent audio stream overlap, auto-maximize on launch, and sync theme background SSOT
 
-- Implement `useMediaSession` hook in `@music/hooks` to integrate W3C MediaSession API
-- Register action handlers for 'play', 'pause', 'previoustrack', 'nexttrack', 'stop', 'seekto', 'seekbackward', and 'seekforward'
-- Synchronize `MediaMetadata` (title, artist, album, artwork), `playbackState`, and throttled `positionState` with Windows SMTC and OS transport controls
-- Wire `useMediaSession` into `PlayerProvider` for seamless global playback synchronization across the app
-- Add `MediaPlayPause`, `MediaTrackNext`, `MediaTrackPrevious`, `MediaStop` support to `useGlobalHotkeys` with input field bypass for media keys
-- Set `app.setAppUserModelId` in Electron `main.ts` for proper Windows SMTC app branding
-- Add centralized unit tests for `useMediaSession` and media hotkeys (314/314 tests passing)
-- Update roadmap tracking in `docs/____ROADMAP.md`
+- Audio Concurrency & Stream Overlap Fix:
+  - Remove duplicate `this.howl.play()` in `AudioEngine.load()` when `autoplay: true`
+  - Add Monophonic Guard with `isPendingPlay` flag in `AudioEngine.play()` to block multiple concurrent playback nodes
+  - Forcibly pause and disconnect underlying `HTMLMediaElement` nodes on `AudioEngine.stop()` to eliminate zombie audio streams
+  - Prevent race condition track reloads in `PlayerProvider.play()` when audio is actively in 'loading' state
+  - Add 300ms hardware debounce for `MediaPlayPause` key in `useGlobalHotkeys` to filter OS SMTC double dispatch
+  - Add `type="button"` and `e.currentTarget.blur()` on Play/Pause UI button in `PlaybackControls` to prevent Space key focus trap
+
+- Window Launch & Theme SSOT:
+  - Configure Electron `BrowserWindow` to open maximized instantly (`win.maximize()`) with Zero-Latency
+  - Establish `ThemeProvider.scss` as Single Source of Truth (SSOT) for theme palette: extract `--bg-primary` via Vite raw import and `themeScssParser`
+  - Set window `backgroundColor` dynamically from user's active theme in `electron-store` to eliminate white flash
+  - Synchronize theme selection from `ThemeProvider` to `electron-store` on change
+  - Extract `ThemeContext.ts` to satisfy `react-refresh/only-export-components` rule
+
+- Testing & Roadmap:
+  - Add unit tests for monophonic guard, autoplay safety, and media key debounce
+  - Add unit tests for `themeScssParser` verifying accurate extraction of all 6 themes (318/318 Desktop tests passing)
+  - Update progress tracking in `docs/____ROADMAP.md`
+

@@ -30,6 +30,7 @@ export class AudioEngine implements IAudioEngine {
   private events: AudioEngineEvents = {};
   private currentSinkId: string = 'default';
   private pendingSeek: number | null = null;
+  private isPendingPlay: boolean = false;
 
   constructor(events?: AudioEngineEvents) {
     if (events) {
@@ -83,6 +84,7 @@ export class AudioEngine implements IAudioEngine {
 
     this.stop(); // Stop anything currently playing
     this.pendingSeek = null; // Reset pending seek on new load
+    this.isPendingPlay = autoplay;
 
     // Convert file path to custom protocol with 'app' host for standard compliance
     const url = `melovista://app/${encodeURIComponent(filePath)}`;
@@ -94,6 +96,7 @@ export class AudioEngine implements IAudioEngine {
       autoplay: autoplay,
       format: ['mp3', 'flac', 'wav', 'm4a', 'aac', 'ogg'],
       onplay: () => {
+        this.isPendingPlay = false;
         // AGGRESSIVE RESUME: Defeat Autoplay Policy Suspensions
         if (Howler.ctx && Howler.ctx.state === 'suspended') {
           Howler.ctx.resume().then(() => {
@@ -105,14 +108,17 @@ export class AudioEngine implements IAudioEngine {
         this.startTrackingProgress();
       },
       onpause: () => {
+        this.isPendingPlay = false;
         if (this.events.onPause) this.events.onPause();
         this.stopTrackingProgress();
       },
       onstop: () => {
+        this.isPendingPlay = false;
         if (this.events.onStop) this.events.onStop();
         this.stopTrackingProgress();
       },
       onend: () => {
+        this.isPendingPlay = false;
         if (this.events.onEnd) this.events.onEnd();
         this.stopTrackingProgress();
       },
@@ -136,10 +142,12 @@ export class AudioEngine implements IAudioEngine {
         this.startTrackingProgress();
       },
       onloaderror: (_id: number, err: unknown) => {
+        this.isPendingPlay = false;
         console.error('Howler load error:', err);
         if (this.events.onLoadError) this.events.onLoadError(err);
       },
       onplayerror: (_id: number, err: unknown) => {
+        this.isPendingPlay = false;
         console.error('Howler play error:', err);
         if (this.events.onPlayError) this.events.onPlayError(err);
         this.howl?.once('unlock', () => {
@@ -148,16 +156,20 @@ export class AudioEngine implements IAudioEngine {
       }
     });
 
-    if (autoplay) {
-      this.howl.play();
-    }
+    // NOTE: We deliberately do NOT call this.howl.play() here.
+    // When autoplay is true, Howler's constructor automatically queues playback upon load.
   }
 
   public play() {
     if (this.howl) {
+      // Monophonic Guard: Do not call play if already playing or pending autoplay
+      if (this.howl.playing() || this.isPendingPlay) {
+        return;
+      }
       if (this.howl.state() === 'unloaded') {
         this.howl.load();
       }
+      this.isPendingPlay = true;
       this.howl.play();
     }
   }
@@ -171,13 +183,31 @@ export class AudioEngine implements IAudioEngine {
   }
 
   public pause() {
+    this.isPendingPlay = false;
     if (this.howl && this.howl.playing()) {
       this.howl.pause();
     }
   }
 
   public stop() {
+    this.isPendingPlay = false;
     if (this.howl) {
+      // Physical node cleanup: forcibly pause and disconnect underlying HTML5 audio nodes
+      // to guarantee no zombie audio streams continue running in Chromium.
+      const sounds = (this.howl as HowlInternal)._sounds;
+      if (sounds) {
+        for (const sound of sounds) {
+          const node = sound._node as unknown as HTMLMediaElement | undefined;
+          if (node && typeof node.pause === 'function') {
+            try {
+              node.pause();
+              node.src = '';
+            } catch {
+              // Ignore
+            }
+          }
+        }
+      }
       this.howl.stop();
       this.howl.unload();
       this.howl = null;

@@ -451,11 +451,13 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
       const currentSrc = engineRef.current.getSource();
       const expectedUrl = `melovista://app/${encodeURIComponent(currentSongRef.current.filePath)}`;
       
-      if (engineState !== 'loaded' || currentSrc !== expectedUrl) {
+      if (currentSrc !== expectedUrl || engineState === 'unloaded') {
         engineRef.current.load(currentSongRef.current.filePath, true);
-      } else {
+      } else if (engineState === 'loaded') {
         engineRef.current.play();
       }
+      // If engineState === 'loading' and currentSrc === expectedUrl,
+      // the song is already actively loading with autoplay=true. Do not call load() again.
     }
   }, []);
 

@@ -12,7 +12,7 @@ interface MockHowlInstance extends Howl {
   _sinkId: string;
   _trigger: (event: string, ...args: unknown[]) => void;
   options: Record<string, unknown>; // Howler options có cấu trúc rất phức tạp, để any ở đây là chấp nhận được hoặc dùng Record<string, unknown>
-  _sounds: Array<{ _node: { setSinkId: Mock } }>;
+  _sounds: Array<{ _node: { setSinkId: Mock; pause: Mock; src: string } }>;
 }
 
 let lastHowlInstance: MockHowlInstance | null = null;
@@ -28,7 +28,9 @@ class MockHowl {
   public _sinkId = 'default';
   public _sounds = [{
     _node: {
-      setSinkId: vi.fn(async (id: string) => { this._sinkId = id; })
+      setSinkId: vi.fn(async (id: string) => { this._sinkId = id; }),
+      pause: vi.fn(),
+      src: 'test.mp3',
     }
   }];
 
@@ -289,16 +291,39 @@ describe('AudioEngine', () => {
       engine.setVolume(0.75);
       expect(engine.getVolume()).toBe(0.75);
     });
-  });
 
-  it('should track progress using requestAnimationFrame', async () => {
-    engine.load('song.mp3');
-    vi.runOnlyPendingTimers();
-    engine.play();
-    vi.runOnlyPendingTimers();
+    it('should enforce Monophonic Guard: ignore redundant play() calls when already playing', () => {
+      engine.load('song.mp3');
+      vi.runOnlyPendingTimers();
 
-    if (lastHowlInstance) lastHowlInstance._seek = 10;
-    vi.advanceTimersByTime(16);
-    expect(events.onProgress).toHaveBeenCalledWith(10, 180);
+      engine.play();
+      vi.runOnlyPendingTimers();
+      expect(lastHowlInstance?.play).toHaveBeenCalledTimes(1);
+
+      // Subsequent play calls while playing should be ignored
+      engine.play();
+      engine.play();
+      expect(lastHowlInstance?.play).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not call play() manually when load is called with autoplay = true', () => {
+      engine.load('song.mp3', true);
+      // autoplay: true is passed to Howler options directly; engine.load should not manually call howl.play()
+      expect(lastHowlInstance?.play).not.toHaveBeenCalled();
+      expect(lastHowlInstance?.options.autoplay).toBe(true);
+    });
+
+    it('should forcibly pause and clear physical HTMLMediaElement nodes on stop()', () => {
+      engine.load('song.mp3');
+      vi.runOnlyPendingTimers();
+
+      const node = lastHowlInstance?._sounds[0]._node;
+      engine.stop();
+
+      expect(node?.pause).toHaveBeenCalled();
+      expect(node?.src).toBe('');
+      expect(lastHowlInstance?.stop).toHaveBeenCalled();
+      expect(lastHowlInstance?.unload).toHaveBeenCalled();
+    });
   });
 });

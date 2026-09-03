@@ -22,6 +22,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
     return (
         <>
             <button
+                type="button"
                 className={`control-btn secondary ${isShuffle ? 'active' : ''}`}
                 onClick={onToggleShuffle}
                 disabled={disabled}
@@ -31,6 +32,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
             </button>
 
             <button
+                type="button"
                 className="control-btn"
                 onClick={onPrev}
                 disabled={disabled}
@@ -40,8 +42,16 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
             </button>
 
             <button
+                type="button"
                 className="control-btn play-btn"
-                onClick={isPlaying ? onPause : onPlay}
+                onClick={(e) => {
+                    e.currentTarget.blur();
+                    if (isPlaying) {
+                        onPause();
+                    } else {
+                        onPlay();
+                    }
+                }}
                 disabled={disabled}
                 title={isPlaying ? t('player.pause') : t('player.play')}
             >
@@ -53,6 +63,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
             </button>
 
             <button
+                type="button"
                 className="control-btn"
                 onClick={onNext}
                 disabled={disabled}
@@ -62,6 +73,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
             </button>
 
             <button
+                type="button"
                 className={`control-btn secondary ${repeatMode !== 'OFF' ? 'active' : ''}`}
                 onClick={onToggleRepeat}
                 disabled={disabled}

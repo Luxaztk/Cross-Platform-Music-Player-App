@@ -42,6 +42,10 @@ import { setupStorageIPC, storageAdapter } from './ipc/storage'
 import { setupDownloaderIPC } from './ipc/downloader'
 import { setupDialogIPC } from './ipc/dialog'
 import { logFileTrace } from './infrastructure/FileTraceLogger'
+import themeScss from '../src/presentations/components/Theme/ThemeProvider.scss?raw'
+import { extractThemeBackgroundColors } from './utils/themeScssParser'
+
+const THEME_BACKGROUND_COLORS = extractThemeBackgroundColors(themeScss)
 
 // Register custom scheme BEFORE app is ready
 protocol.registerSchemesAsPrivileged([
@@ -83,10 +87,15 @@ const AUDIO_MIME_TYPES: Record<string, string> = {
 
 let win: BrowserWindow | null
 
-function createWindow() {
+async function createWindow() {
+  const settings = await storageAdapter.getSettings()
+  const userTheme = settings?.appearance?.theme || 'midnight'
+  const backgroundColor = THEME_BACKGROUND_COLORS[userTheme] || THEME_BACKGROUND_COLORS['midnight'] || '#0a0a0a'
+
   win = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: 1280,
+    height: 800,
+    backgroundColor,
     autoHideMenuBar: true,
     icon: path.join(process.env.VITE_PUBLIC as string, 'logo.png'),
     webPreferences: {
@@ -94,6 +103,9 @@ function createWindow() {
       autoplayPolicy: 'no-user-gesture-required',
     },
   })
+
+  // Tự động mở toàn màn hình (Maximized) ngay lập tức (Zero-Latency)
+  win.maximize()
 
   // Đảm bảo tất cả các liên kết target="_blank" mở trên trình duyệt hệ thống
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -285,11 +297,11 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
+    createWindow().catch(console.error)
   }
 })
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Protocol handler for melovista://app/{encodedFilePath}
   protocol.handle('melovista', async (request) => {
     // Xử lý CORS Preflight request
@@ -422,7 +434,7 @@ app.whenReady().then(() => {
   setupStorageIPC()
   setupDownloaderIPC()
   setupDialogIPC()
-  createWindow()
+  await createWindow()
 
   // Khởi chạy cơ chế tự động cập nhật
   setupAutoUpdate()

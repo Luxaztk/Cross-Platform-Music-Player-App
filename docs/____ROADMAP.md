@@ -59,6 +59,21 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 
 ### 🐛 Bug Fixes & Cải Tiến
 
+- [x] **Tự động mở Full Size (Maximized) và đồng bộ màu nền khởi động theo Theme User:**
+  - Cấu hình Electron `BrowserWindow` mở ở trạng thái `win.maximize()` tức thì (Zero-Latency), không cần bấm nút phóng to thủ công.
+  - Thiết lập `ThemeProvider.scss` làm Single Source of Truth (SSOT) duy nhất: Dùng Vite Raw Import (`?raw`) và parser tiện ích trích xuất trực tiếp `--bg-primary` theo từng theme (không hardcode mã màu).
+  - Tự động gán `backgroundColor` cho `BrowserWindow` theo theme người dùng đã lưu trong `electron-store`, triệt tiêu hoàn toàn hiện tượng nháy/lệch màu nền khi mở app.
+  - Đồng bộ ngược cấu hình theme từ `ThemeProvider` trong Renderer Process về `electron-store` qua `window.electronAPI.saveSettings`.
+  - Kết quả: **318/318 Desktop tests Green (42/42 test files), Clean Build, Zero TypeScript errors**.
+
+- [x] **Sửa lỗi đa luồng phát nhạc đè lên nhau khi phối hợp phím Space, UI Play và Nút tai nghe:**
+  - Khắc phục xung đột double dispatch giữa `navigator.mediaSession` và `MediaPlayPause` trong `useGlobalHotkeys` (hardware debounce 300ms).
+  - Triệt tiêu lỗi "Autoplay Double-Play" trong `AudioEngine.load()` (loại bỏ lệnh gọi thừa `this.howl.play()`).
+  - Xử lý race condition trong `PlayerProvider.play()` khi audio đang ở trạng thái `'loading'` (ngăn nạp lặp lại cùng một nguồn âm thanh).
+  - Bổ sung Monophonic Playback Lock & dọn dẹp vật lý `HTMLMediaElement` ngầm trong `AudioEngine.stop()` để ngăn chặn Howler sinh nhiều sound node song song.
+  - Xử lý focus trap trên nút Play UI (`type="button"`, `blur()` ngay khi click) triệt tiêu hoàn toàn xung đột phím Space kích hoạt `click` mặc định.
+  - Kết quả: **315/315 Desktop tests Green, 13/13 Player tests Green, 19/19 Hooks tests Green, Clean Build, Zero TypeScript errors**.
+
 - [x] **Đồng bộ Hardware Media Keys & Nút điều khiển Tai nghe (MediaSession API & OS SMTC):**
   - Tích hợp chuẩn W3C MediaSession API (`navigator.mediaSession`) xử lý tương tác nút tai nghe (Play/Pause, Next, Prev, Stop, Seek) cả khi app chạy dưới nền.
   - Đồng bộ `MediaMetadata` (Tên bài, Ca sĩ, Album, Ảnh bìa coverArt) và `playbackState` lên Windows SMTC / Volume Overlay / Lock Screen.
