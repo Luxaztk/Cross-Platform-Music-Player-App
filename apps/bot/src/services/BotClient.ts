@@ -59,7 +59,10 @@ export class BotClient extends Client {
 
   public getMusicManager(guildId: string): MusicManager {
     let manager = this.musicManagers.get(guildId);
-    if (!manager) {
+    if (!manager || manager.isDestroyed) {
+      if (manager && manager.isDestroyed) {
+        manager.destroy();
+      }
       manager = new MusicManager(guildId, this.config.cookiesPath);
       this.musicManagers.set(guildId, manager);
     }

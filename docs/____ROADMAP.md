@@ -95,47 +95,41 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 
 Mục tiêu: Đưa trải nghiệm nghe nhạc chất lượng cao của MeloVista lên Discord cho nhu cầu cá nhân & bạn bè, tích hợp Monorepo, phát nhạc YouTube & Local Lossless 0đ, bypass 100% lỗi YouTube 403.
 
-- [x] **Pha 1: Khởi Tạo Workspace & Gateway Kết Nối**
+- [x] **Phase 1: Khởi Tạo Workspace & Gateway Kết Nối**
   - [x] Khởi tạo package `apps/bot` với TypeScript, `discord.js` (v14) và `@discordjs/voice`.
   - [x] Thiết lập hệ thống nạp cấu hình môi trường (`DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`).
   - [x] Xây dựng Handler tự động đăng ký và dispatch Slash Commands (`/ping`, `/join`, `/leave`).
 
-- [x] **Pha 2: Voice Audio Streaming Pipeline (yt-dlp + Local File)**
+- [x] **Phase 2: Voice Audio Streaming Pipeline (yt-dlp + Local File)**
   - [x] Tích hợp `@discordjs/voice` + `prism-media` + `opusscript`.
   - [x] Xây dựng bộ Stream Extractor kế thừa `yt-dlp` pipe stdout trực tiếp vào FFmpeg (phát tức thì < 1s).
   - [x] Tích hợp nạp file `youtube_cookies.txt` từ cấu hình cá nhân để triệt tiêu lỗi YouTube 403 / Bot Detection.
   - [x] Hỗ trợ phát trực tiếp kho nhạc Local trên PC (`.mp3`, `.flac`, `.wav`, `.m4a`) qua Voice Channel.
 
-- [x] **Pha 3: Queue Management & Interactive UI Controls**
-  - [x] **Xây dựng Discord Music Bot (`apps/bot`)**:
-  - Hỗ trợ đầy đủ 13 lệnh Slash Commands: `/play`, `/pause`, `/resume`, `/skip`, `/stop`, `/queue`, `/volume`, `/loop`, `/shuffle`, `/language`, `/ping`, `/join`, `/leave`.
-  - Tích hợp pipeline âm thanh PCM `s16le` 48kHz Stereo ➔ Mã hóa Opus với FFmpeg streaming trực tiếp.
-  - Tích hợp giao thức mã hóa đầu cuối **Discord DAVE E2EE** (`@discordjs/voice@0.19.2` + `@snazzah/davey@0.1.12` + `@noble/ciphers` + `@stablelib/xchacha20poly1305`) vượt qua mã lỗi Discord `4017`.
-  - Giao diện Discord Rich Embeds & Action Rows Buttons điều khiển trực quan theo MeloVista Emerald Style:
-    - **In-Place UI Updates (`interaction.update`)**: Cập nhật trạng thái trực tiếp trên Player Embed cũ mà không spam tin nhắn phụ.
-    - **Bố cục 2 Hàng Cân Bằng (3 + 3)**: `[ ⏸ Pause ] [ ⏭ Next ] [ ■ Stop ]` và `[ ☰ Queue ] [ ↺ Loop ] [ ⤮ Shuffle ]`.
-    - **100% Monochrome Text Symbols**: Chuẩn hóa biểu tượng đơn sắc đồng điệu thẩm mỹ.
-    - **Chế độ Lặp 3 Cấp Độ (`LoopMode`)**: Off, Track (↺¹), Queue (⟳).
-    - **Chế độ Phát Ngẫu Nhiên (`ShuffleMode`)**: Bật (⤮ / Bright Blue) / Tắt (⦿ / Secondary).
-    - **System State Guards**: Phủ kín guard clauses kiểm soát trạng thái phát cho 100% lệnh Slash Commands và nút bấm.
-  - Tích hợp tính năng **Đa Ngôn Ngữ (i18n)** qua lệnh `/language` với cơ chế lưu vĩnh viễn vào file JSON (`guild_settings.json`).
-  - Đọc 100% ID3/FLAC/M4A metadata & Cover Art từ file local qua `music-metadata` kèm fallback theo tên file.
-  - Tải Playlist siêu tốc với cờ `--flat-playlist` (phát bài đầu tiên trong < 0.8s).
-  - Đạt 100% kiểm thử Unit Test (87/87 monorepo test cases Green ✅).
+- [x] **Phase 3: Queue Management & Interactive UI Controls**
+  - [x] Hỗ trợ đầy đủ 13 lệnh Slash Commands: `/play`, `/pause`, `/resume`, `/skip`, `/stop`, `/queue`, `/volume`, `/loop`, `/shuffle`, `/language`, `/ping`, `/join`, `/leave`.
+  - [x] Tích hợp pipeline âm thanh PCM `s16le` 48kHz Stereo ➔ Mã hóa Opus với FFmpeg streaming trực tiếp.
+  - [x] Tích hợp giao thức mã hóa đầu cuối **Discord DAVE E2EE** (`@discordjs/voice@0.19.2` + `@snazzah/davey@0.1.12` + `@noble/ciphers` + `@stablelib/xchacha20poly1305`) vượt qua mã lỗi Discord `4017`.
+  - [x] Giao diện Discord Rich Embeds & Action Rows Buttons điều khiển trực quan theo MeloVista Emerald Style.
+
+- [x] **Phase 4: Discord Embedded Activity App & Bot Hardening**
+  - [x] **Tích hợp Activity Server & Webview vào `apps/bot`**: Khởi chạy HTTP Web Server + WebSocket RPC Server trong `apps/bot`.
+  - [x] **Tái sử dụng 100% Desktop React UI Components**: Tích hợp Vite React bundle cho `apps/bot`.
+  - [x] **WebSocket RPC Protocol Engine**: Đồng bộ hai chiều trạng thái phát nhạc (seek, volume, queue, lyrics) thời gian thực giữa Bot Voice Service và Embedded Webview UI.
+  - [x] **Real-time Multi-user Sync**: Đồng bộ tương tác đa người dùng trực quan trong Voice Channel (100% tests Green).
+  - [x] **Bot Deep Audit & Resiliency Hardening**: Triệt tiêu lỗi vòng lặp `destroy()`, chống memory leak, bảo vệ SSRF, hỗ trợ đầy đủ `SEEK`, `PREV_TRACK`, Repeat 3 nấc.
+  - [x] **Tài Liệu Hướng Dẫn Triển Khai Bot UI**: Cập nhật `apps/bot/README.md` với hướng dẫn chi tiết về Web Dashboard, Discord Embedded Activity (Cloudflare Tunnel/Ngrok + URL Mapping), và hướng dẫn triển khai Production.
+
+- [ ] **Phase 5: Bộ Lọc Âm Thanh Nâng Cao & Tối Ưu Tìm Kiếm (DSP & Search Expansion)**
   - [ ] Tính năng Autocomplete Search cho lệnh `/play` (gợi ý nhanh từ YouTube & thư viện cục bộ).
   - [ ] Tích hợp bộ lọc âm thanh thời gian thực (DSP Filters): Bass Boost, Nightcore, 8D Audio, Volume Normalization.
 
-- [x] **Pha 5: Discord Embedded Activity App & Bot Hardening (Tích hợp 100% trong `apps/bot`)**
-  - [x] **Tích hợp Activity Server & Webview vào `apps/bot`**: Khởi chạy HTTP Web Server + WebSocket RPC Server trong `apps/bot` phục vụ giao diện Web App Spotify-style trực tiếp cho Discord Embedded Activity SDK.
-  - [x] **Tái sử dụng 100% Desktop React UI Components (DRY Protocol)**: Tích hợp Vite React bundle cho `apps/bot`, dùng lại trực tiếp các React Components chuẩn từ Desktop (`Sidebar`, `Header`, `PlayerBar`, `LyricsPanel`, `ThemeProvider`, `App.scss`).
-  - [x] **WebSocket RPC Protocol Engine**: Đồng bộ hai chiều trạng thái phát nhạc (seek, volume, queue, lyrics) thời gian thực giữa Bot Voice Service và Embedded Webview UI.
-  - [x] **Real-time Multi-user Sync**: Đồng bộ tương tác đa người dùng trực quan trong Voice Channel (100% tests Green).
-  - [x] **Bot Deep Audit & Resiliency Hardening (24/24 Items Hoàn Tất)**:
-    - Triệt tiêu lỗi vòng lặp `destroy()` timeout vô hạn và chống memory leak trên `MusicManager` & `BotClient`.
-    - Bảo vệ lỗ hổng SSRF trên endpoint Proxy Image với hostname whitelist.
-    - Hỗ trợ đầy đủ lệnh `SEEK` (FFmpeg `-ss`), `PREV_TRACK` (Previous Track History), và chu kỳ Repeat 3 nấc trên Activity UI.
-    - Bổ sung Interactive Queue Side Panel, WebSocket Auto-Reconnect (Exponential Backoff), và Floating Error Toast.
-    - Nâng cấp điều hướng phân trang tương tác cho lệnh `/queue` trên Discord (`createQueuePaginationComponents`).
+- [ ] **Phase 6: Đóng Gói Docker, CI/CD & Triển Khai Hosting 24/7 (Packaging & Cloud Hosting)**
+  - [ ] Tạo Multi-Stage Dockerfile tối ưu dung lượng (< 250MB) kèm `yt-dlp` và `ffmpeg`.
+  - [ ] Thiết lập `docker-compose.yml` với volume persistence cho Data, Cookies & Local Music.
+  - [ ] Cấu hình PM2 Process Manager (`ecosystem.config.cjs`) cho môi trường Non-Docker.
+  - [ ] Tích hợp Cloudflare Tunnel (HTTPS/WSS 0đ) cho Discord Activity Webview.
+  - [ ] Tạo tài liệu hướng dẫn triển khai hoàn chỉnh từ A-Z (`docs/bot/__BOT_deployment_guide.md`).
 
 ---
 
@@ -198,7 +192,7 @@ Mục tiêu: Đạt 100% Coverage và duy trì trạng thái Clean Build cho to�
 
 - [📁 docs/desktop/](file:///k:/cross-platform-music-player-app/docs/desktop): Báo cáo kiến trúc, phân tích kỹ thuật và tài liệu báo cáo của bản Desktop.
 - [📁 docs/mobile/](file:///k:/cross-platform-music-player-app/docs/mobile): Thiết kế UI, luồng phát nhạc, schema lưu trữ và kế hoạch cải tiến âm thanh di động.
-- [📁 docs/bot/](file:///k:/cross-platform-music-player-app/docs/bot): Báo cáo kiến trúc bot ([`__BOT_architecture_report.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_architecture_report.md)) và đặc tả kỹ thuật Audio Pipeline ([`__BOT_audio_pipeline.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_audio_pipeline.md)).
+- [📁 docs/bot/](file:///k:/cross-platform-music-player-app/docs/bot): Báo cáo kiến trúc ([`__BOT_architecture_report.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_architecture_report.md)), đặc tả Audio Pipeline ([`__BOT_audio_pipeline.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_audio_pipeline.md)), hướng dẫn thiết lập VPS ([`__BOT_vps_setup_guide.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_vps_setup_guide.md)), báo cáo kiểm tra tương tác ([`__BOT_interaction_logic_audit.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_interaction_logic_audit.md)), và bộ kịch bản test thủ công ([`__BOT_manual_test_cases.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_manual_test_cases.md)).
 
 ---
 

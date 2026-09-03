@@ -126,6 +126,14 @@ export class ActivityServer {
     this.botClient = client;
   }
 
+  private ensureManagerListener(guildId: string, musicManager: MusicManager): void {
+    if (musicManager.listenerCount('stateChange') === 0) {
+      musicManager.on('stateChange', () => {
+        this.broadcastGuildState(guildId, musicManager);
+      });
+    }
+  }
+
   private tickerInterval: ReturnType<typeof setInterval> | null = null;
 
   public start(port: number = 3000): Promise<number> {
@@ -136,6 +144,7 @@ export class ActivityServer {
       this.tickerInterval = setInterval(() => {
         if (this.botClient) {
           for (const [guildId, musicManager] of this.botClient.musicManagers.entries()) {
+            this.ensureManagerListener(guildId, musicManager);
             if (musicManager.currentTrack && musicManager.audioPlayer.state.status !== 'idle') {
               this.broadcastGuildState(guildId, musicManager);
             }
@@ -245,6 +254,7 @@ export class ActivityServer {
     }
 
     const musicManager = this.botClient.getMusicManager(guildId);
+    this.ensureManagerListener(guildId, musicManager);
 
     switch (msg.type) {
       case 'JOIN_GUILD': {

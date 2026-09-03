@@ -9,6 +9,7 @@ import {
   VoiceConnectionStatus,
   type AudioResource,
 } from '@discordjs/voice';
+import { EventEmitter } from 'node:events';
 import type { GuildTextBasedChannel, VoiceBasedChannel, Message, Guild, GuildBasedChannel } from 'discord.js';
 import type { TrackMetadata } from '../extractors/BaseExtractor.js';
 import { AudioStreamer } from './AudioStreamer.js';
@@ -18,7 +19,7 @@ import { guildLanguageStore } from './GuildLanguageStore.js';
 
 export type LoopMode = 'off' | 'track' | 'queue';
 
-export class MusicManager {
+export class MusicManager extends EventEmitter {
   public readonly guildId: string;
   public voiceConnection: VoiceConnection | null = null;
   public readonly audioPlayer: AudioPlayer;
@@ -31,14 +32,15 @@ export class MusicManager {
   public textChannel: GuildTextBasedChannel | null = null;
   public lastVoiceChannel: VoiceBasedChannel | null = null;
   public nowPlayingMessage: Message | null = null;
+  public isDestroyed: boolean = false;
 
   private streamer: AudioStreamer;
   private currentResource: AudioResource<TrackMetadata> | null = null;
   private activeCleanup: (() => void) | null = null;
   private disconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-  private isDestroyed: boolean = false;
 
   constructor(guildId: string, cookiesPath?: string) {
+    super();
     this.guildId = guildId;
     this.streamer = new AudioStreamer(cookiesPath);
 
@@ -49,6 +51,11 @@ export class MusicManager {
     });
 
     this.setupAudioPlayerListeners();
+  }
+
+  public notifyStateChange(): void {
+    this.emit('stateChange');
+    this.updateNowPlayingMessage().catch(() => {});
   }
 
   public ensureVoiceConnection(guild?: Guild): boolean {
@@ -107,6 +114,7 @@ export class MusicManager {
   }
 
   public join(voiceChannel: VoiceBasedChannel, textChannel?: GuildTextBasedChannel): VoiceConnection {
+    this.isDestroyed = false;
     if (textChannel) {
       this.textChannel = textChannel;
     }
@@ -161,6 +169,7 @@ export class MusicManager {
   }
 
   public async enqueue(tracks: TrackMetadata | TrackMetadata[], textChannel?: GuildTextBasedChannel) {
+    this.isDestroyed = false;
     if (textChannel) {
       this.textChannel = textChannel;
     }
@@ -171,6 +180,8 @@ export class MusicManager {
     if (this.isShuffle && this.queue.length > 1) {
       this.shuffleQueueInternal();
     }
+
+    this.notifyStateChange();
 
     if (this.audioPlayer.state.status === AudioPlayerStatus.Idle && !this.currentTrack) {
       await this.playNext();
@@ -195,6 +206,7 @@ export class MusicManager {
       this.currentTrack = null;
       this.currentResource = null;
       this.scheduleDisconnect();
+      this.notifyStateChange();
       return false;
     }
 
@@ -246,6 +258,7 @@ export class MusicManager {
         }
       }
 
+      this.notifyStateChange();
       return true;
     } catch (err) {
       let msg = err instanceof Error ? err.message : String(err);
@@ -292,16 +305,30 @@ export class MusicManager {
   }
 
   public pause(): boolean {
-    return this.audioPlayer.pause();
+    const ok = this.audioPlayer.pause();
+    if (ok) {
+      this.scheduleDisconnect(); // Lên lịch ngắt kết nối nếu pause quá 3 phút không ai resume
+      this.notifyStateChange();
+    }
+    return ok;
   }
 
   public resume(): boolean {
-    return this.audioPlayer.unpause();
+    const ok = this.audioPlayer.unpause();
+    if (ok) {
+      if (this.disconnectTimeout) {
+        clearTimeout(this.disconnectTimeout);
+        this.disconnectTimeout = null;
+      }
+      this.notifyStateChange();
+    }
+    return ok;
   }
 
   public skip(): boolean {
     if (!this.currentTrack) return false;
     this.audioPlayer.stop();
+    this.notifyStateChange();
     return true;
   }
 
@@ -319,15 +346,18 @@ export class MusicManager {
       this.activeCleanup = null;
     }
     this.scheduleDisconnect();
+    this.notifyStateChange();
   }
 
   public setVolume(vol: number): boolean {
     this.volume = Math.max(0, Math.min(150, vol));
+    let success = false;
     if (this.currentResource?.volume) {
       this.currentResource.volume.setVolume(this.volume / 100);
-      return true;
+      success = true;
     }
-    return false;
+    this.notifyStateChange();
+    return success;
   }
 
   public getPlaybackPosition(): number {
@@ -344,6 +374,7 @@ export class MusicManager {
     this.queue.unshift(this.previousTrack);
     this.previousTrack = null;
     this.audioPlayer.stop();
+    this.notifyStateChange();
     return true;
   }
 
@@ -366,6 +397,7 @@ export class MusicManager {
       this.currentResource = resource;
       this.activeCleanup = cleanup;
       this.audioPlayer.play(resource);
+      this.notifyStateChange();
       return true;
     } catch (err) {
       console.error(`[MusicManager] seekTo failed:`, err);
@@ -375,6 +407,7 @@ export class MusicManager {
 
   public setLoop(mode: LoopMode): LoopMode {
     this.loopMode = mode;
+    this.notifyStateChange();
     return this.loopMode;
   }
 
@@ -383,6 +416,7 @@ export class MusicManager {
     if (this.isShuffle && this.queue.length > 0) {
       this.shuffleQueueInternal();
     }
+    this.notifyStateChange();
     return this.isShuffle;
   }
 
@@ -396,6 +430,7 @@ export class MusicManager {
   public shuffle(): number {
     this.isShuffle = true;
     this.shuffleQueueInternal();
+    this.notifyStateChange();
     return this.queue.length;
   }
 
@@ -443,5 +478,7 @@ export class MusicManager {
       this.voiceConnection.destroy();
       this.voiceConnection = null;
     }
+
+    this.emit('stateChange');
   }
 }
