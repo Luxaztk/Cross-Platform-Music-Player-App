@@ -39,21 +39,27 @@ export class AudioStreamer {
       inputStream = this.youtubeExtractor.createStream(track);
     }
 
-    const ffmpegArgs = [
+    // BUG-A4 FIX: Tách rõ input args và output args để -af filter vào đúng output section
+    // Cấu trúc chuẩn FFmpeg: [input_opts] [-ss seek] [-af filter] [output_format]
+    const ffmpegInputArgs: string[] = [
       '-analyzeduration', '0',
       '-loglevel', 'error',
     ];
 
-    // DESIGN-06: Seek support — thêm -ss trước input để FFmpeg bắt đầu từ vị trí mong muốn
+    // DESIGN-06: Seek support — -ss trước output để seek hiệu quả
     if (options.seek && options.seek > 0) {
-      ffmpegArgs.push('-ss', String(options.seek));
+      ffmpegInputArgs.push('-ss', String(options.seek));
     }
 
-    ffmpegArgs.push('-f', 's16le', '-ar', '48000', '-ac', '2');
-
+    const ffmpegOutputArgs: string[] = [];
     if (options.filter) {
-      ffmpegArgs.unshift('-af', options.filter);
+      // -af phải là OUTPUT filter — đứng TRƯỚC output format flags
+      ffmpegOutputArgs.push('-af', options.filter);
     }
+    ffmpegOutputArgs.push('-f', 's16le', '-ar', '48000', '-ac', '2');
+
+    const ffmpegArgs = [...ffmpegInputArgs, ...ffmpegOutputArgs];
+
 
     const transcoder = new prism.FFmpeg({
       args: ffmpegArgs,

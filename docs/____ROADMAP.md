@@ -150,6 +150,25 @@ Mục tiêu: Đưa trải nghiệm nghe nhạc chất lượng cao của MeloVis
   - [x] **Real-time Multi-user Sync**: Đồng bộ tương tác đa người dùng trực quan trong Voice Channel (100% tests Green).
   - [x] **Bot Deep Audit & Resiliency Hardening**: Triệt tiêu lỗi vòng lặp `destroy()`, chống memory leak, bảo vệ SSRF, hỗ trợ đầy đủ `SEEK`, `PREV_TRACK`, Repeat 3 nấc.
   - [x] **Tài Liệu Hướng Dẫn Triển Khai Bot UI**: Cập nhật `apps/bot/README.md` với hướng dẫn chi tiết về Web Dashboard, Discord Embedded Activity (Cloudflare Tunnel/Ngrok + URL Mapping), và hướng dẫn triển khai Production.
+  - [x] **Critical Bug Fix Sprint (P0+P1)** *(04/09/2026)*: Vá 8 lỗi nghiêm trọng qua 5 files, tsc Zero errors, 18/18 Tests Green.
+    - `BUG-A1` VoiceConnection reconnect race condition (`Promise.race` sai → `rejoin()` + 20s Ready)
+    - `BUG-A2` `playNext()` đệ quy không giới hạn → `consecutiveFailures` counter MAX=5
+    - `BUG-A3` `sendStateToClient()` thiếu try/catch → Unhandled WebSocket exception
+    - `BUG-A4` FFmpeg `-af` filter vị trí sai → DSP filters silently fail (tách `inputArgs/outputArgs`)
+    - `BUG-A5` Playlist flat-mode URL `undefined` → validate + skip invalid entries
+    - `IMP-B1` Double `destroy()` redundant trong `BotClient.getMusicManager()`
+    - `IMP-B2` `NoSubscriberBehavior.Pause` → `Stop` (ngăn bot freeze khi voice drop)
+    - `IMP-B3` yt-dlp zombie process khi skip → override `stdout.destroy()` kill `SIGKILL`
+    - `DEP-C2` Queue không giới hạn → `MAX_QUEUE_SIZE = 500` guard trong `PLAY_TRACK`
+  - [x] **Remaining Points & Production Hardening Sprint (P2+P3)** *(04/09/2026)*: Triển khai toàn bộ 8 điểm audit còn lại, tsc Zero errors, 19/19 Tests Green.
+    - `BUG-A6` Triệt tiêu Ticker 1s Broadcast Storm: Chỉ broadcast khi có WebSocket client kết nối thực tế tới guild; chuyển sang event-driven `stateChange` listener; bọc `ws.send` try/catch dọn dead connections.
+    - `IMP-B7` Debounce 500ms cho `updateNowPlayingMessage()`: Ngăn chặn triệt để mã lỗi rate limit `429 Too Many Requests` của Discord API khi kéo volume hoặc bấm nút liên tiếp.
+    - `DEP-C3` Netscape Cookies Expiration & Validity Check trong `YoutubeExtractor`: Kiểm tra epoch expiration của cookies đăng nhập (`LOGIN_INFO`, `SAPISID`...) và cảnh báo sớm.
+    - `DEP-C4` Auto-rejoin Voice Connection khi Discord Gateway reconnect (`Events.ShardResume` & `Events.VoiceStateUpdate`).
+    - `IMP-B4` Button Prefix Guard (`btn_`) trong `interactionCreate`: Ngăn chặn khởi tạo dư thừa `MusicManager` instance từ các button tương tác ngoài.
+    - `IMP-B8` Slash Commands SHA-256 Hash Caching (`ready.ts`): Bỏ qua `rest.put(...)` nếu commands không thay đổi khi bot khởi động lại (tránh rate limit đăng ký lệnh).
+    - `IMP-B5` SPA Fallback Header `Content-Type: text/html; charset=utf-8` trong `ActivityServer`.
+    - `DEP-C1` Bổ sung metrics giám sát hệ thống (`activeGuilds`, `wsClients`, `uptime`, `memoryUsage` heap/rss) vào `/api/health` cho server Pentium N6000 4GB RAM.
 
 - [ ] **Phase 5: Bộ Lọc Âm Thanh Nâng Cao & Tối Ưu Tìm Kiếm (DSP & Search Expansion)**
   - [ ] Tính năng Autocomplete Search cho lệnh `/play` (gợi ý nhanh từ YouTube & thư viện cục bộ).
@@ -224,6 +243,7 @@ Mục tiêu: Đạt 100% Coverage và duy trì trạng thái Clean Build cho to�
 - [📁 docs/desktop/](file:///k:/cross-platform-music-player-app/docs/desktop): Báo cáo kiến trúc, phân tích kỹ thuật và tài liệu báo cáo của bản Desktop.
 - [📁 docs/mobile/](file:///k:/cross-platform-music-player-app/docs/mobile): Thiết kế UI, luồng phát nhạc, schema lưu trữ và kế hoạch cải tiến âm thanh di động.
 - [📁 docs/bot/](file:///k:/cross-platform-music-player-app/docs/bot): Báo cáo kiến trúc ([`__BOT_architecture_report.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_architecture_report.md)), đặc tả Audio Pipeline ([`__BOT_audio_pipeline.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_audio_pipeline.md)), hướng dẫn thiết lập VPS ([`__BOT_vps_setup_guide.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_vps_setup_guide.md)), báo cáo kiểm tra tương tác ([`__BOT_interaction_logic_audit.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_interaction_logic_audit.md)), và bộ kịch bản test thủ công ([`__BOT_manual_test_cases.md`](file:///k:/cross-platform-music-player-app/docs/bot/__BOT_manual_test_cases.md)).
+- [📁 docs/server/](file:///k:/cross-platform-music-player-app/docs/server): Thông số kỹ thuật máy chủ Homelab và định hướng kiến trúc Streaming ([`SERVER_SPECIFICATIONS.md`](file:///k:/cross-platform-music-player-app/docs/server/SERVER_SPECIFICATIONS.md)).
 
 ---
 

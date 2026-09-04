@@ -12,6 +12,60 @@ export class YoutubeExtractor implements BaseExtractor {
   constructor(cookiesPath?: string) {
     this.cookiesPath = cookiesPath;
     this.ytDlpPath = this.resolveYtDlpBinary();
+    if (this.cookiesPath) {
+      this.checkCookieValidity();
+    }
+  }
+
+  // DEP-C3 FIX: Kiểm tra tính hợp lệ và thời hạn của cookies Netscape
+  public checkCookieValidity(): { valid: boolean; expiredCount: number; warning?: string } {
+    if (!this.cookiesPath || !fs.existsSync(this.cookiesPath)) {
+      return { valid: true, expiredCount: 0 };
+    }
+
+    try {
+      const content = fs.readFileSync(this.cookiesPath, 'utf-8');
+      const lines = content.split('\n');
+      const nowSec = Math.floor(Date.now() / 1000);
+      let expiredCount = 0;
+      let totalCookies = 0;
+      let hasExpiredCritical = false;
+
+      // Danh sách các cookie quan trọng để bypass YouTube bot detection
+      const criticalCookieNames = new Set(['LOGIN_INFO', 'SAPISID', 'SSID', '__Secure-3PSID', '__Secure-1PSID']);
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || (trimmed.startsWith('#') && !trimmed.startsWith('#HttpOnly_'))) {
+          continue;
+        }
+
+        const cols = trimmed.split('\t');
+        if (cols.length >= 7) {
+          totalCookies++;
+          const expiry = parseInt(cols[4], 10);
+          const name = cols[5];
+
+          if (expiry > 0 && expiry < nowSec) {
+            expiredCount++;
+            if (criticalCookieNames.has(name)) {
+              hasExpiredCritical = true;
+            }
+          }
+        }
+      }
+
+      if (hasExpiredCritical || (totalCookies > 0 && expiredCount === totalCookies)) {
+        const warning = `[YoutubeExtractor] ⚠️ CẢNH BÁO: File cookies (${this.cookiesPath}) chứa ${expiredCount}/${totalCookies} cookie đã hết hạn (bao gồm cookie đăng nhập). Có thể gặp lỗi 403 Forbidden hoặc Bot Detection!`;
+        console.warn(warning);
+        return { valid: false, expiredCount, warning };
+      }
+
+      return { valid: true, expiredCount };
+    } catch (err) {
+      console.warn(`[YoutubeExtractor] Không thể kiểm tra hạn cookies (${this.cookiesPath}):`, err);
+      return { valid: true, expiredCount: 0 };
+    }
   }
 
   private resolveYtDlpBinary(): string {
@@ -104,7 +158,14 @@ export class YoutubeExtractor implements BaseExtractor {
           if (raw._type === 'playlist' && Array.isArray(raw.entries)) {
             for (const entry of raw.entries) {
               if (entry && entry.id) {
-                tracks.push(this.formatEntry(entry, requestedBy));
+                const formatted = this.formatEntry(entry, requestedBy);
+                // BUG-A5 FIX: Skip entries không có URL hợp lệ (private/geo-blocked/age-gated)
+                // --flat-playlist không đảm bảo webpage_url luôn tồn tại
+                if (formatted.url && !formatted.url.includes('undefined') && !formatted.url.includes('/watch?v=\n')) {
+                  tracks.push(formatted);
+                } else {
+                  console.warn(`[YoutubeExtractor] Bỏ qua entry không có URL hợp lệ: id=${String(entry.id)}`);
+                }
               }
             }
             return resolve({
@@ -191,6 +252,19 @@ export class YoutubeExtractor implements BaseExtractor {
       }
     });
 
-    return proc.stdout;
+    // IMP-B3 FIX: Override destroy() để kill yt-dlp process rõ ràng
+    // Trên Linux server, khi stream bị destroy (skip/stop), proc gốc vẫn chạy
+    // cho đến khi SIGPIPE hoặc timeout, tạo zombie processes ngốn CPU
+    const stdout = proc.stdout;
+    const originalDestroy = stdout.destroy.bind(stdout);
+    stdout.destroy = (err?: Error): typeof stdout => {
+      if (!proc.killed) {
+        proc.kill('SIGKILL');
+      }
+      clearTimeout(streamTimeout);
+      return originalDestroy(err);
+    };
+
+    return stdout;
   }
 }

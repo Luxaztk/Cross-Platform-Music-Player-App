@@ -1,6 +1,12 @@
 import dotenv from 'dotenv';
 import path from 'node:path';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const currentDir =
+  typeof import.meta.dirname !== 'undefined'
+    ? import.meta.dirname
+    : path.dirname(fileURLToPath(import.meta.url));
 
 // Tìm và nạp file .env từ nhiều vị trí tiềm năng (khi chạy từ root monorepo hoặc từ trong apps/bot)
 const envCandidatePaths = [
@@ -8,8 +14,8 @@ const envCandidatePaths = [
   path.resolve(process.cwd(), 'apps/bot/.env'),
   path.resolve(process.cwd(), '.env.local'),
   path.resolve(process.cwd(), '.env'),
-  path.resolve(import.meta.dirname, '../../.env.local'),
-  path.resolve(import.meta.dirname, '../../.env'),
+  path.resolve(currentDir, '../../.env.local'),
+  path.resolve(currentDir, '../../.env'),
 ];
 
 for (const envPath of envCandidatePaths) {

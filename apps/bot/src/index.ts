@@ -14,7 +14,7 @@ async function bootstrap() {
     const activityServer = new ActivityServer(client);
 
     // Khởi chạy HTTP & WebSocket Server cho Discord Embedded Activity
-    const activityPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+    const activityPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 36970;
     await activityServer.start(activityPort).catch((err) => {
       console.warn('[ActivityServer] Không thể khởi chạy Web Server:', err);
     });

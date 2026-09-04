@@ -16,8 +16,15 @@ describe('ActivityServer Unit Tests', () => {
     await server.stop();
   });
 
-  it('should respond to HTTP health check', async () => {
-    const res = await new Promise<{ status: string }>((resolve, reject) => {
+  it('should respond to HTTP health check with enhanced metrics', async () => {
+    const res = await new Promise<{
+      status: string;
+      botReady: boolean;
+      activeGuilds: number;
+      wsClients: number;
+      uptime: number;
+      memoryUsage: { heapUsedMb: number; rssMb: number };
+    }>((resolve, reject) => {
       http.get(`http://localhost:${testPort}/api/health`, (res) => {
         let data = '';
         res.on('data', (chunk) => (data += chunk));
@@ -27,6 +34,11 @@ describe('ActivityServer Unit Tests', () => {
     });
 
     expect(res.status).toBe('ok');
+    expect(typeof res.activeGuilds).toBe('number');
+    expect(typeof res.wsClients).toBe('number');
+    expect(typeof res.uptime).toBe('number');
+    expect(res.memoryUsage).toBeDefined();
+    expect(typeof res.memoryUsage.heapUsedMb).toBe('number');
   });
 
   it('should accept WebSocket connection and respond to messages', async () => {

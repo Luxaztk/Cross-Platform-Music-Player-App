@@ -16,6 +16,9 @@ export interface ActivityMessage {
   seekSec?: number;
 }
 
+// DEP-C2 FIX: Giới hạn kích thước hàng đợi để ngăn abuse (spam /play playlist 10.000 bài)
+const MAX_QUEUE_SIZE = 500;
+
 export interface ClientConnection {
   ws: WebSocket;
   guildId?: string;
@@ -46,9 +49,21 @@ export class ActivityServer {
     this.app.use(express.static(publicPath));
     this.app.use(express.json());
 
-    // Health check & status endpoint
+    // Health check & status endpoint (DEP-C1: Bổ sung metrics giám sát hệ thống)
     this.app.get('/api/health', (_req, res) => {
-      res.json({ status: 'ok', botReady: !!this.botClient?.user, timestamp: Date.now() });
+      const memory = process.memoryUsage();
+      res.json({
+        status: 'ok',
+        botReady: !!this.botClient?.user,
+        activeGuilds: this.botClient?.musicManagers.size || 0,
+        wsClients: this.clients.size,
+        uptime: Math.floor(process.uptime()),
+        memoryUsage: {
+          heapUsedMb: Math.round((memory.heapUsed / 1024 / 1024) * 100) / 100,
+          rssMb: Math.round((memory.rss / 1024 / 1024) * 100) / 100,
+        },
+        timestamp: Date.now(),
+      });
     });
 
     // Image proxy endpoint to bypass Discord CSP & Referrer restrictions
@@ -102,6 +117,8 @@ export class ActivityServer {
     this.app.use((_req, res) => {
       res.sendFile(path.join(publicPath, 'index.html'), (err) => {
         if (err) {
+          // IMP-B5 FIX: Thêm Content-Type rõ ràng cho fallback HTML string
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
           res.status(200).send(`
             <!DOCTYPE html>
             <html>
@@ -126,28 +143,53 @@ export class ActivityServer {
     this.botClient = client;
   }
 
+  private subscribedManagers = new WeakSet<MusicManager>();
+
+  private hasConnectedClients(guildId: string): boolean {
+    for (const client of this.clients) {
+      if (client.guildId === guildId && client.ws.readyState === WebSocket.OPEN) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private ensureManagerListener(guildId: string, musicManager: MusicManager): void {
-    if (musicManager.listenerCount('stateChange') === 0) {
-      musicManager.on('stateChange', () => {
-        this.broadcastGuildState(guildId, musicManager);
+    if (!this.subscribedManagers.has(musicManager)) {
+      this.subscribedManagers.add(musicManager);
+      const listener = () => {
+        if (this.hasConnectedClients(guildId)) {
+          this.broadcastGuildState(guildId, musicManager);
+        }
+      };
+      musicManager.on('stateChange', listener);
+      musicManager.once('destroy', () => {
+        musicManager.off('stateChange', listener);
       });
     }
   }
 
   private tickerInterval: ReturnType<typeof setInterval> | null = null;
 
-  public start(port: number = 3000): Promise<number> {
+  public start(port: number = 36970): Promise<number> {
     return new Promise((resolve, reject) => {
       this.server = http.createServer(this.app);
       this.wss = new WebSocketServer({ server: this.server });
 
+      // BUG-A6 FIX: Ngăn chặn Ticker 1s Broadcast Storm
+      // 1. Nếu không có client WebSocket nào kết nối (clients.size === 0), ticker bỏ qua toàn bộ
+      // 2. Chỉ broadcast cho guild có client kết nối thực tế (hasConnectedClients)
       this.tickerInterval = setInterval(() => {
-        if (this.botClient) {
-          for (const [guildId, musicManager] of this.botClient.musicManagers.entries()) {
-            this.ensureManagerListener(guildId, musicManager);
-            if (musicManager.currentTrack && musicManager.audioPlayer.state.status !== 'idle') {
-              this.broadcastGuildState(guildId, musicManager);
-            }
+        if (!this.botClient || this.clients.size === 0) return;
+
+        for (const [guildId, musicManager] of this.botClient.musicManagers.entries()) {
+          this.ensureManagerListener(guildId, musicManager);
+          if (
+            this.hasConnectedClients(guildId) &&
+            musicManager.currentTrack &&
+            musicManager.audioPlayer.state.status !== 'idle'
+          ) {
+            this.broadcastGuildState(guildId, musicManager);
           }
         }
       }, 1000);
@@ -223,7 +265,12 @@ export class ActivityServer {
 
     for (const client of this.clients) {
       if (client.guildId === guildId && client.ws.readyState === WebSocket.OPEN) {
-        client.ws.send(payload);
+        try {
+          client.ws.send(payload);
+        } catch (err) {
+          console.error('[ActivityServer] broadcastState error — removing dead connection:', err);
+          this.clients.delete(client);
+        }
       }
     }
   }
@@ -329,6 +376,15 @@ export class ActivityServer {
           }
           conn.lastPlayRequestTime = now;
 
+          // DEP-C2 FIX: Kiểm tra giới hạn queue trước khi enqueue
+          if (musicManager.queue.length >= MAX_QUEUE_SIZE) {
+            this.sendToClient(conn, {
+              type: 'ERROR',
+              message: `Hàng đợi đã đầy (tối đa ${MAX_QUEUE_SIZE} bài). Vui lòng dùng /stop để xóa hàng đợi.`,
+            });
+            break;
+          }
+
           const targetGuild = this.botClient.guilds.cache.get(guildId) || this.botClient.guilds.cache.first();
           musicManager.ensureVoiceConnection(targetGuild);
 
@@ -428,7 +484,14 @@ export class ActivityServer {
         durationSec: musicManager.currentTrack?.duration || 0,
       },
     };
-    conn.ws.send(JSON.stringify(statePayload));
+    // BUG-A3 FIX: Wrap ws.send() trong try/catch để ngăn unhandled exception
+    // khi client disconnect giữa chừng sau khi readyState đã pass check
+    try {
+      conn.ws.send(JSON.stringify(statePayload));
+    } catch (err) {
+      console.error('[ActivityServer] sendStateToClient error — removing dead connection:', err);
+      this.clients.delete(conn);
+    }
   }
 
   private broadcastGuildState(guildId: string, musicManager: MusicManager): void {

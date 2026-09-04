@@ -34,8 +34,8 @@ CLIENT_ID=your_client_id_here
 # 3. Guild Server ID (Chuột phải vào icon Server Discord -> Copy Server ID để sync lệnh tức thì)
 GUILD_ID=your_test_guild_id_here
 
-# 4. Cổng HTTP/WebSocket Server cho Bot UI (Mặc định: 3000)
-PORT=3000
+# 4. Cổng HTTP/WebSocket Server cho Bot UI (Mặc định: 36970)
+PORT=36970
 
 # 5. Đường dẫn file Cookie YouTube (Tùy chọn - bypass lỗi 403 / giới hạn độ tuổi)
 COOKIES_PATH=
@@ -74,22 +74,22 @@ flowchart LR
         User2([Local / LAN User]) -->|HTTP / WS| ActivityServer
     end
 
-    CloudflareTunnel -->|Reverse Proxy| ActivityServer[ActivityServer :3000]
+    CloudflareTunnel -->|Reverse Proxy| ActivityServer[ActivityServer :36970]
     ActivityServer --> MusicManager[MusicManager Audio Engine]
     MusicManager --> DiscordVoice[Discord Voice WebRTC Stream]
 ```
 
 ### 🔹 Phương Án 1: Truy Cập Web Dashboard Trực Tiếp (Local & Mạng LAN)
 
-Khi chạy Bot (`npm run bot` hoặc `npm run bot:dev`), `ActivityServer` sẽ tự động khởi chạy HTTP Server và WebSocket Server tại cổng `PORT` (mặc định là `3000`):
+Khi chạy Bot (`npm run bot` hoặc `npm run bot:dev`), `ActivityServer` sẽ tự động khởi chạy HTTP Server và WebSocket Server tại cổng `PORT` (mặc định là `36970`):
 
 1. Mở trình duyệt web và truy cập:
    ```text
-   http://localhost:3000
+   http://localhost:36970
    ```
 2. Nếu muốn truy cập từ thiết bị khác trong cùng mạng LAN:
    ```text
-   http://<IP_MAY_CHU_CUA_BAN>:3000
+   http://<IP_MAY_CHU_CUA_BAN>:36970
    ```
 3. **Tính năng**: Xem danh sách bài hát đang phát, thanh tiến trình thời gian thực, điều chỉnh âm lượng, tìm kiếm bài hát trên YouTube và thêm vào hàng đợi trực tiếp từ trình duyệt.
 
@@ -101,21 +101,21 @@ Discord Embedded Activity cho phép người dùng trong phòng thoại mở tr�
 
 > [!IMPORTANT]
 > **Yêu cầu kỹ thuật bắt buộc từ Discord**:
-> Discord Webview **chỉ chấp nhận các kết nối bảo mật qua giao thức HTTPS và WebSocket WSS**. Do đó, bạn cần tạo một URL Public HTTPS trỏ về `http://localhost:3000`.
+> Discord Webview **chỉ chấp nhận các kết nối bảo mật qua giao thức HTTPS và WebSocket WSS**. Do đó, bạn cần tạo một URL Public HTTPS trỏ về `http://localhost:36970`.
 
 #### Bước 1: Tạo HTTPS Tunnel miễn phí (Khuyên dùng Cloudflare Tunnel)
 
 **Cách A: Dùng Cloudflare Quick Tunnel (Nhanh nhất cho môi trường Dev / Cá nhân)**
 ```bash
 # Cài đặt cloudflared (hoặc tải binary từ GitHub Cloudflare)
-# Khởi chạy Quick Tunnel trỏ về cổng 3000:
-cloudflared tunnel --url http://localhost:3000
+# Khởi chạy Quick Tunnel trỏ về cổng 36970:
+cloudflared tunnel --url http://localhost:36970
 ```
 Terminal sẽ in ra một đường dẫn HTTPS công khai (ví dụ: `https://melovista-demo.trycloudflare.com`).
 
 **Cách B: Dùng Ngrok (Thay thế)**
 ```bash
-ngrok http 3000
+ngrok http 36970
 ```
 Lấy URL dạng `https://xxxx.ngrok-free.app`.
 

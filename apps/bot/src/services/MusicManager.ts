@@ -38,6 +38,11 @@ export class MusicManager extends EventEmitter {
   private currentResource: AudioResource<TrackMetadata> | null = null;
   private activeCleanup: (() => void) | null = null;
   private disconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  // BUG-A2 FIX: Đếm số lần playNext() thất bại liên tiếp để ngăn đệ quy vô hạn
+  private consecutiveFailures: number = 0;
+  private readonly MAX_CONSECUTIVE_FAILURES = 5;
+  // IMP-B7 FIX: Debounce timer cho updateNowPlayingMessage để ngăn dính Discord rate limit 429
+  private nowPlayingDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(guildId: string, cookiesPath?: string) {
     super();
@@ -46,7 +51,9 @@ export class MusicManager extends EventEmitter {
 
     this.audioPlayer = createAudioPlayer({
       behaviors: {
-        noSubscriber: NoSubscriberBehavior.Pause,
+        // IMP-B2 FIX: Dùng Stop thay vì Pause để khi VoiceConnection bị drop tạm thời,
+        // AudioPlayer phát Idle event → handleTrackEnd() tự retry, tránh bot bị đóng băng
+        noSubscriber: NoSubscriberBehavior.Stop,
       },
     });
 
@@ -55,7 +62,7 @@ export class MusicManager extends EventEmitter {
 
   public notifyStateChange(): void {
     this.emit('stateChange');
-    this.updateNowPlayingMessage().catch(() => {});
+    this.updateNowPlayingMessage(false).catch(() => {});
   }
 
   public ensureVoiceConnection(guild?: Guild): boolean {
@@ -155,12 +162,14 @@ export class MusicManager extends EventEmitter {
     });
 
     this.voiceConnection.on(VoiceConnectionStatus.Disconnected, async () => {
+      // BUG-A1 FIX: Pattern chính thức discord.js v14 — chủ động rejoin trước rồi chờ Ready
+      // Thay vì Promise.race 2 transitional states (sai logic) với timeout 5s quá ngắn
+      if (this.isDestroyed) return;
       try {
-        await Promise.race([
-          entersState(this.voiceConnection!, VoiceConnectionStatus.Signalling, 5_000),
-          entersState(this.voiceConnection!, VoiceConnectionStatus.Connecting, 5_000),
-        ]);
+        this.voiceConnection!.rejoin();
+        await entersState(this.voiceConnection!, VoiceConnectionStatus.Ready, 20_000);
       } catch (_error) {
+        console.warn(`[MusicManager ${this.guildId}] VoiceConnection không thể reconnect trong 20s. Đang hủy.`);
         this.destroy();
       }
     });
@@ -258,6 +267,8 @@ export class MusicManager extends EventEmitter {
         }
       }
 
+      // BUG-A2 FIX: Reset counter khi phát thành công
+      this.consecutiveFailures = 0;
       this.notifyStateChange();
       return true;
     } catch (err) {
@@ -277,13 +288,44 @@ export class MusicManager extends EventEmitter {
         }).catch(() => { });
       }
 
-      // Thử phát bài tiếp theo
+      // BUG-A2 FIX: Giới hạn số lần đệ quy liên tiếp để ngăn crash Node.js
+      this.consecutiveFailures++;
+      if (this.consecutiveFailures >= this.MAX_CONSECUTIVE_FAILURES) {
+        console.error(`[MusicManager ${this.guildId}] ${this.MAX_CONSECUTIVE_FAILURES} lần thất bại liên tiếp. Dừng phát và lên lịch ngắt kết nối.`);
+        if (this.textChannel) {
+          this.textChannel.send({
+            embeds: [createErrorEmbed(`Đã bỏ qua ${this.MAX_CONSECUTIVE_FAILURES} bài liên tiếp do lỗi. Hàng đợi bị tạm dừng.`)],
+          }).catch(() => {});
+        }
+        this.consecutiveFailures = 0;
+        this.scheduleDisconnect();
+        return false;
+      }
       return this.playNext();
     }
   }
 
-  public async updateNowPlayingMessage(): Promise<void> {
+  public async updateNowPlayingMessage(immediate: boolean = true): Promise<void> {
     if (!this.nowPlayingMessage || !this.currentTrack) return;
+
+    // IMP-B7 FIX: Nếu không phải immediate (ví dụ từ volume slider, toggle button liên tiếp),
+    // debounce 500ms để không vượt quá giới hạn 5 edits / 5s của Discord API
+    if (!immediate) {
+      if (this.nowPlayingDebounceTimer) {
+        clearTimeout(this.nowPlayingDebounceTimer);
+      }
+      this.nowPlayingDebounceTimer = setTimeout(() => {
+        this.nowPlayingDebounceTimer = null;
+        this.updateNowPlayingMessage(true).catch(() => {});
+      }, 500);
+      return;
+    }
+
+    if (this.nowPlayingDebounceTimer) {
+      clearTimeout(this.nowPlayingDebounceTimer);
+      this.nowPlayingDebounceTimer = null;
+    }
+
     const lang = guildLanguageStore.getLanguage(this.guildId);
     const isPaused = this.audioPlayer.state.status === 'paused';
     await this.nowPlayingMessage.edit({
@@ -453,6 +495,12 @@ export class MusicManager extends EventEmitter {
       this.disconnectTimeout = null;
     }
 
+    // IMP-B7 FIX: Hủy debounce timer nếu đang chờ
+    if (this.nowPlayingDebounceTimer) {
+      clearTimeout(this.nowPlayingDebounceTimer);
+      this.nowPlayingDebounceTimer = null;
+    }
+
     // Dọn Now Playing message
     if (this.nowPlayingMessage) {
       this.nowPlayingMessage.edit({ components: [] }).catch(() => { });
@@ -480,5 +528,6 @@ export class MusicManager extends EventEmitter {
     }
 
     this.emit('stateChange');
+    this.emit('destroy');
   }
 }

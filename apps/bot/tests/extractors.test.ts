@@ -11,6 +11,13 @@ describe('Extractors Suite', () => {
       expect(extractor.validate('rick astley never gonna give you up')).toBe(true);
       expect(extractor.validate('')).toBe(false);
     });
+
+    it('handles non-existent cookie file gracefully', () => {
+      const ext = new YoutubeExtractor('non_existent_cookies.txt');
+      const result = ext.checkCookieValidity();
+      expect(result.valid).toBe(true);
+      expect(result.expiredCount).toBe(0);
+    });
   });
 
   describe('LocalFileExtractor', () => {

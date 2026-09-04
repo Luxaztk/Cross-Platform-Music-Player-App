@@ -1,9 +1,12 @@
-fix(core): remediate memory leaks, unclosed audio contexts, and process lifecycles
+fix(bot): complete deep audit hardening, bug fixes (P0-P3) and deployment readiness
 
-- AudioSection & useHeader: Auto-close Web Audio AudioContext instances after test playback (1.3s/600ms) and on component unmount to prevent hardware stream exhaustion.
-- AudioSection: Eliminate redundant animationRef and resolve React hook cleanup / React Compiler warnings.
-- main.ts: Wrap fs.open() in try...finally to ensure file descriptors are safely closed on chunked protocol requests.
-- MainMetadataService: Add 15s timeout kill switch for FFmpeg child processes to prevent zombie processes during audio fingerprinting.
-- useLyrics: Implement isMounted lifecycle check and cleanup in fetch useEffect to prevent memory leaks and state updates on unmounted components.
-- Tests & Setup: Add AudioContext.close mock and expand unit tests for AudioSection timer-based sound test reset.
-- Roadmap: Update docs/____ROADMAP.md to reflect memory leak audit completion.
+- Fix voice connection reconnect race condition and limit playNext recursion
+- Fix FFmpeg DSP filter arguments order and YouTube flat-playlist URL extraction
+- Mitigate unhandled WebSocket exceptions and enforce MAX_QUEUE_SIZE = 500
+- Eliminate ActivityServer 1s ticker broadcast storm with event-driven state sync
+- Add 500ms debounce to Now Playing message updates to prevent Discord 429 rate limits
+- Implement Netscape cookie expiration check in YoutubeExtractor
+- Implement auto-rejoin on Gateway ShardResume and VoiceStateUpdate
+- Add button prefix guard ('btn_') and Slash Commands SHA-256 caching
+- Enhance /api/health with system resource metrics and configure PM2 ecosystem
+- Update unit tests (19/19 passing) and project roadmap documentation

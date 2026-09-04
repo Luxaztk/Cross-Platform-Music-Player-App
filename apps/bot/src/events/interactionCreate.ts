@@ -40,6 +40,9 @@ export async function onInteractionCreate(interaction: Interaction, client: BotC
   // 2. Xử lý Button Clicks (Cập nhật trực tiếp tại chỗ trên Player Embed)
   if (interaction.isButton()) {
     if (!interaction.guildId) return;
+    // IMP-B4 FIX: Chỉ lấy MusicManager khi button ID thuộc về Player (tiền tố btn_)
+    // Ngăn chặn khởi tạo MusicManager vô ích từ các button khác
+    if (!interaction.customId.startsWith('btn_')) return;
     const musicManager = client.getMusicManager(interaction.guildId);
 
     switch (interaction.customId) {
