@@ -1,1 +1,9 @@
-.
+fix(core): remediate memory leaks, unclosed audio contexts, and process lifecycles
+
+- AudioSection & useHeader: Auto-close Web Audio AudioContext instances after test playback (1.3s/600ms) and on component unmount to prevent hardware stream exhaustion.
+- AudioSection: Eliminate redundant animationRef and resolve React hook cleanup / React Compiler warnings.
+- main.ts: Wrap fs.open() in try...finally to ensure file descriptors are safely closed on chunked protocol requests.
+- MainMetadataService: Add 15s timeout kill switch for FFmpeg child processes to prevent zombie processes during audio fingerprinting.
+- useLyrics: Implement isMounted lifecycle check and cleanup in fetch useEffect to prevent memory leaks and state updates on unmounted components.
+- Tests & Setup: Add AudioContext.close mock and expand unit tests for AudioSection timer-based sound test reset.
+- Roadmap: Update docs/____ROADMAP.md to reflect memory leak audit completion.

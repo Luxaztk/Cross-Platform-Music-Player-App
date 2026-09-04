@@ -36,6 +36,7 @@ interface MockAudioContextType {
   createGain: unknown;
   currentTime: number;
   destination: unknown;
+  close: unknown;
 }
 
 // Mock for window.AudioContext
@@ -57,6 +58,7 @@ const mockAudioContext = vi.fn().mockImplementation(function (this: MockAudioCon
   });
   this.currentTime = 0;
   this.destination = {};
+  this.close = vi.fn().mockResolvedValue(undefined);
   return this;
 });
 

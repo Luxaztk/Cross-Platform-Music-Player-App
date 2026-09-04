@@ -91,6 +91,14 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
   - Đồng bộ UI modal xác nhận theo chuẩn hệ thống chung (`var(--bg-modal)`, `var(--radius-lg)`).
   - Kết quả: **304/304 tests Green, Zero TypeScript errors**.
 
+- [x] **Kiểm toán & Khắc phục rủi ro Memory Leak / Resource Leak toàn dự án:**
+  - Khắc phục 2 điểm rò rỉ Web Audio API (`AudioSection.tsx`, `useHeader.tsx`): Đóng an toàn `AudioContext` sau khi phát xong beep, tự động reset `isPlayingTest = false` để kết thúc vòng lặp RAF giả lập Peak Meter và mở khóa nút test sound.
+  - Khắc phục rủi ro rò rỉ File Descriptor trong `melovista://` protocol (`main.ts`): Bọc `fileHandle` trong khối `try...finally` đảm bảo tệp luôn được đóng ngay cả khi phát sinh lỗi IO.
+  - Bổ sung 15s Timeout Kill Switch cho tiến trình FFmpeg trích xuất vân tay âm thanh (`MainMetadataService.ts`) ngăn ngừa Zombie Child Process.
+  - Bổ sung cờ `isMounted` cho `useLyrics.ts` chống cập nhật state trên unmounted component khi chuyển bài nhanh.
+  - Kết quả: **318/318 Desktop tests Green (42/42 test files), 19/19 Hooks tests Green, Clean Production Build, Zero TypeScript errors**.
+  - Chi tiết tại báo cáo kiểm toán chuyên sâu: [`memory_leak_audit_report.md`](file:///C:/Users/Luxaztk/.gemini/antigravity-ide/brain/a8a3c06a-e37e-4259-a3a1-18aff735bbba/memory_leak_audit_report.md).
+
 ---
 
 ## 📱 2. MeloVista Mobile App (Expo / React Native)

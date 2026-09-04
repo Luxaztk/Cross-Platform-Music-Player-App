@@ -101,6 +101,7 @@ describe('AudioSection', () => {
       currentTime = 0;
       destination = {};
       resume = vi.fn().mockResolvedValue(undefined);
+      close = vi.fn().mockResolvedValue(undefined);
       createOscillator = vi.fn().mockReturnValue(mockOscillator);
       createGain = vi.fn().mockReturnValue(mockGainNode);
       setSinkId = vi.fn().mockResolvedValue(undefined);
@@ -150,7 +151,8 @@ describe('AudioSection', () => {
     expect(mockUpdateSettings).toHaveBeenCalledWith({ audio: { deviceId: 'device-1' } });
   });
 
-  it('handles playing test sound', async () => {
+  it('handles playing test sound and resets button after timeout', async () => {
+    vi.useFakeTimers();
     render(<AudioSection searchQuery="" />);
     
     const testBtn = screen.getByText('settings.audio.testBtn').closest('button')!;
@@ -162,6 +164,15 @@ describe('AudioSection', () => {
 
     // Test btn should be active/disabled
     expect(testBtn).toBeDisabled();
+
+    // Advance time past 1300ms to trigger cleanup
+    await act(async () => {
+      vi.advanceTimersByTime(1400);
+    });
+
+    // Test btn should be re-enabled
+    expect(testBtn).not.toBeDisabled();
+    vi.useRealTimers();
   });
 
   it('disables test sound button when music is playing', () => {

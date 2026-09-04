@@ -37,7 +37,7 @@ export class MainMetadataService {
     // 1. Verify File Existence
     try {
       await fs.access(filePath);
-    } catch (_err) {
+    } catch {
       console.error('\x1b[31m%s\x1b[0m', `[FFmpeg Hash] CRITICAL: File does not exist: ${filePath}`);
       return `error-fallback-v2-missing-${randomUUID()}`;
     }
@@ -48,7 +48,7 @@ export class MainMetadataService {
 
     try {
       await fs.access(resolvedPath);
-    } catch (_err) {
+    } catch {
       console.error('\x1b[31m%s\x1b[0m', `[FFmpeg Hash] CRITICAL: FFmpeg binary not found at: ${resolvedPath}`);
       return `error-fallback-v2-no-binary-${randomUUID()}`;
     }
@@ -73,10 +73,21 @@ export class MainMetadataService {
         let pcmData = Buffer.alloc(0);
         let stderr = '';
 
+        const timeout = setTimeout(() => {
+          try {
+            ffmpeg.kill('SIGKILL');
+          } catch {
+            // Ignore
+          }
+          logFileTrace('calculateAudioHash.ffmpeg', filePath, 'FAIL', `FFmpeg timed out after 15s (offset=${offset})`);
+          resolve({ pcm: Buffer.alloc(0), stderr: 'FFmpeg hashing timed out after 15s' });
+        }, 15000);
+
         ffmpeg.stdout.on('data', (chunk) => { pcmData = Buffer.concat([pcmData, chunk]); });
         ffmpeg.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
 
         ffmpeg.on('close', (code) => {
+          clearTimeout(timeout);
           if (code !== 0 || pcmData.length === 0) {
             console.error('\x1b[31m%s\x1b[0m', `[FFmpeg Hash] Failed (offset=${offset}). Code: ${code}, Bytes: ${pcmData.length}`);
           }
@@ -86,6 +97,7 @@ export class MainMetadataService {
         });
 
         ffmpeg.on('error', (error) => {
+          clearTimeout(timeout);
           const errMsg = error instanceof Error ? error.message : String(error);
           logFileTrace('calculateAudioHash.ffmpeg', filePath, 'FAIL', errMsg);
           resolve({ pcm: Buffer.alloc(0), stderr: errMsg });

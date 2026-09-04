@@ -351,9 +351,15 @@ app.whenReady().then(async () => {
           const end = match[2] ? parseInt(match[2], 10) : fileSize - 1
           const chunkSize = end - start + 1
           const fileHandle = await fs.open(filePath, 'r')
-          const buffer = Buffer.alloc(chunkSize)
-          const { bytesRead } = await fileHandle.read(buffer, 0, chunkSize, start)
-          await fileHandle.close()
+          let buffer: Buffer = Buffer.alloc(0)
+          let bytesRead = 0
+          try {
+            buffer = Buffer.alloc(chunkSize)
+            const readResult = await fileHandle.read(buffer, 0, chunkSize, start)
+            bytesRead = readResult.bytesRead
+          } finally {
+            await fileHandle.close()
+          }
 
           if (bytesRead === 0) {
             logFileTrace(
@@ -371,7 +377,7 @@ app.whenReady().then(async () => {
             )
           }
 
-          return new Response(buffer, {
+          return new Response(buffer as unknown as BodyInit, {
             status: 206,
             statusText: 'Partial Content',
             headers: {

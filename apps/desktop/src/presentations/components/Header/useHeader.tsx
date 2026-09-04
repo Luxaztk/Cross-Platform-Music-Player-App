@@ -114,6 +114,7 @@ export const useHeader = (): UseHeaderReturn => {
   const handleTestSound = useCallback(() => {
     const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ctx = new AudioContextClass();
+
     const playBeep = (c: AudioContext) => {
         const osc = c.createOscillator();
         const gainNode = c.createGain();
@@ -125,6 +126,12 @@ export const useHeader = (): UseHeaderReturn => {
         osc.start();
         gainNode.gain.exponentialRampToValueAtTime(0.00001, c.currentTime + 0.5);
         osc.stop(c.currentTime + 0.5);
+
+        setTimeout(() => {
+          if (c.state !== 'closed') {
+            c.close().catch(() => {});
+          }
+        }, 600);
     };
 
     if ('setSinkId' in ctx && typeof (ctx as unknown as { setSinkId: (id: string) => Promise<void> }).setSinkId === 'function') {

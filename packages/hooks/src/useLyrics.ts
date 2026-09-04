@@ -41,26 +41,38 @@ export const useLyrics = () => {
 
   // Fetch lyrics when song changes
   useEffect(() => {
+    let isMounted = true;
+
     const fetchLyrics = async () => {
       if (!currentSong) {
-        setRawLyrics(null);
+        if (isMounted) setRawLyrics(null);
         return;
       }
 
-      setIsLoading(true);
-      setError(null);
+      if (isMounted) {
+        setIsLoading(true);
+        setError(null);
+      }
       try {
         const lyrics = await repository.getLyrics(currentSong.id);
-        setRawLyrics(lyrics);
+        if (isMounted) setRawLyrics(lyrics);
       } catch (err) {
-        console.error('Failed to fetch lyrics:', err);
-        setError('Không thể tải lời bài hát');
+        if (isMounted) {
+          console.error('Failed to fetch lyrics:', err);
+          setError('Không thể tải lời bài hát');
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchLyrics();
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentSong, repository]);
 
   const searchLyrics = useCallback(async (query: string) => {

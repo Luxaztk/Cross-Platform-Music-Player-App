@@ -19,14 +19,23 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
     const { devices, currentDeviceId, setAudioDevice } = useAudioDevices();
     const [isPlayingTest, setIsPlayingTest] = useState(false);
     const meterFillRef = useRef<HTMLDivElement>(null);
-    const animationRef = useRef<number | null>(null);
+
+    const testAudioContextRef = useRef<AudioContext | null>(null);
+    const testTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const showsDevice = matchesSearch(t('settings.audio.device'), searchQuery) || matchesSearch(t('settings.audio.deviceDesc'), searchQuery);
     const showsTest = matchesSearch(t('settings.audio.test'), searchQuery) || matchesSearch(t('settings.audio.testDesc'), searchQuery);
 
     useEffect(() => {
         return () => {
-            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+            if (testTimerRef.current) {
+                clearTimeout(testTimerRef.current);
+                testTimerRef.current = null;
+            }
+            if (testAudioContextRef.current && testAudioContextRef.current.state !== 'closed') {
+                testAudioContextRef.current.close().catch(() => {});
+                testAudioContextRef.current = null;
+            }
         };
     }, []);
 
@@ -50,32 +59,32 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
             let isClipping = false;
 
             if (isPlaying && analyser) {
-                // Use Float data (-1.0 to 1.0)
+                // REAL AUDIO: Calculate true RMS and Peak from Float32Array
                 analyser.getFloatTimeDomainData(dataArray);
 
-                let maxAmplitude = 0;
+                let sumSquares = 0;
+                let peak = 0;
+
                 for (let i = 0; i < dataArray.length; i++) {
                     const absValue = Math.abs(dataArray[i]);
-                    if (absValue > maxAmplitude) maxAmplitude = absValue;
+                    sumSquares += absValue * absValue;
+                    if (absValue > peak) peak = absValue;
                 }
 
-                // Calculate dBFS
-                let db = -Infinity;
-                if (maxAmplitude > 0) {
-                    db = 20 * Math.log10(maxAmplitude);
-                }
+                const rms = Math.sqrt(sumSquares / dataArray.length);
+                const rmsDb = rms > 0 ? 20 * Math.log10(rms) : PEAK_METER_MIN_DB;
+                const peakDb = peak > 0 ? 20 * Math.log10(peak) : PEAK_METER_MIN_DB;
 
-                // Map dB to Percentage (Floor: MIN_DB, Ceiling: MAX_DB)
-                if (db > PEAK_METER_MIN_DB) {
-                    level = ((db - PEAK_METER_MIN_DB) / (PEAK_METER_MAX_DB - PEAK_METER_MIN_DB)) * 100;
-                }
-                level = Math.max(0, Math.min(100, level));
-                isClipping = level >= PEAK_METER_CLIPPING_THRESHOLD;
+                // Clipping detection: Peak > -0.1 dBFS
+                isClipping = peakDb >= PEAK_METER_CLIPPING_THRESHOLD;
+
+                // Map RMS dB (-60 dB to 0 dB) to 0 - 100% percentage
+                const normalizedLevel = ((rmsDb - PEAK_METER_MIN_DB) / (PEAK_METER_MAX_DB - PEAK_METER_MIN_DB)) * 100;
+                level = Math.max(0, Math.min(100, normalizedLevel));
             } else if (isPlayingTest) {
-                // MOCK DATA for Test Sound (Scaled to look like dBFS)
+                // TEST SOUND ANIMATION: Synthetic wave simulation
                 const elapsed = Date.now() - start;
-                if (elapsed > 1100) {
-                    setIsPlayingTest(false);
+                if (elapsed > 1200) {
                     level = 0;
                 } else {
                     if (elapsed < 200) level = (elapsed / 200) * 85;
@@ -111,13 +120,24 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
         if (isPlayingTest || isPlaying) return;
 
         setIsPlayingTest(true);
+
+        if (testTimerRef.current) {
+            clearTimeout(testTimerRef.current);
+            testTimerRef.current = null;
+        }
+        if (testAudioContextRef.current && testAudioContextRef.current.state !== 'closed') {
+            testAudioContextRef.current.close().catch(() => {});
+            testAudioContextRef.current = null;
+        }
         
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const audioContext = new AudioContextClass();
+        testAudioContextRef.current = audioContext;
 
         // Apply selected output device to the test context
-        if (currentDeviceId && typeof (audioContext as any).setSinkId === 'function') {
+        if (currentDeviceId && 'setSinkId' in audioContext && typeof (audioContext as unknown as { setSinkId: (id: string) => Promise<void> }).setSinkId === 'function') {
             try {
-                await (audioContext as any).setSinkId(currentDeviceId === 'default' ? '' : currentDeviceId);
+                await (audioContext as unknown as { setSinkId: (id: string) => Promise<void> }).setSinkId(currentDeviceId === 'default' ? '' : currentDeviceId);
             } catch (e) {
                 console.error('Failed to set sinkId on test audioContext:', e);
             }
@@ -141,6 +161,17 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
         gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
 
         oscillator.stop(audioContext.currentTime + 1.2);
+
+        testTimerRef.current = setTimeout(() => {
+            if (audioContext.state !== 'closed') {
+                audioContext.close().catch(() => {});
+            }
+            if (testAudioContextRef.current === audioContext) {
+                testAudioContextRef.current = null;
+            }
+            testTimerRef.current = null;
+            setIsPlayingTest(false);
+        }, 1300);
     };
 
     if (searchQuery && !showsDevice && !showsTest) return null;
