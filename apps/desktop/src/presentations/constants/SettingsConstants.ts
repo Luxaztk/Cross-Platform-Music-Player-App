@@ -30,6 +30,11 @@ export const DEFAULT_SETTINGS = {
     backgroundSync: 0,
     cookiesPath: '',
     browserSource: 'edge' as 'chrome' | 'edge' | 'brave' | 'firefox',
+  },
+  server: {
+    serverUrl: '',
+    autoConnect: false,
+    autoPushOnDownload: true,
   }
 };
 

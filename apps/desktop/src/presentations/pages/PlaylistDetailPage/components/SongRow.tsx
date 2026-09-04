@@ -109,12 +109,32 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
             </div>
 
             <div className="song-details">
-              <span
-                className="title-text"
-                style={{ color: isPlaying ? 'var(--color-primary)' : undefined }}
-              >
-                {song.title}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span
+                  className="title-text"
+                  style={{ color: isPlaying ? 'var(--color-primary)' : undefined }}
+                >
+                  {song.title}
+                </span>
+                {song.sourceType === 'stream' && (
+                  <span
+                    className="badge-streaming-indicator"
+                    style={{
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      padding: '1px 5px',
+                      borderRadius: '4px',
+                      background: 'rgba(16, 185, 129, 0.15)',
+                      color: 'var(--color-primary, #10b981)',
+                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      letterSpacing: '0.5px',
+                      lineHeight: '12px',
+                    }}
+                  >
+                    STREAM
+                  </span>
+                )}
+              </div>
               <div className="artist-text">
                 {artistParts.map((part, i) => {
                   const isSeparator = /(\s(?:ft\.?|x|&|and)\s|,\s?)/i.test(part);

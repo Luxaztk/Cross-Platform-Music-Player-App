@@ -41,6 +41,7 @@ import { setupLibraryIPC } from './ipc/library'
 import { setupStorageIPC, storageAdapter } from './ipc/storage'
 import { setupDownloaderIPC } from './ipc/downloader'
 import { setupDialogIPC } from './ipc/dialog'
+import { setupServerIPC } from './ipc/server'
 import { logFileTrace } from './infrastructure/FileTraceLogger'
 import themeScss from '../src/presentations/components/Theme/ThemeProvider.scss?raw'
 import { extractThemeBackgroundColors } from './utils/themeScssParser'
@@ -425,8 +426,8 @@ app.whenReady().then(async () => {
 
     // In Dev, we need 'unsafe-eval' for Vite HMR. In Prod, we strip it out.
     const csp = isDev
-      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self' http://localhost:5173 ws://localhost:5173;"
-      : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: melovista://app/*; media-src 'self' melovista://app/*; connect-src 'self';"
+      ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http: melovista://app/*; media-src 'self' melovista://app/* http: https: blob:; connect-src 'self' http: https: ws: wss:;"
+      : "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http: melovista://app/*; media-src 'self' melovista://app/* http: https: blob:; connect-src 'self' http: https: ws: wss:;"
 
     callback({
       responseHeaders: {
@@ -440,6 +441,7 @@ app.whenReady().then(async () => {
   setupStorageIPC()
   setupDownloaderIPC()
   setupDialogIPC()
+  setupServerIPC()
   await createWindow()
 
   // Khởi chạy cơ chế tự động cập nhật

@@ -21,6 +21,10 @@ export interface Song {
   createdAt?: string; // ISO string
   updatedAt?: string; // ISO string
   lastPlaybackPosition?: number; // Last saved position in seconds
+  sourceType?: 'local' | 'stream' | 'cloud'; // Source identifier
+  streamUrl?: string; // Streaming audio URL if hosted remotely
+  isOffline?: boolean; // True if downloaded for offline playback
+  localOfflinePath?: string; // Local storage path if downloaded
 }
 
 export type DuplicateReason = 'URL' | 'HASH' | 'PATH' | 'METADATA';
@@ -133,3 +137,53 @@ export interface DownloadItem {
   error?: string;
   downloadedPath?: string;
 }
+
+export interface ServerHealth {
+  status: string;
+  service: string;
+  version: string;
+  uptime: number;
+  totalSongs: number;
+  memoryUsage: {
+    heapUsedMb: number;
+    rssMb: number;
+  };
+  timestamp: number;
+}
+
+export interface ServerSettings {
+  serverUrl: string;
+  autoConnect?: boolean;
+  autoPushOnDownload?: boolean;
+}
+
+export interface LibraryDiffItem {
+  localId: string;
+  title: string;
+  artist: string;
+  duration: number;
+  hash?: string;
+  fileSize?: number;
+}
+
+export interface LibraryDiffRequest {
+  songs: LibraryDiffItem[];
+}
+
+export interface MatchedSongInfo {
+  localId: string;
+  serverId: string;
+  matchReason: 'HASH' | 'METADATA';
+}
+
+export interface LibraryDiffResult {
+  toUploadIds: string[];
+  alreadyExists: MatchedSongInfo[];
+}
+
+export interface UploadSongResponse {
+  success: boolean;
+  song?: Song;
+  error?: string;
+}
+

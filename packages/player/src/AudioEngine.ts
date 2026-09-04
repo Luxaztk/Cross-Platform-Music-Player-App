@@ -86,8 +86,9 @@ export class AudioEngine implements IAudioEngine {
     this.pendingSeek = null; // Reset pending seek on new load
     this.isPendingPlay = autoplay;
 
-    // Convert file path to custom protocol with 'app' host for standard compliance
-    const url = `melovista://app/${encodeURIComponent(filePath)}`;
+    // Check if path is already a remote URL (HTTP/HTTPS/Blob) or a custom protocol
+    const isRemote = /^https?:\/\/|^blob:/i.test(filePath);
+    const url = isRemote ? filePath : (filePath.startsWith('melovista://') ? filePath : `melovista://app/${encodeURIComponent(filePath)}`);
     this.lastUrl = url;
 
     this.howl = new Howl({
@@ -97,6 +98,18 @@ export class AudioEngine implements IAudioEngine {
       format: ['mp3', 'flac', 'wav', 'm4a', 'aac', 'ogg'],
       onplay: () => {
         this.isPendingPlay = false;
+
+        // Ensure CORS is set on HTMLMediaElement for Web Audio Analyser
+        if (isRemote && this.howl) {
+          const sounds = (this.howl as HowlInternal)._sounds;
+          if (sounds && sounds[0]?._node && 'crossOrigin' in sounds[0]._node) {
+            try {
+              (sounds[0]._node as HTMLMediaElement).crossOrigin = 'anonymous';
+            } catch {
+              // Ignore if crossOrigin cannot be set dynamically
+            }
+          }
+        }
         // AGGRESSIVE RESUME: Defeat Autoplay Policy Suspensions
         if (Howler.ctx && Howler.ctx.state === 'suspended') {
           Howler.ctx.resume().then(() => {

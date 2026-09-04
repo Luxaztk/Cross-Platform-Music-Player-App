@@ -9,6 +9,7 @@ import type {
   ImportResult,
   SyncHistoryEntry,
   SyncStats,
+  UploadSongResponse,
 } from '@music/types'
 import type { YoutubeInfo } from './modules/downloader/YoutubeDownloader'
 
@@ -100,6 +101,8 @@ export interface ElectronAPI {
   onYoutubeAuthRequired: (callback: (data: { url: string; id?: string }) => void) => () => void
   getPathForFile: (file: File) => string
   quitApp: () => Promise<void>
+  uploadSongToServer: (payload: { serverUrl: string; song: Song }) => Promise<UploadSongResponse>
+  onUploadProgress: (callback: (data: { songId: string; uploadedBytes: number; totalBytes: number; percent: number; speedMb: number }) => void) => () => void
 }
 
 // Expose safe APIs to the renderer process
@@ -233,6 +236,12 @@ const electronAPI: ElectronAPI = {
     }
   },
   quitApp: () => ipcRenderer.invoke('quit-app'),
+  uploadSongToServer: (payload) => ipcRenderer.invoke('server:uploadSong', payload),
+  onUploadProgress: (callback) => {
+    const listener = (_event: IpcRendererEvent, data: { songId: string; uploadedBytes: number; totalBytes: number; percent: number; speedMb: number }) => callback(data)
+    ipcRenderer.on('server:uploadProgress', listener)
+    return () => ipcRenderer.off('server:uploadProgress', listener)
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

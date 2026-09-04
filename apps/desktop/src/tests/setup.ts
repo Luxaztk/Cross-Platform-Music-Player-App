@@ -7,7 +7,8 @@ const electronAPIMock = {
     general: { language: 'vi', notifications: true },
     appearance: { theme: 'midnight' },
     audio: { deviceId: 'default' },
-    downloads: { downloadPath: 'C:/Music', autoImportPaths: [], bitrate: '320' }
+    downloads: { downloadPath: 'C:/Music', autoImportPaths: [], bitrate: '320' },
+    server: { serverUrl: '', autoConnect: false },
   }),
   saveSettings: vi.fn().mockResolvedValue(undefined),
   selectDirectory: vi.fn().mockResolvedValue('C:/NewPath'),
@@ -19,6 +20,8 @@ const electronAPIMock = {
   onUpdateDownloaded: vi.fn().mockReturnValue(() => {}),
   checkForUpdates: vi.fn().mockResolvedValue(undefined),
   quitAndInstallUpdate: vi.fn().mockResolvedValue(undefined),
+  uploadSongToServer: vi.fn().mockResolvedValue({ success: true }),
+  onUploadProgress: vi.fn().mockReturnValue(() => {}),
 };
 
 // @ts-expect-error - mock global electronAPI for testing

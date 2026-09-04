@@ -325,5 +325,18 @@ describe('AudioEngine', () => {
       expect(lastHowlInstance?.stop).toHaveBeenCalled();
       expect(lastHowlInstance?.unload).toHaveBeenCalled();
     });
+
+    it('should support remote streaming HTTP/HTTPS and Blob URLs without wrapping with melovista://', () => {
+      engine.load('http://192.168.1.185:4545/api/stream/123');
+      expect(engine.getSource()).toBe('http://192.168.1.185:4545/api/stream/123');
+      expect(lastHowlInstance?.options.src).toEqual(['http://192.168.1.185:4545/api/stream/123']);
+
+      engine.load('https://example.com/audio.mp3');
+      expect(engine.getSource()).toBe('https://example.com/audio.mp3');
+      expect(lastHowlInstance?.options.src).toEqual(['https://example.com/audio.mp3']);
+
+      engine.load('C:\\Music\\song.mp3');
+      expect(engine.getSource()).toContain('melovista://app/');
+    });
   });
 });

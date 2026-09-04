@@ -31,7 +31,7 @@ export const QualitySettings: React.FC<QualitySettingsProps> = ({
 
 interface BackgroundSyncSettingsProps extends BaseSectionProps {
     value: number;
-    onChange: (val: any) => void;
+    onChange: (val: string | number) => void;
     isSaving: boolean;
     t: (key: string, options?: Record<string, unknown> | string) => string;
 }

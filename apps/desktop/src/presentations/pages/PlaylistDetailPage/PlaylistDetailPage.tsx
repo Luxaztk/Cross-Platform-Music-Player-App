@@ -18,11 +18,6 @@ export const PlaylistDetailPage: React.FC = () => {
     utils
   } = usePlaylistDetail();
 
-  React.useEffect(() => {
-    console.log('PlaylistDetailPage MOUNTED!');
-    return () => console.log('PlaylistDetailPage UNMOUNTED!');
-  }, []);
-
   const { t, appIcon, playlists, allSongs, currentSong, id, libraryFilter } = utils;
 
   const activeSong = state.activeMenuId ? state.filteredSongs.find((s) => s.id === state.activeMenuId) : null;

@@ -1,12 +1,32 @@
-fix(bot): complete deep audit hardening, bug fixes (P0-P3) and deployment readiness
+feat(homelab): complete streaming engine, 2-way sync, mobile caching & deployment suite
 
-- Fix voice connection reconnect race condition and limit playNext recursion
-- Fix FFmpeg DSP filter arguments order and YouTube flat-playlist URL extraction
-- Mitigate unhandled WebSocket exceptions and enforce MAX_QUEUE_SIZE = 500
-- Eliminate ActivityServer 1s ticker broadcast storm with event-driven state sync
-- Add 500ms debounce to Now Playing message updates to prevent Discord 429 rate limits
-- Implement Netscape cookie expiration check in YoutubeExtractor
-- Implement auto-rejoin on Gateway ShardResume and VoiceStateUpdate
-- Add button prefix guard ('btn_') and Slash Commands SHA-256 caching
-- Enhance /api/health with system resource metrics and configure PM2 ecosystem
-- Update unit tests (19/19 passing) and project roadmap documentation
+- apps/server:
+  - Implement Direct Stream HTTP 206 Partial Content (Zero-copy Range Requests) for lossless audio playback
+  - Implement MusicScanner with ID3 metadata parsing, album art extraction, and fast fingerprinting
+  - Add POST /api/library/diff with 2-tier matching (audio fingerprint p2: & metadata)
+  - Add POST /api/upload stream receiver for zero-RAM file uploads directly to disk
+  - Add server listen error handling (EADDRINUSE) and clean test fixtures (setIndexedSong, setCover)
+
+- apps/desktop:
+  - Implement 1-Click Push Library to Server with real-time speed meter (MB/s) and progress tracking
+  - Implement Auto-Push on Download in DownloadProvider when downloading YouTube audio
+  - Add ServerSection in SettingsPage with automatic background healthcheck and status indicators
+  - Fix settings persistence bug for server configuration in MainStorageAdapter & SettingsProvider
+  - Fix PlaylistDetailPage loading freeze bug on navigation from Settings via render-time state adjustment in usePlaylistData
+  - Strict TypeScript & ESLint compliance: eliminate all unexpected 'any' in DownloadProvider and QualitySettings
+
+- apps/mobile:
+  - Implement High/Low Watermark LRU Audio Cache (500MB / 400MB) with Atomic Write (.tmp -> .mp3)
+  - Implement Pinned Offline Storage with persistent album artwork & offline indicator flags
+  - Add predictive pre-caching hook (usePrecacheNextTrack) and 3-tier playback cascade (Offline -> Cache -> Stream)
+  - Add offline badges in library, playlist, and now-playing views, plus cache management in settings
+
+- deployment & ops:
+  - Add PM2 Monorepo Master Ecosystem (ecosystem.config.cjs) using node --import tsx with hard memory limits
+  - Add automated 1-step deployment script (scripts/deploy-homelab.sh) with fail-safe validation
+  - Add production deployment guide (homelab_dual_deployment_guide.md) with Cloudflare Zero Trust setup
+
+- testing & roadmap:
+  - 100% Green across entire monorepo: 344 desktop tests (46 files), 40 mobile tests, 72 core tests, 14 player tests, 12 server tests
+  - Zero TypeScript compiler errors (tsc --noEmit), zero ESLint warnings
+  - Sync progress across docs/____ROADMAP.md (Phase 2, Phase 3, Phase 3.5, Phase 4 completed)

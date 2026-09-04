@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { useLanguage, useSettings, useDownload } from '@hooks';
 import { ICON_SIZES } from '@constants';
 import { SettingsSearch } from './components/SettingsSearch';
-import { GeneralSection, AppearanceSection, DownloadSection, AudioSection } from './sections';
-import { Save, Check, Settings, Palette, Download, Volume2, Info } from 'lucide-react';
+import { GeneralSection, AppearanceSection, DownloadSection, AudioSection, ServerSection } from './sections';
+import { Save, Check, Settings, Palette, Download, Volume2, Info, Radio } from 'lucide-react';
 import './SettingsPage.scss';
 
 export const SettingsPage: React.FC = () => {
@@ -29,6 +29,7 @@ export const SettingsPage: React.FC = () => {
         { id: 'appearance', label: t('settings.menu.appearance'), icon: <Palette size={ICON_SIZES.SMALL} /> },
         { id: 'audio', label: t('settings.menu.audio'), icon: <Volume2 size={ICON_SIZES.SMALL} /> },
         { id: 'downloads', label: t('settings.menu.downloads'), icon: <Download size={ICON_SIZES.SMALL} /> },
+        { id: 'server', label: t('settings.menu.server', { defaultValue: 'Máy chủ Streaming' }), icon: <Radio size={ICON_SIZES.SMALL} /> },
         { id: 'about', label: t('settings.menu.about'), icon: <Info size={ICON_SIZES.SMALL} /> },
     ], [t]);
 
@@ -44,6 +45,7 @@ export const SettingsPage: React.FC = () => {
                     <AppearanceSection searchQuery={searchQuery} />
                     <AudioSection searchQuery={searchQuery} />
                     <DownloadSection searchQuery={searchQuery} />
+                    <ServerSection searchQuery={searchQuery} />
                 </div>
             );
         }
@@ -53,6 +55,7 @@ export const SettingsPage: React.FC = () => {
             case 'appearance': return <AppearanceSection />;
             case 'audio': return <AudioSection />;
             case 'downloads': return <DownloadSection />;
+            case 'server': return <ServerSection />;
             case 'about':
                 return (
                     <div className="settings-section about-section">

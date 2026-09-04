@@ -10,8 +10,9 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 2. [📱 MeloVista Mobile App (Expo / React Native)](#-2-melovista-mobile-app-expo--react-native)
 3. [🤖 MeloVista Discord Music Bot (`apps/bot`)](#-3-melovista-discord-music-bot-appsbot)
 4. [☁️ MeloVista Cloud (Google Drive Sync)](#-4-melovista-cloud-google-drive-sync)
-5. [🧪 Hệ Thống Kiểm Thử (Testing Suite)](#-5-hệ-thống-kiểm-thử-testing-suite)
-6. [📚 Cấu Trúc Tài Liệu Chi Tiết (`docs/`)](#-6-cấu-trúc-tài-liệu-chi-tiết-docs)
+5. [📡 MeloVista Homelab & Streaming Engine (Desktop • Mobile • Server)](#-5-melovista-homelab--streaming-engine-desktop--mobile--server)
+6. [🧪 Hệ Thống Kiểm Thử (Testing Suite)](#-6-hệ-thống-kiểm-thử-testing-suite)
+7. [📚 Cấu Trúc Tài Liệu Chi Tiết (`docs/`)](#-7-cấu-trúc-tài-liệu-chi-tiết-docs)
 
 ---
 
@@ -98,6 +99,15 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
   - Bổ sung cờ `isMounted` cho `useLyrics.ts` chống cập nhật state trên unmounted component khi chuyển bài nhanh.
   - Kết quả: **318/318 Desktop tests Green (42/42 test files), 19/19 Hooks tests Green, Clean Production Build, Zero TypeScript errors**.
   - Chi tiết tại báo cáo kiểm toán chuyên sâu: [`memory_leak_audit_report.md`](file:///C:/Users/Luxaztk/.gemini/antigravity-ide/brain/a8a3c06a-e37e-4259-a3a1-18aff735bbba/memory_leak_audit_report.md).
+
+- [x] **Sửa lỗi treo vĩnh viễn Loading danh sách bài hát khi điều hướng từ SettingsPage về PlaylistDetailPage:**
+  - **Nguyên nhân gốc rễ:** Trong `usePlaylistData.ts`, logic so khớp thay đổi state dựa trên `prevDeps` (`useState({ id, library, playlists, songs })`). Khi điều hướng từ SettingsPage về Playlist (ví dụ `/playlist/0`), dữ liệu `library`, `playlists` và `songs` trong `LibraryContext` đã có sẵn trong RAM. Khi hook khởi tạo, `prevDeps` lưu chính các đối tượng này dẫn đến điều kiện so sánh khác biệt (`id !== prevDeps.id || library !== prevDeps.library...`) đánh giá thành `false`. Kết quả là `setIsLoading(false)` không bao giờ được kích hoạt, `playlist` giữ giá trị `null`, làm giao diện hiển thị vĩnh viễn trạng thái loading. Khi người dùng click sang playlist khác, `id !== prevDeps.id` kích hoạt thì mới thoát khỏi trạng thái treo.
+  - **Giải pháp triệt để:**
+    - Tách hàm thuần túy `getPlaylistState(id, library, playlists, songs)` để tính toán đồng bộ trạng thái `playlist`, `localSongs`, `isLoading`.
+    - Sử dụng lazy initializer (`useState(() => getPlaylistState(...))`) cho `playlist`, `localSongs` và `isLoading`. Nhờ vậy, ngay khi component mount, nếu dữ liệu thư viện đã có sẵn trong context, hook tính toán và trả về dữ liệu bài hát ngay trong render đầu tiên (Zero-flicker, `isLoading = false` tức thì).
+    - Cập nhật `useEffect` lắng nghe dependency `[id, library, playlists, songs]` với các bộ lọc shallow equality guard chống re-render thừa.
+    - Bổ sung bộ kiểm thử tự động tại `src/tests/presentations/pages/PlaylistDetailPage/hooks/usePlaylistData.test.ts` bao phủ luồng điều hướng giữa các trang và chuyển đổi playlist.
+  - **Kết quả:** **344/344 Desktop tests Green (46/46 test files), Clean Build, Zero TypeScript errors**.
 
 ---
 
@@ -197,7 +207,71 @@ Mục tiêu: Sử dụng Google Drive làm kho lưu trữ và cơ sở dữ li�
 
 ---
 
-## 🧪 5. Hệ Thống Kiểm Thử (Testing Suite)
+## 📡 5. MeloVista Homelab & Streaming Engine (Desktop • Mobile • Server)
+
+Mục tiêu: Xây dựng hệ sinh thái phát nhạc trực tuyến độ trễ thấp (< 300ms) kết nối MeloVista Desktop, Mobile với máy chủ Homelab (`luxaztk-server` Intel Pentium N6000 440GB FLAC/MP3) và phát trực tiếp qua mạng LAN.
+
+- [x] **Phase 1: Tháo Gỡ Rào Cản Client Engine & Mở Rộng Data Model (P0 - Song Song)** *(Hoàn thành 04/09/2026)*
+  - [x] Mở rộng interface `Song` trong `@music/types`: Thêm `sourceType?: 'local' | 'stream' | 'cloud'` và `streamUrl?: string`.
+  - [x] Nâng cấp `AudioEngine.ts` (`packages/player`): Hỗ trợ trực tiếp URL HTTP/HTTPS/Blob, kích hoạt `crossOrigin: 'anonymous'`, giữ nguyên tương thích ngược với `melovista://app/*` (14/14 tests Green).
+  - [x] Cập nhật CSP trong `apps/desktop/electron/main.ts`: Mở rộng `media-src` và `connect-src` hỗ trợ stream từ xa (318/318 tests Green).
+  - [x] Tháo gỡ nút thắt `new File(uri)` trong `ExpoAudioEngine.ts` (`apps/mobile`): Cho phép nhận thẳng Remote URL vào `expo-audio`.
+  - [x] Vá lỗi bất đồng bộ trong `MobileAudioAdapter.test.ts` (12/12 mobile tests Green).
+
+- [x] **Phase 2: Xây Dựng Standalone Streaming Server (`apps/server`) (P0 - Song Song)** *(Hoàn thành 04/09/2026)*
+  - [x] Thiết lập backend Express + TypeScript tối ưu cho máy chủ cá nhân Pentium N6000 6W (RAM < 80MB).
+  - [x] Triển khai 100% **Direct Stream HTTP 206 Partial Content** (Zero-copy Range Requests) không transcode, bảo tồn âm thanh Lossless và 0% CPU (`StreamController.ts`).
+  - [x] Bộ quét thư mục nhạc cục bộ (Music Scanner) đọc metadata ID3 và Album Art phục vụ qua REST API JSON (`MusicScanner.ts`).
+  - [x] Cung cấp 3 API cốt lõi: `GET /api/songs`, `GET /api/stream/:songId`, `GET /api/cover/:songId` (10/10 tests Green, zero TS errors).
+  - [x] Đóng gói & cấu hình triển khai Homelab (`apps/server/ecosystem.config.cjs`, root `ecosystem.config.cjs`, `apps/server/.env.example`, `scripts/deploy-homelab.sh`) quản lý tiến trình bằng PM2 chạy 24/7 trên node `luxaztk-server` (Pentium N6000). Hướng dẫn triển khai chi tiết: [`homelab_dual_deployment_guide.md`](file:///C:/Users/Luxaztk/.gemini/antigravity-ide/brain/44800a45-f90e-4c8b-8c82-b696295c68f0/homelab_dual_deployment_guide.md).
+
+- [x] **Phase 3: Kết Nối Máy Chủ & Phát Nhạc Độc Lập (Desktop & Mobile) (P1)** *(Hoàn thành 04/09/2026)*
+  - [x] Desktop: Nhập Server URL trong `SettingsPage/sections/ServerSection.tsx`, kiểm tra kết nối (`ServerClient.checkHealth`), đồng bộ bài hát (`ServerClient.fetchSongs` + `handleAddSongs`) và phát trực tiếp bài hát từ máy chủ Homelab (7/7 tests Green).
+  - [x] **Fix Desktop ServerSection i18n keys & CSS styling:** Bổ sung từ điển đa ngôn ngữ (vi/en) cho tab cài đặt Server trong `packages/i18n/src/desktop.ts`, khắc phục class CSS `.setting-group` -> `.settings-group` trong `ServerSection.tsx`, chuẩn hóa theme semantic variables trong `SettingsPage.scss` và hoàn thiện cơ chế fallback i18n `defaultValue` trong `LanguageProvider.tsx` (100% tests Green).
+  - [x] **Fix Desktop Server URL Persistence & Quick Sync Visibility:** Khắc phục lỗi lọc bỏ trường `server` trong `SettingsProvider.tsx`, bổ sung deep-merge fallback `server` trong `MainStorageAdapter.ts` (Electron Main process), đồng bộ hai chiều `inputUrl` trong `ServerSection.tsx` và bổ sung unit test tập trung `SettingsProvider.test.tsx` (100% Green).
+  - [x] Mobile: Nhập Server URL trong `app/(tabs)/settings.tsx`, đồng bộ dữ liệu vào `AsyncStorage` qua `MobileServerSyncService.ts`, kiểm tra kết nối và nạp danh sách bài hát vào thư viện qua `useLibraryContext()` (8/8 tests Green).
+  - [x] Trình phát hiển thị badge `STREAM` đồng nhất trên Desktop (`SongRow`, `NowPlaying`) và Mobile (`SongRow`, `PlayerBar`, `NowPlayingScreen`).
+  - [x] Kiểm thử toàn diện: **44/44 desktop suites pass (330 tests)**, 20/20 mobile tests pass, Zero TS errors trên toàn bộ Monorepo.
+
+- [x] **Phase 3.5: Đẩy Kho Nhạc Từ Desktop Lên Server (1-Click Push & Auto-Sync - P1)** *(Hoàn thành 05/09/2026)*:
+  - [x] **Phía Server (`apps/server`)**:
+    - Endpoint `POST /api/library/diff`: So khớp 2 tầng (Tầng 1: Audio Fingerprint `hash` / `p2:...` với Perceptual Similarity >= 0.85 chống trùng khi sửa tag ID3; Tầng 2: Title + Artist + Duration ± 3s).
+    - Endpoint `POST /api/upload`: Stream trực tiếp file từ request pipe xuống đĩa cứng (`MUSIC_DIR/{Artist}/{Album}/{Filename}`) và index tức thì vào RAM scanner (12/12 tests Green).
+    - Hỗ trợ reverse proxy / Cloudflare Tunnel qua `trust proxy` và tự động phân giải `BASE_URL`.
+  - [x] **Phía Electron Main (`apps/desktop/electron`)**:
+    - IPC handler `server:uploadSong`: Đọc file stream từ ổ đĩa (`fs.createReadStream`) truyền thẳng qua HTTP POST (Node fetch `duplex: 'half'`), phát event `server:uploadProgress` với tốc độ MB/s.
+    - Preload bridge `uploadSongToServer` và `onUploadProgress`.
+  - [x] **Phía Desktop Core & Service (`@music/core` & `apps/desktop`)**:
+    - `ServerClient.checkLibraryDiff()` (72/72 tests Green).
+    - `ServerUploadService`: Quản lý batch diffing, stream uploading, tính toán tốc độ MB/s, quản lý hủy (AbortSignal) và `uploadSingleSong()`.
+  - [x] **Giao diện Desktop (`ServerSection.tsx` & `SettingsPage.scss`)**:
+    - Thẻ thống kê số lượng bài hát cục bộ (`HardDrive`) và số lượng bài trên Server (`Server`).
+    - Nút **"Đẩy kho nhạc lên Server"** (`UploadCloud`) kèm thanh tiến trình trực quan (% hoàn thành, tên bài đang đẩy, tốc độ MB/s, nút Hủy).
+    - Tự động kiểm tra sức khỏe máy chủ khi tải trang (`checkHealth` background).
+    - Checkbox toggle **"Tự động đẩy khi tải nhạc mới"** (`autoPushOnDownload`).
+  - [x] **Auto-Push On Download (`DownloadProvider.tsx`)**:
+    - Tự động đẩy file copy lên Homelab Server ngay khi tải xong từ YouTube nếu bật `autoPushOnDownload`.
+  - [x] **Kiểm thử toàn diện**: **45/45 suites passing (340/340 tests Green)** trên desktop, 12/12 server tests passing, 72/72 core tests passing, Zero TypeScript errors trên toàn bộ Monorepo.
+
+- [x] **Phase 4: Caching Cục Bộ & Trải Nghiệm Offline Cho Mobile (P2)** *(Hoàn thành 04/09/2026)*
+  - [x] **Engine LRU Cache High/Low Watermark (100% / 80%)**: Xây dựng `MobileAudioCacheService.ts` quản lý bộ nhớ đệm `Paths.cache/melovista/audio_cache/`, thuật toán High/Low Watermark (mặc định 500MB / 400MB) theo chuẩn Spotify và ExoPlayer, cơ chế Atomic Write (`.tmp` -> `.mp3`) chống hỏng file và Touch-on-read cập nhật timestamp (9/9 tests Green).
+  - [x] **Pinned Offline Storage**: Xây dựng `MobileOfflineService.ts` quản lý tải về vĩnh viễn vào `Paths.document/melovista/offline/`, bảo vệ độc lập 100% không bị xóa bởi thuật toán LRU, tải đồng bộ Cover Art và cập nhật flag `isOffline` (6/6 tests Green).
+  - [x] **Audio Cascade & Auto-Caching**: Nâng cấp `MobileAudioAdapter.ts` ưu tiên phát nhạc theo tầng `Offline` -> `LRU Cache` -> `Remote Stream`, tự động background caching cho luồng stream từ xa không làm gián đoạn độ trễ phát (5/5 tests Green).
+  - [x] **Predictive Pre-caching Hook**: Xây dựng `usePrecacheNextTrack.ts` và tích hợp vào `PlayerWithLibrary.tsx`, tự động tải trước bài hát tiếp theo trong hàng đợi khi bài hiện tại chạy vượt 50% thời lượng (4/4 tests Green).
+  - [x] **Mobile UI Integration**:
+    - `SongActions.tsx`: Nút "Tải về nghe Offline" / "Xóa bản tải Offline" trực quan.
+    - `now-playing.tsx`: Nút Quick Action tải về trên Header với ActivityIndicator, badge `OFFLINE` xanh dương.
+    - `library.tsx` & `playlist/[id].tsx`: Hiển thị badge `OFFLINE` / `STREAM` trên từng dòng bài hát.
+    - `settings.tsx`: Thẻ "Bộ Nhớ Đệm & Offline" hiển thị dung lượng đệm LRU, số bài offline, nút xóa cache và bộ chọn hạn mức (250MB, 500MB, 1GB).
+  - [x] **Kiểm thử toàn diện**: 40/40 mobile tests pass (7 test files), 324/324 desktop tests pass (43 suites), 69/69 core tests pass, 10/10 server tests pass, Zero TypeScript errors trên toàn bộ Monorepo.
+
+- [ ] **Phase 5 (Future / Mở Rộng Sau Nếu Cần): Đồng Bộ Đa Nền Tảng & Remote Control**
+  - [ ] WebSocket Remote Control: Điều khiển phát nhạc trên PC từ điện thoại và ngược lại.
+  - [ ] Tính năng "Listen Together": Nghe cùng một bài hát trên nhiều thiết bị với độ trễ < 50ms.
+
+---
+
+## 🧪 6. Hệ Thống Kiểm Thử (Testing Suite)
 
 Mục tiêu: Đạt 100% Coverage và duy trì trạng thái Clean Build cho toàn bộ Monorepo.
 

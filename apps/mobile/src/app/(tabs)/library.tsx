@@ -64,12 +64,63 @@ const SongRow = React.memo(function SongRow({
       ]}
     >
       <View style={styles.rowLeft}>
-        <Text
-          numberOfLines={1}
-          style={[styles.rowTitle, { color: isActive ? colors.primary : colors.text }]}
-        >
-          {item.title}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text
+            numberOfLines={1}
+            style={[styles.rowTitle, { color: isActive ? colors.primary : colors.text, flexShrink: 1 }]}
+          >
+            {item.title}
+          </Text>
+          {item.isOffline ? (
+            <View
+              style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                borderColor: 'rgba(59, 130, 246, 0.3)',
+                borderWidth: 1,
+                borderRadius: 4,
+                paddingHorizontal: 4,
+                paddingVertical: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Feather name="check-circle" size={9} color="#3B82F6" />
+              <Text
+                style={{
+                  fontSize: 9,
+                  fontWeight: '700',
+                  color: '#3B82F6',
+                  letterSpacing: 0.5,
+                }}
+              >
+                OFFLINE
+              </Text>
+            </View>
+          ) : item.sourceType === 'stream' ? (
+            <View
+              style={{
+                backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                borderColor: 'rgba(16, 185, 129, 0.3)',
+                borderWidth: 1,
+                borderRadius: 4,
+                paddingHorizontal: 4,
+                paddingVertical: 1,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 9,
+                  fontWeight: '700',
+                  color: colors.primary,
+                  letterSpacing: 0.5,
+                }}
+              >
+                STREAM
+              </Text>
+            </View>
+          ) : null}
+        </View>
         <Text numberOfLines={1} style={[styles.rowSubtitle, { color: colors.mutedText }]}>
           {item.artist}
           {item.album ? ` · ${item.album}` : ''}

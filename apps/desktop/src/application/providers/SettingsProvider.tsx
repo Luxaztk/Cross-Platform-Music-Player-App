@@ -1,5 +1,5 @@
 import React, { useState, useEffect, type ReactNode } from 'react';
-import type { AppSettings } from '@constants';
+import { DEFAULT_SETTINGS, type AppSettings } from '@constants';
 import { SettingsContext } from '../hooks/SettingsContext';
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -19,11 +19,12 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     setIsSaving(true);
     try {
-      const updated = {
+      const updated: AppSettings = {
         general: { ...settings.general, ...(newSettings.general || {}) },
         appearance: { ...settings.appearance, ...(newSettings.appearance || {}) },
         audio: { ...settings.audio, ...(newSettings.audio || {}) },
         downloads: { ...settings.downloads, ...(newSettings.downloads || {}) },
+        server: { ...(settings.server || DEFAULT_SETTINGS.server), ...(newSettings.server || {}) },
       };
 
       await window.electronAPI.saveSettings(updated);

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo, type ReactNode } from 'react';
-import { useNotification, useLibrary, useLanguage } from '@hooks';
+import { useNotification, useLibrary, useLanguage, useSettings } from '@hooks';
 import { getErrorMessage, normalizeString } from '@music/utils';
 import { extractYoutubeId } from '@music/core';
-import { DOWNLOAD_STATUS, type DownloadItem, type DownloadStatus } from '@music/types';
+import { DOWNLOAD_STATUS, type DownloadItem, type DownloadStatus, type Song } from '@music/types';
+import { ServerUploadService } from '../../infrastructure/services/ServerUploadService';
 import {
     DownloadContext,
     initialDuplicateInfo,
@@ -13,6 +14,7 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
     const { t } = useLanguage();
     const { showNotification } = useNotification();
     const { refreshLibrary, refreshPlaylists, songs } = useLibrary();
+    const { settings } = useSettings();
 
     const [url, _setUrl] = useState('');
     const [downloadState, setDownloadState] = useState<DownloadStatus>(DOWNLOAD_STATUS.IDLE);
@@ -184,7 +186,7 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         // Chỉ reset nếu không phải đang lấy thông tin hoặc đang tải
         if (
-            downloadState !== DOWNLOAD_STATUS.FETCHING && 
+            downloadState !== DOWNLOAD_STATUS.FETCHING &&
             downloadState !== DOWNLOAD_STATUS.DOWNLOADING
         ) {
             setDownloadState(DOWNLOAD_STATUS.IDLE);
@@ -226,7 +228,7 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
             }
 
             const targetMode = mode || (isPlaylist && !isVideo ? 'playlist' : 'video');
-            
+
             if (targetMode === 'playlist') {
                 const result = await window.electronAPI.fetchPlaylistInfo(fetchUrl);
                 if (!result.success || !result.items) {
@@ -236,23 +238,23 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
                     }
                     throw new Error(result.error || t('downloader.error'));
                 }
-                
+
                 const filteredItems = result.items.filter(info => {
                     const originMatch = songs.some(s => s.originId === info.id || (s.sourceUrl && extractYoutubeId(s.sourceUrl) === info.id));
                     if (originMatch) return false;
 
                     const normalizedTitle = normalizeString(info.title);
                     const normalizedArtist = normalizeString(info.artist);
-                    
+
                     const metadataMatch = songs.some(s => {
                         const titleMatch = normalizeString(s.title) === normalizedTitle;
                         const storedArtist = normalizeString(s.artist);
                         const artistMatch = storedArtist === normalizedArtist ||
-                                            storedArtist.includes(normalizedArtist) ||
-                                            normalizedArtist.includes(storedArtist);
+                            storedArtist.includes(normalizedArtist) ||
+                            normalizedArtist.includes(storedArtist);
                         return titleMatch && artistMatch;
                     });
-                    
+
                     return !metadataMatch;
                 });
 
@@ -260,14 +262,14 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
                 if (skippedCount > 0) {
                     showNotification('info', t('downloader.skippedExisting').replace('{{count}}', skippedCount.toString()));
                 }
-                
+
                 const items: DownloadItem[] = filteredItems.map(info => ({
                     ...info,
                     url: `https://www.youtube.com/watch?v=${info.id}`,
                     status: DOWNLOAD_STATUS.PREVIEW,
                     progress: 0
                 }));
-                
+
                 setPreviewItems(items);
                 setPlaylistTitle(result.title || null);
                 setDownloadState(DOWNLOAD_STATUS.PREVIEW);
@@ -294,7 +296,7 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
                     progress: 0
                 }]);
                 setPlaylistTitle(null);
-                
+
                 setDuplicateInfo(hasWarning
                     ? { ...initialDuplicateInfo, warning: { title: dupCheck.existingSong!.title, artist: dupCheck.existingSong!.artist, reason: dupCheck.reason as string } }
                     : initialDuplicateInfo
@@ -318,11 +320,11 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         const newDownloads = new Map(downloads);
         const itemsToStart = [...previewItems];
-        
+
         itemsToStart.forEach(item => {
             newDownloads.set(item.id, { ...item, status: DOWNLOAD_STATUS.PENDING });
         });
-        
+
         setDownloads(newDownloads);
         setDownloadState(DOWNLOAD_STATUS.DOWNLOADING);
         setPreviewItems([]); // Chuyển sang queue nên xóa preview
@@ -333,7 +335,7 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
                 const dlResult = await window.electronAPI.downloadYtAudio(item.id, item.url, item.title);
                 if (!dlResult.success || !dlResult.filePath) {
                     if (dlResult.error?.includes('Sign in')) {
-                         setAuthRequired(true);
+                        setAuthRequired(true);
                     }
                     throw new Error(dlResult.error);
                 }
@@ -348,24 +350,48 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
                 });
 
                 await window.electronAPI.importFromPath(dlResult.filePath, item.url, item.id);
-                
+
                 setDownloads(prev => {
                     const current = prev.get(item.id);
                     if (current) {
                         const nextMap = new Map(prev);
-                        nextMap.set(item.id, { 
-                            ...current, 
-                            status: DOWNLOAD_STATUS.SUCCESS, 
-                            progress: 100, 
-                            downloadedPath: dlResult.filePath 
+                        nextMap.set(item.id, {
+                            ...current,
+                            status: DOWNLOAD_STATUS.SUCCESS,
+                            progress: 100,
+                            downloadedPath: dlResult.filePath
                         });
                         return nextMap;
                     }
                     return prev;
                 });
-                
+
                 refreshLibrary();
                 refreshPlaylists();
+
+                // Auto-push to Homelab Server if enabled
+                const serverUrl = settings?.server?.serverUrl;
+                const autoPush = settings?.server?.autoPushOnDownload !== false;
+                if (serverUrl && autoPush) {
+                    const songToUpload: Song = {
+                        id: item.id,
+                        title: item.title,
+                        artist: item.artist,
+                        artists: [item.artist],
+                        album: item.album || 'Unknown Album',
+                        filePath: dlResult.filePath,
+                        duration: item.duration || 0,
+                        genre: '',
+                        year: null,
+                        coverArt: null,
+                        sourceType: 'local',
+                        originId: item.id,
+                        sourceUrl: item.url,
+                    };
+                    ServerUploadService.getInstance().uploadSingleSong(serverUrl, songToUpload).catch((pushErr) => {
+                        console.warn('[AutoPush] Failed to push downloaded song to server:', pushErr);
+                    });
+                }
             } catch (err) {
                 setDownloads(prev => {
                     const current = prev.get(item.id);

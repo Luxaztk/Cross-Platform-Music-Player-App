@@ -1,5 +1,23 @@
 import { ExpoAudioEngine } from './ExpoAudioEngine';
 import type { IAudioEngine, AudioEngineEvents } from '@music/core';
+import { MobileAudioCacheService } from '../services/MobileAudioCacheService';
+
+function extractSongId(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const match = parsed.pathname.match(/\/api\/stream\/(.+)$/i);
+    if (match && match[1]) {
+      return decodeURIComponent(match[1]);
+    }
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    if (segments.length > 0) {
+      return decodeURIComponent(segments[segments.length - 1]);
+    }
+  } catch {
+    // fallback
+  }
+  return url.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
 
 export class MobileAudioAdapter implements IAudioEngine {
   private engine: ExpoAudioEngine;
@@ -56,11 +74,29 @@ export class MobileAudioAdapter implements IAudioEngine {
     });
   }
 
-  load(filePath: string, autoplay?: boolean): void {
+  load(filePath: string, autoplay?: boolean, songId?: string): void {
     this.currentUrl = filePath;
     this.queueCommand(async () => {
       try {
-        await this.engine.load(filePath, { shouldPlay: autoplay });
+        let uriToLoad = filePath;
+        const isRemote = /^https?:\/\//i.test(filePath);
+
+        if (isRemote) {
+          try {
+            const cached = await MobileAudioCacheService.getCachedUri(songId, filePath);
+            if (cached) {
+              uriToLoad = cached;
+            } else {
+              const idToCache = songId || extractSongId(filePath);
+              // Background fire-and-forget stream caching
+              void MobileAudioCacheService.cacheSongStream(idToCache, filePath).catch(() => {});
+            }
+          } catch {
+            // cache service error fallback
+          }
+        }
+
+        await this.engine.load(uriToLoad, { shouldPlay: autoplay });
         if (this.events.onLoad) {
           this.events.onLoad(0);
         }
@@ -123,10 +159,16 @@ export class MobileAudioAdapter implements IAudioEngine {
 
   getSource(): string | null {
     if (!this.currentUrl) return null;
-    return `melovista://app/${encodeURIComponent(this.currentUrl)}`;
+    const isRemote = /^https?:\/\//i.test(this.currentUrl);
+    return isRemote ? this.currentUrl : `melovista://app/${encodeURIComponent(this.currentUrl)}`;
   }
 
   getAnalyser(): AnalyserNode | null {
     return null; // Not supported on mobile
   }
+
+  async waitForIdle(): Promise<void> {
+    await this.activeCommand;
+  }
 }
+

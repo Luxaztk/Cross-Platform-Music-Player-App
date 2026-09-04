@@ -4,9 +4,15 @@ import { MobileStorageAdapter } from '../storage/MobileStorageAdapter';
 import { MobileAudioAdapter } from '../audio/MobileAudioAdapter';
 import { Alert } from 'react-native';
 import { useLanguage } from '../../presentations/components/Language';
+import { usePrecacheNextTrack } from '../hooks/usePrecacheNextTrack';
 
 const storageAdapter = new MobileStorageAdapter();
 const audioAdapter = new MobileAudioAdapter();
+
+const PrecacheSupervisor = () => {
+  usePrecacheNextTrack();
+  return null;
+};
 
 export const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) => {
   const { songs, handleDeleteSong } = useLibraryContext();
@@ -36,6 +42,7 @@ export const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) =
         void storageAdapter.patchSong(songId, { lastPlaybackPosition: position });
       }}
     >
+      <PrecacheSupervisor />
       {children}
     </SharedPlayerProvider>
   );

@@ -101,18 +101,24 @@ export class ExpoAudioEngine implements PlayerEngine {
       this.isConfigured = true
     }
 
-    const file = new File(uri)
-    const exists = file.exists || file.info().exists
-    
-    console.log(`[engine] Loading audio: ${uri}`)
-    console.log(`[engine] File exists (property/info): ${file.exists}/${file.info().exists}`)
-    if (file.exists) {
-      console.log(`[engine] File size: ${file.size} bytes`)
-    }
+    const isRemote = /^https?:\/\//i.test(uri)
 
-    if (!exists) {
-      console.error(`[engine] File not found: ${uri}`)
-      throw new Error('FILE_NOT_FOUND')
+    if (!isRemote) {
+      const file = new File(uri)
+      const exists = file.exists || file.info().exists
+      
+      console.log(`[engine] Loading audio: ${uri}`)
+      console.log(`[engine] File exists (property/info): ${file.exists}/${file.info().exists}`)
+      if (file.exists) {
+        console.log(`[engine] File size: ${file.size} bytes`)
+      }
+
+      if (!exists) {
+        console.error(`[engine] File not found: ${uri}`)
+        throw new Error('FILE_NOT_FOUND')
+      }
+    } else {
+      console.log(`[engine] Loading remote streaming audio: ${uri}`)
     }
 
     if (!this.player) {

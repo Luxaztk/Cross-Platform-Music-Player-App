@@ -22,6 +22,7 @@ import { useNotifications } from '../../presentations/components/Notification'
 import { SongActions } from '../../presentations/components/SongActions'
 import { useLibraryContext, usePlayer } from '@music/hooks'
 import { useAppShell } from '../../presentations/components/AppShell'
+import { MobileOfflineService } from '../../infrastructure/services/MobileOfflineService'
 
 // ── Utilities ───────────────────────────────────────────────────
 
@@ -95,12 +96,63 @@ const PlaylistSongRow = React.memo(function PlaylistSongRow({
 
       {/* Song info */}
       <View style={styles.rowInfo}>
-        <Text
-          numberOfLines={1}
-          style={[styles.rowTitle, { color: isActive ? colors.primary : colors.text }]}
-        >
-          {item.title}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text
+            numberOfLines={1}
+            style={[styles.rowTitle, { color: isActive ? colors.primary : colors.text, flexShrink: 1 }]}
+          >
+            {item.title}
+          </Text>
+          {item.isOffline ? (
+            <View
+              style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                borderColor: 'rgba(59, 130, 246, 0.3)',
+                borderWidth: 1,
+                borderRadius: 4,
+                paddingHorizontal: 4,
+                paddingVertical: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Feather name="check-circle" size={9} color="#3B82F6" />
+              <Text
+                style={{
+                  fontSize: 9,
+                  fontWeight: '700',
+                  color: '#3B82F6',
+                  letterSpacing: 0.5,
+                }}
+              >
+                OFFLINE
+              </Text>
+            </View>
+          ) : item.sourceType === 'stream' ? (
+            <View
+              style={{
+                backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                borderColor: 'rgba(16, 185, 129, 0.3)',
+                borderWidth: 1,
+                borderRadius: 4,
+                paddingHorizontal: 4,
+                paddingVertical: 1,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 9,
+                  fontWeight: '700',
+                  color: colors.primary,
+                  letterSpacing: 0.5,
+                }}
+              >
+                STREAM
+              </Text>
+            </View>
+          ) : null}
+        </View>
         <View style={styles.rowMeta}>
           <Text numberOfLines={1} style={[styles.rowArtist, { color: colors.mutedText }]}>
             {item.artist}
@@ -494,6 +546,27 @@ export default function PlaylistDetailScreen() {
       [selectedSongForActions, handleDeleteSongs, notify, t],
     )
 
+  const onToggleOffline = useCallback(async () => {
+    if (!selectedSongForActions) return
+    const song = selectedSongForActions
+    if (song.isOffline) {
+      const res = await MobileOfflineService.removeOfflineSong(song, handlePatchSong)
+      if (res.ok) {
+        notify({ message: t.songs.removeOfflineSuccess, kind: 'success' })
+        setSelectedSongForActions((prev) => (prev ? { ...prev, isOffline: false, localOfflinePath: undefined } : null))
+      }
+    } else {
+      notify({ message: t.songs.downloading, kind: 'info' })
+      const res = await MobileOfflineService.downloadSongForOffline(song, handlePatchSong)
+      if (res.ok) {
+        notify({ message: t.songs.downloadSuccess, kind: 'success' })
+        setSelectedSongForActions((prev) => (prev ? { ...prev, isOffline: true, localOfflinePath: res.localUri } : null))
+      } else {
+        notify({ message: res.error || 'Tải bài hát thất bại', kind: 'error' })
+      }
+    }
+  }, [selectedSongForActions, handlePatchSong, notify, t])
+
   if (!playlist) {
     return (
       <View
@@ -679,6 +752,7 @@ export default function PlaylistDetailScreen() {
         onMoveToPlaylist={onAddToPlaylist}
         onRemoveFromPlaylist={onRemoveFromPlaylist}
         onDeleteFromLibrary={onDeleteFromLibrary}
+        onToggleOffline={onToggleOffline}
       />
 
       <Modal visible={editSongModalVisible} animationType="slide" transparent={false}>

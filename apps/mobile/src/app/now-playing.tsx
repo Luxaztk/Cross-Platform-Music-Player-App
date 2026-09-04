@@ -1,14 +1,16 @@
 import Slider from '@react-native-community/slider'
 import { router } from 'expo-router'
 import React, { useCallback, useState } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useTheme } from '../presentations/components/Theme'
-import { usePlayer } from '@music/hooks'
+import { useLibraryContext, usePlayer } from '@music/hooks'
 import { useLanguage } from '../presentations/components/Language'
+import { useNotifications } from '../presentations/components/Notification'
 import { formatTime } from '../presentations/player/format'
 import { QueueModal } from '../presentations/player/QueueModal'
+import { MobileOfflineService } from '../infrastructure/services/MobileOfflineService'
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import Feather from '@expo/vector-icons/Feather'
@@ -17,6 +19,9 @@ export default function NowPlayingScreen() {
   const { theme } = useTheme()
   const { t } = useLanguage()
   const insets = useSafeAreaInsets()
+  const { notify } = useNotifications()
+  const { handlePatchSong } = useLibraryContext()
+  const [isDownloading, setIsDownloading] = useState(false)
 
   const {
     currentSong,
@@ -54,6 +59,29 @@ export default function NowPlayingScreen() {
     void setRepeatMode(nextMode)
   }, [repeatMode, setRepeatMode])
 
+  const handleToggleOffline = useCallback(async () => {
+    if (!currentSong) return
+    if (currentSong.isOffline) {
+      const res = await MobileOfflineService.removeOfflineSong(currentSong, handlePatchSong)
+      if (res.ok) {
+        notify({ message: t.songs.removeOfflineSuccess, kind: 'success' })
+      }
+    } else {
+      setIsDownloading(true)
+      notify({ message: t.songs.downloading, kind: 'info' })
+      try {
+        const res = await MobileOfflineService.downloadSongForOffline(currentSong, handlePatchSong)
+        if (res.ok) {
+          notify({ message: t.songs.downloadSuccess, kind: 'success' })
+        } else {
+          notify({ message: res.error || 'Tải bài hát thất bại', kind: 'error' })
+        }
+      } finally {
+        setIsDownloading(false)
+      }
+    }
+  }, [currentSong, handlePatchSong, notify, t])
+
   const repeatLabel =
     repeatMode === 'ONE'
       ? 'repeat-one'
@@ -89,20 +117,48 @@ export default function NowPlayingScreen() {
           Đang phát
         </Text>
 
-        <Pressable
-          onPress={() => setIsQueueVisible(true)}
-          hitSlop={12}
-          style={({ pressed }) => [
-            styles.headerRight,
-            {
-              backgroundColor: theme.colors.surfaceSolid,
-              borderColor: theme.colors.subtleBorder,
-              opacity: pressed ? 0.75 : 1,
-            },
-          ]}
-        >
-          <MaterialIcons name="queue-music" size={20} color={theme.colors.text} />
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {currentSong && (currentSong.sourceType === 'stream' || currentSong.isOffline) && (
+            <Pressable
+              onPress={handleToggleOffline}
+              disabled={isDownloading}
+              hitSlop={12}
+              style={({ pressed }) => [
+                styles.backBtn,
+                {
+                  backgroundColor: theme.colors.surfaceSolid,
+                  borderColor: currentSong.isOffline ? '#3B82F6' : theme.colors.subtleBorder,
+                  opacity: pressed || isDownloading ? 0.75 : 1,
+                },
+              ]}
+            >
+              {isDownloading ? (
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              ) : (
+                <Feather
+                  name={currentSong.isOffline ? 'check-circle' : 'download-cloud'}
+                  size={18}
+                  color={currentSong.isOffline ? '#3B82F6' : theme.colors.text}
+                />
+              )}
+            </Pressable>
+          )}
+
+          <Pressable
+            onPress={() => setIsQueueVisible(true)}
+            hitSlop={12}
+            style={({ pressed }) => [
+              styles.headerRight,
+              {
+                backgroundColor: theme.colors.surfaceSolid,
+                borderColor: theme.colors.subtleBorder,
+                opacity: pressed ? 0.75 : 1,
+              },
+            ]}
+          >
+            <MaterialIcons name="queue-music" size={20} color={theme.colors.text} />
+          </Pressable>
+        </View>
       </View>
 
       {/* Album art */}
@@ -127,12 +183,63 @@ export default function NowPlayingScreen() {
 
       {/* Song info */}
       <View style={styles.info}>
-        <Text
-          style={[styles.title, { color: theme.colors.text }]}
-          numberOfLines={1}
-        >
-          {currentSong?.title ?? 'Chưa chọn bài hát'}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <Text
+            style={[styles.title, { color: theme.colors.text }]}
+            numberOfLines={1}
+          >
+            {currentSong?.title ?? 'Chưa chọn bài hát'}
+          </Text>
+          {currentSong?.isOffline ? (
+            <View
+              style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                borderColor: 'rgba(59, 130, 246, 0.3)',
+                borderWidth: 1,
+                borderRadius: 4,
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 3,
+              }}
+            >
+              <Feather name="check-circle" size={10} color="#3B82F6" />
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: '700',
+                  color: '#3B82F6',
+                  letterSpacing: 0.5,
+                }}
+              >
+                OFFLINE
+              </Text>
+            </View>
+          ) : currentSong?.sourceType === 'stream' ? (
+            <View
+              style={{
+                backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                borderColor: 'rgba(16, 185, 129, 0.3)',
+                borderWidth: 1,
+                borderRadius: 4,
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: '700',
+                  color: theme.colors.primary,
+                  letterSpacing: 0.5,
+                }}
+              >
+                STREAM
+              </Text>
+            </View>
+          ) : null}
+        </View>
 
         <Text
           style={[styles.subtitle, { color: theme.colors.mutedText }]}

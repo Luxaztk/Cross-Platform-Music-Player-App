@@ -52,3 +52,24 @@ vi.mock('expo-router', () => ({
   usePathname: () => '/',
   useLocalSearchParams: () => ({}),
 }));
+
+// Mock expo-file-system
+vi.mock('expo-file-system', () => ({
+  Paths: {
+    cache: 'mock-cache-path',
+    document: 'mock-document-path',
+  },
+  Directory: vi.fn().mockImplementation(function (this: any, parent: any, name: string) {
+    this.uri = typeof parent === 'object' ? `${parent.uri}/${name}` : `${parent}/${name}`;
+    this.exists = true;
+    this.create = vi.fn();
+  }),
+  File: vi.fn().mockImplementation(function (this: any, pathOrDir: any, name?: string) {
+    this.uri = typeof pathOrDir === 'object' && name ? `${pathOrDir.uri}/${name}` : String(pathOrDir);
+    this.exists = true;
+    this.size = 1024;
+    this.info = vi.fn().mockReturnValue({ exists: true });
+    this.write = vi.fn();
+    this.delete = vi.fn();
+  }),
+}));

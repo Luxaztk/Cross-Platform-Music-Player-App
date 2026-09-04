@@ -21,8 +21,29 @@ export const NowPlaying: React.FC<NowPlayingProps> = ({
                 </div>
             )}
             <div className="song-meta">
-                <div className="song-title" title={song?.title}>
-                    {song?.title || t('player.notPlaying')}
+                <div className="song-title" title={song?.title} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {song?.title || t('player.notPlaying')}
+                    </span>
+                    {song?.sourceType === 'stream' && (
+                        <span
+                            className="badge-streaming-indicator"
+                            style={{
+                                fontSize: '9px',
+                                fontWeight: 700,
+                                padding: '1px 5px',
+                                borderRadius: '4px',
+                                background: 'rgba(16, 185, 129, 0.15)',
+                                color: 'var(--color-primary, #10b981)',
+                                border: '1px solid rgba(16, 185, 129, 0.3)',
+                                letterSpacing: '0.5px',
+                                lineHeight: '12px',
+                                flexShrink: 0,
+                            }}
+                        >
+                            STREAM
+                        </span>
+                    )}
                 </div>
                 <div className="song-artist" title={song?.artist}>
                     {song?.artist || '-'}

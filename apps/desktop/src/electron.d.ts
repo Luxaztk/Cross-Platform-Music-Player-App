@@ -114,6 +114,15 @@ declare global {
       onYoutubeAuthRequired: (callback: (data: { url: string; id?: string }) => void) => () => void
       getPathForFile: (file: File) => string
       quitApp: () => Promise<void>
+
+      // Server operations
+      uploadSongToServer: (payload: {
+        serverUrl: string
+        song: Song
+      }) => Promise<{ success: boolean; skipped?: boolean; song?: Song; error?: string }>
+      onUploadProgress: (
+        callback: (data: { speedMb: number; progress?: number }) => void,
+      ) => () => void
     }
   }
 

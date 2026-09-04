@@ -21,6 +21,7 @@ interface SongActionsProps {
   onMoveToPlaylist: () => void
   onRemoveFromPlaylist: () => void
   onDeleteFromLibrary: () => void
+  onToggleOffline?: () => void
 }
 
 
@@ -36,7 +37,8 @@ export const SongActions = ({
   onMoveToPlaylist,
   onRemoveFromPlaylist,
   onDeleteFromLibrary,
-  onEditSong
+  onEditSong,
+  onToggleOffline,
 }: SongActionsProps) => {
   const insets = useSafeAreaInsets()
   const { theme } = useTheme()
@@ -101,6 +103,15 @@ export const SongActions = ({
             colors={colors}
             onPress={action(onEditSong)}
           />
+          {onToggleOffline && (
+            <ActionItem
+              icon={song.isOffline ? 'cloud-off' : 'download-cloud'}
+              label={song.isOffline ? t.songs.removeOffline : t.songs.downloadOffline}
+              colors={colors}
+              destructive={song.isOffline}
+              onPress={action(onToggleOffline)}
+            />
+          )}
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 

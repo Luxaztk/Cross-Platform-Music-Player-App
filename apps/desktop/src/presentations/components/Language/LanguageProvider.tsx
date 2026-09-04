@@ -20,12 +20,20 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (result && typeof result === 'object' && key in result) {
         result = (result as Record<string, unknown>)[key];
       } else {
+        if (typeof options === 'string') return options;
+        if (options && typeof options === 'object' && typeof options.defaultValue === 'string') {
+          return options.defaultValue;
+        }
         return keyPath; // Fallback to key if not found
       }
     }
 
     if (typeof result !== 'string') {
-      return typeof options === 'string' ? options : keyPath;
+      if (typeof options === 'string') return options;
+      if (options && typeof options === 'object' && typeof options.defaultValue === 'string') {
+        return options.defaultValue;
+      }
+      return keyPath;
     }
 
     let variables: Record<string, unknown> | undefined;

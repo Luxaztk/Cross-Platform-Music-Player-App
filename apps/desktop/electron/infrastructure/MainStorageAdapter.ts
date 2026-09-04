@@ -131,7 +131,14 @@ export class MainStorageAdapter implements IStorageAdapter {
     return updatedSong;
   }
   async getSettings(): Promise<AppSettings> {
-    const settings = this.store.get('settings') || { ...DEFAULT_SETTINGS };
+    const saved = (this.store.get('settings') || {}) as Partial<AppSettings>;
+    const settings: AppSettings = {
+      general: { ...DEFAULT_SETTINGS.general, ...(saved.general || {}) },
+      appearance: { ...DEFAULT_SETTINGS.appearance, ...(saved.appearance || {}) },
+      audio: { ...DEFAULT_SETTINGS.audio, ...(saved.audio || {}) },
+      downloads: { ...DEFAULT_SETTINGS.downloads, ...(saved.downloads || {}) },
+      server: { ...DEFAULT_SETTINGS.server, ...(saved.server || {}) },
+    };
 
     // Ensure downloadPath is never empty when sent to UI
     if (!settings.downloads.downloadPath) {
@@ -147,7 +154,14 @@ export class MainStorageAdapter implements IStorageAdapter {
 
   async saveSettings(settings: Partial<AppSettings>): Promise<void> {
     const current = await this.getSettings();
-    this.store.set('settings', { ...current, ...settings });
+    const updated: AppSettings = {
+      general: { ...current.general, ...(settings.general || {}) },
+      appearance: { ...current.appearance, ...(settings.appearance || {}) },
+      audio: { ...current.audio, ...(settings.audio || {}) },
+      downloads: { ...current.downloads, ...(settings.downloads || {}) },
+      server: { ...current.server, ...(settings.server || {}) },
+    };
+    this.store.set('settings', updated);
   }
 
   async clear(): Promise<void> {

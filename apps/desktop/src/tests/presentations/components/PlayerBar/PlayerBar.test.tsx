@@ -170,4 +170,22 @@ describe('PlayerBar', () => {
     await user.click(screen.getByTitle('player.lyrics'));
     expect(mockToggleLyrics).toHaveBeenCalled();
   });
+
+  it('renders STREAM indicator badge when currentSong has sourceType stream', () => {
+    vi.mocked(usePlayer).mockReturnValue({
+      ...vi.mocked(usePlayer)(),
+      currentSong: {
+        id: '2',
+        title: 'Stream Song',
+        artist: 'Stream Artist',
+        duration: 200,
+        sourceType: 'stream',
+        streamUrl: 'http://localhost:3001/api/stream/2',
+      },
+    } as unknown as ReturnType<typeof usePlayer>);
+
+    render(<PlayerBar />);
+    expect(screen.getByText('Stream Song')).toBeInTheDocument();
+    expect(screen.getByText('STREAM')).toBeInTheDocument();
+  });
 });

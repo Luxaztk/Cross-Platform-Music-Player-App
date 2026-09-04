@@ -93,9 +93,34 @@ export function PlayerBar() {
         <View style={styles.textWrap}>
           {hasSong ? (
             <>
-              <Text numberOfLines={1} style={[styles.title, { color: theme.colors.text }]}>
-                {title}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text numberOfLines={1} style={[styles.title, { color: theme.colors.text, flexShrink: 1 }]}>
+                  {title}
+                </Text>
+                {currentSong?.sourceType === 'stream' && (
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                      borderColor: 'rgba(16, 185, 129, 0.3)',
+                      borderWidth: 1,
+                      borderRadius: 4,
+                      paddingHorizontal: 4,
+                      paddingVertical: 1,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        fontWeight: '700',
+                        color: theme.colors.primary,
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      STREAM
+                    </Text>
+                  </View>
+                )}
+              </View>
               <Text numberOfLines={1} style={[styles.subtitle, { color: theme.colors.mutedText }]}>
                 {artist || 'Unknown Artist'}
               </Text>

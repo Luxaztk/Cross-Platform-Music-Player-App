@@ -108,6 +108,21 @@ describe('LanguageProvider', () => {
     expect(screen.getByTestId('t-missing')).toHaveTextContent('missing.key');
   });
 
+  it('returns defaultValue if translation is not found and defaultValue is provided in options', () => {
+    const FallbackComponent = () => {
+      const context = useContext(LanguageContext);
+      return <span>{context?.t('totally.unknown.key', { defaultValue: 'Default Text' })}</span>;
+    };
+
+    render(
+      <LanguageProvider>
+        <FallbackComponent />
+      </LanguageProvider>
+    );
+
+    expect(screen.getByText('Default Text')).toBeInTheDocument();
+  });
+
   it('returns keyPath if the resolved value is not a string (like an object)', () => {
     render(
       <LanguageProvider>

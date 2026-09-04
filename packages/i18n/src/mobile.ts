@@ -20,6 +20,21 @@ export type Translations = {
     english: string
     vietnamese: string
     navigationLayout: string
+    serverTitle: string
+    serverDesc: string
+    serverUrlTitle: string
+    serverTestBtn: string
+    serverSyncBtn: string
+    serverChecking: string
+    serverSyncing: string
+    serverConnected: string
+    serverSaveSuccess: string
+    cacheTitle: string
+    cacheDesc: string
+    cacheUsed: string
+    clearCache: string
+    clearCacheSuccess: string
+    cacheQuota: string
   }
   library: {
     title: string
@@ -112,6 +127,11 @@ export type Translations = {
     editMetadataSuccess: string
     cancelDelete: string
     delete: string
+    downloadOffline: string
+    removeOffline: string
+    downloading: string
+    downloadSuccess: string
+    removeOfflineSuccess: string
   }
 }
 
@@ -135,7 +155,22 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       language: 'Language',
       english: 'English',
       vietnamese: 'Vietnamese',
-      navigationLayout: 'Navigation layout'
+      navigationLayout: 'Navigation layout',
+      serverTitle: 'Streaming Server (Homelab)',
+      serverDesc: 'Stream music directly from your home server (HTTP 206)',
+      serverUrlTitle: 'Server URL',
+      serverTestBtn: 'Check Connection',
+      serverSyncBtn: 'Sync Songs',
+      serverChecking: 'Checking...',
+      serverSyncing: 'Syncing...',
+      serverConnected: 'Connected to server successfully',
+      serverSaveSuccess: 'Server URL saved',
+      cacheTitle: 'Audio Cache (LRU)',
+      cacheDesc: 'Auto-cache playing tracks for zero latency and offline listening',
+      cacheUsed: 'Used',
+      clearCache: 'Clear Cache',
+      clearCacheSuccess: 'Audio cache cleared successfully',
+      cacheQuota: 'Cache Limit',
     },
     library: {
       title: 'Library',
@@ -230,7 +265,12 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       sortDuration: 'Duration',
       sortDateAdded: 'Date added',
       cancelDelete: 'Cancel',
-      delete: 'Delete'
+      delete: 'Delete',
+      downloadOffline: 'Download for Offline',
+      removeOffline: 'Remove Offline Download',
+      downloading: 'Downloading track...',
+      downloadSuccess: 'Track downloaded for offline listening',
+      removeOfflineSuccess: 'Removed offline download',
     },
   },
   vi: {
@@ -252,7 +292,22 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       language: 'Ngôn ngữ',
       english: 'Tiếng Anh',
       vietnamese: 'Tiếng Việt',
-      navigationLayout: 'Điều hướng'
+      navigationLayout: 'Điều hướng',
+      serverTitle: 'Máy Chủ Streaming (Homelab)',
+      serverDesc: 'Phát trực tiếp nhạc từ máy chủ gia đình (HTTP 206)',
+      serverUrlTitle: 'Địa chỉ Máy Chủ',
+      serverTestBtn: 'Kiểm tra kết nối',
+      serverSyncBtn: 'Đồng bộ nhạc',
+      serverChecking: 'Đang kiểm tra...',
+      serverSyncing: 'Đang đồng bộ...',
+      serverConnected: 'Đã kết nối thành công tới máy chủ',
+      serverSaveSuccess: 'Đã lưu cấu hình máy chủ',
+      cacheTitle: 'Bộ Nhớ Đệm Âm Thanh (LRU)',
+      cacheDesc: 'Tự động lưu bài hát đang nghe để phát tức thì và tiết kiệm mạng 4G/5G',
+      cacheUsed: 'Đã dùng',
+      clearCache: 'Xóa bộ nhớ đệm',
+      clearCacheSuccess: 'Đã dọn dẹp bộ nhớ đệm thành công',
+      cacheQuota: 'Định mức Cache',
     },
     library: {
       title: 'Thư viện',
@@ -347,7 +402,12 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       sortDuration: 'Thời lượng',
       sortDateAdded: 'Ngày thêm',
       cancelDelete: 'Hủy',
-      delete: 'Xóa'
+      delete: 'Xóa',
+      downloadOffline: 'Tải về nghe Offline',
+      removeOffline: 'Xóa bản tải Offline',
+      downloading: 'Đang tải bài hát...',
+      downloadSuccess: 'Đã tải bài hát về máy',
+      removeOfflineSuccess: 'Đã xóa bản tải offline',
     },
   },
 }

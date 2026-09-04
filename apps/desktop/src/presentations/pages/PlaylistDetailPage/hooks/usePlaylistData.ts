@@ -3,17 +3,47 @@ import type { Playlist, PlaylistDetail, Song } from '@music/types';
 import { useLibraryContext } from '@music/hooks';
 import { useNotification, useLanguage } from '@hooks';
 
+const getPlaylistState = (
+  id: string | undefined,
+  library: Playlist | null,
+  playlists: Playlist[],
+  songs: Song[]
+): { playlist: PlaylistDetail | null; localSongs: Song[]; isLoading: boolean } => {
+  if (!id) {
+    return { playlist: null, localSongs: [], isLoading: false };
+  }
+
+  if (id === '0') {
+    if (library) {
+      return {
+        playlist: { ...library, songs, songCount: songs.length },
+        localSongs: songs,
+        isLoading: false,
+      };
+    }
+    return { playlist: null, localSongs: [], isLoading: true };
+  }
+
+  const p = playlists.find((item) => item.id === id);
+  if (p) {
+    const pSongs = p.songIds
+      .map((sid) => songs.find((s) => s.id === sid))
+      .filter(Boolean) as Song[];
+    return {
+      playlist: { ...p, songs: pSongs, songCount: pSongs.length },
+      localSongs: pSongs,
+      isLoading: false,
+    };
+  }
+
+  return {
+    playlist: null,
+    localSongs: [],
+    isLoading: playlists.length === 0,
+  };
+};
+
 export const usePlaylistData = (id: string | undefined) => {
-  const [playlist, setPlaylist] = useState<PlaylistDetail | null>(null);
-  const [localSongs, setLocalSongs] = useState<Song[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-
-  const [editingSong, setEditingSong] = useState<Song | null>(null);
-  const [deletingSong, setDeletingSong] = useState<Song | null>(null);
-  const [bulkDeleteMode, setBulkDeleteMode] = useState<'library' | 'playlist' | null>(null);
-
   const {
     handleImportFiles,
     handleImportFolder,
@@ -34,8 +64,13 @@ export const usePlaylistData = (id: string | undefined) => {
   const { t } = useLanguage();
   const isLibrary = id === '0';
 
-  const [prevDeps, setPrevDeps] = useState({ id, library, playlists, songs });
+  const computedState = getPlaylistState(id, library, playlists, songs);
 
+  const [prevDeps, setPrevDeps] = useState(() => ({ id, library, playlists, songs }));
+  const [playlist, setPlaylist] = useState<PlaylistDetail | null>(() => computedState.playlist);
+  const [localSongs, setLocalSongs] = useState<Song[]>(() => computedState.localSongs);
+
+  // Synchronize state during rendering when id, library, playlists, or songs change
   if (
     id !== prevDeps.id ||
     library !== prevDeps.library ||
@@ -43,25 +78,16 @@ export const usePlaylistData = (id: string | undefined) => {
     songs !== prevDeps.songs
   ) {
     setPrevDeps({ id, library, playlists, songs });
-    if (id) {
-      if (id === '0' && library) {
-        setPlaylist({ ...library, songs, songCount: songs.length });
-        setLocalSongs(songs);
-        setIsLoading(false);
-      } else {
-        const p = playlists.find(p => p.id === id);
-        if (p) {
-          const pSongs = p.songIds.map(sid => songs.find(s => s.id === sid)).filter(Boolean) as Song[];
-          setPlaylist({ ...p, songs: pSongs, songCount: pSongs.length });
-          setLocalSongs(pSongs);
-        } else {
-          setPlaylist(null);
-          setLocalSongs([]);
-        }
-        setIsLoading(false);
-      }
-    }
+    setPlaylist(computedState.playlist);
+    setLocalSongs(computedState.localSongs);
   }
+
+  const isLoading = computedState.isLoading;
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [editingSong, setEditingSong] = useState<Song | null>(null);
+  const [deletingSong, setDeletingSong] = useState<Song | null>(null);
+  const [bulkDeleteMode, setBulkDeleteMode] = useState<'library' | 'playlist' | null>(null);
 
   const onSaveMetadata = useCallback(async (updated: Song | Playlist) => {
     if (editingSong) {
