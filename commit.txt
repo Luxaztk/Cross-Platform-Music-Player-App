@@ -5,18 +5,19 @@ fix(server): implement automated orphan cleanup engine, real-time watcher, and c
   - Integrate orphan pruning into `getSongs()`, `getIndexedSong()`, and `scanDirectory()` so manual file deletions are instantly reflected
   - Add real-time filesystem watcher (`fs.watch`) on `MUSIC_DIR` with debouncing to automatically synchronize manual disk deletions/additions without restarting the server
   - Add graceful server shutdown handlers for `SIGINT` and `SIGTERM` to close the watcher cleanly
+  - Fix debounceTimer typing to `ReturnType<typeof setTimeout>` for cross-environment TypeScript compliance
   - Add unit tests verifying automated orphan pruning (14/14 tests Green)
 
 - apps/desktop:
   - Deduplicate server songs against local songs in `ServerSection.tsx` (match by hash or normalized title + artist + duration <= 3s)
   - Automatically purge redundant stream duplicates from the library on sync
   - Ignore songs with `sourceType === 'stream'` or HTTP URL in `library:scanMissingFiles` IPC handler to eliminate false missing file warnings
-  - Complete i18n support in `ServerSection.tsx`: status pills, upload counts, disconnected server label, Cloudflare limit hint, and search filters
+  - Complete 100% i18n support in `ServerSection.tsx`: status pills, upload counts, disconnected server label, Cloudflare limit hint, and search filters
   - Fix upload stream flowing mode conflict and handle Cloudflare 100MB limit in `electron/ipc/server.ts` and `ServerUploadService.ts`
   - Unit tests passing (46/46 suites, 344/344 tests Green)
 
 - packages/i18n:
-  - Add missing Vietnamese and English translation keys in `desktop.ts` for all server settings strings
+  - Add missing Vietnamese and English translation keys in `desktop.ts` for all server settings strings (sync notifications, push counts, status pills, hints)
 
 - infrastructure & docs:
   - Add `apps/server/data/` to `.gitignore`
