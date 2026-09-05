@@ -61,6 +61,35 @@ export function createApp(scanner: MusicScanner): Express {
     res.json(indexed.song);
   });
 
+  // Delete song and physical file
+  app.delete('/api/songs/:id', (req, res) => {
+    const songId = req.params.id;
+    const removed = scanner.removeSong(songId);
+    if (!removed.success || !removed.physicalPath) {
+      res.status(404).json({ error: 'Song not found' });
+      return;
+    }
+
+    try {
+      if (fs.existsSync(removed.physicalPath)) {
+        fs.unlinkSync(removed.physicalPath);
+      }
+      // Clean up empty parent directory if empty
+      const parentDir = path.dirname(removed.physicalPath);
+      if (fs.existsSync(parentDir) && fs.readdirSync(parentDir).length === 0) {
+        fs.rmdirSync(parentDir);
+        const grandParentDir = path.dirname(parentDir);
+        if (fs.existsSync(grandParentDir) && fs.readdirSync(grandParentDir).length === 0) {
+          fs.rmdirSync(grandParentDir);
+        }
+      }
+      res.json({ success: true, id: songId });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete file from disk';
+      res.status(500).json({ error: msg });
+    }
+  });
+
   // Stream audio file (Direct Stream HTTP 206 Partial Content)
   app.get('/api/stream/:id', (req, res) => {
     const songId = req.params.id;
@@ -165,6 +194,17 @@ export function createApp(scanner: MusicScanner): Express {
 
     const targetPath = path.join(targetFolder, filename);
     const writeStream = fs.createWriteStream(targetPath);
+
+    req.on('aborted', () => {
+      writeStream.destroy();
+      try {
+        if (fs.existsSync(targetPath)) {
+          fs.unlinkSync(targetPath);
+        }
+      } catch {
+        // Ignored
+      }
+    });
 
     req.pipe(writeStream);
 

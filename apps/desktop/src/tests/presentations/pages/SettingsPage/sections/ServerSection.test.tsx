@@ -45,6 +45,7 @@ describe('ServerSection', () => {
   const mockUpdateSettings = vi.fn().mockResolvedValue(true);
   const mockShowNotification = vi.fn();
   const mockHandleAddSongs = vi.fn().mockResolvedValue({ count: 5 });
+  const mockHandleDeleteSongs = vi.fn().mockResolvedValue(true);
   const mockPushSongs = vi.fn();
   const mockT = vi.fn((_key: string, options?: { defaultValue?: string }) => options?.defaultValue || _key);
 
@@ -90,6 +91,7 @@ describe('ServerSection', () => {
 
     vi.mocked(useLibraryContext).mockReturnValue({
       handleAddSongs: mockHandleAddSongs,
+      handleDeleteSongs: mockHandleDeleteSongs,
       songs: mockLocalSongs,
     } as unknown as ReturnType<typeof useLibraryContext>);
 
@@ -288,6 +290,77 @@ describe('ServerSection', () => {
         autoConnect: false,
         autoPushOnDownload: false,
       },
+    });
+  });
+
+  it('deduplicates songs when syncing from server and removes redundant stream duplicates', async () => {
+    const user = userEvent.setup();
+    const existingWithDuplicate: Song[] = [
+      ...mockLocalSongs,
+      {
+        id: 'stream-dup-1',
+        filePath: 'http://server/api/stream/dup1',
+        title: 'Local Song 1',
+        artist: 'Artist 1',
+        artists: ['Artist 1'],
+        album: 'Album 1',
+        year: 2026,
+        coverArt: null,
+        duration: 210,
+        genre: 'Pop',
+        sourceType: 'stream',
+      },
+    ];
+
+    vi.mocked(useLibraryContext).mockReturnValue({
+      handleAddSongs: mockHandleAddSongs,
+      handleDeleteSongs: mockHandleDeleteSongs,
+      songs: existingWithDuplicate,
+    } as unknown as ReturnType<typeof useLibraryContext>);
+
+    // Server returns 1 matching song and 1 new song
+    vi.mocked(ServerClient.fetchSongs).mockResolvedValueOnce({
+      ok: true,
+      songs: [
+        {
+          id: 'server-1',
+          filePath: 'http://server/api/stream/server-1',
+          title: 'Local Song 1', // matches local-1
+          artist: 'Artist 1',
+          artists: ['Artist 1'],
+          album: 'Album 1',
+          year: 2026,
+          coverArt: null,
+          duration: 210,
+          genre: 'Pop',
+          sourceType: 'stream',
+        },
+        {
+          id: 'server-2',
+          filePath: 'http://server/api/stream/server-2',
+          title: 'Brand New Server Song',
+          artist: 'New Artist',
+          artists: ['New Artist'],
+          album: 'New Album',
+          year: 2026,
+          coverArt: null,
+          duration: 150,
+          genre: 'Rock',
+          sourceType: 'stream',
+        },
+      ],
+    });
+
+    render(<ServerSection />);
+
+    const syncBtn = screen.getByText('Đồng bộ nhạc');
+    await user.click(syncBtn);
+
+    await waitFor(() => {
+      expect(mockHandleDeleteSongs).toHaveBeenCalledWith(['stream-dup-1']);
+      expect(mockHandleAddSongs).toHaveBeenCalledWith([
+        expect.objectContaining({ id: 'server-2', title: 'Brand New Server Song' }),
+      ]);
     });
   });
 });

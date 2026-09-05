@@ -33,6 +33,86 @@ export class MusicScanner {
     return 'srv-' + crypto.createHash('md5').update(path.normalize(filePath).toLowerCase()).digest('hex').substring(0, 16);
   }
 
+  private watcher: fs.FSWatcher | null = null;
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  public async indexSingleFile(filePath: string): Promise<Song | null> {
+    if (!fs.existsSync(filePath)) return null;
+
+    try {
+      const id = this.generateId(filePath);
+      const stat = fs.statSync(filePath);
+      let metadata: mm.IAudioMetadata | null = null;
+      try {
+        metadata = await mm.parseFile(filePath, { skipCovers: false });
+      } catch {
+        // Fallback if audio metadata cannot be parsed
+      }
+
+      const title = metadata?.common.title || path.basename(filePath, path.extname(filePath));
+      const artist = metadata?.common.artist || metadata?.common.albumartist || 'Unknown Artist';
+      const artists = metadata?.common.artists && metadata?.common.artists.length > 0
+        ? metadata.common.artists
+        : [artist];
+      const album = metadata?.common.album || 'Unknown Album';
+      const duration = Math.round(metadata?.format.duration || 0);
+      const genre = (metadata?.common.genre && metadata?.common.genre[0]) || 'Music';
+      const year = metadata?.common.year || null;
+
+      // Album Artwork
+      let coverArtUrl: string | null = null;
+      if (metadata?.common.picture && metadata.common.picture.length > 0) {
+        const pic = metadata.common.picture[0];
+        this.coverMap.set(id, {
+          buffer: Buffer.from(pic.data),
+          mime: pic.format || 'image/jpeg',
+        });
+        coverArtUrl = `${this.baseUrl}/api/cover/${id}`;
+      }
+
+      const hash = this.calculateFastHash(filePath);
+
+      const song: Song = {
+        id,
+        title,
+        artist,
+        artists,
+        album,
+        duration,
+        genre,
+        year,
+        coverArt: coverArtUrl,
+        filePath: `${this.baseUrl}/api/stream/${id}`,
+        sourceType: 'stream',
+        streamUrl: `${this.baseUrl}/api/stream/${id}`,
+        fileSize: stat.size,
+        hash,
+        dateAdded: stat.birthtime.toISOString(),
+        createdAt: stat.birthtime.toISOString(),
+        updatedAt: stat.mtime.toISOString(),
+      };
+
+      this.songsMap.set(id, { song, physicalPath: filePath });
+      return song;
+    } catch (err) {
+      console.error(`[MusicScanner] Failed to parse metadata for: ${filePath}`, err);
+      return null;
+    }
+  }
+
+  public pruneOrphans(): number {
+    let prunedCount = 0;
+    for (const [id, item] of this.songsMap.entries()) {
+      if (!fs.existsSync(item.physicalPath)) {
+        this.songsMap.delete(id);
+        this.coverMap.delete(id);
+        console.log(`[MusicScanner] Pruned orphan song: "${item.song.title}" (file deleted on disk: ${item.physicalPath})`);
+        prunedCount++;
+      }
+    }
+    return prunedCount;
+  }
+
   public async scanDirectory(directoryPath: string): Promise<number> {
     if (!fs.existsSync(directoryPath)) {
       try {
@@ -41,6 +121,7 @@ export class MusicScanner {
       } catch (_err) {
         console.warn(`[MusicScanner] Directory does not exist and could not be created: ${directoryPath}`);
       }
+      this.pruneOrphans();
       return 0;
     }
 
@@ -49,68 +130,23 @@ export class MusicScanner {
 
     let count = 0;
     for (const filePath of audioFiles) {
-      try {
-        const id = this.generateId(filePath);
-        const stat = fs.statSync(filePath);
-        let metadata: mm.IAudioMetadata | null = null;
-        try {
-          metadata = await mm.parseFile(filePath, { skipCovers: false });
-        } catch {
-          // Fallback if audio metadata cannot be parsed
-        }
-
-        const title = metadata?.common.title || path.basename(filePath, path.extname(filePath));
-        const artist = metadata?.common.artist || metadata?.common.albumartist || 'Unknown Artist';
-        const artists = metadata?.common.artists && metadata?.common.artists.length > 0
-          ? metadata.common.artists
-          : [artist];
-        const album = metadata?.common.album || 'Unknown Album';
-        const duration = Math.round(metadata?.format.duration || 0);
-        const genre = (metadata?.common.genre && metadata?.common.genre[0]) || 'Music';
-        const year = metadata?.common.year || null;
-
-        // Album Artwork
-        let coverArtUrl: string | null = null;
-        if (metadata?.common.picture && metadata.common.picture.length > 0) {
-          const pic = metadata.common.picture[0];
-          this.coverMap.set(id, {
-            buffer: Buffer.from(pic.data),
-            mime: pic.format || 'image/jpeg',
-          });
-          coverArtUrl = `${this.baseUrl}/api/cover/${id}`;
-        }
-
-        const hash = this.calculateFastHash(filePath);
-
-        const song: Song = {
-          id,
-          title,
-          artist,
-          artists,
-          album,
-          duration,
-          genre,
-          year,
-          coverArt: coverArtUrl,
-          filePath: `${this.baseUrl}/api/stream/${id}`,
-          sourceType: 'stream',
-          streamUrl: `${this.baseUrl}/api/stream/${id}`,
-          fileSize: stat.size,
-          hash,
-          dateAdded: stat.birthtime.toISOString(),
-          createdAt: stat.birthtime.toISOString(),
-          updatedAt: stat.mtime.toISOString(),
-        };
-
-        this.songsMap.set(id, { song, physicalPath: filePath });
+      const id = this.generateId(filePath);
+      if (!this.songsMap.has(id)) {
+        const song = await this.indexSingleFile(filePath);
+        if (song) count++;
+      } else {
         count++;
-      } catch (err) {
-        console.error(`[MusicScanner] Failed to parse metadata for: ${filePath}`, err);
       }
     }
 
-    console.log(`[MusicScanner] Scanned ${count} songs from ${directoryPath}`);
-    return count;
+    // Automatically prune any indexed songs whose physical files were deleted
+    const pruned = this.pruneOrphans();
+    if (pruned > 0) {
+      console.log(`[MusicScanner] Cleaned up ${pruned} orphan songs missing from disk.`);
+    }
+
+    console.log(`[MusicScanner] Scanned ${count} songs from ${directoryPath} (Total active: ${this.songsMap.size})`);
+    return this.songsMap.size;
   }
 
   public calculateFastHash(filePath: string): string {
@@ -279,6 +315,7 @@ export class MusicScanner {
   }
 
   public getSongs(): Song[] {
+    this.pruneOrphans();
     return Array.from(this.songsMap.values()).map((item) => ({
       ...item.song,
       filePath: `${this.baseUrl}/api/stream/${item.song.id}`,
@@ -288,7 +325,14 @@ export class MusicScanner {
   }
 
   public getIndexedSong(id: string): IndexedSong | undefined {
-    return this.songsMap.get(id);
+    const indexed = this.songsMap.get(id);
+    if (indexed && !fs.existsSync(indexed.physicalPath)) {
+      this.songsMap.delete(id);
+      this.coverMap.delete(id);
+      console.log(`[MusicScanner] Pruned orphan song during access: "${indexed.song.title}" (id: ${id})`);
+      return undefined;
+    }
+    return indexed;
   }
 
   public setIndexedSong(id: string, indexed: IndexedSong): void {
@@ -303,7 +347,63 @@ export class MusicScanner {
     this.coverMap.set(id, cover);
   }
 
+  public removeSong(id: string): { success: boolean; physicalPath?: string } {
+    const indexed = this.songsMap.get(id);
+    if (!indexed) return { success: false };
+
+    this.songsMap.delete(id);
+    this.coverMap.delete(id);
+    console.log(`[MusicScanner] Removed song from index: "${indexed.song.title}" (id: ${id})`);
+    return { success: true, physicalPath: indexed.physicalPath };
+  }
+
+  public startWatching(directoryPath: string): void {
+    this.stopWatching();
+    if (!fs.existsSync(directoryPath)) return;
+
+    try {
+      this.watcher = fs.watch(directoryPath, { recursive: true }, (_eventType, filename) => {
+        if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        this.debounceTimer = setTimeout(async () => {
+          const pruned = this.pruneOrphans();
+          if (filename) {
+            const fullPath = path.join(directoryPath, filename);
+            const ext = path.extname(filename).toLowerCase();
+            if (SUPPORTED_EXTENSIONS.has(ext) && fs.existsSync(fullPath)) {
+              const id = this.generateId(fullPath);
+              if (!this.songsMap.has(id)) {
+                await this.indexSingleFile(fullPath);
+              }
+            }
+          }
+          if (pruned > 0) {
+            console.log(`[MusicScanner] Auto-cleaned ${pruned} orphan songs following filesystem event.`);
+          }
+        }, 500);
+      });
+      console.log(`[MusicScanner] Real-time filesystem watcher active on: ${directoryPath}`);
+    } catch (err) {
+      console.warn(`[MusicScanner] Could not start filesystem watcher:`, err);
+    }
+  }
+
+  public stopWatching(): void {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    if (this.watcher) {
+      try {
+        this.watcher.close();
+      } catch {
+        // Ignored
+      }
+      this.watcher = null;
+    }
+  }
+
   public clear(): void {
+    this.stopWatching();
     this.songsMap.clear();
     this.coverMap.clear();
   }

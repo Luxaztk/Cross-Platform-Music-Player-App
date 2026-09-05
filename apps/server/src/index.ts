@@ -23,6 +23,7 @@ async function start() {
   try {
     const count = await scanner.scanDirectory(MUSIC_DIR);
     console.log(`[Server] Initial scan completed: ${count} songs indexed.`);
+    scanner.startWatching(MUSIC_DIR);
   } catch (err) {
     console.error('[Server] Initial scan error:', err);
   }
@@ -30,6 +31,17 @@ async function start() {
   const server = app.listen(PORT, HOST, () => {
     console.log(`[Server] Streaming server is LIVE and ready at http://${HOST}:${PORT}`);
   });
+
+  const shutdown = () => {
+    console.log('\n[Server] Shutting down gracefully...');
+    scanner.stopWatching();
+    server.close(() => {
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 
   server.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {

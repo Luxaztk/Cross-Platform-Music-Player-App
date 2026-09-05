@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useSettings, useLanguage, useNotification } from '@hooks';
 import { useLibraryContext } from '@music/hooks';
 import { ServerClient } from '@music/core';
-import type { ServerHealth } from '@music/types';
+import type { ServerHealth, Song } from '@music/types';
 import { ICON_SIZES } from '@constants';
 import {
   Radio,
@@ -25,7 +25,7 @@ import { type SettingsSectionProps, matchesSearch } from '../utils';
 export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) => {
   const { t } = useLanguage();
   const { settings, updateSettings, isSaving } = useSettings();
-  const { handleAddSongs, songs } = useLibraryContext();
+  const { handleAddSongs, handleDeleteSongs, songs } = useLibraryContext();
   const { showNotification } = useNotification();
 
   const serverUrlFromSettings = settings?.server?.serverUrl ?? '';
@@ -129,14 +129,102 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
 
     if (result.ok && result.songs.length > 0) {
       try {
-        const importRes = await handleAddSongs(result.songs);
-        showNotification(
-          'success',
-          t('settings.server.syncSuccess', {
-            count: importRes.count ?? result.songs.length,
-            defaultValue: `Đã đồng bộ thành công ${importRes.count ?? result.songs.length} bài hát từ máy chủ!`,
-          })
+        const normalize = (str?: string) =>
+          (str || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]/g, '');
+
+        const isMatchingSong = (s1: Song, s2: Song) => {
+          // Tier 1: Audio fingerprint hash match
+          if (s1.hash && s2.hash && !s1.hash.startsWith('error-') && !s2.hash.startsWith('error-')) {
+            if (s1.hash === s2.hash) return true;
+            if (s1.hash.startsWith('p2:') && s2.hash.startsWith('p2:')) {
+              const h1 = s1.hash.slice(3);
+              const h2 = s2.hash.slice(3);
+              if (h1 === h2) return true;
+            }
+          }
+          // Tier 2: Title + Artist normalized match and duration difference <= 3 seconds
+          const t1 = normalize(s1.title);
+          const t2 = normalize(s2.title);
+          const a1 = normalize(s1.artist);
+          const a2 = normalize(s2.artist);
+          if (t1 && t2 && t1 === t2 && (a1 === a2 || !a1 || !a2)) {
+            const durDiff = Math.abs((s1.duration || 0) - (s2.duration || 0));
+            if (durDiff <= 3) return true;
+          }
+          return false;
+        };
+
+        const existingLocalSongs = (songs || []).filter(
+          (s) => s.sourceType !== 'stream' && !!s.filePath && !s.filePath.startsWith('http')
         );
+        const existingStreamSongs = (songs || []).filter(
+          (s) => s.sourceType === 'stream' || (s.filePath && s.filePath.startsWith('http'))
+        );
+
+        // 1. Clean up redundant stream songs that already exist as local songs in library
+        const redundantStreamSongIds = existingStreamSongs
+          .filter((streamSong) => existingLocalSongs.some((loc) => isMatchingSong(loc, streamSong)))
+          .map((s) => s.id);
+
+        let cleanedDuplicatesCount = 0;
+        if (redundantStreamSongIds.length > 0) {
+          await handleDeleteSongs(redundantStreamSongIds);
+          cleanedDuplicatesCount = redundantStreamSongIds.length;
+        }
+
+        // 2. Filter songs from server: Only add songs that do NOT exist locally and not already in stream songs
+        const songsToAdd = result.songs.filter((serverSong) => {
+          const hasLocal = existingLocalSongs.some((loc) => isMatchingSong(loc, serverSong));
+          if (hasLocal) return false;
+          const hasStream = existingStreamSongs.some(
+            (s) => !redundantStreamSongIds.includes(s.id) && (s.id === serverSong.id || isMatchingSong(s, serverSong))
+          );
+          return !hasStream;
+        });
+
+        let addedNewCount = 0;
+        if (songsToAdd.length > 0) {
+          const importRes = await handleAddSongs(songsToAdd);
+          addedNewCount = importRes.count ?? songsToAdd.length;
+        }
+
+        if (cleanedDuplicatesCount > 0 && addedNewCount > 0) {
+          showNotification(
+            'success',
+            t('settings.server.syncSuccessCleanedAndAdded', {
+              added: addedNewCount,
+              cleaned: cleanedDuplicatesCount,
+              defaultValue: `Đã đồng bộ thành công: Thêm ${addedNewCount} bài mới từ máy chủ, dọn dẹp ${cleanedDuplicatesCount} bài trùng lặp.`,
+            })
+          );
+        } else if (cleanedDuplicatesCount > 0) {
+          showNotification(
+            'success',
+            t('settings.server.syncSuccessCleanedOnly', {
+              count: cleanedDuplicatesCount,
+              defaultValue: `Tất cả bài hát trên máy chủ đã có sẵn trên máy tính. Đã dọn dẹp ${cleanedDuplicatesCount} bài stream trùng lặp!`,
+            })
+          );
+        } else if (addedNewCount > 0) {
+          showNotification(
+            'success',
+            t('settings.server.syncSuccess', {
+              count: addedNewCount,
+              defaultValue: `Đã đồng bộ thành công ${addedNewCount} bài hát từ máy chủ!`,
+            })
+          );
+        } else {
+          showNotification(
+            'info',
+            t('settings.server.syncAllUpToDate', {
+              defaultValue: 'Thư viện đã được đồng bộ hoàn hảo với máy chủ (Không có bài mới hoặc bài trùng lặp).',
+            })
+          );
+        }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         showNotification('error', msg || t('settings.server.syncFail', { defaultValue: 'Lỗi nạp bài hát vào thư viện' }));
@@ -146,7 +234,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     } else {
       showNotification('error', result.error || t('settings.server.syncFail', { defaultValue: 'Không thể tải danh sách bài hát' }));
     }
-  }, [displayUrl, handleAddSongs, showNotification, t]);
+  }, [displayUrl, songs, handleAddSongs, handleDeleteSongs, showNotification, t]);
 
   const handlePushLibrary = useCallback(async () => {
     const targetUrl = ServerClient.normalizeUrl(displayUrl);
@@ -179,6 +267,27 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
       showNotification('info', t('settings.server.pushCancelled', { defaultValue: 'Đã hủy quá trình đẩy nhạc lên Server.' }));
     } else if (summary.error) {
       showNotification('error', summary.error || t('settings.server.pushFail', { defaultValue: 'Quá trình đẩy nhạc gặp lỗi' }));
+    } else if (summary.failedCount > 0) {
+      const hasCloudflareLimit = summary.failedSongs?.some((s) => s.error.includes('100MB') || s.error.includes('413'));
+      const extraHint = hasCloudflareLimit
+        ? t('settings.server.cloudflareLimitHint', {
+            defaultValue: ' (Có bài hát >100MB bị Cloudflare từ chối, hãy chuyển sang IP LAN để tải lên)',
+          })
+        : '';
+      showNotification(
+        'warning',
+        t('settings.server.pushPartialSuccess', {
+          uploaded: summary.uploadedCount,
+          failed: summary.failedCount,
+          extraHint,
+          defaultValue: `Đã đẩy ${summary.uploadedCount} bài hát, nhưng có ${summary.failedCount} bài thất bại${extraHint}.`,
+        })
+      );
+      // Re-check health to update server song count
+      const refreshed = await ServerClient.checkHealth(targetUrl);
+      if (refreshed.ok && refreshed.health) {
+        setHealthStatus(refreshed.health);
+      }
     } else {
       showNotification(
         'success',
@@ -218,6 +327,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     matchesSearch(t('settings.server.urlDesc'), searchQuery) ||
     matchesSearch(t('settings.server.pushTitle'), searchQuery) ||
     matchesSearch(t('settings.server.syncTitle'), searchQuery) ||
+    matchesSearch(t('settings.server.autoPushTitle'), searchQuery) ||
     matchesSearch('server', searchQuery);
 
   if (searchQuery && !showsServer) return null;
@@ -331,7 +441,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
                     <span>
                       {healthStatus
                         ? t('settings.server.serverSongsCount', { count: healthStatus.totalSongs, defaultValue: `${healthStatus.totalSongs} bài hát trên Server` })
-                        : 'Máy chủ: Chưa kết nối'}
+                        : t('settings.server.notConnected', { defaultValue: 'Máy chủ: Chưa kết nối' })}
                     </span>
                   </span>
                 </div>
@@ -359,11 +469,20 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
                 <div className="progress-header">
                   <div className="progress-status-info">
                     <span className={`status-pill ${uploadState.status}`}>
-                      {uploadState.status === 'diffing' && 'So khớp vân tay...'}
-                      {uploadState.status === 'uploading' && `Đang đẩy: ${uploadState.current}/${uploadState.total}`}
-                      {uploadState.status === 'completed' && 'Hoàn tất'}
-                      {uploadState.status === 'cancelled' && 'Đã hủy'}
-                      {uploadState.status === 'error' && 'Lỗi'}
+                      {uploadState.status === 'diffing' &&
+                        t('settings.server.statusDiffing', { defaultValue: 'So khớp vân tay...' })}
+                      {uploadState.status === 'uploading' &&
+                        t('settings.server.statusUploading', {
+                          current: uploadState.current,
+                          total: uploadState.total,
+                          defaultValue: `Đang đẩy: ${uploadState.current}/${uploadState.total}`,
+                        })}
+                      {uploadState.status === 'completed' &&
+                        t('settings.server.statusCompleted', { defaultValue: 'Hoàn tất' })}
+                      {uploadState.status === 'cancelled' &&
+                        t('settings.server.statusCancelled', { defaultValue: 'Đã hủy' })}
+                      {uploadState.status === 'error' &&
+                        t('settings.server.statusError', { defaultValue: 'Lỗi' })}
                     </span>
                     <span className="current-song-name" title={uploadState.currentSongTitle}>
                       {uploadState.currentSongTitle}
@@ -395,9 +514,21 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
                       <span className="speed-badge">{uploadState.speedMb} MB/s</span>
                     )}
                     <span className="summary-counts">
-                      {uploadState.uploadedCount > 0 && `Đã tải: ${uploadState.uploadedCount}`}
-                      {uploadState.skippedCount > 0 && ` • Bỏ qua: ${uploadState.skippedCount}`}
-                      {uploadState.failedCount > 0 && ` • Lỗi: ${uploadState.failedCount}`}
+                      {uploadState.uploadedCount > 0 &&
+                        t('settings.server.countUploaded', {
+                          count: uploadState.uploadedCount,
+                          defaultValue: `Đã tải: ${uploadState.uploadedCount}`,
+                        })}
+                      {uploadState.skippedCount > 0 &&
+                        t('settings.server.countSkipped', {
+                          count: uploadState.skippedCount,
+                          defaultValue: ` • Bỏ qua: ${uploadState.skippedCount}`,
+                        })}
+                      {uploadState.failedCount > 0 &&
+                        t('settings.server.countFailed', {
+                          count: uploadState.failedCount,
+                          defaultValue: ` • Lỗi: ${uploadState.failedCount}`,
+                        })}
                     </span>
                   </div>
                 </div>

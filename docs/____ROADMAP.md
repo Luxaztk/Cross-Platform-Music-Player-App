@@ -251,7 +251,17 @@ Mục tiêu: Xây dựng hệ sinh thái phát nhạc trực tuyến độ trễ
     - Checkbox toggle **"Tự động đẩy khi tải nhạc mới"** (`autoPushOnDownload`).
   - [x] **Auto-Push On Download (`DownloadProvider.tsx`)**:
     - Tự động đẩy file copy lên Homelab Server ngay khi tải xong từ YouTube nếu bật `autoPushOnDownload`.
-  - [x] **Kiểm thử toàn diện**: **45/45 suites passing (340/340 tests Green)** trên desktop, 12/12 server tests passing, 72/72 core tests passing, Zero TypeScript errors trên toàn bộ Monorepo.
+  - [x] **Khắc phục lỗi Stream Upload IPC & Giới hạn 100MB Cloudflare Tunnel (P0)** *(Hoàn thành 05/09/2026)*:
+    - Sửa lỗi `UND_ERR_REQ_CONTENT_LENGTH_MISMATCH` trong `apps/desktop/electron/ipc/server.ts` bằng `Transform` stream để không kích hoạt flowing mode trước khi `fetch` tiêu thụ stream.
+    - Xử lý Cloudflare Free tier limit 100MB (`413 Payload Too Large`): Bổ sung cảnh báo chi tiết và phân loại lỗi cho các tệp mixtape/lossless dung lượng lớn (>100MB), hướng dẫn dùng IP mạng LAN nội bộ.
+    - Dọn dẹp tệp dở dang khi bị ngắt kết nối (`req.on('aborted')`) trong `apps/server/src/app.ts`.
+  - [x] **Sửa lỗi Đồng bộ 2 chiều, Dọn dẹp Mock Files Server & Bỏ qua Stream Songs khi Quét File Mồ Côi (P0)** *(Hoàn thành 05/09/2026)*:
+    - Bổ sung endpoint `DELETE /api/songs/:id` và hàm `removeSong` trong `MusicScanner.ts` để xóa tệp trên đĩa và dọn dẹp các tệp test/mock trên Homelab Server (13/13 tests Green).
+    - Ngăn chặn trùng lặp 2 chiều khi Đồng bộ từ Server về Desktop (`handleSyncSongs`): So khớp vân tay âm thanh và metadata, chỉ thêm các bài hát thực sự mới chưa có ở local, tự động dọn dẹp các bài stream bị nhân bản thừa trong thư viện hiện tại của người dùng (10/10 tests Green).
+    - Sửa `library:scanMissingFiles` trong `apps/desktop/electron/ipc/library.ts`: Bỏ qua các bài hát `sourceType: 'stream'` hoặc `filePath` dạng HTTP URL để triệt tiêu thông báo warning file mồ côi giả.
+    - Hoàn thiện 100% i18n đa ngôn ngữ (Tiếng Việt & English) cho toàn bộ tab Streaming Server trong `packages/i18n` và `ServerSection.tsx` (trạng thái tiến trình, thống kê tải lên, cảnh báo Cloudflare, thông báo đồng bộ).
+    - Xây dựng **Cơ chế Tự động Dọn dẹp File Mồ Côi trên Homelab Server (Automated Orphan Cleanup Engine)**: `pruneOrphans()` tự động xóa các bài hát bị xóa tay khỏi bộ nhớ RAM khi truy vấn `GET /api/songs` hoặc stream, kết hợp bộ theo dõi tệp thời gian thực `fs.watch` trên thư mục nhạc (14/14 server tests Green).
+  - [x] **Kiểm thử toàn diện**: **46/46 suites passing (344/344 tests Green)** trên desktop, 14/14 server tests passing, 72/72 core tests passing, Zero TypeScript errors trên toàn bộ Monorepo.
 
 - [x] **Phase 4: Caching Cục Bộ & Trải Nghiệm Offline Cho Mobile (P2)** *(Hoàn thành 04/09/2026)*
   - [x] **Engine LRU Cache High/Low Watermark (100% / 80%)**: Xây dựng `MobileAudioCacheService.ts` quản lý bộ nhớ đệm `Paths.cache/melovista/audio_cache/`, thuật toán High/Low Watermark (mặc định 500MB / 400MB) theo chuẩn Spotify và ExoPlayer, cơ chế Atomic Write (`.tmp` -> `.mp3`) chống hỏng file và Touch-on-read cập nhật timestamp (9/9 tests Green).

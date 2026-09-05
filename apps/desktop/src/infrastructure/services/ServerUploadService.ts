@@ -1,6 +1,12 @@
 import { ServerClient } from '@music/core';
 import type { Song } from '@music/types';
 
+export interface FailedUploadItem {
+  songId: string;
+  songTitle: string;
+  error: string;
+}
+
 export interface UploadProgressState {
   status: 'idle' | 'diffing' | 'uploading' | 'completed' | 'cancelled' | 'error';
   total: number;
@@ -11,6 +17,7 @@ export interface UploadProgressState {
   skippedCount: number;
   uploadedCount: number;
   failedCount: number;
+  failedSongs?: FailedUploadItem[];
   error?: string;
 }
 
@@ -19,6 +26,7 @@ export interface UploadSummary {
   uploadedCount: number;
   skippedCount: number;
   failedCount: number;
+  failedSongs?: FailedUploadItem[];
   cancelled: boolean;
   error?: string;
 }
@@ -130,6 +138,7 @@ export class ServerUploadService {
     // Step 2: Batch Uploading via Stream IPC
     let uploadedCount = 0;
     let failedCount = 0;
+    const failedSongs: FailedUploadItem[] = [];
     const totalToUpload = toUploadSongs.length;
 
     // Listen to chunk-level progress from Electron
@@ -152,8 +161,9 @@ export class ServerUploadService {
             skippedCount,
             uploadedCount,
             failedCount,
+            failedSongs,
           });
-          return { total: localSongs.length, uploadedCount, skippedCount, failedCount, cancelled: true };
+          return { total: localSongs.length, uploadedCount, skippedCount, failedCount, failedSongs, cancelled: true };
         }
 
         const song = toUploadSongs[i];
@@ -171,6 +181,7 @@ export class ServerUploadService {
           skippedCount,
           uploadedCount,
           failedCount,
+          failedSongs,
         });
 
         const res = await window.electronAPI.uploadSongToServer({
@@ -182,7 +193,13 @@ export class ServerUploadService {
           uploadedCount++;
         } else {
           failedCount++;
-          console.warn(`[ServerUploadService] Failed to upload ${song.title}:`, res.error);
+          const errDetail = res.error || 'Lỗi không xác định khi tải lên';
+          failedSongs.push({
+            songId: song.id,
+            songTitle: song.title || 'Bài hát không tên',
+            error: errDetail,
+          });
+          console.warn(`[ServerUploadService] Failed to upload ${song.title}:`, errDetail);
         }
       }
     } finally {
@@ -199,6 +216,7 @@ export class ServerUploadService {
       skippedCount,
       uploadedCount,
       failedCount,
+      failedSongs,
     });
 
     return {
@@ -206,6 +224,7 @@ export class ServerUploadService {
       uploadedCount,
       skippedCount,
       failedCount,
+      failedSongs,
       cancelled: false,
     };
   }

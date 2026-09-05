@@ -1,32 +1,24 @@
-feat(homelab): complete streaming engine, 2-way sync, mobile caching & deployment suite
+fix(server): implement automated orphan cleanup engine, real-time watcher, and complete i18n
 
 - apps/server:
-  - Implement Direct Stream HTTP 206 Partial Content (Zero-copy Range Requests) for lossless audio playback
-  - Implement MusicScanner with ID3 metadata parsing, album art extraction, and fast fingerprinting
-  - Add POST /api/library/diff with 2-tier matching (audio fingerprint p2: & metadata)
-  - Add POST /api/upload stream receiver for zero-RAM file uploads directly to disk
-  - Add server listen error handling (EADDRINUSE) and clean test fixtures (setIndexedSong, setCover)
+  - Implement `pruneOrphans()` in `MusicScanner.ts` to automatically purge songs from RAM whose physical files were deleted from disk
+  - Integrate orphan pruning into `getSongs()`, `getIndexedSong()`, and `scanDirectory()` so manual file deletions are instantly reflected
+  - Add real-time filesystem watcher (`fs.watch`) on `MUSIC_DIR` with debouncing to automatically synchronize manual disk deletions/additions without restarting the server
+  - Add graceful server shutdown handlers for `SIGINT` and `SIGTERM` to close the watcher cleanly
+  - Add unit tests verifying automated orphan pruning (14/14 tests Green)
 
 - apps/desktop:
-  - Implement 1-Click Push Library to Server with real-time speed meter (MB/s) and progress tracking
-  - Implement Auto-Push on Download in DownloadProvider when downloading YouTube audio
-  - Add ServerSection in SettingsPage with automatic background healthcheck and status indicators
-  - Fix settings persistence bug for server configuration in MainStorageAdapter & SettingsProvider
-  - Fix PlaylistDetailPage loading freeze bug on navigation from Settings via render-time state adjustment in usePlaylistData
-  - Strict TypeScript & ESLint compliance: eliminate all unexpected 'any' in DownloadProvider and QualitySettings
+  - Deduplicate server songs against local songs in `ServerSection.tsx` (match by hash or normalized title + artist + duration <= 3s)
+  - Automatically purge redundant stream duplicates from the library on sync
+  - Ignore songs with `sourceType === 'stream'` or HTTP URL in `library:scanMissingFiles` IPC handler to eliminate false missing file warnings
+  - Complete i18n support in `ServerSection.tsx`: status pills, upload counts, disconnected server label, Cloudflare limit hint, and search filters
+  - Fix upload stream flowing mode conflict and handle Cloudflare 100MB limit in `electron/ipc/server.ts` and `ServerUploadService.ts`
+  - Unit tests passing (46/46 suites, 344/344 tests Green)
 
-- apps/mobile:
-  - Implement High/Low Watermark LRU Audio Cache (500MB / 400MB) with Atomic Write (.tmp -> .mp3)
-  - Implement Pinned Offline Storage with persistent album artwork & offline indicator flags
-  - Add predictive pre-caching hook (usePrecacheNextTrack) and 3-tier playback cascade (Offline -> Cache -> Stream)
-  - Add offline badges in library, playlist, and now-playing views, plus cache management in settings
+- packages/i18n:
+  - Add missing Vietnamese and English translation keys in `desktop.ts` for all server settings strings
 
-- deployment & ops:
-  - Add PM2 Monorepo Master Ecosystem (ecosystem.config.cjs) using node --import tsx with hard memory limits
-  - Add automated 1-step deployment script (scripts/deploy-homelab.sh) with fail-safe validation
-  - Add production deployment guide (homelab_dual_deployment_guide.md) with Cloudflare Zero Trust setup
-
-- testing & roadmap:
-  - 100% Green across entire monorepo: 344 desktop tests (46 files), 40 mobile tests, 72 core tests, 14 player tests, 12 server tests
-  - Zero TypeScript compiler errors (tsc --noEmit), zero ESLint warnings
-  - Sync progress across docs/____ROADMAP.md (Phase 2, Phase 3, Phase 3.5, Phase 4 completed)
+- infrastructure & docs:
+  - Add `apps/server/data/` to `.gitignore`
+  - Update `docs/____ROADMAP.md` Phase 3.5 status
+  - Zero TypeScript errors across monorepo

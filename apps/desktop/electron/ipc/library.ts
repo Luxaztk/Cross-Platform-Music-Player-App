@@ -453,6 +453,16 @@ export function setupLibraryIPC() {
       const missingSongs: Song[] = [];
 
       for (const song of songs) {
+        // Skip remote stream songs since they do not exist on the local physical filesystem
+        if (
+          song.sourceType === 'stream' ||
+          !song.filePath ||
+          song.filePath.startsWith('http://') ||
+          song.filePath.startsWith('https://')
+        ) {
+          continue;
+        }
+
         try {
           await fs.access(song.filePath, fs.constants.F_OK);
           logFileTrace('library:scanMissingFiles.access', song.filePath, 'SUCCESS', `File exists for songId=${song.id}`);

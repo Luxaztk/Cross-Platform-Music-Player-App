@@ -306,5 +306,87 @@ describe('MeloVista Streaming Server Suite', () => {
       const allSongs = scanner.getSongs();
       expect(allSongs.some((s) => s.title === 'My Song')).toBe(true);
     });
+
+    it('DELETE /api/songs/:id deletes song from scanner and physical disk', async () => {
+      const deleteTestPath = path.join(tempDir, 'to_delete.mp3');
+      fs.writeFileSync(deleteTestPath, Buffer.alloc(100, 0x11));
+
+      const deleteSongId = scanner.generateId(deleteTestPath);
+      scanner.setIndexedSong(deleteSongId, {
+        song: {
+          id: deleteSongId,
+          title: 'To Delete',
+          artist: 'Artist',
+          artists: ['Artist'],
+          album: 'Album',
+          duration: 60,
+          genre: 'Pop',
+          year: 2026,
+          coverArt: null,
+          filePath: `/api/stream/${deleteSongId}`,
+          sourceType: 'stream',
+          streamUrl: `/api/stream/${deleteSongId}`,
+          fileSize: 100,
+        },
+        physicalPath: deleteTestPath,
+      });
+
+      expect(fs.existsSync(deleteTestPath)).toBe(true);
+
+      const res = await request(app).delete(`/api/songs/${deleteSongId}`);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.id).toBe(deleteSongId);
+
+      // Verify removed from scanner and disk
+      expect(scanner.getIndexedSong(deleteSongId)).toBeUndefined();
+      expect(fs.existsSync(deleteTestPath)).toBe(false);
+
+      // Subsequent delete returns 404
+      const res404 = await request(app).delete(`/api/songs/${deleteSongId}`);
+      expect(res404.status).toBe(404);
+    });
+
+    it('automatically prunes orphan songs when file is deleted manually from disk', async () => {
+      const manualFilePath = path.join(tempDir, 'manual_delete.mp3');
+      fs.writeFileSync(manualFilePath, Buffer.alloc(100, 0x22));
+
+      const manualSongId = scanner.generateId(manualFilePath);
+      scanner.setIndexedSong(manualSongId, {
+        song: {
+          id: manualSongId,
+          title: 'Manual Delete Song',
+          artist: 'Artist',
+          artists: ['Artist'],
+          album: 'Album',
+          duration: 120,
+          genre: 'Pop',
+          year: 2026,
+          coverArt: null,
+          filePath: `/api/stream/${manualSongId}`,
+          sourceType: 'stream',
+          streamUrl: `/api/stream/${manualSongId}`,
+          fileSize: 100,
+        },
+        physicalPath: manualFilePath,
+      });
+
+      expect(fs.existsSync(manualFilePath)).toBe(true);
+      expect(scanner.getSongs().some((s) => s.id === manualSongId)).toBe(true);
+
+      // User manually deletes the file from disk (e.g. rm via terminal)
+      fs.unlinkSync(manualFilePath);
+      expect(fs.existsSync(manualFilePath)).toBe(false);
+
+      // Requesting /api/songs should auto-prune orphan and not return it
+      const res = await request(app).get('/api/songs');
+      expect(res.status).toBe(200);
+      expect(res.body.some((s: { id: string }) => s.id === manualSongId)).toBe(false);
+
+      // Accessing /api/stream/:id directly should return 404 and prune
+      const streamRes = await request(app).get(`/api/stream/${manualSongId}`);
+      expect(streamRes.status).toBe(404);
+      expect(scanner.getIndexedSong(manualSongId)).toBeUndefined();
+    });
   });
 });

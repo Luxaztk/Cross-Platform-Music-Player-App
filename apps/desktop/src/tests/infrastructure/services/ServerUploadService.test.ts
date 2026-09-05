@@ -194,6 +194,13 @@ describe('ServerUploadService', () => {
 
       expect(summary.failedCount).toBe(1);
       expect(summary.uploadedCount).toBe(0);
+      expect(summary.failedSongs).toEqual([
+        {
+          songId: 's1',
+          songTitle: 'Song 1',
+          error: 'Upload timeout',
+        },
+      ]);
     });
   });
 

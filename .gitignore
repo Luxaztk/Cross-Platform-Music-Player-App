@@ -119,6 +119,9 @@ docs/00_Bao_Cao_Mon_Hoc_MVP
 apps/bot/data/
 data/guild_settings.json
 
+# Streaming Server Runtime Data
+apps/server/data/
+
 AI_RULES.md
 .cursorrules
 /.agents
