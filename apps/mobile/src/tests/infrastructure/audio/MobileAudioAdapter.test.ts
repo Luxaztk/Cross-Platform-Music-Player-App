@@ -12,6 +12,7 @@ vi.mock('../../../infrastructure/audio/ExpoAudioEngine', () => {
       this.unload = vi.fn().mockResolvedValue(undefined);
       this.seekTo = vi.fn().mockResolvedValue(undefined);
       this.setVolume = vi.fn().mockResolvedValue(undefined);
+      this.setActiveForLockScreen = vi.fn().mockResolvedValue(undefined);
       return this;
     })
   };
@@ -97,5 +98,35 @@ describe('MobileAudioAdapter', () => {
 
     expect(mockEngine.load).toHaveBeenCalledWith('mock-cache-path/melovista/audio_cache/song_123.mp3', { shouldPlay: true });
     expect(adapter.getSource()).toBe('http://192.168.1.185:4545/api/stream/song-123');
+  });
+
+  it('updates lock screen metadata when song is active and clears on deactivate or stop', async () => {
+    const mockSong: any = {
+      id: 'song-1',
+      title: 'Stargazing',
+      artist: 'Travis Scott',
+      album: 'Astroworld',
+      coverArt: 'https://example.com/art.jpg',
+    };
+
+    adapter.updateLockScreen(true, mockSong);
+    await adapter.waitForIdle();
+
+    expect(mockEngine.setActiveForLockScreen).toHaveBeenCalledWith(true, {
+      title: 'Stargazing',
+      artist: 'Travis Scott',
+      albumTitle: 'Astroworld',
+      artworkUrl: 'https://example.com/art.jpg',
+    });
+
+    adapter.updateLockScreen(false);
+    await adapter.waitForIdle();
+    expect(mockEngine.setActiveForLockScreen).toHaveBeenCalledWith(false);
+
+    // Verify stop also clears lock screen
+    adapter.stop();
+    await adapter.waitForIdle();
+    expect(mockEngine.setActiveForLockScreen).toHaveBeenCalledWith(false);
+    expect(mockEngine.unload).toHaveBeenCalled();
   });
 });

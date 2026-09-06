@@ -55,13 +55,13 @@ const ImportProgressObserver: React.FC = () => {
     const unsub = window.electronAPI.onImportProgress?.((percent: number) => {
       // Create toast if it doesn't exist
       if (lastPercent === -1) {
-        showNotification('info', t('playlist.importFolder') + `... ${percent}%`, { 
+        showNotification('info', t('library.importingFolderProgress', { percent }), { 
           id: 'import-progress', 
           duration: 0 
         });
       } else {
         updateNotification('import-progress', { 
-          message: t('playlist.importFolder') + `... ${percent}%` 
+          message: t('library.importingFolderProgress', { percent }) 
         });
       }
       
@@ -72,7 +72,7 @@ const ImportProgressObserver: React.FC = () => {
         setTimeout(() => {
           updateNotification('import-progress', {
             type: 'success',
-            message: t('playlist.importComplete', 'Import hoàn tất!'),
+            message: t('playlist.importComplete'),
             duration: 3000
           });
           lastPercent = -1;
@@ -145,11 +145,11 @@ export const LibraryProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const handleSyncError = useCallback((err: unknown) => {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    showNotification('error', `[Library] Sync failed: ${errorMessage || 'Unknown error'}`, { 
+    showNotification('error', t('library.syncFailed', { error: errorMessage || t('library.unknownError') }), { 
       id: 'sync-toast',
       duration: 5000 
     });
-  }, [showNotification]);
+  }, [showNotification, t]);
 
   return (
     <SharedLibraryProvider 

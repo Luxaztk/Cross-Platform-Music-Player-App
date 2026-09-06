@@ -145,7 +145,7 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
                     <span
                       key={i}
                       className="clickable-artist"
-                      title={`💡 ${t('common.filterByArtist', { defaultValue: `Click để lọc bài hát của ${part.trim()}` })}`}
+                      title={`💡 ${t('common.filterByArtistPrompt', { artist: part.trim() })}`}
                       onClick={(e) => {
                         if (e.ctrlKey || e.metaKey || e.shiftKey) {
                           // Allow bubbling to handleRowClick for selection

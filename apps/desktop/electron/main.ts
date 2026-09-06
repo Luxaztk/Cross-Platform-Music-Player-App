@@ -7,6 +7,8 @@ import fs from 'node:fs/promises'
 import log from 'electron-log'
 import { fileURLToPath } from 'node:url'
 
+(globalThis as Record<string, unknown>).__electronLog = log;
+
 // --- CONFIG THE PHYSICAL LOGGER (electron-log) ---
 if (app) {
   if (process.platform === 'win32') {

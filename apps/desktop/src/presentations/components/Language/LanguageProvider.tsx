@@ -20,11 +20,24 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (result && typeof result === 'object' && key in result) {
         result = (result as Record<string, unknown>)[key];
       } else {
-        if (typeof options === 'string') return options;
-        if (options && typeof options === 'object' && typeof options.defaultValue === 'string') {
-          return options.defaultValue;
+        result = undefined;
+        break;
+      }
+    }
+
+    // Fallback to Vietnamese dictionary if missing in current language
+    if (typeof result !== 'string' && language !== 'vi') {
+      let fallbackResult: unknown = translations['vi'];
+      for (const key of keys) {
+        if (fallbackResult && typeof fallbackResult === 'object' && key in fallbackResult) {
+          fallbackResult = (fallbackResult as Record<string, unknown>)[key];
+        } else {
+          fallbackResult = undefined;
+          break;
         }
-        return keyPath; // Fallback to key if not found
+      }
+      if (typeof fallbackResult === 'string') {
+        result = fallbackResult;
       }
     }
 
@@ -33,19 +46,17 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (options && typeof options === 'object' && typeof options.defaultValue === 'string') {
         return options.defaultValue;
       }
-      return keyPath;
-    }
-
-    let variables: Record<string, unknown> | undefined;
-    if (options && typeof options === 'object') {
-      variables = options;
+      return keyPath; // Fallback to key if not found
     }
 
     // Replace variables if provided
-    if (variables) {
+    if (options && typeof options === 'object') {
       let templated = result;
-      Object.entries(variables).forEach(([key, value]) => {
-        templated = templated.replace(`{${key}}`, String(value));
+      Object.entries(options).forEach(([key, value]) => {
+        if (key !== 'defaultValue') {
+          const strVal = String(value);
+          templated = templated.split(`{{${key}}}`).join(strVal).split(`{${key}}`).join(strVal);
+        }
       });
       return templated;
     }

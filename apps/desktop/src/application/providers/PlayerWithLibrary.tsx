@@ -15,7 +15,7 @@ export const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) =
       storage={storage}
       allSongs={songs}
       onFileError={(song) => {
-        showNotification('error', t('player.fileNotFound').replace('{title}', song.title));
+        showNotification('error', t('player.fileNotFound', { title: song.title }));
       }}
       onSavePlaybackPosition={(songId, position) => {
         // Direct DB update to prevent UI re-renders (fixes 1-second stutter)

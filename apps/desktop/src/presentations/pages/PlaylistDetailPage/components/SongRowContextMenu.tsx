@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Play, PlaySquare, ListPlus, FolderPlus, ChevronRight, Edit2, Trash2, Keyboard } from 'lucide-react';
+import { Play, PlaySquare, ListPlus, FolderPlus, ChevronRight, Edit2, Trash2, Keyboard, BookmarkCheck } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import type { Song, Playlist } from '@music/types';
 import { useHotkeysModal } from '@application/context/HotkeysContext';
@@ -35,6 +35,7 @@ interface SongRowContextMenuProps {
     onAddToQueue: () => void;
     onAddToPlaylist: (pid: string) => void;
     onEdit: () => void;
+    onEditChapters?: () => void;
     onDelete: () => void;
     onSetSubMenu: (id: string | null) => void;
     t: (key: string, options?: Record<string, string | number>) => string;
@@ -53,6 +54,7 @@ export const SongRowContextMenu: React.FC<SongRowContextMenuProps> = ({
     onAddToQueue,
     onAddToPlaylist,
     onEdit,
+    onEditChapters,
     onDelete,
     onSetSubMenu,
     t,
@@ -134,6 +136,13 @@ export const SongRowContextMenu: React.FC<SongRowContextMenuProps> = ({
           onClick={onEdit}
           shortcut="F2"
         />
+        {onEditChapters && (
+          <MenuAction
+            icon={<BookmarkCheck size={ICON_SIZES.XSMALL} />}
+            label={t('chapters.editTitle') || 'Chỉnh sửa mốc bài hát'}
+            onClick={onEditChapters}
+          />
+        )}
         <MenuAction
           icon={<Trash2 size={16} />}
           label={t('common.delete')}

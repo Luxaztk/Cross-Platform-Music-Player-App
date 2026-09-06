@@ -25,6 +25,16 @@ export interface Song {
   streamUrl?: string; // Streaming audio URL if hosted remotely
   isOffline?: boolean; // True if downloaded for offline playback
   localOfflinePath?: string; // Local storage path if downloaded
+  chapters?: SongChapter[]; // Virtual tracklist / chapters for mixtapes
+}
+
+export interface SongChapter {
+  id: string; // unique chapter identifier
+  title: string;
+  startTime: number; // in seconds
+  endTime?: number; // in seconds
+  artist?: string;
+  skip?: boolean; // If true, auto-skipped during playback
 }
 
 export type DuplicateReason = 'URL' | 'HASH' | 'PATH' | 'METADATA';
@@ -95,6 +105,7 @@ export interface YoutubeInfo {
   album: string;
   thumbnail: string;
   duration?: number;
+  chapters?: SongChapter[];
 }
 
 export interface SyncStats {
@@ -117,11 +128,18 @@ export const DOWNLOAD_STATUS = {
   PREVIEW: 'preview',
   PENDING: 'pending',
   DOWNLOADING: 'downloading',
+  CONVERTING: 'converting',
   SUCCESS: 'success',
   ERROR: 'error',
 } as const;
 
 export type DownloadStatus = (typeof DOWNLOAD_STATUS)[keyof typeof DOWNLOAD_STATUS];
+
+export interface DownloadProgressPayload {
+  id: string;
+  percent: number;
+  stage?: 'downloading' | 'converting';
+}
 
 export interface DownloadItem {
   id: string; // YouTube Video ID
@@ -131,6 +149,7 @@ export interface DownloadItem {
   album: string;
   thumbnail: string;
   duration?: number;
+  chapters?: SongChapter[];
   status: DownloadStatus;
   progress: number;
   speed?: string;

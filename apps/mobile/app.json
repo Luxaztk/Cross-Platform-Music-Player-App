@@ -57,8 +57,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d6751740-ee99-4d55-b236-6d9e586f7b2a"
+        "projectId": "52b60eba-d5b7-45ea-9955-131d3f64b9a9"
       }
-    }
+    },
+    "owner": "luxaztk"
   }
 }

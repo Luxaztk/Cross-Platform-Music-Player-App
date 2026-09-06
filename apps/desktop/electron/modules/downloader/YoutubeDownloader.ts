@@ -3,10 +3,12 @@ import { EventEmitter } from 'events';
 import { app } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import log from 'electron-log/main';
 import { waitForFileUnlock } from '../../utils/fileState';
+import { extractSongChapters } from '@music/utils';
+import type { SongChapter, DownloadProgressPayload } from '@music/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +21,8 @@ interface YtDlpRawInfo {
   channel?: string;
   uploader?: string;
   duration?: number;
+  description?: string;
+  chapters?: Array<{ start_time?: number; end_time?: number; title?: string }>;
 }
 
 export interface YoutubeInfo {
@@ -28,6 +32,7 @@ export interface YoutubeInfo {
   artist: string;
   album: string;
   duration: number;
+  chapters?: SongChapter[];
 }
 
 export interface DownloadTask {
@@ -36,7 +41,7 @@ export interface DownloadTask {
   outputPath: string;
   resolve: (path: string) => void;
   reject: (err: Error) => void;
-  subprocess?: any;
+  subprocess?: ChildProcess;
 }
 
 export class YoutubeDownloader extends EventEmitter {
@@ -139,6 +144,12 @@ export class YoutubeDownloader extends EventEmitter {
     if (result.code === 0) {
       try {
         const info = JSON.parse(result.stdout) as YtDlpRawInfo;
+        const chapters = extractSongChapters({
+          rawChapters: info.chapters,
+          description: info.description,
+          totalDuration: info.duration,
+        });
+
         return {
           id: info.id,
           title: info.title || info.fulltitle || 'Unknown Title',
@@ -146,8 +157,9 @@ export class YoutubeDownloader extends EventEmitter {
           artist: info.channel || info.uploader || 'Unknown Artist',
           album: 'YouTube Download',
           duration: info.duration || 0,
+          chapters: chapters.length > 0 ? chapters : undefined,
         };
-      } catch (e) {
+      } catch {
         throw new Error('Failed to parse YouTube info.');
       }
     }
@@ -185,7 +197,7 @@ export class YoutubeDownloader extends EventEmitter {
         const items = entries.map(info => ({
           id: info.id,
           title: info.title || info.fulltitle || 'Unknown Title',
-          thumbnail: info.thumbnail || (info as any).thumbnails?.[0]?.url || '',
+          thumbnail: info.thumbnail || (info as { thumbnails?: Array<{ url: string }> }).thumbnails?.[0]?.url || '',
           artist: info.channel || info.uploader || 'Unknown Artist',
           album: playlistTitle,
           duration: info.duration || 0,
@@ -241,8 +253,9 @@ export class YoutubeDownloader extends EventEmitter {
       if (!fs.existsSync(this.binaryPath)) throw new Error(`yt-dlp missing`);
       if (!fs.existsSync(ffmpegPath)) throw new Error(`ffmpeg missing`);
 
-      let args = [
+      const args = [
         '--newline',
+        '--force-overwrites',
         '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0',
         '--no-playlist', '--restrict-filenames', '--embed-thumbnail',
         '--convert-thumbnails', 'jpg', '--embed-metadata', '--no-check-certificates',
@@ -262,7 +275,10 @@ export class YoutubeDownloader extends EventEmitter {
       }
 
       const subprocess = spawn(this.binaryPath, args, { 
-        shell: false, cwd: musicPath, env: { ...process.env } 
+        shell: false, 
+        cwd: musicPath, 
+        env: { ...process.env },
+        stdio: ['ignore', 'pipe', 'pipe']
       });
       task.subprocess = subprocess;
 
@@ -271,7 +287,10 @@ export class YoutubeDownloader extends EventEmitter {
       subprocess.stdout.on('data', (data: Buffer | string) => {
         const text = data.toString();
 
-        if (text.includes('[ffmpeg]') || text.includes('[download]') || text.includes('[ExtractAudio]')) {
+        if (text.includes('[ExtractAudio]') || text.includes('[ffmpeg]')) {
+          log.debug('[YT-DLP process]:', text.trim());
+          this.throttledEmitProgress(id, 100, 'converting');
+        } else if (text.includes('[download]')) {
           log.debug('[YT-DLP process]:', text.trim());
         }
         
@@ -279,7 +298,7 @@ export class YoutubeDownloader extends EventEmitter {
         if (matches.length > 0) {
           const lastMatch = matches[matches.length - 1];
           const percent = parseFloat(lastMatch[1]);
-          this.throttledEmitProgress(id, percent);
+          this.throttledEmitProgress(id, percent, 'downloading');
         }
       });
 
@@ -323,11 +342,16 @@ export class YoutubeDownloader extends EventEmitter {
     }
   }
 
-  private throttledEmitProgress(id: string, percent: number) {
+  private throttledEmitProgress(
+    id: string, 
+    percent: number, 
+    stage: 'downloading' | 'converting' = 'downloading'
+  ) {
     const now = Date.now();
     const last = this.progressLastEmit.get(id) || 0;
-    if (now - last > 200) {
-      this.emit('progress', { id, percent });
+    if (stage === 'converting' || now - last > 200) {
+      const payload: DownloadProgressPayload = { id, percent, stage };
+      this.emit('progress', payload);
       this.progressLastEmit.set(id, now);
     }
   }

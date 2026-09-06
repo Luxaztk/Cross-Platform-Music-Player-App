@@ -19,28 +19,28 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             <div className="bulk-actions-bar">
                 <div className="selection-info">
                     <span className="count">{selectedCount}</span>
-                    <span className="text">{t('playlist.songsSelected') || 'bài hát được chọn'}</span>
+                    <span className="text">{t('playlist.songsSelected')}</span>
                 </div>
                 <div className="bulk-btns">
                     {!isLibrary && (
-                        <button className="bulk-btn delete" onClick={() => onBulkDelete('playlist')}>
+                        <button type="button" className="bulk-btn delete" onClick={() => onBulkDelete('playlist')}>
                             <X size={ICON_SIZES.XSMALL} />
-                            {t('playlist.removeFromPlaylist') || 'Gỡ khỏi playlist'}
+                            {t('playlist.removeFromPlaylist')}
                         </button>
                     )}
                     {isLibrary && (
-                        <button className="bulk-btn delete" onClick={() => onBulkDelete('library')}>
+                        <button type="button" className="bulk-btn delete" onClick={() => onBulkDelete('library')}>
                             <Trash size={ICON_SIZES.XSMALL} />
-                            {t('playlist.deleteFromLibrary') || 'Xóa khỏi thư viện'}
+                            {t('playlist.deleteFromLibrary')}
                         </button>
                     )}
                     <div className="bulk-divider" />
-                    <button className="bulk-btn secondary" onClick={onBulkAddToQueue}>
+                    <button type="button" className="bulk-btn secondary" onClick={onBulkAddToQueue}>
                         <ListPlus size={ICON_SIZES.XSMALL} />
-                        {t('playlist.addToQueue') || 'Thêm vào hàng đợi'}
+                        {t('playlist.addToQueue')}
                     </button>
                     <div className="bulk-divider" />
-                    <button className="bulk-btn close" onClick={onCancel}>
+                    <button type="button" className="bulk-btn close" onClick={onCancel}>
                         {t('common.cancel')}
                     </button>
                 </div>

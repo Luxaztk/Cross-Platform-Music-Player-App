@@ -10,6 +10,8 @@
   "scripts": {
     "desktop": "npm run dev --workspace=apps/desktop",
     "mobile": "npm run start --workspace=apps/mobile",
+    "mobile:build:apk": "npm run build:apk --workspace=apps/mobile",
+    "mobile:build:dev": "npm run build:dev --workspace=apps/mobile",
     "bot": "npm run start --workspace=apps/bot",
     "bot:dev": "npm run dev --workspace=apps/bot",
     "server": "npm run start --workspace=apps/server",

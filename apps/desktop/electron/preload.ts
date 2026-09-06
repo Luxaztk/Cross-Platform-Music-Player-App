@@ -10,6 +10,7 @@ import type {
   SyncHistoryEntry,
   SyncStats,
   UploadSongResponse,
+  SongChapter,
 } from '@music/types'
 import type { YoutubeInfo } from './modules/downloader/YoutubeDownloader'
 
@@ -60,6 +61,11 @@ export interface ElectronAPI {
   saveLyricUsage: (usage: Record<string, number>) => Promise<void>
   incrementLyricUsage: (id: number | string) => Promise<void>
   patchSong: (songId: string, updates: Partial<Song>) => Promise<Song | null>
+  exportChapters: (
+    songId: string,
+    chapters: SongChapter[],
+    targetDir: string
+  ) => Promise<{ success: boolean; exportedCount: number; error?: string }>
   fetchYtInfo: (url: string) => Promise<{ success: boolean; info?: YoutubeInfo; error?: string }>
   fetchPlaylistInfo: (url: string) => Promise<{ success: boolean; items?: YoutubeInfo[]; error?: string }>
   downloadYtAudio: (
@@ -68,7 +74,7 @@ export interface ElectronAPI {
     title: string,
   ) => Promise<{ success: boolean; filePath?: string; error?: string }>
   writeAudioMetadata: (filePath: string, metadata: Partial<Song>) => Promise<void>
-  onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => () => void
+  onDownloadProgress: (callback: (data: { id: string; percent: number; stage?: 'downloading' | 'converting' }) => void) => () => void
   onImportProgress: (callback: (percent: number) => void) => () => void
   openItemPath: (filePath: string) => Promise<void>
   openDownloadsFolder: () => Promise<void>
@@ -155,6 +161,8 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.invoke('storage:incrementLyricUsage', id),
   patchSong: (songId: string, updates: Partial<Song>) =>
     ipcRenderer.invoke('storage:patchSong', songId, updates),
+  exportChapters: (songId: string, chapters: SongChapter[], targetDir: string) =>
+    ipcRenderer.invoke('chapters:export', songId, chapters, targetDir),
   getSettings: () => ipcRenderer.invoke('storage:getSettings'),
   saveSettings: (settings: unknown) => ipcRenderer.invoke('storage:saveSettings', settings),
   selectDirectory: (title?: string) => ipcRenderer.invoke('dialog:openDirectory', title),
@@ -166,9 +174,11 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.invoke('download-yt-audio', id, url, title),
   writeAudioMetadata: (filePath: string, metadata: Partial<Song>) =>
     ipcRenderer.invoke('write-audio-metadata', filePath, metadata),
-  onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => {
-    const listener = (_event: IpcRendererEvent, data: { id: string; percent: number }) =>
-      callback(data)
+  onDownloadProgress: (callback: (data: { id: string; percent: number; stage?: 'downloading' | 'converting' }) => void) => {
+    const listener = (
+      _event: IpcRendererEvent, 
+      data: { id: string; percent: number; stage?: 'downloading' | 'converting' }
+    ) => callback(data)
     ipcRenderer.on('download-progress', listener)
     return () => ipcRenderer.off('download-progress', listener)
   },

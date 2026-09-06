@@ -78,6 +78,10 @@
       .spinning { 
         color: var(--color-primary);
         animation: spin 1.5s linear infinite;
+
+        &.converting {
+          color: var(--color-warning);
+        }
       }
     }
   }
@@ -85,6 +89,7 @@
   &:not(.clickable):hover .status-overlay-icon,
   &.status-completed .status-overlay-icon,
   &.status-downloading .status-overlay-icon,
+  &.status-converting .status-overlay-icon,
   &.status-pending .status-overlay-icon {
     opacity: 1;
   }
@@ -196,6 +201,10 @@
           background: rgba(var(--color-primary-rgb), 0.1);
           color: var(--color-primary);
         }
+        &.converting {
+          background: rgba(var(--color-warning-rgb, 245, 158, 11), 0.15);
+          color: var(--color-warning);
+        }
       }
 
       .album-tag {
@@ -217,6 +226,11 @@
         font-size: 0.75rem;
         font-weight: 700;
         color: var(--color-primary);
+
+        &.converting {
+          color: var(--color-warning);
+          animation: pulse-soft 1.5s ease-in-out infinite;
+        }
       }
     }
   }
@@ -233,6 +247,12 @@
       height: 100%;
       background: var(--color-primary);
       transition: width 0.3s ease;
+
+      &.converting {
+        background: linear-gradient(90deg, var(--color-primary), var(--color-warning), var(--color-primary));
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite linear;
+      }
     }
   }
 }
@@ -321,4 +341,14 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }

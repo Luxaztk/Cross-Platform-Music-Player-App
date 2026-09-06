@@ -45,13 +45,20 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
         };
         checkAuth();
 
-        const unsubProgress = window.electronAPI.onDownloadProgress((data: { id: string; percent: number }) => {
+        const unsubProgress = window.electronAPI.onDownloadProgress((data: { id: string; percent: number; stage?: 'downloading' | 'converting' }) => {
             console.log('[DownloadProvider] Received progress:', data);
             setDownloads(prev => {
                 const item = prev.get(data.id);
                 if (item) {
                     const newMap = new Map(prev);
-                    newMap.set(data.id, { ...item, progress: data.percent, status: DOWNLOAD_STATUS.DOWNLOADING });
+                    const newStatus = data.stage === 'converting'
+                        ? DOWNLOAD_STATUS.CONVERTING
+                        : DOWNLOAD_STATUS.DOWNLOADING;
+                    newMap.set(data.id, { 
+                        ...item, 
+                        progress: data.percent, 
+                        status: newStatus 
+                    });
                     return newMap;
                 }
                 return prev;
@@ -140,7 +147,11 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
             let hasSuccess = false;
 
             downloads.forEach(item => {
-                if (item.status === DOWNLOAD_STATUS.PENDING || item.status === DOWNLOAD_STATUS.DOWNLOADING) {
+                if (
+                    item.status === DOWNLOAD_STATUS.PENDING || 
+                    item.status === DOWNLOAD_STATUS.DOWNLOADING ||
+                    item.status === DOWNLOAD_STATUS.CONVERTING
+                ) {
                     allDone = false;
                 }
                 if (item.status === DOWNLOAD_STATUS.ERROR) {
@@ -184,10 +195,11 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
             return;
         }
 
-        // Chỉ reset nếu không phải đang lấy thông tin hoặc đang tải
+        // Chỉ reset nếu không phải đang lấy thông tin hoặc đang tải / chuyển đổi
         if (
             downloadState !== DOWNLOAD_STATUS.FETCHING &&
-            downloadState !== DOWNLOAD_STATUS.DOWNLOADING
+            downloadState !== DOWNLOAD_STATUS.DOWNLOADING &&
+            downloadState !== DOWNLOAD_STATUS.CONVERTING
         ) {
             setDownloadState(DOWNLOAD_STATUS.IDLE);
             setDownloadError(null);
@@ -260,7 +272,7 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
 
                 const skippedCount = result.items.length - filteredItems.length;
                 if (skippedCount > 0) {
-                    showNotification('info', t('downloader.skippedExisting').replace('{{count}}', skippedCount.toString()));
+                    showNotification('info', t('downloader.skippedExisting', { count: skippedCount }));
                 }
 
                 const items: DownloadItem[] = filteredItems.map(info => ({
@@ -351,6 +363,18 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
 
                 await window.electronAPI.importFromPath(dlResult.filePath, item.url, item.id);
 
+                if (item.chapters && item.chapters.length > 0) {
+                    try {
+                        const allSongs = await window.electronAPI.getSongsData();
+                        const imported = Object.values(allSongs).find(s => s.filePath === dlResult.filePath || s.originId === item.id);
+                        if (imported) {
+                            await window.electronAPI.patchSong(imported.id, { chapters: item.chapters });
+                        }
+                    } catch (patchErr) {
+                        console.warn('[DownloadProvider] Failed to patch chapters on imported song:', patchErr);
+                    }
+                }
+
                 setDownloads(prev => {
                     const current = prev.get(item.id);
                     if (current) {
@@ -428,7 +452,11 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
 
     const clearAbandoned = () => {
-        if (stateRef.current !== DOWNLOAD_STATUS.FETCHING && stateRef.current !== DOWNLOAD_STATUS.DOWNLOADING) {
+        if (
+            stateRef.current !== DOWNLOAD_STATUS.FETCHING && 
+            stateRef.current !== DOWNLOAD_STATUS.DOWNLOADING &&
+            stateRef.current !== DOWNLOAD_STATUS.CONVERTING
+        ) {
             resetDownload();
         }
     };
@@ -443,7 +471,11 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
     const activeCount = useMemo(() => {
         let count = 0;
         downloads.forEach(item => {
-            if (item.status === DOWNLOAD_STATUS.DOWNLOADING || item.status === DOWNLOAD_STATUS.PENDING) count++;
+            if (
+                item.status === DOWNLOAD_STATUS.DOWNLOADING || 
+                item.status === DOWNLOAD_STATUS.PENDING ||
+                item.status === DOWNLOAD_STATUS.CONVERTING
+            ) count++;
         });
         return count;
     }, [downloads]);

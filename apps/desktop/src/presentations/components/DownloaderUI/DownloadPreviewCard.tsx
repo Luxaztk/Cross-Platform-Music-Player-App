@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { Edit2, CheckCircle2, Clock, Loader2, RefreshCw } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { useLanguage } from '@hooks';
 import { DOWNLOAD_STATUS, type DownloadItem } from '@music/types';
@@ -23,8 +23,6 @@ export const DownloadPreviewCard: React.FC<DownloadPreviewCardProps> = ({ info, 
         <div 
             className={`video-card ${finalOnClick ? 'clickable' : ''} status-${info.status}`} 
             onClick={finalOnClick} 
-            role={finalOnClick ? 'button' : undefined}
-            tabIndex={finalOnClick ? 0 : undefined}
         >
             <div className="thumbnail-container">
                 <img src={info.thumbnail} alt={info.title} />
@@ -38,6 +36,7 @@ export const DownloadPreviewCard: React.FC<DownloadPreviewCardProps> = ({ info, 
                     {info.status === DOWNLOAD_STATUS.SUCCESS && <CheckCircle2 size={24} className="success" />}
                     {info.status === DOWNLOAD_STATUS.PENDING && <Clock size={24} className="pending" />}
                     {info.status === DOWNLOAD_STATUS.DOWNLOADING && <Loader2 size={24} className="spinning" />}
+                    {info.status === DOWNLOAD_STATUS.CONVERTING && <RefreshCw size={24} className="spinning converting" />}
                 </div>
             </div>
             <div className="video-details">
@@ -65,12 +64,18 @@ export const DownloadPreviewCard: React.FC<DownloadPreviewCardProps> = ({ info, 
                     {info.status === DOWNLOAD_STATUS.DOWNLOADING && (
                         <span className="progress-text">{Math.round(info.progress)}%</span>
                     )}
+                    {info.status === DOWNLOAD_STATUS.CONVERTING && (
+                        <span className="progress-text converting">FFmpeg...</span>
+                    )}
                 </div>
             </div>
 
-            {info.status === DOWNLOAD_STATUS.DOWNLOADING && (
+            {(info.status === DOWNLOAD_STATUS.DOWNLOADING || info.status === DOWNLOAD_STATUS.CONVERTING) && (
                 <div className="card-progress-bar">
-                    <div className="fill" style={{ width: `${info.progress}%` }} />
+                    <div 
+                        className={`fill ${info.status === DOWNLOAD_STATUS.CONVERTING ? 'converting' : ''}`} 
+                        style={{ width: `${info.status === DOWNLOAD_STATUS.CONVERTING ? 100 : info.progress}%` }} 
+                    />
                 </div>
             )}
 

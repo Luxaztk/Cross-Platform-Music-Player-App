@@ -1,3 +1,3 @@
-export * from './desktop.js';
-export * from './mobile.js';
-export * from './bot.js';
+export * from './desktop';
+export * from './mobile';
+export * from './bot';

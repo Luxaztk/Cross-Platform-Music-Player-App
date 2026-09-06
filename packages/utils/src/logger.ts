@@ -23,11 +23,11 @@ class Logger {
       // Renderer Process: Send to Main via IPC bridge
       (globalThis as unknown as { window: { electronAPI: { log: (l: LogLevel, m: string) => void } } }).window.electronAPI.log(level, message);
     } else if (this.isMain) {
-      // Main Process: Dynamic import to avoid bringing electron-log into browser bundles
-      try {
-        const log = (await import('electron-log')).default;
-        (log as unknown as Record<string, (msg: string) => void>)[level](message);
-      } catch (_err) {
+      // Main Process: Use injected logger from electron/main if available, fallback to console
+      const electronLog = (globalThis as Record<string, unknown>).__electronLog;
+      if (electronLog && typeof (electronLog as Record<string, (m: string) => void>)[level] === 'function') {
+        (electronLog as Record<string, (m: string) => void>)[level](message);
+      } else {
         console[level === 'debug' || level === 'verbose' ? 'log' : level](message);
       }
     } else {

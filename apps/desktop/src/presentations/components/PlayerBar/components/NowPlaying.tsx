@@ -4,10 +4,14 @@ import { type NowPlayingProps } from '../types';
 export const NowPlaying: React.FC<NowPlayingProps> = ({
     isVisible,
     song,
+    currentChapter,
     appIcon,
+    onOpenChapters,
     t
 }) => {
     if (!isVisible) return null;
+
+    const hasChapters = (song?.chapters && song.chapters.length > 0) || !!currentChapter;
 
     return (
         <div className="now-playing">
@@ -48,8 +52,21 @@ export const NowPlaying: React.FC<NowPlayingProps> = ({
                 <div className="song-artist" title={song?.artist}>
                     {song?.artist || '-'}
                 </div>
+                {hasChapters && (
+                    <button
+                        type="button"
+                        className="chapter-badge-btn"
+                        onClick={onOpenChapters}
+                        title={currentChapter ? `${t('chapters.editTitle')} - ${currentChapter.title}` : t('chapters.editTitle')}
+                    >
+                        <span className="chapter-badge-icon">📌</span>
+                        <span className="chapter-badge-text">
+                            {currentChapter ? currentChapter.title : `${song?.chapters?.length || 0} ${t('chapters.badgeTitle')}`}
+                        </span>
+                    </button>
+                )}
             </div>
         </div>
-
     );
 };
+

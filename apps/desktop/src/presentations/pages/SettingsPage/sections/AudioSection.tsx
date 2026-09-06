@@ -216,7 +216,7 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
                                 className={`test-btn-mini ${isPlayingTest ? 'active' : ''}`}
                                 onClick={handleTestSound}
                                 disabled={isPlayingTest || isPlaying}
-                                title={isPlaying ? "Disabled while playing music" : ""}
+                                title={isPlaying ? t('settings.audio.disabledWhilePlaying') : ''}
                             >
                                 <Play size={14} fill="currentColor" />
                                 <span>{t('settings.audio.testBtn')}</span>

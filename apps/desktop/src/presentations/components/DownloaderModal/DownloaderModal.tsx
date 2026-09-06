@@ -88,6 +88,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
         );
 
       case DOWNLOAD_STATUS.DOWNLOADING:
+      case DOWNLOAD_STATUS.CONVERTING:
       case DOWNLOAD_STATUS.SUCCESS:
       case DOWNLOAD_STATUS.ERROR: {
         const items = state.downloads.size > 0 

@@ -16,8 +16,11 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
 }) => {
     if (!isVisible) return null;
 
-    const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING;
+    const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || 
+                   manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING || 
+                   manager.downloadState === DOWNLOAD_STATUS.CONVERTING;
     const hideDownloadBtn = manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING || 
+                            manager.downloadState === DOWNLOAD_STATUS.CONVERTING || 
                             manager.downloadState === DOWNLOAD_STATUS.SUCCESS || 
                             manager.downloadState === DOWNLOAD_STATUS.ERROR;
 
@@ -37,7 +40,11 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                         value={manager.url}
                         onChange={(e) => manager.setUrl(e.target.value)}
                         placeholder={t('downloader.urlPlaceholder')}
-                        disabled={manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING || manager.downloadState === DOWNLOAD_STATUS.MODE_SELECTION}
+                        disabled={
+                            manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING || 
+                            manager.downloadState === DOWNLOAD_STATUS.CONVERTING || 
+                            manager.downloadState === DOWNLOAD_STATUS.MODE_SELECTION
+                        }
                         onKeyDown={(e) => e.key === 'Enter' && onFetch()}
                     />
                     <button type="button" className="paste-icon-btn" onClick={onPaste} title={t('downloader.paste')}>
@@ -61,7 +68,7 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                     <span>
                         {manager.downloadState === DOWNLOAD_STATUS.FETCHING
                             ? t('downloader.searching')
-                            : manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING
+                            : (manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING || manager.downloadState === DOWNLOAD_STATUS.CONVERTING)
                                 ? t('downloader.downloading')
                                 : manager.downloadState === DOWNLOAD_STATUS.PREVIEW
                                     ? t('downloader.downloadNow')
@@ -141,7 +148,9 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
 
                     {manager.downloads.size === 1 ? (
                         <div className="single-download-monitor">
-                            {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
+                            {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && 
+                             manager.downloadState !== DOWNLOAD_STATUS.CONVERTING && 
+                             manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
                                 <div className="action-buttons horizontal action-buttons--end">
                                     <button 
                                         type="button" 
@@ -176,7 +185,9 @@ export const DownloaderTool: React.FC<DownloaderToolProps> = ({
                             <div className="monitor-bar">
                                 <div className="fill" style={{ width: `${manager.totalProgress}%` }} />
                             </div>
-                            {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
+                            {manager.downloadState !== DOWNLOAD_STATUS.DOWNLOADING && 
+                             manager.downloadState !== DOWNLOAD_STATUS.CONVERTING && 
+                             manager.downloadState !== DOWNLOAD_STATUS.FETCHING && (
                                 <div className="action-buttons horizontal action-buttons--end">
                                     <button 
                                         type="button" 

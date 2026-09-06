@@ -29,8 +29,8 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
     <div className="song-picker-modal-overlay" onClick={actions.onClose}>
       <div className="song-picker-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{t('modal.selectSongs') || 'Chọn bài hát để thêm'}</h2>
-          <button className="close-btn" onClick={actions.onClose} title={t('common.close')}>
+          <h2>{t('modal.selectSongs')}</h2>
+          <button type="button" className="close-btn" onClick={actions.onClose} title={t('common.close')}>
             <X size={ICON_SIZES.MEDIUM} />
           </button>
         </div>
@@ -50,12 +50,12 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
           {state.isDebouncing && state.searchQuery !== '' ? (
             <div className="searching-state">
               <Loader2 size={24} className="animate-spin" />
-              <p>{t('downloader.searching') || 'Đang tìm kiếm...'}</p>
+              <p>{t('downloader.searching')}</p>
             </div>
           ) : (state.isTrulyEmpty && state.searchQuery !== '') ? (
             <div className="no-results">
               <Search size={48} strokeWidth={1} />
-              <p>{t('sidebar.noResults') || 'Không tìm thấy kết quả nào.'}</p>
+              <p>{t('sidebar.noResults')}</p>
             </div>
           ) : (
             <div className="clustered-results">
@@ -107,11 +107,11 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
         </div>
 
         <div className="modal-footer">
-          <button className="secondary-btn" onClick={actions.onClose}>
+          <button type="button" className="secondary-btn" onClick={actions.onClose}>
             {t('common.cancel')}
           </button>
-          <button className="primary-btn" onClick={actions.handleAdd} disabled={state.selectedIds.size === 0}>
-            {t('common.addSelected') || 'Add selected'} ({state.selectedIds.size})
+          <button type="button" className="primary-btn" onClick={actions.handleAdd} disabled={state.selectedIds.size === 0}>
+            {t('common.addSelected')} ({state.selectedIds.size})
           </button>
         </div>
       </div>
@@ -119,8 +119,15 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
   );
 };
 
+interface SongPickerItemProps {
+  song: Song;
+  isSelected: boolean;
+  onClick: () => void;
+  appIcon: string;
+}
+
 // Sub-component for individual song items
-const SongPickerItem = ({ song, isSelected, onClick, appIcon }: any) => (
+const SongPickerItem: React.FC<SongPickerItemProps> = ({ song, isSelected, onClick, appIcon }) => (
   <div
     className={`song-item ${isSelected ? 'selected' : ''}`}
     onClick={onClick}

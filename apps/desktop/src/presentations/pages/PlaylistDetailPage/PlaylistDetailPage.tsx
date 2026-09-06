@@ -1,5 +1,6 @@
-import React from 'react';
-import { EditModal, DeleteConfirmationModal, SongPickerModal } from '@components';
+import React, { useState } from 'react';
+import type { Song } from '@music/types';
+import { EditModal, DeleteConfirmationModal, SongPickerModal, ChapterEditorModal } from '@components';
 import { usePlaylistDetail } from './usePlaylistDetail';
 import { PlaylistHeader } from './components/PlaylistHeader';
 import { FilterChips } from './components/FilterChips';
@@ -19,6 +20,8 @@ export const PlaylistDetailPage: React.FC = () => {
   } = usePlaylistDetail();
 
   const { t, appIcon, playlists, allSongs, currentSong, id, libraryFilter } = utils;
+
+  const [chapterModalSong, setChapterModalSong] = useState<Song | null>(null);
 
   const activeSong = state.activeMenuId ? state.filteredSongs.find((s) => s.id === state.activeMenuId) : null;
 
@@ -121,6 +124,10 @@ export const PlaylistDetailPage: React.FC = () => {
           actions.setIsEditModalOpen(true);
           actions.setActiveMenuId(null);
         }}
+        onEditChapters={() => {
+          if (activeSong) setChapterModalSong(activeSong);
+          actions.setActiveMenuId(null);
+        }}
         onDelete={() => activeSong && actions.onDeleteSong(activeSong)}
         onSetSubMenu={actions.setActiveSubMenuId}
         t={t}
@@ -172,6 +179,13 @@ export const PlaylistDetailPage: React.FC = () => {
         allSongs={allSongs}
         existingSongIds={state.localSongs.map((s) => s.id)}
         onAdd={(songIds) => id && actions.onAddSongsToPlaylist(id, songIds)}
+      />
+
+      <ChapterEditorModal
+        isOpen={!!chapterModalSong}
+        onClose={() => setChapterModalSong(null)}
+        song={chapterModalSong}
+        currentAudioTime={0}
       />
 
       <FloatingBadge />

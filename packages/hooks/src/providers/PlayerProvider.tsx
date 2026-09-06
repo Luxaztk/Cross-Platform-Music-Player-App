@@ -134,6 +134,12 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
           engineRef.current.seek(song.lastPlaybackPosition);
           setProgress(song.lastPlaybackPosition);
         }
+      } else if (song.chapters && song.chapters.length > 0) {
+        const firstActive = song.chapters.find(c => !c.skip);
+        if (firstActive && firstActive.startTime > 0) {
+          engineRef.current.seek(firstActive.startTime);
+          setProgress(firstActive.startTime);
+        }
       }
     }
   }, [setProgress, savePlaybackPosition]);
@@ -198,7 +204,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         }
       }
     }
-  }), [playSong, pushToHistory, generateUid]);
+  }), [generateUid, playSong, pushToHistory]);
   // ==========================================
 
   // Engine initialization effect
@@ -208,6 +214,24 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     engineRef.current = engine;
     engine.setEvents({
       onProgress: (p, d) => {
+        // Virtual Auto-Skip for Chapters
+        const chapters = currentSongRef.current?.chapters;
+        if (chapters && chapters.length > 0) {
+          const currentChapter = chapters.find(
+            c => p >= c.startTime && (c.endTime === undefined || p < c.endTime)
+          );
+          if (currentChapter?.skip && typeof currentChapter.endTime === 'number' && currentChapter.endTime > p) {
+            const targetTime = currentChapter.endTime;
+            const totalDuration = isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0);
+            if (totalDuration > 0 && targetTime >= totalDuration - 0.5) {
+              playbackIterator.next();
+            } else {
+              engineRef.current?.seek(targetTime);
+            }
+            return;
+          }
+        }
+
         progressRef.current = p;
         setUiState((prev: PlayerUiState) => {
           const newDuration = isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || prev.duration);

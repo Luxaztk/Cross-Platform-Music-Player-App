@@ -30,6 +30,7 @@ export class ExpoAudioEngine implements PlayerEngine {
   private player: ReturnType<typeof createAudioPlayer> | null = null
   private listeners = new Set<ProgressListener>()
   private isConfigured = false
+  private currentLockScreenMetadata?: LockScreenMetadata
 
   constructor() {
     // Background initialization
@@ -89,6 +90,13 @@ export class ExpoAudioEngine implements PlayerEngine {
     this.player = null
     try {
       p.pause() // MUST pause before remove to prevent ghost audio overlapping!
+      if (!isExpoGo) {
+        try {
+          p.setActiveForLockScreen(false)
+        } catch {
+          // ignore
+        }
+      }
       p.remove()
     } finally {
       this.emit({ isLoaded: false, isPlaying: false, positionMs: 0, durationMs: 0 })
@@ -138,6 +146,10 @@ export class ExpoAudioEngine implements PlayerEngine {
     } else {
       this.player.pause()
     }
+
+    if (this.currentLockScreenMetadata && !isExpoGo) {
+      void this.setActiveForLockScreen(true, this.currentLockScreenMetadata)
+    }
   }
 
   async play() {
@@ -173,10 +185,21 @@ export class ExpoAudioEngine implements PlayerEngine {
   }
 
   async setActiveForLockScreen(active: boolean, metadata?: LockScreenMetadata, options?: AudioLockScreenOptions) {
+    if (active && metadata) {
+      this.currentLockScreenMetadata = metadata
+    } else if (!active) {
+      this.currentLockScreenMetadata = undefined
+    }
+
     if (!this.player || isExpoGo) return
-    this.player.setActiveForLockScreen(active, metadata, {
-      "showSeekBackward": true,
-      "showSeekForward": true
-    })
+    try {
+      this.player.setActiveForLockScreen(active, metadata || this.currentLockScreenMetadata, {
+        showSeekBackward: true,
+        showSeekForward: true,
+        ...options
+      })
+    } catch (err) {
+      console.warn('[engine] setActiveForLockScreen failed:', err)
+    }
   }
 }

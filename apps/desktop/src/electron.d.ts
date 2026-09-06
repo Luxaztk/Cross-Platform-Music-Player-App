@@ -8,6 +8,7 @@ import type {
   YoutubeInfo,
   SyncHistoryEntry,
   SyncStats,
+  SongChapter,
 } from '@music/types'
 
 declare global {
@@ -81,7 +82,7 @@ declare global {
         filePath: string,
         metadata: Partial<Song>,
       ) => Promise<{ success: boolean; error?: string }>
-      onDownloadProgress: (callback: (data: { id: string; percent: number }) => void) => () => void
+      onDownloadProgress: (callback: (data: { id: string; percent: number; stage?: 'downloading' | 'converting' }) => void) => () => void
       onImportProgress: (callback: (percent: number) => void) => () => void
       openItemPath: (filePath: string) => Promise<void>
       openDownloadsFolder: () => Promise<void>
@@ -91,6 +92,11 @@ declare global {
       selectDirectory: (title?: string) => Promise<string | null>
       incrementLyricUsage: (id: string | number) => Promise<void>
       patchSong: (songId: string, updates: Partial<Song>) => Promise<Song | null>
+      exportChapters: (
+        songId: string,
+        chapters: SongChapter[],
+        targetDir: string
+      ) => Promise<{ success: boolean; exportedCount: number; error?: string }>
       // Autoupdate
       onUpdateAvailable: (callback: (version: string) => void) => () => void
       onUpdateProgress: (callback: (percent: number) => void) => () => void

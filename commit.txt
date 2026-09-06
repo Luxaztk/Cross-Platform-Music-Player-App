@@ -1,25 +1,38 @@
-fix(server): implement automated orphan cleanup engine, real-time watcher, and complete i18n
+feat(chapters): implement virtual tracklist engine, interactive editor, auto-skip, and ffmpeg slice exporter
 
-- apps/server:
-  - Implement `pruneOrphans()` in `MusicScanner.ts` to automatically purge songs from RAM whose physical files were deleted from disk
-  - Integrate orphan pruning into `getSongs()`, `getIndexedSong()`, and `scanDirectory()` so manual file deletions are instantly reflected
-  - Add real-time filesystem watcher (`fs.watch`) on `MUSIC_DIR` with debouncing to automatically synchronize manual disk deletions/additions without restarting the server
-  - Add graceful server shutdown handlers for `SIGINT` and `SIGTERM` to close the watcher cleanly
-  - Fix debounceTimer typing to `ReturnType<typeof setTimeout>` for cross-environment TypeScript compliance
-  - Add unit tests verifying automated orphan pruning (14/14 tests Green)
+- packages/utils & types:
+  - Add `chapterParser.ts` with regex extraction, YouTube description parsing, and boundary normalization
+  - Add `SongChapter` interface with `skip?: boolean` and integrate into `Song.chapters`
+  - Unit tests passing (11/11 tests Green)
 
-- apps/desktop:
-  - Deduplicate server songs against local songs in `ServerSection.tsx` (match by hash or normalized title + artist + duration <= 3s)
-  - Automatically purge redundant stream duplicates from the library on sync
-  - Ignore songs with `sourceType === 'stream'` or HTTP URL in `library:scanMissingFiles` IPC handler to eliminate false missing file warnings
-  - Complete 100% i18n support in `ServerSection.tsx`: status pills, upload counts, disconnected server label, Cloudflare limit hint, and search filters
-  - Fix upload stream flowing mode conflict and handle Cloudflare 100MB limit in `electron/ipc/server.ts` and `ServerUploadService.ts`
-  - Unit tests passing (46/46 suites, 344/344 tests Green)
+- apps/desktop (Chapter & PlayerBar):
+  - Interactive `ChapterEditorModal`: micro-time adjustment (±0.5s, ±1s), 1-click time pinning, dual-field Title/Artist editing with swap, preview listen, and auto-skip toggle
+  - Add Maximize/Restore toggle (`Maximize2`/`Minimize2`) to expand modal to 100vw x 100vh for easy large mixtape editing
+  - Smart Seekbar in `ProgressBar.tsx`: visual tick dividers, hover tooltips, and diagonal striped regions for skipped chapters
+  - Add chapter badge chip in `NowPlaying.tsx` displaying active chapter
+  - Implement `nextChapter` / `prevChapter` in `usePlayerBar.ts` skipping ignored chapters
+  - Physical slice exporter (`ChapterExportService.ts`) with FFmpeg stream-copy / re-encode and ID3v2 tags
+
+- packages/hooks (Audio Engine):
+  - Add virtual auto-skip engine in `PlayerProvider.onProgress` (<1ms seek without re-encoding or corrupting original files)
+  - Auto-skip initial skipped chapters when playback starts
+
+- apps/desktop (Downloader & Conversion UX):
+  - Add `CONVERTING` stage to `DOWNLOAD_STATUS` and listen for `[ExtractAudio]` in `YoutubeDownloader.ts`
+  - Display dynamic "Converting audio (FFmpeg)..." status in `DownloadPreviewCard`
+  - ChildProcess hardening with `stdio: ['ignore', 'pipe', 'pipe']` and `--force-overwrites`
+
+- apps/desktop (Window & Theme):
+  - Electron window zero-latency `win.maximize()` on launch
+  - Theme sync from `ThemeProvider.scss` to `BrowserWindow.backgroundColor` and `electron-store`
+
+- apps/mobile:
+  - Add `useMobileLockScreen.ts` and update `app.config.ts`, `eas.json`
+  - Audio adapter background playback hardening
 
 - packages/i18n:
-  - Add missing Vietnamese and English translation keys in `desktop.ts` for all server settings strings (sync notifications, push counts, status pills, hints)
+  - Zero ghost keys audit, 100% parity between `vi` and `en` in `desktop.ts`
 
-- infrastructure & docs:
-  - Add `apps/server/data/` to `.gitignore`
-  - Update `docs/____ROADMAP.md` Phase 3.5 status
-  - Zero TypeScript errors across monorepo
+- testing & roadmap:
+  - 367/367 Desktop unit tests Green (49/49 files), zero TypeScript errors across monorepo
+  - Update `docs/____ROADMAP.md` with Next/Prev Chapter UI tracking item

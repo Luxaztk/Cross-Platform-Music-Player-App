@@ -22,7 +22,9 @@ export const useDownloadSection = (searchQuery: string): UseDownloadSectionRetur
     const [editingItem, setEditingItem] = useState<DownloadItem | null>(null);
     const [showBulkEdit, setShowBulkEdit] = useState(false);
 
-    const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING;
+    const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || 
+                   manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING ||
+                   manager.downloadState === DOWNLOAD_STATUS.CONVERTING;
 
     useEffect(() => {
         if (manager.downloadState === DOWNLOAD_STATUS.SUCCESS || manager.downloadState === DOWNLOAD_STATUS.ERROR) {

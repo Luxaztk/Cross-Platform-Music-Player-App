@@ -20,3 +20,4 @@ export * from './Dropdown';
 export * from './Tooltip';
 export * from './DownloaderUI';
 export * from './GlobalDragDrop';
+export * from './ChapterEditorModal';

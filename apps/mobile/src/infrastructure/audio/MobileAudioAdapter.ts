@@ -1,5 +1,6 @@
 import { ExpoAudioEngine } from './ExpoAudioEngine';
 import type { IAudioEngine, AudioEngineEvents } from '@music/core';
+import type { Song } from '@music/types';
 import { MobileAudioCacheService } from '../services/MobileAudioCacheService';
 
 function extractSongId(url: string): string {
@@ -127,8 +128,29 @@ export class MobileAudioAdapter implements IAudioEngine {
   stop(): void {
     this.currentUrl = null;
     this.queueCommand(async () => {
+      await this.engine.setActiveForLockScreen(false);
       await this.engine.unload();
       if (this.events.onStop) this.events.onStop();
+    });
+  }
+
+  updateLockScreen(active: boolean, song?: Song | null): void {
+    this.queueCommand(async () => {
+      if (!active || !song) {
+        await this.engine.setActiveForLockScreen(false);
+        return;
+      }
+
+      const artistName =
+        song.artist ||
+        (song.artists && song.artists.length > 0 ? song.artists.join(', ') : 'Unknown Artist');
+
+      await this.engine.setActiveForLockScreen(true, {
+        title: song.title || 'Unknown Title',
+        artist: artistName,
+        albumTitle: song.album || undefined,
+        artworkUrl: song.coverArt || undefined,
+      });
     });
   }
 

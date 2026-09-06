@@ -5,12 +5,18 @@ import { MobileAudioAdapter } from '../audio/MobileAudioAdapter';
 import { Alert } from 'react-native';
 import { useLanguage } from '../../presentations/components/Language';
 import { usePrecacheNextTrack } from '../hooks/usePrecacheNextTrack';
+import { useMobileLockScreen } from '../hooks/useMobileLockScreen';
 
 const storageAdapter = new MobileStorageAdapter();
 const audioAdapter = new MobileAudioAdapter();
 
 const PrecacheSupervisor = () => {
   usePrecacheNextTrack();
+  return null;
+};
+
+const LockScreenSupervisor = () => {
+  useMobileLockScreen({ adapter: audioAdapter });
   return null;
 };
 
@@ -43,6 +49,7 @@ export const PlayerWithLibrary = ({ children }: { children: React.ReactNode }) =
       }}
     >
       <PrecacheSupervisor />
+      <LockScreenSupervisor />
       {children}
     </SharedPlayerProvider>
   );

@@ -1,11 +1,14 @@
-import type { Song } from '@music/types';
-import type { RepeatMode } from '@music/hooks/types';
+import type { Song, SongChapter } from '@music/types';
+import type { RepeatMode, QueueItem } from '@music/hooks/types';
 
-export interface PlayerBarProps {}
+export interface PlayerBarProps {
+    className?: string;
+}
 
 export interface UsePlayerBarReturn {
     state: {
         currentSong: Song | null;
+        currentChapter: SongChapter | null;
         isPlaying: boolean;
         progress: number;
         duration: number;
@@ -14,10 +17,11 @@ export interface UsePlayerBarReturn {
         repeatMode: RepeatMode;
         isQueueOpen: boolean;
         isLyricsOpen: boolean;
+        isChapterEditorOpen: boolean;
         isSeeking: boolean;
         localProgress: number;
         lastVolume: number;
-        queue: any[];
+        queue: QueueItem[];
     };
     refs: {
         queueContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -38,6 +42,10 @@ export interface UsePlayerBarReturn {
         toggleQueue: () => void;
         toggleLyrics: () => void;
         setIsQueueOpen: (open: boolean) => void;
+        seekToChapter: (chapter: SongChapter) => void;
+        nextChapter: () => void;
+        prevChapter: () => void;
+        setIsChapterEditorOpen: (open: boolean) => void;
     };
     utils: {
         displayProgress: number;
@@ -55,7 +63,9 @@ export interface BasePlayerSectionProps {
 
 export interface NowPlayingProps extends BasePlayerSectionProps {
     song: Song | null;
+    currentChapter?: SongChapter | null;
     appIcon: string;
+    onOpenChapters?: () => void;
     t: (key: string) => string;
 }
 
@@ -77,6 +87,7 @@ export interface ProgressBarProps extends BasePlayerSectionProps {
     progress: number;
     duration: number;
     percent: number;
+    chapters?: SongChapter[];
     onSeekStart: () => void;
     onSeekChange: (val: number) => void;
     onSeekEnd: (val: number) => void;

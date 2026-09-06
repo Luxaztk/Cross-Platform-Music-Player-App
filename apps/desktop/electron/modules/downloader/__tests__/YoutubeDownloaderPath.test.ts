@@ -1,22 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'node:path';
-import { create as createYoutubeDl } from 'youtube-dl-exec';
 
 type MockableProcess = Omit<NodeJS.Process, 'resourcesPath'> & {
     resourcesPath?: string;
 };
 
+interface YoutubeDownloaderPrivate {
+    binaryPath: string;
+}
+
 const mockProcess = process as unknown as MockableProcess;
-
-const mockedCreate = vi.mocked(createYoutubeDl);
-
-vi.mock('youtube-dl-exec', () => ({
-    create: vi.fn().mockImplementation((binaryPath: string) => ({
-        _binaryPath: binaryPath,
-        exec: vi.fn(),
-    })),
-    default: vi.fn(),
-}));
 
 vi.mock('node:fs', () => ({
     default: { existsSync: vi.fn().mockReturnValue(true) },
@@ -48,7 +41,8 @@ describe('YoutubeDownloader Path Resolution', () => {
         vi.doMock('electron', () => ({
             app: {
                 isPackaged: isPackaged,
-                getAppPath: vi.fn(() => 'mocked-app-path')
+                getAppPath: vi.fn(() => 'mocked-app-path'),
+                getPath: vi.fn(() => 'mocked-user-data')
             }
         }));
 
@@ -70,24 +64,24 @@ describe('YoutubeDownloader Path Resolution', () => {
         setupMockEnvironment(false, 'win32');
 
         const { YoutubeDownloader } = await import('../YoutubeDownloader');
-        new YoutubeDownloader();
+        const downloader = new YoutubeDownloader();
 
         const binName = 'yt-dlp.exe';
         const expectedPath = path.join('mocked-app-path', 'resources/bin', binName);
 
-        expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
+        expect((downloader as unknown as YoutubeDownloaderPrivate).binaryPath).toBe(expectedPath);
     });
 
     it('should resolve to local node_modules in development (POSIX)', async () => {
         setupMockEnvironment(false, 'linux');
 
         const { YoutubeDownloader } = await import('../YoutubeDownloader');
-        new YoutubeDownloader();
+        const downloader = new YoutubeDownloader();
 
         const binName = 'yt-dlp';
         const expectedPath = path.join('mocked-app-path', 'resources/bin', binName);
 
-        expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
+        expect((downloader as unknown as YoutubeDownloaderPrivate).binaryPath).toBe(expectedPath);
     });
 
     it('should resolve to app.asar.unpacked in production (Windows)', async () => {
@@ -95,12 +89,12 @@ describe('YoutubeDownloader Path Resolution', () => {
         setupMockEnvironment(true, 'win32', mockResources);
 
         const { YoutubeDownloader } = await import('../YoutubeDownloader');
-        new YoutubeDownloader();
+        const downloader = new YoutubeDownloader();
 
         const binName = 'yt-dlp.exe';
         const expectedPath = path.join(mockResources, 'bin', binName);
 
-        expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
+        expect((downloader as unknown as YoutubeDownloaderPrivate).binaryPath).toBe(expectedPath);
     });
 
     it('should resolve to app.asar.unpacked in production (POSIX)', async () => {
@@ -108,11 +102,11 @@ describe('YoutubeDownloader Path Resolution', () => {
         setupMockEnvironment(true, 'linux', mockResources);
 
         const { YoutubeDownloader } = await import('../YoutubeDownloader');
-        new YoutubeDownloader();
+        const downloader = new YoutubeDownloader();
 
         const binName = 'yt-dlp';
         const expectedPath = path.join(mockResources, 'bin', binName);
 
-        expect(mockedCreate).toHaveBeenCalledWith(expectedPath);
+        expect((downloader as unknown as YoutubeDownloaderPrivate).binaryPath).toBe(expectedPath);
     });
 });

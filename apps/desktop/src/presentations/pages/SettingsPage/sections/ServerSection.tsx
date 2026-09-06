@@ -84,10 +84,31 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     }
   };
 
+  const getLocalizedServerError = useCallback(
+    (err?: string | null): string => {
+      if (!err) return t('settings.server.cannotConnect');
+      if (err.includes('URL không hợp lệ') || err.includes('Địa chỉ máy chủ không hợp lệ')) {
+        return t('settings.server.invalidUrl');
+      }
+      if (err.includes('Timeout') || err.includes('Hết thời gian')) {
+        return t('settings.server.timeout');
+      }
+      if (err.includes('Không thể kiểm tra sai khác')) {
+        return t('settings.server.diffFail');
+      }
+      if (err.includes('Máy chủ phản hồi mã lỗi:')) {
+        const match = err.match(/\d+/);
+        return t('settings.server.serverError', { status: match ? match[0] : 'Error' });
+      }
+      return err;
+    },
+    [t]
+  );
+
   const handleCheckConnection = useCallback(async () => {
     const targetUrl = ServerClient.normalizeUrl(displayUrl);
     if (!targetUrl) {
-      setErrorMessage(t('settings.server.invalidUrl', { defaultValue: 'Vui lòng nhập địa chỉ máy chủ hợp lệ' }));
+      setErrorMessage(t('settings.server.invalidUrl'));
       return;
     }
 
@@ -111,10 +132,10 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
         });
       }
     } else {
-      setErrorMessage(result.error || t('settings.server.cannotConnect', { defaultValue: 'Không thể kết nối tới máy chủ' }));
+      setErrorMessage(getLocalizedServerError(result.error));
       setHealthStatus(null);
     }
-  }, [displayUrl, serverUrlFromSettings, settings?.server, updateSettings, t]);
+  }, [displayUrl, serverUrlFromSettings, settings?.server, updateSettings, t, getLocalizedServerError]);
 
   const handleSyncSongs = useCallback(async () => {
     const targetUrl = ServerClient.normalizeUrl(displayUrl);
@@ -227,24 +248,24 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        showNotification('error', msg || t('settings.server.syncFail', { defaultValue: 'Lỗi nạp bài hát vào thư viện' }));
+        showNotification('error', getLocalizedServerError(msg) || t('settings.server.syncFail'));
       }
     } else if (result.ok && result.songs.length === 0) {
-      showNotification('info', t('settings.server.noSongs', { defaultValue: 'Máy chủ chưa có bài hát nào được quét' }));
+      showNotification('info', t('settings.server.noSongs'));
     } else {
-      showNotification('error', result.error || t('settings.server.syncFail', { defaultValue: 'Không thể tải danh sách bài hát' }));
+      showNotification('error', getLocalizedServerError(result.error) || t('settings.server.syncFail'));
     }
-  }, [displayUrl, songs, handleAddSongs, handleDeleteSongs, showNotification, t]);
+  }, [displayUrl, songs, handleAddSongs, handleDeleteSongs, showNotification, t, getLocalizedServerError]);
 
   const handlePushLibrary = useCallback(async () => {
     const targetUrl = ServerClient.normalizeUrl(displayUrl);
     if (!targetUrl) {
-      showNotification('error', t('settings.server.invalidUrl', { defaultValue: 'Vui lòng nhập địa chỉ máy chủ hợp lệ' }));
+      showNotification('error', t('settings.server.invalidUrl'));
       return;
     }
 
     if (localSongs.length === 0) {
-      showNotification('info', t('settings.server.noLocalSongs', { defaultValue: 'Không có bài hát cục bộ nào để tải lên' }));
+      showNotification('info', t('settings.server.noLocalSongs'));
       return;
     }
 
@@ -264,15 +285,13 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     setIsPushing(false);
 
     if (summary.cancelled) {
-      showNotification('info', t('settings.server.pushCancelled', { defaultValue: 'Đã hủy quá trình đẩy nhạc lên Server.' }));
+      showNotification('info', t('settings.server.pushCancelled'));
     } else if (summary.error) {
-      showNotification('error', summary.error || t('settings.server.pushFail', { defaultValue: 'Quá trình đẩy nhạc gặp lỗi' }));
+      showNotification('error', getLocalizedServerError(summary.error) || t('settings.server.pushFail'));
     } else if (summary.failedCount > 0) {
       const hasCloudflareLimit = summary.failedSongs?.some((s) => s.error.includes('100MB') || s.error.includes('413'));
       const extraHint = hasCloudflareLimit
-        ? t('settings.server.cloudflareLimitHint', {
-            defaultValue: ' (Có bài hát >100MB bị Cloudflare từ chối, hãy chuyển sang IP LAN để tải lên)',
-          })
+        ? t('settings.server.cloudflareLimitHint')
         : '';
       showNotification(
         'warning',
@@ -280,7 +299,6 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
           uploaded: summary.uploadedCount,
           failed: summary.failedCount,
           extraHint,
-          defaultValue: `Đã đẩy ${summary.uploadedCount} bài hát, nhưng có ${summary.failedCount} bài thất bại${extraHint}.`,
         })
       );
       // Re-check health to update server song count
@@ -303,11 +321,30 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
         setHealthStatus(refreshed.health);
       }
     }
-  }, [displayUrl, localSongs, showNotification, t]);
+  }, [displayUrl, localSongs, showNotification, t, getLocalizedServerError]);
 
   const handleCancelPush = useCallback(() => {
     abortSignalRef.current.aborted = true;
   }, []);
+
+  const getCurrentSongTitleText = useCallback(() => {
+    if (!uploadState) return '';
+    if (uploadState.status === 'diffing') {
+      return t('settings.server.statusDiffingDetail');
+    }
+    if (uploadState.status === 'completed') {
+      return uploadState.uploadedCount === 0
+        ? t('settings.server.statusAllExist')
+        : t('settings.server.statusSyncComplete');
+    }
+    if (uploadState.status === 'cancelled') {
+      return t('settings.server.pushCancelled');
+    }
+    if (uploadState.status === 'error') {
+      return getLocalizedServerError(uploadState.error);
+    }
+    return uploadState.currentSongTitle;
+  }, [uploadState, t, getLocalizedServerError]);
 
   const autoPushOnDownload = settings?.server?.autoPushOnDownload !== false;
 
@@ -484,8 +521,8 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
                       {uploadState.status === 'error' &&
                         t('settings.server.statusError', { defaultValue: 'Lỗi' })}
                     </span>
-                    <span className="current-song-name" title={uploadState.currentSongTitle}>
-                      {uploadState.currentSongTitle}
+                    <span className="current-song-name" title={getCurrentSongTitleText()}>
+                      {getCurrentSongTitleText()}
                     </span>
                   </div>
                   {isPushing && (

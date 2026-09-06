@@ -55,10 +55,33 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 
 ### ⏳ Hạng Mục Mở Rộng
 
+- [x] **YouTube Mixtape & Virtual Tracklist Engine (Phương Án 3 - Hybrid Audio Chunking - P1)** *(Hoàn thành 05/09/2026)*:
+  - [x] **Tự động nhận diện Chapters ban đầu (Draft):** Trích xuất mốc thời gian từ native YouTube Chapters và bộ lọc Regex thông minh trong Video Description (`extractSongChapters`, `parseChaptersFromText` trong `packages/utils`, 11/11 tests Green). Tự động ghi metadata `chapters` khi tải nhạc từ YouTube (`YoutubeDownloader.ts`, `DownloadProvider.tsx`).
+  - [x] **Kiến trúc Phân đoạn ảo (Virtual Tracklist - CUE Sheet Model):** Giữ nguyên 1 file âm thanh gốc duy nhất (100% bit-perfect, bảo tồn trọn vẹn đoạn nối bài crossfade, 0% click/pop, tiết kiệm ổ đĩa). `Song.chapters?: SongChapter[]` trong `@music/types`.
+  - [x] **Trải nghiệm Trình phát thông minh (Smart Player & Seekbar):** Vạch chia Chapter trực quan trên thanh Seekbar (`.chapter-divider`), hover tooltip (`.chapter-hover-tooltip`), chip indicator hiển thị mốc hiện tại (`NowPlaying.tsx`), hỗ trợ `nextChapter` / `prevChapter` nhảy chính xác giữa các chapter (3/3 seekbar tests Green).
+  - [x] **Bộ công cụ Tinh chỉnh mốc thủ công (Interactive Chapter Editor):** Modal Portal (`ChapterEditorModal`) cho phép người dùng nghe thử (`▶`), chỉnh mốc thời gian cực nhạy (`[-1s]`, `[-0.5s]`, `[+0.5s]`, `[+1s]`), One-click "Ghim mốc tại thời điểm đang nghe", thêm/xóa bài con và lưu cập nhật tức thì (<1ms) vào DB qua `handlePatchSong` / `patchSong` (10/10 modal tests Green).
+  - [x] **Tính năng Phụ: Xuất thành các file rời (On-Demand Physical Slicing):** `ChapterExportService` phía Electron Main Process hỗ trợ dùng FFmpeg stream-copy (`-c copy`) hoặc re-encode chất lượng cao (320kbps MP3) cắt thành các file MP3 độc lập kèm metadata ID3v2 đầy đủ theo thư mục người dùng chọn.
+  - [x] **Kiểm thử toàn diện & Clean Build:** 11/11 chapter parser tests Green, 31/31 desktop player & modal tests Green, `npx tsc -b` sạch 100% (Zero TypeScript errors).
 - [ ] **Bộ Chỉnh Âm Nâng Cao (Advanced Equalizer):** Bộ cân bằng âm thanh Graphic EQ 10-band đa dải tần.
 - [ ] **Hồ Sơ Nghệ Sĩ (Artist Profile Page):** Trang tổng quan hiển thị toàn bộ bài hát, album và thông tin nghệ sĩ.
+- [x] **Nâng cấp Hệ Thống Chapter (Virtual Tracklist v2 - i18n, Multi-field Editing, Virtual Auto-Skip & Fullscreen Modal):**
+  - [x] **Audit & Chuẩn hoá i18n:** Bổ sung `player.progress` triệt tiêu Ghost Key, bổ sung các key song ngữ Việt/Anh cho thao tác Chapter, loại bỏ toàn bộ text viết cứng trong `ChapterEditorModal` và `useChapterEditor` (0 Ghost Keys, 100% sync).
+  - [x] **Đa trường thông tin (Title & Artist Editing) + Swap:** Bổ sung ô nhập liệu `artist` bên cạnh `title` trong `ChapterEditorModal`, nút Swap 1-click đảo vị trí nếu description bị viết ngược, hỗ trợ `ch.artist` trong tên file và tag ID3 khi xuất slice FFmpeg trong `ChapterExportService`.
+  - [x] **Virtual Auto-Skip Engine:** Mở rộng `SongChapter.skip?: boolean`, tích hợp tự động phát hiện và nhảy cóc (`seek(endTime)`) trong `PlayerProvider.onProgress` (<1ms, không phá hủy file gốc), hiển thị phân đoạn skip dạng sọc chéo trên `ProgressBarChapters` và nút toggle skip trên từng dòng chapter.
+  - [x] **Nút Mở rộng Toàn màn hình (Fullscreen / Maximize Modal):** Bổ sung nút toggle Phóng to / Thu nhỏ (`Maximize2` / `Minimize2`) cạnh nút đóng `X` của `ChapterEditorModal`, cho phép mở rộng full `100vw` x `100vh` để quản lý thuận tiện mixtape hàng chục chapters mà không bị giới hạn khung nhìn.
+  - [x] **Kiểm thử toàn diện & Clean Build:** 366/366 Desktop tests Green (49/49 test files), 17/17 Chapter & ProgressBar tests Green, 14/14 Utils tests Green, 19/19 Hooks tests Green, Clean Build, Zero TypeScript errors.
+- [ ] **Nút điều hướng Chapter trực tiếp trên PlayerBar (Next / Prev Chapter UI):**
+  - Bổ sung nút bấm vật lý `‹` và `›` (ChevronLeft/ChevronRight) kẹp 2 bên chip Chapter indicator ở góc trái (`NowPlaying.tsx`) hoặc trên cụm `PlaybackControls.tsx`.
+  - Kết nối trực tiếp vào `actions.nextChapter` và `actions.prevChapter` đã có sẵn trong `usePlayerBar.ts`.
+  - Hỗ trợ phím tắt bàn phím toàn cục (Global Hotkeys: `[` và `]`).
+
 
 ### 🐛 Bug Fixes & Cải Tiến
+
+- [x] **Cải thiện hiển thị trạng thái Converting âm thanh (FFmpeg) & Chống treo ChildProcess khi tải YouTube:**
+  - Khắc phục hiện tượng người dùng tưởng app bị treo khi tải video dung lượng lớn / thời lượng dài (>2h): Bổ sung trạng thái `CONVERTING` vào `DOWNLOAD_STATUS` trong `@music/types`, bắt sự kiện `[ExtractAudio]` trong `YoutubeDownloader.ts`, phát event `stage: 'converting'` và cập nhật UI `DownloadPreviewCard` hiển thị rõ ràng thông báo "Đang chuyển đổi âm thanh (FFmpeg)..." thay vì đứng im ở 100%.
+  - Gia cố an toàn: Bổ sung `stdio: ['ignore', 'pipe', 'pipe']` và `--force-overwrites` vào `spawn(yt-dlp)` triệt tiêu nguy cơ dừng tiến trình chờ nhập liệu từ stdin.
+  - Kết quả: **362/362 Desktop tests Green (49/49 test files), 9/9 Downloader Engine tests Green, Clean Build, Zero TypeScript errors**.
 
 - [x] **Tự động mở Full Size (Maximized) và đồng bộ màu nền khởi động theo Theme User:**
   - Cấu hình Electron `BrowserWindow` mở ở trạng thái `win.maximize()` tức thì (Zero-Latency), không cần bấm nút phóng to thủ công.
@@ -107,9 +130,15 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
     - Sử dụng lazy initializer (`useState(() => getPlaylistState(...))`) cho `playlist`, `localSongs` và `isLoading`. Nhờ vậy, ngay khi component mount, nếu dữ liệu thư viện đã có sẵn trong context, hook tính toán và trả về dữ liệu bài hát ngay trong render đầu tiên (Zero-flicker, `isLoading = false` tức thì).
     - Cập nhật `useEffect` lắng nghe dependency `[id, library, playlists, songs]` với các bộ lọc shallow equality guard chống re-render thừa.
     - Bổ sung bộ kiểm thử tự động tại `src/tests/presentations/pages/PlaylistDetailPage/hooks/usePlaylistData.test.ts` bao phủ luồng điều hướng giữa các trang và chuyển đổi playlist.
-  - **Kết quả:** **344/344 Desktop tests Green (46/46 test files), Clean Build, Zero TypeScript errors**.
+- [x] **Kiểm toán & Chuẩn hóa Đa ngôn ngữ Toàn diện (i18n Localization Deep Audit & Hardening)**:
+  - Khắc phục các chuỗi hardcoded tiếng Anh/Việt trong `showNotification` (`LibraryProvider`, `DownloadProvider`, `PlayerWithLibrary`, `MainLayout`).
+  - Triệt tiêu hoàn toàn chuỗi tiếng Việt cứng trong tiến trình đẩy nhạc và thông báo lỗi của `ServerSection.tsx` và `ServerUploadService.ts`, đảm bảo hiển thị đúng 100% khi chuyển ngữ sang English (`en`).
+  - Nâng cấp động cơ `LanguageProvider.tsx` hỗ trợ fallback từ điển thông minh sang `vi` và hỗ trợ cả 2 dạng cú pháp biến `{var}` & `{{var}}` tương thích ES2020.
+  - Dọn dẹp toàn bộ các pattern fallback `|| 'Tiếng Việt'` thừa thãi trên toàn Desktop App (`BulkActionsBar`, `SongPickerModal`, `EmptyState`, `GeneralSection`, `AudioSection`, `SongRow`).
+  - Đồng bộ 100% từ điển `packages/i18n/src/desktop.ts` (409 keys khớp tuyệt đối giữa `vi` và `en`, 0 ghost keys). Toàn bộ 46 test suites / 345 unit tests Desktop đạt 100% Green, Zero TypeScript compilation errors.
 
 ---
+
 
 ## 📱 2. MeloVista Mobile App (Expo / React Native)
 
@@ -125,8 +154,14 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 
 ### 🚀 Kế Hoạch Tiếp Theo
 
-- [ ] **Phát Nhạc Dưới Nền (Background Audio):** Cấu hình EAS build duy trì phát âm thanh khi ẩn app.
-- [ ] **Lock Screen Media Controls:** Đồng bộ thanh điều khiển nhạc trên màn hình khóa của iOS và Android.
+- [x] **Cấu Hình Build APK Độc Lập (EAS Preview APK Pipeline):** Cấu hình `apps/mobile/eas.json` profile `preview` (`buildType: "apk"`) và bổ sung script `npm run mobile:build:apk` xuất file APK độc lập cài thẳng vào điện thoại, nhúng sẵn JS bundle và giải phóng hoàn toàn sự phụ thuộc vào máy tính dev.
+- [x] **Tách Biệt Package ID Cho Môi Trường Dev & Product (Dual-App Setup):** Triển khai `apps/mobile/app.config.ts` dynamic variant: bản Dev sử dụng `com.split_dance.melovista.dev` (MeloVista Dev), bản Product sử dụng `com.split_dance.melovista` (MeloVista). Cho phép cài song song cả 2 bản trên 1 máy, triệt tiêu 100% lỗi xung đột chữ ký Keystore (Signature Mismatch).
+- [x] **Phát Nhạc Dưới Nền (Background Audio) & Lock Screen Media Controls:**
+  - Tích hợp `useMobileLockScreen` và `LockScreenSupervisor` vào `PlayerWithLibrary`.
+  - Kết nối `MobileAudioAdapter.updateLockScreen` xuống `ExpoAudioEngine.setActiveForLockScreen(true, metadata)`.
+  - Kích hoạt Android Foreground Service (`AudioControlsService`) với quyền `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, cấp quyền CPU Wakelock duy trì âm thanh liên tục khi màn hình tắt (bảo vệ khỏi Android Doze Mode).
+  - Ghim thanh điều khiển Media Controls (Play/Pause, Tên bài, Nghệ sĩ, Ảnh bìa) trực tiếp lên Màn hình khóa và Notification Bar.
+  - Kết quả kiểm thử: **44/44 tests Green, Clean Build, 0 lỗi TypeScript, Hermes Bytecode bundling 100%**.
 
 ---
 

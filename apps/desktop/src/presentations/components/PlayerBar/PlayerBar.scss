@@ -159,6 +159,40 @@
           overflow: hidden;
           text-overflow: ellipsis;
         }
+
+        .chapter-badge-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          margin-top: 3px;
+          padding: 2px 7px;
+          background: var(--bg-surface-dim);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-sm);
+          color: var(--color-primary);
+          font-size: 11px;
+          font-weight: 500;
+          cursor: pointer;
+          max-width: 100%;
+          transition: all var(--transition-fast);
+          outline: none;
+
+          &:hover {
+            background: var(--bg-surface-hover);
+            border-color: var(--color-primary);
+          }
+
+          .chapter-badge-icon {
+            font-size: 10px;
+            flex-shrink: 0;
+          }
+
+          .chapter-badge-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
       }
     }
   }
@@ -243,8 +277,71 @@
       font-size: var(--font-size-xs);
       color: var(--color-text-dim);
 
-      .progress-range {
+      .progress-container {
+        position: relative;
         flex-grow: 1;
+        display: flex;
+        align-items: center;
+        height: 24px;
+      }
+
+      .progress-range {
+        width: 100%;
+        margin: 0;
+      }
+
+      .chapter-skipped-region {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 6px;
+        background: repeating-linear-gradient(
+          -45deg,
+          rgba(239, 68, 68, 0.25),
+          rgba(239, 68, 68, 0.25) 4px,
+          rgba(239, 68, 68, 0.1) 4px,
+          rgba(239, 68, 68, 0.1) 8px
+        );
+        border-radius: 2px;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .chapter-divider {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        height: 10px;
+        background-color: var(--color-text-main);
+        opacity: 0.75;
+        border-radius: 1px;
+        pointer-events: none;
+        z-index: 2;
+        transition: height var(--transition-fast), background-color var(--transition-fast);
+
+        &.skipped {
+          background-color: var(--color-error, #ef4444);
+          opacity: 0.9;
+        }
+      }
+
+      .chapter-hover-tooltip {
+        position: absolute;
+        bottom: calc(100% + 4px);
+        transform: translateX(-50%);
+        background: var(--bg-surface-solid);
+        color: var(--color-text-main);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-md);
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 10;
+        animation: fadeIn 0.15s ease;
       }
     }
   }

@@ -9,7 +9,9 @@
     "ios": "expo run:ios",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "build:apk": "npx eas-cli build -p android --profile preview",
+    "build:dev": "npx eas-cli build -p android --profile development"
   },
   "dependencies": {
     "@music/core": "*",

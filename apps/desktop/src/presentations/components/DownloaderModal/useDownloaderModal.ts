@@ -39,7 +39,9 @@ export const useDownloaderModal = (isOpen: boolean, onClose: () => void) => {
     }
   }, [isOpen]);
 
-  const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING;
+  const isBusy = manager.downloadState === DOWNLOAD_STATUS.FETCHING || 
+                 manager.downloadState === DOWNLOAD_STATUS.DOWNLOADING ||
+                 manager.downloadState === DOWNLOAD_STATUS.CONVERTING;
 
   const handleClose = useCallback(() => {
     if (isBusy) return;

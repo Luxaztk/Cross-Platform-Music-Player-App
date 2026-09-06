@@ -55,13 +55,13 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
     
     const unbindError = window.electronAPI.onUpdateError((err: string) => {
       setIsChecking(false);
-      setUpdateStatus(`${t('common.error') || 'Lỗi'}: ${err}`);
+      setUpdateStatus(`${t('common.error')}: ${err}`);
     });
 
     const unbindDownloaded = window.electronAPI.onUpdateDownloaded(() => {
       setIsChecking(false);
       setUpdateDownloaded(true);
-      setUpdateStatus(t('update.ready') || 'Đã tải xong bản cập nhật');
+      setUpdateStatus(t('update.ready'));
     });
     
     return () => {
@@ -90,7 +90,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
       await window.electronAPI.checkForUpdatesManual();
     } catch {
       setIsChecking(false);
-      setUpdateStatus(t('common.error') || 'Lỗi kết nối');
+      setUpdateStatus(t('common.error'));
     }
   };
 
@@ -216,7 +216,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({ searchQuery }) =
                 )}
                 <span>
                   {updateDownloaded 
-                    ? (t('update.restartNow') || 'Khởi động lại') 
+                    ? t('update.restartNow') 
                     : isChecking 
                       ? t('settings.general.checkingUpdates') 
                       : t('settings.general.checkUpdates')}

@@ -9,6 +9,8 @@ import { LibraryService, type IMetadataService, extractYoutubeId, getCanonicalYo
 import { getErrorMessage, normalizeString, logger } from '@music/utils';
 import { LyricsManager } from '../modules/lyrics/LyricsManager';
 import { SyncHistoryService } from '../infrastructure/SyncHistoryService';
+import { ChapterExportService } from '../modules/chapters/ChapterExportService';
+import type { SongChapter } from '@music/types';
 
 const storageAdapter = new MainStorageAdapter();
 const metadataService: IMetadataService = {
@@ -636,6 +638,19 @@ export function setupLibraryIPC() {
     } catch (err) {
       console.error('IPC library:reset-cache error:', err);
       return { success: false, message: getErrorMessage(err) };
+    }
+  });
+
+  ipcMain.handle('chapters:export', async (_event, songId: string, chapters: SongChapter[], targetDir: string) => {
+    try {
+      const song = await storageAdapter.getSongById(songId);
+      if (!song) {
+        return { success: false, exportedCount: 0, error: 'Song not found in library.' };
+      }
+      return await ChapterExportService.exportChapters(song, chapters, targetDir);
+    } catch (err) {
+      console.error('IPC chapters:export error:', err);
+      return { success: false, exportedCount: 0, error: getErrorMessage(err) };
     }
   });
 }

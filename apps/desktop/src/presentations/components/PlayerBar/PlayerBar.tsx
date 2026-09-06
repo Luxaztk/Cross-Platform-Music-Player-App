@@ -4,9 +4,9 @@ import { ICON_SIZES } from '@constants';
 import { useHotkeysModal } from '@application/context/HotkeysContext';
 import { usePlayerBar } from './usePlayerBar';
 import { NowPlaying, PlaybackControls, ProgressBar, VolumeControl } from './components';
+import { ChapterEditorModal } from '../ChapterEditorModal';
 import QueuePanel from './QueuePanel';
 import './PlayerBar.scss';
-
 
 export const PlayerBar: React.FC = () => {
     const {
@@ -27,11 +27,12 @@ export const PlayerBar: React.FC = () => {
                 <NowPlaying
                     isVisible={true}
                     song={state.currentSong}
+                    currentChapter={state.currentChapter}
+                    onOpenChapters={() => actions.setIsChapterEditorOpen(true)}
                     appIcon={appIcon}
                     t={t}
                 />
             </div>
-
 
             <div className="player-center">
                 <div className="player-controls">
@@ -56,15 +57,14 @@ export const PlayerBar: React.FC = () => {
                     progress={utils.displayProgress}
                     duration={state.duration}
                     percent={utils.progressPercent}
+                    chapters={state.currentSong?.chapters}
                     onSeekStart={actions.handleSeekStart}
                     onSeekChange={actions.handleSeekChange}
                     onSeekEnd={actions.handleSeekEnd}
                     formatTime={formatTime}
                     disabled={isDisabled}
                 />
-
             </div>
-
 
             <div className="player-right">
                 <button
@@ -107,8 +107,19 @@ export const PlayerBar: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {state.isChapterEditorOpen && (
+                <ChapterEditorModal
+                    isOpen={state.isChapterEditorOpen}
+                    onClose={() => actions.setIsChapterEditorOpen(false)}
+                    song={state.currentSong}
+                    currentAudioTime={state.progress}
+                    onSeek={actions.handleSeekEnd}
+                />
+            )}
         </footer>
     );
 };
 
 export default PlayerBar;
+

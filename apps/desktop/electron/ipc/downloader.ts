@@ -6,6 +6,7 @@ import { MetadataManager } from '../modules/metadata/MetadataManager';
 import type { ID3Metadata } from '../modules/metadata/MetadataManager';
 import { logFileTrace } from '../infrastructure/FileTraceLogger';
 import { normalizeString } from '@music/utils';
+import type { DownloadProgressPayload } from '@music/types';
 import log from 'electron-log/main';
 
 import { MainStorageAdapter } from '../infrastructure/MainStorageAdapter';
@@ -33,7 +34,7 @@ const getDownloadsDir = async () => {
 
 export const setupDownloaderIPC = () => {
     // Global Progress Listener
-    downloader.on('progress', (data: { id: string; percent: number }) => {
+    downloader.on('progress', (data: DownloadProgressPayload) => {
         BrowserWindow.getAllWindows().forEach((win) => {
             win.webContents.send('download-progress', data);
         });

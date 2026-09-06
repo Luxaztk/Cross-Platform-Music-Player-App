@@ -29,7 +29,7 @@ const MainLayout: React.FC = () => {
   // Show notification when duplicates are detected
   useEffect(() => {
     if (duplicateSongs.length > 0) {
-      showNotification('info', t('modal.duplicatesFound') || 'Phát hiện bài hát trùng lặp')
+      showNotification('info', t('modal.duplicatesFound'))
     }
   }, [duplicateSongs.length, showNotification, t])
 
