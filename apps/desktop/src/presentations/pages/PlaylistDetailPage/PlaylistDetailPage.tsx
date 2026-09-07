@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Song } from '@music/types';
-import { EditModal, DeleteConfirmationModal, SongPickerModal, ChapterEditorModal } from '@components';
+import { EditModal, DeleteConfirmationModal, SongPickerModal, ChapterEditorModal, EditSongPermissionsModal } from '@components';
+import { useSettings } from '@hooks';
 import { usePlaylistDetail } from './usePlaylistDetail';
 import { PlaylistHeader } from './components/PlaylistHeader';
 import { FilterChips } from './components/FilterChips';
@@ -20,8 +21,10 @@ export const PlaylistDetailPage: React.FC = () => {
   } = usePlaylistDetail();
 
   const { t, appIcon, playlists, allSongs, currentSong, id, libraryFilter } = utils;
+  const { settings } = useSettings();
 
   const [chapterModalSong, setChapterModalSong] = useState<Song | null>(null);
+  const [permissionsModalSong, setPermissionsModalSong] = useState<Song | null>(null);
 
   const activeSong = state.activeMenuId ? state.filteredSongs.find((s) => s.id === state.activeMenuId) : null;
 
@@ -128,6 +131,18 @@ export const PlaylistDetailPage: React.FC = () => {
           if (activeSong) setChapterModalSong(activeSong);
           actions.setActiveMenuId(null);
         }}
+        onEditPermissions={
+          settings?.server?.serverUrl &&
+          activeSong &&
+          (activeSong.sourceType === 'stream' ||
+            (!!settings.server.username &&
+              (activeSong.uploader || '').toLowerCase() === settings.server.username.toLowerCase()))
+            ? () => {
+                setPermissionsModalSong(activeSong);
+                actions.setActiveMenuId(null);
+              }
+            : undefined
+        }
         onDelete={() => activeSong && actions.onDeleteSong(activeSong)}
         onSetSubMenu={actions.setActiveSubMenuId}
         t={t}
@@ -181,12 +196,34 @@ export const PlaylistDetailPage: React.FC = () => {
         onAdd={(songIds) => id && actions.onAddSongsToPlaylist(id, songIds)}
       />
 
-      <ChapterEditorModal
-        isOpen={!!chapterModalSong}
-        onClose={() => setChapterModalSong(null)}
-        song={chapterModalSong}
-        currentAudioTime={0}
-      />
+      {chapterModalSong && (
+        <ChapterEditorModal
+          isOpen={!!chapterModalSong}
+          onClose={() => setChapterModalSong(null)}
+          song={chapterModalSong}
+          onSave={(chapters) => {
+            actions.onSaveMetadata({
+              ...chapterModalSong,
+              chapters,
+            });
+            setChapterModalSong(null);
+          }}
+        />
+      )}
+
+      {permissionsModalSong && (
+        <EditSongPermissionsModal
+          isOpen={!!permissionsModalSong}
+          onClose={() => setPermissionsModalSong(null)}
+          song={permissionsModalSong}
+          serverUrl={settings.server.serverUrl}
+          auth={{ username: settings.server.username, token: settings.server.token }}
+          onPermissionUpdated={(updatedSong) => {
+            actions.onSaveMetadata(updatedSong);
+            setPermissionsModalSong(null);
+          }}
+        />
+      )}
 
       <FloatingBadge />
     </div>

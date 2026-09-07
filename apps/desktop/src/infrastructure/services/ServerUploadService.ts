@@ -1,5 +1,5 @@
 import { ServerClient } from '@music/core';
-import type { Song } from '@music/types';
+import type { Song, ServerUploadOptions } from '@music/types';
 
 export interface FailedUploadItem {
   songId: string;
@@ -45,7 +45,8 @@ export class ServerUploadService {
     serverUrl: string,
     allSongs: Song[],
     onProgress: (state: UploadProgressState) => void,
-    signal?: { aborted: boolean }
+    signal?: { aborted: boolean },
+    uploadOptions?: ServerUploadOptions
   ): Promise<UploadSummary> {
     const cleanUrl = ServerClient.normalizeUrl(serverUrl);
     if (!cleanUrl) {
@@ -187,6 +188,7 @@ export class ServerUploadService {
         const res = await window.electronAPI.uploadSongToServer({
           serverUrl: cleanUrl,
           song,
+          options: uploadOptions,
         });
 
         if (res.success) {
@@ -231,7 +233,8 @@ export class ServerUploadService {
 
   public async uploadSingleSong(
     serverUrl: string,
-    song: Song
+    song: Song,
+    uploadOptions?: ServerUploadOptions
   ): Promise<{ success: boolean; skipped?: boolean; error?: string }> {
     const cleanUrl = ServerClient.normalizeUrl(serverUrl);
     if (!cleanUrl) return { success: false, error: 'Invalid server URL' };
@@ -249,6 +252,7 @@ export class ServerUploadService {
       const res = await window.electronAPI.uploadSongToServer({
         serverUrl: cleanUrl,
         song,
+        options: uploadOptions,
       });
       return res;
     } catch (err) {

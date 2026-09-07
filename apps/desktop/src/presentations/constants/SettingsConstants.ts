@@ -1,3 +1,5 @@
+import type { SongVisibility } from '@music/types';
+
 export const DEFAULT_SETTINGS = {
   general: {
     language: 'vi',
@@ -35,6 +37,10 @@ export const DEFAULT_SETTINGS = {
     serverUrl: '',
     autoConnect: false,
     autoPushOnDownload: true,
+    username: '' as string,
+    token: '' as string,
+    defaultVisibility: 'public' as SongVisibility,
+    defaultWhitelist: [] as string[],
   }
 };
 

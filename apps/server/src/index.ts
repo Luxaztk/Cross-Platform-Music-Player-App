@@ -19,6 +19,14 @@ async function start() {
   console.log(`📁 Music Directory: ${MUSIC_DIR}`);
   console.log('='.repeat(50));
 
+  // Initialize persistent database
+  try {
+    await scanner.getStorage().init();
+    console.log(`[Server] Persistent database initialized at: ${scanner.getStorage().getDbPath()}`);
+  } catch (err) {
+    console.error('[Server] Failed to initialize persistent DB:', err);
+  }
+
   // Initial Scan
   try {
     const count = await scanner.scanDirectory(MUSIC_DIR);

@@ -53,6 +53,42 @@ export class MainStorageAdapter implements IStorageAdapter {
         settings: mergedDefaults as AppSettings,
       }
     });
+
+    // Self-healing migration: Strip any bloated `songs` array accidentally stored in playlists
+    this.sanitizeStoredPlaylists();
+  }
+
+  private sanitizeStoredPlaylists(): void {
+    try {
+      const storedPlaylists = this.store.get('playlists') || {};
+      let needsPrune = false;
+      const cleaned: Record<string, Playlist> = {};
+
+      for (const [id, playlist] of Object.entries(storedPlaylists)) {
+        if (
+          (playlist as unknown as { songs?: unknown }).songs ||
+          (playlist as unknown as { songCount?: unknown }).songCount
+        ) {
+          needsPrune = true;
+          cleaned[id] = {
+            id: playlist.id,
+            name: playlist.name,
+            description: playlist.description,
+            songIds: playlist.songIds || [],
+            createdAt: playlist.createdAt || new Date().toISOString(),
+          };
+        } else {
+          cleaned[id] = playlist;
+        }
+      }
+
+      if (needsPrune) {
+        console.log('[Storage] Self-healing migration: Pruned bloated songs array from stored playlists.');
+        this.store.set('playlists', cleaned);
+      }
+    } catch (err) {
+      console.error('[Storage] Error during playlist sanitization:', err);
+    }
   }
 
   async getLibrary(): Promise<Playlist> {
@@ -72,7 +108,24 @@ export class MainStorageAdapter implements IStorageAdapter {
   }
 
   async savePlaylists(playlists: Record<string, Playlist>): Promise<void> {
-    this.store.set('playlists', playlists);
+    const cleaned: Record<string, Playlist> = {};
+    for (const [id, playlist] of Object.entries(playlists)) {
+      if (
+        (playlist as unknown as { songs?: unknown }).songs ||
+        (playlist as unknown as { songCount?: unknown }).songCount
+      ) {
+        cleaned[id] = {
+          id: playlist.id,
+          name: playlist.name,
+          description: playlist.description,
+          songIds: playlist.songIds || [],
+          createdAt: playlist.createdAt || new Date().toISOString(),
+        };
+      } else {
+        cleaned[id] = playlist;
+      }
+    }
+    this.store.set('playlists', cleaned);
   }
 
   async getPlaylists(): Promise<Record<string, Playlist>> {

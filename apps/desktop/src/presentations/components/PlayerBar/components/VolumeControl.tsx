@@ -31,6 +31,14 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
                 step="0.01"
                 value={volume}
                 onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+                onPointerUp={(e) => {
+                    (e.target as HTMLInputElement).blur();
+                }}
+                onKeyDown={(e) => {
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                }}
                 className="styled-range volume-range"
                 placeholder="Volume"
                 style={{ '--range-progress': `${percent}%` } as React.CSSProperties}

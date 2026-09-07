@@ -26,7 +26,12 @@ export interface Song {
   isOffline?: boolean; // True if downloaded for offline playback
   localOfflinePath?: string; // Local storage path if downloaded
   chapters?: SongChapter[]; // Virtual tracklist / chapters for mixtapes
+  uploader?: string; // Username of the uploader on the server
+  visibility?: SongVisibility; // Visibility access level
+  whitelist?: string[]; // Usernames allowed to access if visibility is 'whitelist'
 }
+
+export type SongVisibility = 'public' | 'whitelist' | 'private';
 
 export interface SongChapter {
   id: string; // unique chapter identifier
@@ -174,6 +179,35 @@ export interface ServerSettings {
   serverUrl: string;
   autoConnect?: boolean;
   autoPushOnDownload?: boolean;
+  username?: string;
+  token?: string;
+  defaultVisibility?: SongVisibility;
+  defaultWhitelist?: string[];
+}
+
+export interface ServerSongRecord {
+  id: string;
+  audioHash: string;
+  physicalPath: string;
+  uploader: string;
+  visibility: SongVisibility;
+  whitelist: string[];
+  song: Song;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServerUserSummary {
+  username: string;
+  songCount: number;
+  publicCount: number;
+}
+
+export interface ServerUploadOptions {
+  username?: string;
+  token?: string;
+  visibility?: SongVisibility;
+  whitelist?: string[];
 }
 
 export interface LibraryDiffItem {

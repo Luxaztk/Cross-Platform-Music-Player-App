@@ -70,7 +70,16 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
                     value={progress}
                     onPointerDown={onSeekStart}
                     onChange={(e) => onSeekChange(parseFloat(e.target.value))}
-                    onPointerUp={(e) => onSeekEnd(parseFloat((e.target as HTMLInputElement).value))}
+                    onPointerUp={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        onSeekEnd(parseFloat(target.value));
+                        target.blur();
+                    }}
+                    onKeyDown={(e) => {
+                        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                            e.preventDefault();
+                        }
+                    }}
                     className="styled-range progress-range"
                     placeholder="Player"
                     style={{ '--range-progress': `${percent}%` } as React.CSSProperties}

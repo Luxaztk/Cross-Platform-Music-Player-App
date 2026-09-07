@@ -98,6 +98,18 @@ describe('useGlobalHotkeys', () => {
     fireKey(' ');
     expect(mockPlayer.play).toHaveBeenCalled();
 
+    fireKey('ArrowRight');
+    expect(mockPlayer.seek).toHaveBeenCalledWith(55);
+
+    fireKey('ArrowLeft');
+    expect(mockPlayer.seek).toHaveBeenCalledWith(45);
+
+    fireKey('ArrowUp');
+    expect(mockPlayer.setVolume).toHaveBeenCalledWith(0.55);
+
+    fireKey('ArrowDown');
+    expect(mockPlayer.setVolume).toHaveBeenCalledWith(0.45);
+
     range.blur();
     document.body.removeChild(range);
   });
@@ -307,7 +319,7 @@ describe('useGlobalHotkeys', () => {
     const { unmount } = renderHook(() => useGlobalHotkeys());
     
     unmount();
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function), { capture: true });
     removeEventListenerSpy.mockRestore();
   });
 });

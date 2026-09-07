@@ -464,7 +464,17 @@ export class LibraryService {
       const customPlaylists = { ...playlists };
       delete customPlaylists['0'];
 
-      customPlaylists[updatedPlaylist.id] = updatedPlaylist;
+      // Sanitize: ensure PlaylistDetail properties (like full songs array) are stripped
+      // before persisting to storage to prevent database bloat
+      const cleanPlaylist: Playlist = {
+        id: updatedPlaylist.id,
+        name: updatedPlaylist.name,
+        description: updatedPlaylist.description,
+        songIds: updatedPlaylist.songIds,
+        createdAt: updatedPlaylist.createdAt,
+      };
+
+      customPlaylists[updatedPlaylist.id] = cleanPlaylist;
       await this.storageAdapter.savePlaylists(customPlaylists);
 
       return updatedPlaylist;

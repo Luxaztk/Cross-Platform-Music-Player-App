@@ -78,6 +78,32 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
 
 ### 🐛 Bug Fixes & Cải Tiến
 
+- [x] **Tối ưu hóa toàn diện tốc độ khởi động ứng dụng (Fast Startup & Zero-Wait Launch) (P0):**
+  - **Khắc phục lỗi Database Bloat (11.4 MB)**: Tự động bóc tách và dọn sạch các mảng bài hát `songs: Song[]` và ảnh Base64 bị lưu nhân bản thừa vào `playlists` trong `melovista-library.json`. Cơ chế Self-Healing Migration trong `MainStorageAdapter.ts` và bộ lọc an toàn trong `LibraryService.updatePlaylist` giúp cắt giảm ngay 11.8 MB (40%) dung lượng file và dung lượng IPC transfer.
+  - **Triệt tiêu Waterfall Rendering trong `SettingsProvider`**: Khởi tạo bằng `DEFAULT_SETTINGS`, loại bỏ hoàn toàn màn hình chờ `<div className="loading-screen" />`. Toàn bộ khung Layout, Sidebar và danh sách bài hát mount và tải song song ngay ở frame đầu tiên (Zero-Wait).
+  - **Trì hoãn các tác vụ ngầm lúc mở app (Deferred Background Tasks)**: Dời `rehashAllSongs()` (5s) và `setupAutoUpdate()` (3s) sau khi giao diện đã hiển thị xong, nhường 100% CPU và I/O ổ đĩa cho việc khởi chạy cửa sổ.
+  - **Code-Splitting bằng `React.lazy`**: Tách nhỏ `SettingsPage` thành dynamic chunk, giảm dung lượng bundle tải ban đầu lúc mở ứng dụng.
+  - Kết quả: **377/377 Desktop tests Green, 72/72 Core tests Green, Clean Build, Zero TypeScript errors**.
+
+- [x] **Đơn giản hóa nút Prev (bỏ Double Click, chuyển bài ngay) & Triệt tiêu tiến trình phát kép (Ghost Playback) (P0):**
+  - Loại bỏ hoàn toàn cơ chế double click và độ trễ chờ đợi trên nút Prev (`⏮`): Bấm Prev sẽ chuyển ngay lập tức về bài hát trước đó trong history (nếu history trống thì tua về đầu bài), thao tác nhanh gọn và dứt khoát.
+  - Cố định vòng đời `AudioEngine` duy nhất (Singleton per Provider): Dùng `playbackIteratorRef` cho các sự kiện callback của engine, loại bỏ hoàn toàn việc unmount/tái tạo lại `AudioEngine` khi thay đổi bài hát.
+  - Dọn dẹp triệt để phần tử HTML5 audio (`Nuclear Abort`): Trong `AudioEngine.stop()`, tháo toàn bộ event listeners (`onseeked`, `oncanplay`, v.v.), xóa thuộc tính `src` (`removeAttribute('src')`) và gọi `node.load()` để buộc Chromium hủy ngay lập tức media pipeline ngầm, ngăn chặn hiện tượng bài cũ tự động phát ngầm.
+  - Kết quả: **377/377 Desktop tests Green (50/50 test files), 14/14 AudioEngine tests Green, Clean Build, Zero TypeScript errors**.
+
+- [x] **Sửa lỗi xung đột phím mũi tên điều khiển âm thanh & tiến trình phát với nội tại của thanh trượt (ProgressBar & VolumeBar) (P0):**
+  - Khắc phục hiện tượng khi focus vào thanh trượt (Seekbar / Volume): Hành vi mặc định (native step) của `<input type="range">` đè lên phím tắt toàn cục, khiến phím mũi tên Lên/Xuống nhảy thời gian phát hoặc Trái/Phải nhảy âm lượng chéo, hoặc bước nhảy không chuẩn xác.
+  - Vô hiệu hóa hành vi mặc định của phím mũi tên và phím Space trên `<input type="range">` của `ProgressBar` và `VolumeControl`, chuyển giao quyền điều khiển hoàn toàn cho `useGlobalHotkeys` (Trái/Phải tua ±5s, Lên/Xuống chỉnh âm lượng ±5%).
+  - Tự động nhả focus (`blur()`) sau khi kéo hoặc click thanh trượt (`onPointerUp`) để không giam giữ focus trên slider.
+  - Sử dụng cơ chế Event Capturing (`{ capture: true }`) trong `useGlobalHotkeys` để chặn trước native behavior của range input trước khi browser dispatch xuống element con.
+  - Kết quả: **377/377 Desktop tests Green (50/50 test files), Clean Build, Zero TypeScript errors**.
+
+- [x] **Sửa lỗi không điều khiển được nút Play trên file dài & Nút Next/Prev bị lặp lại đầu bài khi bật Repeat 1 (P0):**
+  - Khắc phục lỗi nút Play bị đơ / vô tác dụng trên file thời lượng dài (mixtape): Do Howler `html5: true` giữ trạng thái `'loading'` kéo dài (chờ `canplaythrough`), `PlayerProvider.play()` kiểm tra cứng `engineState === 'loaded'` nên bỏ qua lệnh play. Giải pháp: Cho phép gọi `engine.play()` khi file đã được nạp cho bài hiện tại; chuẩn hóa URL so sánh cho cả remote stream và `melovista://`.
+  - Khắc phục lỗi Seek reload lại toàn bộ audio trên file dài: Thay đổi điều kiện kiểm tra trong `PlayerProvider.seek()`, không ép buộc `engineState === 'loaded'` gây gián đoạn và tải lại file; tối ưu `AudioEngine.seek()` thực thi ngay khi `node.readyState >= 1`.
+  - Khắc phục nút Next và Prev khi bật Repeat 1: Loại bỏ logic `if (repeatModeRef.current === 'ONE') return seek(0)` trong `playbackIterator.next()` (chế độ Repeat 1 chỉ tự động lặp lại khi bài kết thúc `onEnd`, người dùng bấm Next/Prev phải chuyển bài bình thường); bổ sung cơ chế double-prev chuyển bài trước đó mượt mà.
+  - Kết quả: **370/370 Desktop tests Green (49/49 test files), Clean Build, Zero TypeScript errors**.
+
 - [x] **Cải thiện hiển thị trạng thái Converting âm thanh (FFmpeg) & Chống treo ChildProcess khi tải YouTube:**
   - Khắc phục hiện tượng người dùng tưởng app bị treo khi tải video dung lượng lớn / thời lượng dài (>2h): Bổ sung trạng thái `CONVERTING` vào `DOWNLOAD_STATUS` trong `@music/types`, bắt sự kiện `[ExtractAudio]` trong `YoutubeDownloader.ts`, phát event `stage: 'converting'` và cập nhật UI `DownloadPreviewCard` hiển thị rõ ràng thông báo "Đang chuyển đổi âm thanh (FFmpeg)..." thay vì đứng im ở 100%.
   - Gia cố an toàn: Bổ sung `stdio: ['ignore', 'pipe', 'pipe']` và `--force-overwrites` vào `spawn(yt-dlp)` triệt tiêu nguy cơ dừng tiến trình chờ nhập liệu từ stdin.
@@ -310,7 +336,30 @@ Mục tiêu: Xây dựng hệ sinh thái phát nhạc trực tuyến độ trễ
     - `settings.tsx`: Thẻ "Bộ Nhớ Đệm & Offline" hiển thị dung lượng đệm LRU, số bài offline, nút xóa cache và bộ chọn hạn mức (250MB, 500MB, 1GB).
   - [x] **Kiểm thử toàn diện**: 40/40 mobile tests pass (7 test files), 324/324 desktop tests pass (43 suites), 69/69 core tests pass, 10/10 server tests pass, Zero TypeScript errors trên toàn bộ Monorepo.
 
-- [ ] **Phase 5 (Future / Mở Rộng Sau Nếu Cần): Đồng Bộ Đa Nền Tảng & Remote Control**
+- [x] **Phase 5: Multi-Uploader & Phân Quyền Phát Nhạc (Stream Access Control: Only Me • Whitelist • Public) (P1)** *(Hoàn thành 06/09/2026)*:
+  - [x] **Data Model & Server Storage Engine (`packages/types` & `apps/server`)**: Mở rộng schema `SongVisibility = 'public' | 'whitelist' | 'private'`, `ServerSongRecord`, `ServerUserSummary`, `ServerUploadOptions` và `ServerSettings`. Xây dựng `ServerStorage.ts` quản lý DB JSON bền vững (`data/server_db.json`) với cơ chế Atomic Write (`.tmp` -> replace), Content-Addressable Storage và Reference Counting (`refCount`).
+  - [x] **Deduplication vân tay âm thanh & Cá nhân hóa độc lập (Option 1)**: Khi nhiều user cùng upload một bài hát có audio hash giống nhau, server tái sử dụng chung 1 file audio vật lý trên đĩa cứng để tối ưu dung lượng Homelab, đồng thời duy trì bản ghi `ServerSongRecord` độc lập với metadata, chapters, lyrics và quyền riêng tư riêng cho từng user. File vật lý chỉ bị xóa khi `refCount === 0`.
+  - [x] **Access Control Enforcement & Gatekeeper Middleware (`apps/server`)**:
+    - `canUserAccess(record, username)` kiểm soát chặt chẽ quyền truy cập dựa trên 3 cấp độ: `public` (tất cả), `whitelist` (chỉ định bạn bè), `private` (chỉ uploader).
+    - `GET /api/songs`: Tự động lọc chỉ trả về các bài hát requester được phép nghe theo username gửi kèm (`X-Client-Username`), hỗ trợ lọc theo từng uploader cụ thể (`?uploader=`).
+    - `GET /api/stream/:id`: Chặn triệt để mã lỗi `403 Forbidden` nếu client không thuộc danh sách quyền được cấp.
+    - `GET /api/users`: Trả về danh sách uploader đang hoạt động cùng số lượng bài hát đã chia sẻ.
+    - `POST /api/upload`: Nhận metadata danh tính `X-Client-Username`, `X-Song-Visibility`, `X-Song-Whitelist`, `X-Song-Metadata`.
+    - `PATCH /api/songs/:id` & `DELETE /api/songs/:id`: Bảo vệ quyền sở hữu, ngăn chặn xóa hoặc sửa trái phép bài hát của uploader khác.
+  - [x] **Core Client API (`packages/core`)**: Mở rộng `ServerClient` hỗ trợ đầy đủ `fetchUsers()`, `fetchSongs()` kèm auth header và uploader filter, `updateSongPermissions()`, `deleteSong()` (72/72 tests Green).
+  - [x] **Desktop Selective Sync & Giao Diện Quản Trị (`apps/desktop`)**:
+    - **Modal Duyệt & Chọn Lọc Kho Nhạc Server (`ServerLibraryBrowserModal.tsx`)**: Cho phép duyệt toàn bộ bài hát trên server, lọc theo Uploader bằng danh sách chip trực quan kèm số lượng bài, tìm kiếm văn bản, lọc "Chỉ hiện bài chưa có trong Thư viện", chọn lọc từng bài hát hoặc chọn tất cả, và chỉ đồng bộ chính xác các bài hát đã chọn vào thư viện (8/8 tests Green).
+    - **Cài đặt Danh tính & Quyền riêng tư (`ServerSection.tsx`)**: Ô nhập Tên người dùng (`username`), bộ chọn chế độ chia sẻ mặc định dạng `CustomDropdown` (Công khai 🌐 / Bạn bè 👥 / Riêng tư 🔒) đồng bộ chuẩn thiết kế hệ thống, ô nhập danh sách bạn bè Whitelist phân cách bằng dấu phẩy, nút mở Modal "Duyệt & Chọn Lọc Kho Nhạc" và tích hợp cấu hình phân quyền vào luồng Đẩy kho nhạc (`handlePushLibrary`) và Tự động đẩy khi tải từ YouTube (`DownloadProvider.tsx`).
+    - **Tinh chỉnh giao diện & Bỏ phần ví dụ thừa (`ServerSection.tsx`, `SettingsPage.scss`, `desktop.ts`)**: Thay thế 3 nút chia sẻ bị rớt dòng bằng `CustomDropdown` góc phải gọn gàng, khắc phục triệt để lỗi icon người dùng đè lên chữ trong ô input (bổ sung padding trái `38px !important`, căn giữa `top: 50%; transform: translateY(-50%)`), chuẩn hóa style cho ô whitelist, loại bỏ toàn bộ phần ví dụ thừa ("ví dụ...", "VD...", "e.g....") trong mô tả và placeholder song ngữ Việt/Anh.
+    - [x] **Whitelist Tag/Badge Input với Search Autocomplete (`WhitelistBadgeInput.tsx`) (P1)**: Tái sử dụng engine tìm kiếm `textMatches` từ `searchUtils` (Smart Intent, Unicode NFC/NFD, không phân biệt dấu), autocomplete người dùng thực tế từ server qua `availableUsers`, hiển thị bạn bè dạng Badge/Chip trực quan có nút xóa `×`, hỗ trợ phím điều hướng ArrowDown/ArrowUp, Enter/dấu phẩy để thêm, Backspace để xóa badge cuối khi input trống, và hỗ trợ thêm thủ công user chưa có trên server.
+    - [x] **Chỉnh Sửa Quyền & Whitelist Từng Bài Hát Trên Server (`EditSongPermissionsModal.tsx`) (P1)**: Xây dựng modal độc lập portal an toàn cho phép uploader chuyển đổi quyền riêng tư giữa Public 🌐, Whitelist 👥 và Private 🔒, tích hợp `WhitelistBadgeInput` để quản lý whitelist cho từng bài cụ thể; gọi `ServerClient.updateSongPermissions`; tích hợp trực tiếp vào `ServerLibraryBrowserModal` (nút "Sửa quyền" trên bài hát thuộc sở hữu của uploader) và menu chuột phải thư viện `SongRowContextMenu` (`onEditPermissions`); cập nhật trạng thái tức thì trên UI.
+  - [x] **Kiểm thử toàn diện & Zero TypeScript Errors**:
+    - 18/18 server tests Green (14 tests `server.test.ts`, 4 suites `ServerMultiUploader.test.ts`).
+    - 72/72 core tests Green (9 suites).
+    - 40/40 desktop server settings & permissions tests Green (`EditSongPermissionsModal.test.tsx` [6/6], `ServerLibraryBrowserModal.test.tsx` [9/9], `ServerSection.test.tsx` [13/13], `SongRowContextMenu.test.tsx` [3/3], `SongRow.test.tsx` [9/9]).
+    - Clean Build `npx tsc --noEmit`, Zero TypeScript errors & 0 ESLint warnings trên toàn bộ Monorepo (Tối ưu React 19 Keyed Component Pattern cho `EditSongPermissionsModal` và triệt tiêu cascading render `useEffect`).
+
+- [ ] **Phase 6 (Future / Mở Rộng Sau Nếu Cần): Đồng Bộ Đa Nền Tảng & Remote Control**
   - [ ] WebSocket Remote Control: Điều khiển phát nhạc trên PC từ điện thoại và ngược lại.
   - [ ] Tính năng "Listen Together": Nghe cùng một bài hát trên nhiều thiết bị với độ trễ < 50ms.
 

@@ -90,4 +90,33 @@ describe('ProgressBar with Chapters', () => {
     const skippedDividers = container.querySelectorAll('.chapter-divider.skipped');
     expect(skippedDividers.length).toBe(1); // c3 at 120s
   });
+
+  it('prevents default on arrow keys and space on the range input to disable native stepping', () => {
+    const { container } = render(<ProgressBar {...defaultProps} />);
+    const input = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(input).toBeInTheDocument();
+
+    const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
+    keys.forEach((key) => {
+      const event = new KeyboardEvent('keydown', { key, cancelable: true, bubbles: true });
+      input.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    // Other keys like Tab or Escape should not be prevented
+    const tabEvent = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true, bubbles: true });
+    input.dispatchEvent(tabEvent);
+    expect(tabEvent.defaultPrevented).toBe(false);
+  });
+
+  it('calls onSeekEnd and blurs range input on pointer up', () => {
+    const onSeekEnd = vi.fn();
+    const { container } = render(<ProgressBar {...defaultProps} onSeekEnd={onSeekEnd} />);
+    const input = container.querySelector('input[type="range"]') as HTMLInputElement;
+    const blurSpy = vi.spyOn(input, 'blur');
+
+    fireEvent.pointerUp(input);
+    expect(onSeekEnd).toHaveBeenCalled();
+    expect(blurSpy).toHaveBeenCalled();
+  });
 });

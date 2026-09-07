@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useSettings, useLanguage, useNotification } from '@hooks';
 import { useLibraryContext } from '@music/hooks';
 import { ServerClient } from '@music/core';
-import type { ServerHealth, Song } from '@music/types';
+import type { ServerHealth, ServerUserSummary, Song, SongVisibility } from '@music/types';
 import { ICON_SIZES } from '@constants';
 import {
   Radio,
@@ -15,11 +15,18 @@ import {
   X,
   HardDrive,
   Server,
+  User,
+  Users,
+  Lock,
+  Globe,
+  FolderSearch,
 } from 'lucide-react';
 import {
   ServerUploadService,
   type UploadProgressState,
 } from '@infrastructure/services/ServerUploadService';
+import { CustomDropdown } from '@components';
+import { ServerLibraryBrowserModal, WhitelistBadgeInput } from '../components';
 import { type SettingsSectionProps, matchesSearch } from '../utils';
 
 export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) => {
@@ -37,6 +44,24 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
   const [healthStatus, setHealthStatus] = useState<ServerHealth | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Multi-uploader identity & visibility state
+  const serverUsername = settings?.server?.username ?? '';
+  const [draftUsername, setDraftUsername] = useState<string | null>(null);
+  const username = draftUsername ?? serverUsername;
+
+  const [draftVisibility, setDraftVisibility] = useState<SongVisibility | null>(null);
+  const defaultVisibility = draftVisibility ?? (settings?.server?.defaultVisibility ?? 'public');
+
+  const serverWhitelist = useMemo(
+    () => settings?.server?.defaultWhitelist ?? [],
+    [settings?.server?.defaultWhitelist]
+  );
+  const [draftWhitelist, setDraftWhitelist] = useState<string[] | null>(null);
+  const defaultWhitelist = draftWhitelist ?? serverWhitelist;
+
+  const [availableUsers, setAvailableUsers] = useState<ServerUserSummary[]>([]);
+  const [isBrowserModalOpen, setIsBrowserModalOpen] = useState(false);
+
   // Push state
   const [uploadState, setUploadState] = useState<UploadProgressState | null>(null);
   const [isPushing, setIsPushing] = useState(false);
@@ -52,6 +77,28 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
       });
     }
   }, [serverUrlFromSettings, healthStatus]);
+
+  // Auto-fetch users from server for whitelist autocomplete
+  useEffect(() => {
+    const targetUrl = ServerClient.normalizeUrl(displayUrl);
+    if (!targetUrl) return;
+
+    let isMounted = true;
+    ServerClient.fetchUsers(targetUrl, {
+      username: username.trim() || undefined,
+      token: settings?.server?.token,
+    })
+      .then((res) => {
+        if (isMounted && res.ok) {
+          setAvailableUsers(res.users);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [displayUrl, username, settings?.server?.token]);
 
   const localSongs = useMemo(() => {
     return (songs || []).filter(
@@ -137,6 +184,140 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     }
   }, [displayUrl, serverUrlFromSettings, settings?.server, updateSettings, t, getLocalizedServerError]);
 
+  const handleSaveUsername = async () => {
+    const trimmed = username.trim();
+    setDraftUsername(null);
+    if (trimmed !== serverUsername) {
+      await updateSettings({
+        server: {
+          ...settings?.server,
+          username: trimmed,
+        },
+      });
+      showNotification('success', t('settings.server.saved', { defaultValue: 'Đã lưu cấu hình máy chủ' }));
+    }
+  };
+
+  const handleSaveVisibility = async (vis: SongVisibility) => {
+    setDraftVisibility(vis);
+    await updateSettings({
+      server: {
+        ...settings?.server,
+        defaultVisibility: vis,
+      },
+    });
+  };
+
+  const currentVisibilityIcon = useMemo(() => {
+    switch (defaultVisibility) {
+      case 'public':
+        return <Globe size={14} />;
+      case 'whitelist':
+        return <Users size={14} />;
+      case 'private':
+        return <Lock size={14} />;
+      default:
+        return <Globe size={14} />;
+    }
+  }, [defaultVisibility]);
+
+  const visibilityOptions = useMemo(
+    () => [
+      {
+        value: 'public',
+        label: t('settings.server.visibilityPublic', { defaultValue: 'Công khai (Mọi người)' }),
+      },
+      {
+        value: 'whitelist',
+        label: t('settings.server.visibilityWhitelist', { defaultValue: 'Chỉ định bạn bè (Whitelist)' }),
+      },
+      {
+        value: 'private',
+        label: t('settings.server.visibilityPrivate', { defaultValue: 'Chỉ mình tôi (Riêng tư)' }),
+      },
+    ],
+    [t]
+  );
+
+  const handleSaveWhitelist = async (newWhitelist: string[]) => {
+    setDraftWhitelist(newWhitelist);
+    await updateSettings({
+      server: {
+        ...settings?.server,
+        defaultWhitelist: newWhitelist,
+      },
+    });
+  };
+
+  const handleSyncSelectedSongs = useCallback(
+    async (selectedSongs: Song[]) => {
+      if (selectedSongs.length === 0) return;
+
+      const normalize = (str?: string) =>
+        (str || '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]/g, '');
+
+      const isMatchingSong = (s1: Song, s2: Song) => {
+        if (s1.hash && s2.hash && !s1.hash.startsWith('error-') && !s2.hash.startsWith('error-')) {
+          if (s1.hash === s2.hash) return true;
+          if (s1.hash.startsWith('p2:') && s2.hash.startsWith('p2:')) {
+            const h1 = s1.hash.slice(3);
+            const h2 = s2.hash.slice(3);
+            if (h1 === h2) return true;
+          }
+        }
+        const t1 = normalize(s1.title);
+        const t2 = normalize(s2.title);
+        const a1 = normalize(s1.artist);
+        const a2 = normalize(s2.artist);
+        if (t1 && t2 && t1 === t2 && (a1 === a2 || !a1 || !a2)) {
+          const durDiff = Math.abs((s1.duration || 0) - (s2.duration || 0));
+          if (durDiff <= 3) return true;
+        }
+        return false;
+      };
+
+      const existingLocalSongs = (songs || []).filter(
+        (s) => s.sourceType !== 'stream' && !!s.filePath && !s.filePath.startsWith('http')
+      );
+      const existingStreamSongs = (songs || []).filter(
+        (s) => s.sourceType === 'stream' || (s.filePath && s.filePath.startsWith('http'))
+      );
+
+      const songsToAdd = selectedSongs.filter((serverSong) => {
+        const hasLocal = existingLocalSongs.some((loc) => isMatchingSong(loc, serverSong));
+        if (hasLocal) return false;
+        const hasStream = existingStreamSongs.some(
+          (s) => s.id === serverSong.id || isMatchingSong(s, serverSong)
+        );
+        return !hasStream;
+      });
+
+      if (songsToAdd.length > 0) {
+        const importRes = await handleAddSongs(songsToAdd);
+        const count = importRes.count ?? songsToAdd.length;
+        showNotification(
+          'success',
+          t('settings.server.syncSuccess', {
+            count,
+            defaultValue: `Đã đồng bộ thành công ${count} bài hát từ máy chủ!`,
+          })
+        );
+      } else {
+        showNotification(
+          'info',
+          t('settings.server.syncAllUpToDate', {
+            defaultValue: 'Các bài hát đã chọn đều đã có sẵn trong thư viện!',
+          })
+        );
+      }
+    },
+    [songs, handleAddSongs, showNotification, t]
+  );
+
   const handleSyncSongs = useCallback(async () => {
     const targetUrl = ServerClient.normalizeUrl(displayUrl);
     if (!targetUrl) {
@@ -145,7 +326,10 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     }
 
     setIsSyncing(true);
-    const result = await ServerClient.fetchSongs(targetUrl);
+    const result = await ServerClient.fetchSongs(targetUrl, {
+      username: username.trim() || undefined,
+      token: settings?.server?.token,
+    });
     setIsSyncing(false);
 
     if (result.ok && result.songs.length > 0) {
@@ -255,7 +439,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     } else {
       showNotification('error', getLocalizedServerError(result.error) || t('settings.server.syncFail'));
     }
-  }, [displayUrl, songs, handleAddSongs, handleDeleteSongs, showNotification, t, getLocalizedServerError]);
+  }, [displayUrl, songs, handleAddSongs, handleDeleteSongs, showNotification, t, getLocalizedServerError, username, settings?.server?.token]);
 
   const handlePushLibrary = useCallback(async () => {
     const targetUrl = ServerClient.normalizeUrl(displayUrl);
@@ -272,6 +456,16 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     setIsPushing(true);
     abortSignalRef.current = { aborted: false };
 
+    const parsedWhitelist = defaultVisibility === 'whitelist'
+      ? defaultWhitelist.filter(Boolean)
+      : undefined;
+
+    const uploadOptions = {
+      username: username.trim() || undefined,
+      visibility: defaultVisibility,
+      whitelist: parsedWhitelist,
+    };
+
     const service = ServerUploadService.getInstance();
     const summary = await service.pushSongs(
       targetUrl,
@@ -279,7 +473,8 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
       (state) => {
         setUploadState(state);
       },
-      abortSignalRef.current
+      abortSignalRef.current,
+      uploadOptions
     );
 
     setIsPushing(false);
@@ -321,7 +516,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
         setHealthStatus(refreshed.health);
       }
     }
-  }, [displayUrl, localSongs, showNotification, t, getLocalizedServerError]);
+  }, [displayUrl, localSongs, showNotification, t, getLocalizedServerError, username, defaultVisibility, defaultWhitelist]);
 
   const handleCancelPush = useCallback(() => {
     abortSignalRef.current.aborted = true;
@@ -362,10 +557,15 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     matchesSearch(t('settings.server.desc'), searchQuery) ||
     matchesSearch(t('settings.server.urlTitle'), searchQuery) ||
     matchesSearch(t('settings.server.urlDesc'), searchQuery) ||
+    matchesSearch(t('settings.server.usernameTitle'), searchQuery) ||
+    matchesSearch(t('settings.server.visibilityTitle'), searchQuery) ||
+    matchesSearch(t('settings.server.browseServerBtn'), searchQuery) ||
     matchesSearch(t('settings.server.pushTitle'), searchQuery) ||
     matchesSearch(t('settings.server.syncTitle'), searchQuery) ||
     matchesSearch(t('settings.server.autoPushTitle'), searchQuery) ||
-    matchesSearch('server', searchQuery);
+    matchesSearch('server', searchQuery) ||
+    matchesSearch('uploader', searchQuery) ||
+    matchesSearch('whitelist', searchQuery);
 
   if (searchQuery && !showsServer) return null;
 
@@ -383,7 +583,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
             <h3>{t('settings.server.urlTitle', { defaultValue: 'Địa chỉ Máy Chủ' })}</h3>
             <p>
               {t('settings.server.urlDesc', {
-                defaultValue: 'Nhập địa chỉ IP hoặc tên miền máy chủ phát nhạc (ví dụ: http://192.168.1.185:4545 hoặc https://music.homelab.net)',
+                defaultValue: 'Nhập địa chỉ IP hoặc tên miền máy chủ phát nhạc',
               })}
             </p>
           </div>
@@ -433,19 +633,32 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
               </div>
             </div>
 
-            <button
-              type="button"
-              className="server-sync-btn"
-              onClick={handleSyncSongs}
-              disabled={isSyncing || isPushing}
-            >
-              <RefreshCw size={ICON_SIZES.SMALL} className={isSyncing ? 'spin-icon' : ''} />
-              <span>
-                {isSyncing
-                  ? t('settings.server.syncing', { defaultValue: 'Đang đồng bộ...' })
-                  : t('settings.server.syncBtn', { defaultValue: 'Đồng bộ nhạc từ Server' })}
-              </span>
-            </button>
+            <div className="banner-actions">
+              <button
+                type="button"
+                className="server-browse-btn"
+                onClick={() => setIsBrowserModalOpen(true)}
+                disabled={isSyncing || isPushing}
+              >
+                <FolderSearch size={ICON_SIZES.SMALL} />
+                <span>
+                  {t('settings.server.browseServerBtn', { defaultValue: 'Duyệt & Chọn Lọc' })}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="server-sync-btn"
+                onClick={handleSyncSongs}
+                disabled={isSyncing || isPushing}
+              >
+                <RefreshCw size={ICON_SIZES.SMALL} className={isSyncing ? 'spin-icon' : ''} />
+                <span>
+                  {isSyncing
+                    ? t('settings.server.syncing', { defaultValue: 'Đang đồng bộ...' })
+                    : t('settings.server.syncBtn', { defaultValue: 'Đồng bộ tất cả' })}
+                </span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -457,9 +670,69 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
           </div>
         )}
 
-        {/* 1-Click Push Library Section */}
+        {/* Multi-Uploader & Privacy Configurations */}
         {(settings?.server?.serverUrl || displayUrl) && (
           <>
+            {/* Username / Uploader Identifier */}
+            <div className="setting-item server-user-item">
+              <div className="setting-info">
+                <h3>{t('settings.server.usernameTitle', { defaultValue: 'Tên Người Dùng (Uploader)' })}</h3>
+                <p>
+                  {t('settings.server.usernameDesc', {
+                    defaultValue: 'Tên định danh của bạn khi đẩy nhạc và đồng bộ trên máy chủ',
+                  })}
+                </p>
+              </div>
+              <div className="setting-control server-control-group">
+                <div className="server-input-wrapper">
+                  <User size={ICON_SIZES.SMALL} className="input-icon" />
+                  <input
+                    type="text"
+                    className="server-user-input"
+                    value={username}
+                    onChange={(e) => setDraftUsername(e.target.value)}
+                    onBlur={handleSaveUsername}
+                    placeholder={t('settings.server.usernamePlaceholder', {
+                      defaultValue: 'Nhập tên của bạn',
+                    })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Privacy / Default Visibility for Uploads */}
+            <div className="setting-item server-visibility-item">
+              <div className="setting-info">
+                <h3>{t('settings.server.visibilityTitle', { defaultValue: 'Quyền Riêng Tư Khi Đẩy Nhạc' })}</h3>
+                <p>
+                  {t('settings.server.visibilityDesc', {
+                    defaultValue: 'Chọn chế độ chia sẻ mặc định khi tải nhạc mới lên máy chủ',
+                  })}
+                </p>
+              </div>
+              <div className="setting-control server-visibility-controls">
+                <CustomDropdown
+                  value={defaultVisibility}
+                  onChange={(val) => handleSaveVisibility(val as SongVisibility)}
+                  options={visibilityOptions}
+                  icon={currentVisibilityIcon}
+                  title={t('settings.server.visibilityTitle', { defaultValue: 'Quyền Riêng Tư Khi Đẩy Nhạc' })}
+                  className="visibility-dropdown"
+                />
+
+                {defaultVisibility === 'whitelist' && (
+                  <div className="whitelist-input-row">
+                    <WhitelistBadgeInput
+                      value={defaultWhitelist}
+                      onChange={handleSaveWhitelist}
+                      availableUsers={availableUsers}
+                      currentUsername={username}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="setting-item server-push-item">
               <div className="setting-info">
                 <h3>{t('settings.server.pushTitle', { defaultValue: 'Đẩy kho nhạc lên Server' })}</h3>
@@ -583,12 +856,23 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
                     })}
                   </p>
                 </div>
-                <div className="setting-control">
+                <div className="setting-control server-control-group" style={{ gap: '10px' }}>
+                  <button
+                    type="button"
+                    className="server-browse-btn"
+                    onClick={() => setIsBrowserModalOpen(true)}
+                    disabled={isSyncing || isPushing || !displayUrl}
+                  >
+                    <FolderSearch size={ICON_SIZES.SMALL} />
+                    <span>
+                      {t('settings.server.browseServerBtn', { defaultValue: 'Duyệt & Chọn Lọc' })}
+                    </span>
+                  </button>
                   <button
                     type="button"
                     className="server-test-btn"
                     onClick={handleSyncSongs}
-                    disabled={isSyncing || isPushing}
+                    disabled={isSyncing || isPushing || !displayUrl}
                   >
                     <Music size={ICON_SIZES.SMALL} />
                     <span>
@@ -662,6 +946,19 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
           </>
         )}
       </div>
+
+      {/* Server Library Browser & Selective Sync Modal */}
+      {isBrowserModalOpen && (
+        <ServerLibraryBrowserModal
+          isOpen={isBrowserModalOpen}
+          onClose={() => setIsBrowserModalOpen(false)}
+          serverUrl={displayUrl}
+          clientUsername={username.trim() || undefined}
+          token={settings?.server?.token}
+          existingSongs={songs || []}
+          onSyncSongs={handleSyncSelectedSongs}
+        />
+      )}
     </div>
   );
 };

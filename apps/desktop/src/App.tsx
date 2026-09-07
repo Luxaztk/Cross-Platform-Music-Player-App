@@ -1,8 +1,12 @@
+import React, { Suspense } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { PlaylistDetailPage } from './presentations/pages/PlaylistDetailPage';
 import { MainLayout, GlobalDragDrop } from '@components';
 import './App.scss';
-import { SettingsPage } from './presentations/pages/SettingsPage';
+
+const SettingsPage = React.lazy(() =>
+  import('./presentations/pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+);
 
 function App() {
   return (
@@ -13,7 +17,14 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Navigate to="/playlist/0" replace />} />
             <Route path="playlist/:id" element={<PlaylistDetailPage />} />
-            <Route path="settingsPage" element={<SettingsPage />} />
+            <Route
+              path="settingsPage"
+              element={
+                <Suspense fallback={null}>
+                  <SettingsPage />
+                </Suspense>
+              }
+            />
           </Route>
         </Routes>
       </div>

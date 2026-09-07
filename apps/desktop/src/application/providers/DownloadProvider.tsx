@@ -412,9 +412,16 @@ export const DownloadProvider: React.FC<{ children: ReactNode }> = ({ children }
                         originId: item.id,
                         sourceUrl: item.url,
                     };
-                    ServerUploadService.getInstance().uploadSingleSong(serverUrl, songToUpload).catch((pushErr) => {
-                        console.warn('[AutoPush] Failed to push downloaded song to server:', pushErr);
-                    });
+                    ServerUploadService.getInstance()
+                        .uploadSingleSong(serverUrl, songToUpload, {
+                            username: settings?.server?.username?.trim() || undefined,
+                            token: settings?.server?.token,
+                            visibility: settings?.server?.defaultVisibility,
+                            whitelist: settings?.server?.defaultWhitelist,
+                        })
+                        .catch((pushErr) => {
+                            console.warn('[AutoPush] Failed to push downloaded song to server:', pushErr);
+                        });
                 }
             } catch (err) {
                 setDownloads(prev => {

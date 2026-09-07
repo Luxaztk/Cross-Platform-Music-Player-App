@@ -12,9 +12,15 @@ export function setupServerIPC(): void {
       payload: {
         serverUrl: string;
         song: Song;
+        options?: {
+          username?: string;
+          token?: string;
+          visibility?: string;
+          whitelist?: string[];
+        };
       }
     ): Promise<UploadSongResponse> => {
-      const { serverUrl, song } = payload;
+      const { serverUrl, song, options } = payload;
       if (!serverUrl || !song?.filePath) {
         return { success: false, error: 'Thiếu serverUrl hoặc filePath' };
       }
@@ -40,6 +46,35 @@ export function setupServerIPC(): void {
 
         const uploadUrl = `${cleanServerUrl}/api/upload?${queryParams.toString()}`;
         const fileStream = fs.createReadStream(song.filePath);
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': String(fileSize),
+        };
+
+        if (options?.username) {
+          headers['X-Client-Username'] = options.username;
+        }
+        if (options?.token) {
+          headers['Authorization'] = `Bearer ${options.token}`;
+        }
+        if (options?.visibility) {
+          headers['X-Song-Visibility'] = options.visibility;
+        }
+        if (options?.whitelist && options.whitelist.length > 0) {
+          headers['X-Song-Whitelist'] = options.whitelist.join(',');
+        }
+
+        // Attach custom metadata (chapters, lyrics)
+        if (song.chapters || song.lyrics || song.syncedLyrics) {
+          headers['X-Song-Metadata'] = encodeURIComponent(
+            JSON.stringify({
+              chapters: song.chapters,
+              lyrics: song.lyrics,
+              syncedLyrics: song.syncedLyrics,
+            })
+          );
+        }
 
         // Track uploaded bytes via Transform stream to prevent premature stream consumption before fetch
         let uploadedBytes = 0;
@@ -78,10 +113,7 @@ export function setupServerIPC(): void {
         // Use Node global fetch with stream body and duplex: 'half'
         const response = await fetch(uploadUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/octet-stream',
-            'Content-Length': String(fileSize),
-          },
+          headers,
           body: bodyStream as unknown as BodyInit,
           // @ts-expect-error duplex is required in Node fetch for streams
           duplex: 'half',

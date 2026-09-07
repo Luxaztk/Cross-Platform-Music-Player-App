@@ -72,6 +72,15 @@ export class AudioEngine implements IAudioEngine {
     }
   }
 
+  public static formatUrl(filePath: string): string {
+    const isRemote = /^https?:\/\/|^blob:/i.test(filePath);
+    return isRemote
+      ? filePath
+      : filePath.startsWith('melovista://')
+        ? filePath
+        : `melovista://app/${encodeURIComponent(filePath)}`;
+  }
+
   private lastUrl: string | null = null;
 
   public load(filePath: string, autoplay: boolean = false) {
@@ -88,7 +97,7 @@ export class AudioEngine implements IAudioEngine {
 
     // Check if path is already a remote URL (HTTP/HTTPS/Blob) or a custom protocol
     const isRemote = /^https?:\/\/|^blob:/i.test(filePath);
-    const url = isRemote ? filePath : (filePath.startsWith('melovista://') ? filePath : `melovista://app/${encodeURIComponent(filePath)}`);
+    const url = AudioEngine.formatUrl(filePath);
     this.lastUrl = url;
 
     this.howl = new Howl({
@@ -197,7 +206,7 @@ export class AudioEngine implements IAudioEngine {
 
   public pause() {
     this.isPendingPlay = false;
-    if (this.howl && this.howl.playing()) {
+    if (this.howl) {
       this.howl.pause();
     }
   }
@@ -211,10 +220,29 @@ export class AudioEngine implements IAudioEngine {
       if (sounds) {
         for (const sound of sounds) {
           const node = sound._node as unknown as HTMLMediaElement | undefined;
-          if (node && typeof node.pause === 'function') {
+          if (node) {
             try {
-              node.pause();
+              if (typeof node.pause === 'function') {
+                node.pause();
+              }
+              // Nuclear Abort: Strip all event listeners to prevent any pending seeked/canplay
+              // callbacks from resuming playback in orphaned nodes.
+              node.onseeked = null;
+              node.oncanplay = null;
+              node.oncanplaythrough = null;
+              node.onloadedmetadata = null;
+              node.onplay = null;
+              node.onplaying = null;
+              node.onended = null;
+              node.onerror = null;
+              node.ontimeupdate = null;
               node.src = '';
+              if (typeof node.removeAttribute === 'function') {
+                node.removeAttribute('src');
+              }
+              if (typeof node.load === 'function') {
+                node.load(); // Forces immediate media pipeline termination in Chromium
+              }
             } catch {
               // Ignore
             }
@@ -230,8 +258,13 @@ export class AudioEngine implements IAudioEngine {
 
   public seek(seconds: number) {
     if (this.howl) {
-      if (this.howl.state() === 'loaded') {
+      const sounds = (this.howl as HowlInternal)._sounds;
+      const node = sounds?.[0]?._node as unknown as HTMLMediaElement | undefined;
+      const isReadyToSeek = this.howl.state() === 'loaded' || (node && node.readyState >= 1);
+
+      if (isReadyToSeek) {
         this.howl.seek(seconds);
+        this.pendingSeek = null;
       } else {
         this.pendingSeek = seconds;
       }

@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Play, PlaySquare, ListPlus, FolderPlus, ChevronRight, Edit2, Trash2, Keyboard, BookmarkCheck } from 'lucide-react';
+import { Play, PlaySquare, ListPlus, FolderPlus, ChevronRight, Edit2, Trash2, Keyboard, BookmarkCheck, Shield } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import type { Song, Playlist } from '@music/types';
 import { useHotkeysModal } from '@application/context/HotkeysContext';
@@ -36,6 +36,7 @@ interface SongRowContextMenuProps {
     onAddToPlaylist: (pid: string) => void;
     onEdit: () => void;
     onEditChapters?: () => void;
+    onEditPermissions?: () => void;
     onDelete: () => void;
     onSetSubMenu: (id: string | null) => void;
     t: (key: string, options?: Record<string, string | number>) => string;
@@ -55,6 +56,7 @@ export const SongRowContextMenu: React.FC<SongRowContextMenuProps> = ({
     onAddToPlaylist,
     onEdit,
     onEditChapters,
+    onEditPermissions,
     onDelete,
     onSetSubMenu,
     t,
@@ -141,6 +143,13 @@ export const SongRowContextMenu: React.FC<SongRowContextMenuProps> = ({
             icon={<BookmarkCheck size={ICON_SIZES.XSMALL} />}
             label={t('chapters.editTitle') || 'Chỉnh sửa mốc bài hát'}
             onClick={onEditChapters}
+          />
+        )}
+        {onEditPermissions && (
+          <MenuAction
+            icon={<Shield size={ICON_SIZES.XSMALL} />}
+            label={t('settings.server.editPermissionsTitle') || 'Quyền chia sẻ máy chủ...'}
+            onClick={onEditPermissions}
           />
         )}
         <MenuAction

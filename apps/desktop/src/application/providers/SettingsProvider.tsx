@@ -3,15 +3,25 @@ import { DEFAULT_SETTINGS, type AppSettings } from '@constants';
 import { SettingsContext } from '../hooks/SettingsContext';
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const loadSettings = async () => {
-      const savedSettings = await window.electronAPI.getSettings() as AppSettings;
-      setSettings(savedSettings);
+      try {
+        const savedSettings = (await window.electronAPI.getSettings()) as AppSettings;
+        if (isMounted && savedSettings) {
+          setSettings(savedSettings);
+        }
+      } catch (err) {
+        console.error('[Settings] Failed to load settings:', err);
+      }
     };
     loadSettings();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const updateSettings = async (newSettings: Partial<AppSettings>) => {
@@ -40,7 +50,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsSaving(true);
     try {
       await window.electronAPI.saveSettings({});
-      const defaults = await window.electronAPI.getSettings() as AppSettings;
+      const defaults = (await window.electronAPI.getSettings()) as AppSettings;
       setSettings(defaults);
     } catch (err) {
       console.error('[Settings] Failed to reset settings:', err);
@@ -52,10 +62,6 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   const selectDirectory = async (title?: string) => {
     return await window.electronAPI.selectDirectory(title);
   };
-
-  if (!settings) {
-    return <div className="loading-screen" />;
-  }
 
   return (
     <SettingsContext.Provider value={{ settings, updateSettings, resetSettings, selectDirectory, isSaving }}>

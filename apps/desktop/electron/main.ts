@@ -446,6 +446,10 @@ app.whenReady().then(async () => {
   setupServerIPC()
   await createWindow()
 
-  // Khởi chạy cơ chế tự động cập nhật
-  setupAutoUpdate()
+  // Khởi chạy cơ chế tự động cập nhật sau khi giao diện đã sẵn sàng
+  setTimeout(() => {
+    setupAutoUpdate().catch((err) => {
+      log.error('[AutoUpdate] Error during delayed setupAutoUpdate:', err);
+    });
+  }, 3000);
 })

@@ -121,8 +121,12 @@ export function setupLibraryIPC() {
     });
   });
 
-  // Run rehash migration in the background on startup
-  rehashAllSongs();
+  // Defer rehash migration to avoid hogging CPU/disk IO during window launch
+  setTimeout(() => {
+    rehashAllSongs().catch(err => {
+      console.error('[Rehash] Background rehash error:', err);
+    });
+  }, 5000);
   ipcMain.handle('library:get', async () => {
     return {
       songs: await storageAdapter.getSongList(),

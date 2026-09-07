@@ -156,10 +156,6 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         pushToHistory(currentSongRef.current);
       }
 
-      if (repeatModeRef.current === 'ONE') {
-        return engineRef.current?.seek(0);
-      }
-
       if (queueRef.current.length > 0) {
         const nextItem = queueRef.current[0];
         setQueue(prev => prev.slice(1));
@@ -186,28 +182,32 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     },
 
     prev: () => {
-      if (progressRef.current > 3) {
-        engineRef.current?.seek(0);
-      } else {
-        if (historyRef.current.length > 0) {
-          const newHistory = [...historyRef.current];
-          const prevSong = newHistory.shift()!;
-          setHistory(newHistory);
+      if (historyRef.current.length > 0) {
+        const newHistory = [...historyRef.current];
+        const prevSong = newHistory.shift()!;
+        setHistory(newHistory);
 
-          if (currentSongRef.current) {
-            setQueue(q => [{ uid: generateUid(), song: currentSongRef.current! }, ...q]);
-          }
-          playSong(prevSong);
-        } else {
-          engineRef.current?.seek(0);
-          if (!engineRef.current?.isPlaying()) engineRef.current?.play();
+        if (currentSongRef.current) {
+          setQueue(q => [{ uid: generateUid(), song: currentSongRef.current! }, ...q]);
         }
+        engineRef.current?.stop();
+        playSong(prevSong);
+      } else {
+        engineRef.current?.seek(0);
+        progressRef.current = 0;
+        setUiState((prev: PlayerUiState) => ({ ...prev, progress: 0 }));
+        if (!engineRef.current?.isPlaying()) engineRef.current?.play();
       }
     }
   }), [generateUid, playSong, pushToHistory]);
+
+  const playbackIteratorRef = useRef(playbackIterator);
+  React.useLayoutEffect(() => {
+    playbackIteratorRef.current = playbackIterator;
+  });
   // ==========================================
 
-  // Engine initialization effect
+  // Engine initialization effect (Singleton per Provider - never unmounted on track change)
   useEffect(() => {
     const engine = externalEngine || new AudioEngine();
     // eslint-disable-next-line
@@ -224,7 +224,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
             const targetTime = currentChapter.endTime;
             const totalDuration = isFinite(d) && d > 0 ? d : (currentSongRef.current?.duration || 0);
             if (totalDuration > 0 && targetTime >= totalDuration - 0.5) {
-              playbackIterator.next();
+              playbackIteratorRef.current.next();
             } else {
               engineRef.current?.seek(targetTime);
             }
@@ -263,7 +263,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
           engineRef.current?.seek(0);
           engineRef.current?.play();
         } else {
-          playbackIterator.next();
+          playbackIteratorRef.current.next();
         }
       },
       onLoad: (d) => {
@@ -280,7 +280,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
           onFileErrorRef.current(failedSong);
         }
         // Give the UI a tiny moment to show the toast, then skip
-        setTimeout(() => playbackIterator.next(), 800);
+        setTimeout(() => playbackIteratorRef.current.next(), 800);
       },
       onPlayError: () => {
         // Play errors (e.g. autoplay blocked) — same auto-skip logic
@@ -288,7 +288,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         if (failedSong && onFileErrorRef.current) {
           onFileErrorRef.current(failedSong);
         }
-        setTimeout(() => playbackIterator.next(), 800);
+        setTimeout(() => playbackIteratorRef.current.next(), 800);
       },
     });
 
@@ -297,7 +297,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     return () => {
       engine.stop();
     };
-  }, [playbackIterator, setProgress, externalEngine, savePlaybackPosition]);
+  }, [externalEngine, savePlaybackPosition]);
 
   useEffect(() => {
     if (engineRef.current && engineRef.current.setSinkId && currentDeviceId) {
@@ -473,15 +473,13 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     if (currentSongRef.current && engineRef.current) {
       const engineState = engineRef.current.state();
       const currentSrc = engineRef.current.getSource();
-      const expectedUrl = `melovista://app/${encodeURIComponent(currentSongRef.current.filePath)}`;
+      const expectedUrl = AudioEngine.formatUrl(currentSongRef.current.filePath);
       
-      if (currentSrc !== expectedUrl || engineState === 'unloaded') {
+      if (!currentSrc || currentSrc !== expectedUrl || engineState === 'unloaded') {
         engineRef.current.load(currentSongRef.current.filePath, true);
-      } else if (engineState === 'loaded') {
+      } else {
         engineRef.current.play();
       }
-      // If engineState === 'loading' and currentSrc === expectedUrl,
-      // the song is already actively loading with autoplay=true. Do not call load() again.
     }
   }, []);
 
@@ -503,9 +501,9 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     if (currentSongRef.current && engineRef.current) {
       const engineState = engineRef.current.state();
       const currentSrc = engineRef.current.getSource();
-      const expectedUrl = `melovista://app/${encodeURIComponent(currentSongRef.current.filePath)}`;
+      const expectedUrl = AudioEngine.formatUrl(currentSongRef.current.filePath);
       
-      if (engineState !== 'loaded' || currentSrc !== expectedUrl) {
+      if (!currentSrc || currentSrc !== expectedUrl || engineState === 'unloaded') {
         engineRef.current.load(currentSongRef.current.filePath, false);
       }
       

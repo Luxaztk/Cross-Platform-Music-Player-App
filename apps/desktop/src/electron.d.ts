@@ -125,6 +125,12 @@ declare global {
       uploadSongToServer: (payload: {
         serverUrl: string
         song: Song
+        options?: {
+          username?: string
+          token?: string
+          visibility?: string
+          whitelist?: string[]
+        }
       }) => Promise<{ success: boolean; skipped?: boolean; song?: Song; error?: string }>
       onUploadProgress: (
         callback: (data: { speedMb: number; progress?: number }) => void,

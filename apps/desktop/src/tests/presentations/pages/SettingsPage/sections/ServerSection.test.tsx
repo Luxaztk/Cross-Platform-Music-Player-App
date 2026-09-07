@@ -23,7 +23,8 @@ vi.mock('@music/core', () => ({
   ServerClient: {
     normalizeUrl: vi.fn((url: string) => url.trim().replace(/\/+$/, '')),
     checkHealth: vi.fn(),
-    fetchSongs: vi.fn(),
+    fetchSongs: vi.fn().mockResolvedValue({ ok: true, songs: [] }),
+    fetchUsers: vi.fn().mockResolvedValue({ ok: true, users: [] }),
   },
 }));
 
@@ -265,7 +266,8 @@ describe('ServerSection', () => {
         'http://192.168.1.185:4545',
         mockLocalSongs,
         expect.any(Function),
-        expect.any(Object)
+        expect.any(Object),
+        expect.objectContaining({ visibility: 'public' })
       );
     });
 
@@ -362,5 +364,116 @@ describe('ServerSection', () => {
         expect.objectContaining({ id: 'server-2', title: 'Brand New Server Song' }),
       ]);
     });
+  });
+
+  it('updates username on blur and persists to settings', async () => {
+    const user = userEvent.setup();
+    render(<ServerSection />);
+
+    const usernameInput = screen.getByPlaceholderText(/Nhập tên của bạn/i);
+    await user.clear(usernameInput);
+    await user.type(usernameInput, 'alex_gamer');
+    await user.tab(); // triggers onBlur
+
+    expect(mockUpdateSettings).toHaveBeenCalledWith({
+      server: {
+        serverUrl: 'http://192.168.1.185:4545',
+        autoConnect: false,
+        autoPushOnDownload: true,
+        username: 'alex_gamer',
+      },
+    });
+  });
+
+  it('switches visibility mode to whitelist and renders whitelist input', async () => {
+    vi.mocked(ServerClient.fetchUsers).mockResolvedValue({
+      ok: true,
+      users: [
+        { username: 'alex', songCount: 5, publicCount: 3 },
+        { username: 'shadow', songCount: 12, publicCount: 8 },
+      ],
+    });
+
+    const user = userEvent.setup();
+    render(<ServerSection />);
+
+    // Open visibility dropdown
+    const dropdownTrigger = screen.getByRole('button', { name: /Công khai/i });
+    await user.click(dropdownTrigger);
+
+    // Select whitelist option
+    const whitelistOption = screen.getByRole('option', { name: /Chỉ định bạn bè/i });
+    await user.click(whitelistOption);
+
+    expect(mockUpdateSettings).toHaveBeenCalledWith({
+      server: {
+        serverUrl: 'http://192.168.1.185:4545',
+        autoConnect: false,
+        autoPushOnDownload: true,
+        defaultVisibility: 'whitelist',
+      },
+    });
+
+    // Whitelist input should now be visible
+    const whitelistInput = screen.getByPlaceholderText(/Tìm hoặc nhập tên bạn bè/i);
+    expect(whitelistInput).toBeInTheDocument();
+
+    // Type to search for user
+    await user.type(whitelistInput, 'al');
+
+    // Suggestion for alex should appear
+    const alexOption = await screen.findByRole('option', { name: /alex/i });
+    expect(alexOption).toBeInTheDocument();
+    await user.click(alexOption);
+
+    expect(mockUpdateSettings).toHaveBeenCalledWith({
+      server: {
+        serverUrl: 'http://192.168.1.185:4545',
+        autoConnect: false,
+        autoPushOnDownload: true,
+        defaultWhitelist: ['alex'],
+      },
+    });
+
+    // Alex should be displayed as a badge
+    expect(screen.getByTestId('badge-alex')).toBeInTheDocument();
+
+    // Type a custom user not on server and press Enter
+    await user.type(whitelistInput, 'gamer99{enter}');
+
+    expect(mockUpdateSettings).toHaveBeenCalledWith({
+      server: {
+        serverUrl: 'http://192.168.1.185:4545',
+        autoConnect: false,
+        autoPushOnDownload: true,
+        defaultWhitelist: ['alex', 'gamer99'],
+      },
+    });
+    expect(screen.getByTestId('badge-gamer99')).toBeInTheDocument();
+
+    // Delete badge alex
+    const deleteAlexBtn = screen.getByLabelText('Remove alex');
+    await user.click(deleteAlexBtn);
+
+    expect(mockUpdateSettings).toHaveBeenCalledWith({
+      server: {
+        serverUrl: 'http://192.168.1.185:4545',
+        autoConnect: false,
+        autoPushOnDownload: true,
+        defaultWhitelist: ['gamer99'],
+      },
+    });
+    expect(screen.queryByTestId('badge-alex')).not.toBeInTheDocument();
+  });
+
+  it('opens server browser modal when browse button is clicked', async () => {
+    const user = userEvent.setup();
+    render(<ServerSection />);
+
+    const browseBtn = screen.getByRole('button', { name: /Duyệt & Chọn Lọc/i });
+    await user.click(browseBtn);
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('Kho Nhạc Máy Chủ Homelab')).toBeInTheDocument();
   });
 });

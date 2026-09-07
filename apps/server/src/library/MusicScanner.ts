@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import * as mm from 'music-metadata';
-import type { Song } from '@music/types';
+import type { Song, SongChapter, SongVisibility } from '@music/types';
+import { ServerStorage, generateRecordId } from './ServerStorage.js';
 
 export interface IndexedSong {
   song: Song;
@@ -20,9 +21,15 @@ export class MusicScanner {
   private songsMap = new Map<string, IndexedSong>();
   private coverMap = new Map<string, CoverData>();
   private baseUrl: string;
+  private storage: ServerStorage;
 
-  constructor(baseUrl: string = '') {
+  constructor(baseUrl: string = '', storage?: ServerStorage) {
     this.baseUrl = baseUrl;
+    this.storage = storage || new ServerStorage();
+  }
+
+  public getStorage(): ServerStorage {
+    return this.storage;
   }
 
   public setBaseUrl(url: string) {
@@ -244,9 +251,16 @@ export class MusicScanner {
 
   public async addUploadedSong(
     physicalPath: string,
-    clientMetadata?: Partial<Song>
+    clientMetadata?: Partial<Song>,
+    uploadOptions?: {
+      uploader?: string;
+      visibility?: SongVisibility;
+      whitelist?: string[];
+      chapters?: SongChapter[];
+      lyrics?: string;
+      syncedLyrics?: string;
+    }
   ): Promise<Song> {
-    const id = this.generateId(physicalPath);
     const stat = fs.statSync(physicalPath);
     let metadata: mm.IAudioMetadata | null = null;
     try {
@@ -263,6 +277,33 @@ export class MusicScanner {
     const genre = (metadata?.common.genre && metadata?.common.genre[0]) || 'Music';
     const year = metadata?.common.year || null;
     const hash = clientMetadata?.hash || this.calculateFastHash(physicalPath);
+
+    // Check for physical deduplication: if audio file hash already exists on disk
+    let finalPhysicalPath = physicalPath;
+    const existingAudio = this.storage.getAudioFile(hash);
+    if (existingAudio && fs.existsSync(existingAudio.physicalPath)) {
+      if (path.normalize(existingAudio.physicalPath).toLowerCase() !== path.normalize(physicalPath).toLowerCase()) {
+        try {
+          if (fs.existsSync(physicalPath)) {
+            fs.unlinkSync(physicalPath);
+          }
+        } catch {
+          // Ignored
+        }
+        finalPhysicalPath = existingAudio.physicalPath;
+        console.log(`[MusicScanner] Content-addressable deduplication: Reusing physical audio file ${finalPhysicalPath} for hash ${hash}`);
+      }
+    }
+
+    const uploader = (uploadOptions?.uploader || clientMetadata?.uploader || 'guest').trim();
+    const visibility = uploadOptions?.visibility || clientMetadata?.visibility || 'public';
+    const whitelist = uploadOptions?.whitelist || clientMetadata?.whitelist || [];
+    const chapters = uploadOptions?.chapters || clientMetadata?.chapters;
+    const lyrics = uploadOptions?.lyrics || clientMetadata?.lyrics;
+    const syncedLyrics = uploadOptions?.syncedLyrics || clientMetadata?.syncedLyrics;
+
+    // Deterministic unique ID per uploader
+    const id = generateRecordId(hash, uploader);
 
     let coverArtUrl: string | null = null;
     if (metadata?.common.picture && metadata.common.picture.length > 0) {
@@ -289,13 +330,32 @@ export class MusicScanner {
       streamUrl: `${this.baseUrl}/api/stream/${id}`,
       fileSize: stat.size,
       hash,
+      chapters,
+      lyrics,
+      syncedLyrics,
+      uploader,
+      visibility,
+      whitelist,
       dateAdded: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    this.songsMap.set(id, { song, physicalPath });
-    console.log(`[MusicScanner] Indexed uploaded song: "${title}" by "${artist}" (id: ${id}, hash: ${hash})`);
+    const record = {
+      id,
+      audioHash: hash,
+      physicalPath: finalPhysicalPath,
+      uploader,
+      visibility,
+      whitelist,
+      song,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await this.storage.addSongRecord(record);
+    this.songsMap.set(id, { song, physicalPath: finalPhysicalPath });
+    console.log(`[MusicScanner] Indexed uploaded song: "${title}" by "${artist}" (id: ${id}, uploader: ${uploader}, visibility: ${visibility})`);
     return song;
   }
 
@@ -314,17 +374,69 @@ export class MusicScanner {
     }
   }
 
-  public getSongs(): Song[] {
+  public getSongs(username?: string, filterUploaders?: string[]): Song[] {
     this.pruneOrphans();
-    return Array.from(this.songsMap.values()).map((item) => ({
-      ...item.song,
-      filePath: `${this.baseUrl}/api/stream/${item.song.id}`,
-      streamUrl: `${this.baseUrl}/api/stream/${item.song.id}`,
-      coverArt: this.coverMap.has(item.song.id) ? `${this.baseUrl}/api/cover/${item.song.id}` : null,
+
+    const records = this.storage.getRecordsForUser(username, filterUploaders);
+    const seenIds = new Set(records.map((r) => r.id));
+    const memorySongs: Song[] = [];
+
+    for (const [id, item] of this.songsMap.entries()) {
+      if (seenIds.has(id)) continue;
+      const fakeRecord = {
+        id,
+        audioHash: item.song.hash || '',
+        physicalPath: item.physicalPath,
+        uploader: item.song.uploader || 'server',
+        visibility: item.song.visibility || 'public',
+        whitelist: item.song.whitelist || [],
+        song: item.song,
+        createdAt: item.song.createdAt || new Date().toISOString(),
+        updatedAt: item.song.updatedAt || new Date().toISOString(),
+      };
+      if (this.storage.canUserAccess(fakeRecord, username)) {
+        if (filterUploaders && filterUploaders.length > 0) {
+          const list = filterUploaders.map((u) => u.toLowerCase());
+          if (!list.includes((item.song.uploader || 'server').toLowerCase())) {
+            continue;
+          }
+        }
+        memorySongs.push(item.song);
+      }
+    }
+
+    const allSongs = [...records.map((r) => r.song), ...memorySongs];
+    return allSongs.map((song) => ({
+      ...song,
+      filePath: `${this.baseUrl}/api/stream/${song.id}`,
+      streamUrl: `${this.baseUrl}/api/stream/${song.id}`,
+      coverArt: this.coverMap.has(song.id)
+        ? `${this.baseUrl}/api/cover/${song.id}`
+        : (song.coverArt || null),
     }));
   }
 
   public getIndexedSong(id: string): IndexedSong | undefined {
+    const record = this.storage.getRecord(id);
+    if (record) {
+      if (!fs.existsSync(record.physicalPath)) {
+        this.storage.removeSongRecord(id).catch(() => {});
+        this.songsMap.delete(id);
+        this.coverMap.delete(id);
+        console.log(`[MusicScanner] Pruned orphan song from storage during access: "${record.song.title}" (id: ${id})`);
+        return undefined;
+      }
+      return {
+        song: {
+          ...record.song,
+          filePath: `${this.baseUrl}/api/stream/${record.song.id}`,
+          streamUrl: `${this.baseUrl}/api/stream/${record.song.id}`,
+          coverArt: this.coverMap.has(id) ? `${this.baseUrl}/api/cover/${id}` : (record.song.coverArt || null),
+        },
+        physicalPath: record.physicalPath,
+      };
+    }
+
     const indexed = this.songsMap.get(id);
     if (indexed && !fs.existsSync(indexed.physicalPath)) {
       this.songsMap.delete(id);
@@ -347,9 +459,28 @@ export class MusicScanner {
     this.coverMap.set(id, cover);
   }
 
-  public removeSong(id: string): { success: boolean; physicalPath?: string } {
+  public async removeSong(
+    id: string,
+    requesterUsername?: string
+  ): Promise<{ success: boolean; physicalPath?: string; error?: string }> {
+    const record = this.storage.getRecord(id);
+    if (record) {
+      if (requesterUsername && record.uploader.toLowerCase() !== requesterUsername.toLowerCase()) {
+        return { success: false, error: 'Permission denied: Only the uploader can delete this song' };
+      }
+      const removed = await this.storage.removeSongRecord(id);
+      this.songsMap.delete(id);
+      this.coverMap.delete(id);
+      console.log(`[MusicScanner] Removed song from storage: "${record.song.title}" (id: ${id})`);
+      return { success: true, physicalPath: removed.physicalPathToDelete };
+    }
+
     const indexed = this.songsMap.get(id);
     if (!indexed) return { success: false };
+
+    if (requesterUsername && indexed.song.uploader && indexed.song.uploader.toLowerCase() !== requesterUsername.toLowerCase()) {
+      return { success: false, error: 'Permission denied: Only the uploader can delete this song' };
+    }
 
     this.songsMap.delete(id);
     this.coverMap.delete(id);

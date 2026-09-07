@@ -2,6 +2,7 @@ import express, { type Express } from 'express';
 import cors from 'cors';
 import fs from 'node:fs';
 import path from 'node:path';
+import type { Song, SongVisibility } from '@music/types';
 import { MusicScanner } from './library/MusicScanner.js';
 import { streamAudioFile } from './stream/StreamController.js';
 
@@ -12,12 +13,33 @@ export function createApp(scanner: MusicScanner): Express {
 
   app.use(cors({
     origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Range', 'Content-Type', 'Authorization', 'X-File-Name', 'X-Song-Title', 'X-Song-Artist', 'X-Song-Album', 'X-Song-Duration', 'X-Song-Hash'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Range',
+      'Content-Type',
+      'Authorization',
+      'X-File-Name',
+      'X-Song-Title',
+      'X-Song-Artist',
+      'X-Song-Album',
+      'X-Song-Duration',
+      'X-Song-Hash',
+      'X-Client-Username',
+      'X-Song-Visibility',
+      'X-Song-Whitelist',
+      'X-Song-Metadata',
+    ],
     exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length'],
   }));
 
   app.use(express.json({ limit: '10mb' }));
+
+  // Helper to get client username from headers or query
+  const getClientUsername = (req: express.Request): string | undefined => {
+    const fromHeader = req.headers['x-client-username'];
+    const headerVal = Array.isArray(fromHeader) ? fromHeader[0] : fromHeader;
+    return headerVal?.trim() || (req.query.username as string)?.trim() || undefined;
+  };
 
   // Health check & metrics
   app.get('/api/health', (_req, res) => {
@@ -36,7 +58,13 @@ export function createApp(scanner: MusicScanner): Express {
     });
   });
 
-  // Get all indexed songs
+  // Get all active uploaders and statistics
+  app.get('/api/users', (_req, res) => {
+    const users = scanner.getStorage().getUsers();
+    res.json({ users });
+  });
+
+  // Get all indexed songs (filtered by client username & optional uploader filter)
   app.get('/api/songs', (req, res) => {
     // Dynamic baseUrl resolution if not set explicitly
     const forwardedProto = req.headers['x-forwarded-proto'];
@@ -46,13 +74,27 @@ export function createApp(scanner: MusicScanner): Express {
     const dynamicBase = process.env.BASE_URL || `${protocol}://${host}`;
     scanner.setBaseUrl(dynamicBase);
 
-    const songs = scanner.getSongs();
+    const username = getClientUsername(req);
+    const filterUploaders = req.query.uploader
+      ? (req.query.uploader as string).split(',').map((u) => u.trim()).filter(Boolean)
+      : undefined;
+
+    const songs = scanner.getSongs(username, filterUploaders);
     res.json(songs);
   });
 
   // Get specific song metadata
   app.get('/api/songs/:id', (req, res) => {
     const songId = req.params.id;
+    const username = getClientUsername(req);
+
+    // Permission gatekeeper
+    const record = scanner.getStorage().getRecord(songId);
+    if (record && !scanner.getStorage().canUserAccess(record, username)) {
+      res.status(403).json({ error: 'Access denied: You do not have permission to view this song' });
+      return;
+    }
+
     const indexed = scanner.getIndexedSong(songId);
     if (!indexed) {
       res.status(404).json({ error: 'Song not found' });
@@ -61,38 +103,83 @@ export function createApp(scanner: MusicScanner): Express {
     res.json(indexed.song);
   });
 
-  // Delete song and physical file
-  app.delete('/api/songs/:id', (req, res) => {
+  // Update song permissions or metadata
+  app.patch('/api/songs/:id', async (req, res) => {
     const songId = req.params.id;
-    const removed = scanner.removeSong(songId);
-    if (!removed.success || !removed.physicalPath) {
+    const username = getClientUsername(req);
+    const record = scanner.getStorage().getRecord(songId);
+
+    if (!record) {
       res.status(404).json({ error: 'Song not found' });
       return;
     }
 
-    try {
-      if (fs.existsSync(removed.physicalPath)) {
-        fs.unlinkSync(removed.physicalPath);
+    if (username && record.uploader.toLowerCase() !== username.toLowerCase()) {
+      res.status(403).json({ error: 'Forbidden: Only the uploader can edit song permissions' });
+      return;
+    }
+
+    const visibility = req.body?.visibility;
+    const whitelist = Array.isArray(req.body?.whitelist) ? req.body.whitelist : undefined;
+    const songUpdates = req.body?.songUpdates;
+
+    const updated = await scanner.getStorage().updateSongRecord(songId, {
+      visibility,
+      whitelist,
+      songUpdates,
+    });
+
+    res.json({ success: true, song: updated?.song });
+  });
+
+  // Delete song and physical file
+  app.delete('/api/songs/:id', async (req, res) => {
+    const songId = req.params.id;
+    const username = getClientUsername(req);
+
+    const removed = await scanner.removeSong(songId, username);
+    if (!removed.success) {
+      if (removed.error) {
+        res.status(403).json({ error: removed.error });
+      } else {
+        res.status(404).json({ error: 'Song not found' });
       }
-      // Clean up empty parent directory if empty
-      const parentDir = path.dirname(removed.physicalPath);
-      if (fs.existsSync(parentDir) && fs.readdirSync(parentDir).length === 0) {
-        fs.rmdirSync(parentDir);
-        const grandParentDir = path.dirname(parentDir);
-        if (fs.existsSync(grandParentDir) && fs.readdirSync(grandParentDir).length === 0) {
-          fs.rmdirSync(grandParentDir);
+      return;
+    }
+
+    try {
+      if (removed.physicalPath && fs.existsSync(removed.physicalPath)) {
+        fs.unlinkSync(removed.physicalPath);
+        // Clean up empty parent directory if empty
+        const parentDir = path.dirname(removed.physicalPath);
+        if (fs.existsSync(parentDir) && fs.readdirSync(parentDir).length === 0) {
+          fs.rmdirSync(parentDir);
+          const grandParentDir = path.dirname(parentDir);
+          if (fs.existsSync(grandParentDir) && fs.readdirSync(grandParentDir).length === 0) {
+            fs.rmdirSync(grandParentDir);
+          }
         }
       }
       res.json({ success: true, id: songId });
     } catch (err: unknown) {
+      console.error('[DELETE /api/songs/:id Error]', err);
       const msg = err instanceof Error ? err.message : 'Failed to delete file from disk';
       res.status(500).json({ error: msg });
     }
   });
 
-  // Stream audio file (Direct Stream HTTP 206 Partial Content)
+  // Stream audio file (Direct Stream HTTP 206 Partial Content) with permission check
   app.get('/api/stream/:id', (req, res) => {
     const songId = req.params.id;
+    const username = getClientUsername(req);
+
+    // Permission check
+    const record = scanner.getStorage().getRecord(songId);
+    if (record && !scanner.getStorage().canUserAccess(record, username)) {
+      res.status(403).json({ error: 'Access denied: You do not have permission to stream this song' });
+      return;
+    }
+
     const indexed = scanner.getIndexedSong(songId);
     if (!indexed) {
       res.status(404).json({ error: 'Song not found' });
@@ -180,6 +267,29 @@ export function createApp(scanner: MusicScanner): Express {
     const duration = parseInt((req.query.duration as string) || (req.headers['x-song-duration'] as string) || '0', 10);
     const hash = (req.query.hash as string) || (req.headers['x-song-hash'] as string) || '';
 
+    // Multi-uploader & access control headers
+    const rawUploader = ((req.headers['x-client-username'] as string) || (req.query.uploader as string) || 'guest').trim();
+    const rawVisibility = (((req.headers['x-song-visibility'] as string) || (req.query.visibility as string) || 'public').trim()) as SongVisibility;
+    const rawWhitelist = (req.headers['x-song-whitelist'] as string) || (req.query.whitelist as string) || '';
+    const whitelist = rawWhitelist
+      ? rawWhitelist.split(',').map((u) => u.trim()).filter(Boolean)
+      : [];
+
+    // Optional custom metadata (chapters, lyrics)
+    const rawMetadata = (req.headers['x-song-metadata'] as string) || (req.query.metadata as string) || '';
+    let parsedMetadata: Partial<Song> = {};
+    if (rawMetadata) {
+      try {
+        parsedMetadata = JSON.parse(decodeURIComponent(rawMetadata));
+      } catch {
+        try {
+          parsedMetadata = JSON.parse(rawMetadata);
+        } catch {
+          // Ignored
+        }
+      }
+    }
+
     const safeArtist = decodeURIComponent(rawArtist).replace(/[\\/:*?"<>|]/g, '_').trim() || 'Unknown Artist';
     const safeAlbum = decodeURIComponent(rawAlbum).replace(/[\\/:*?"<>|]/g, '_').trim() || 'Unknown Album';
     const safeTitle = decodeURIComponent(rawTitle || path.basename(filename, path.extname(filename))).replace(/[\\/:*?"<>|]/g, '_').trim();
@@ -210,13 +320,27 @@ export function createApp(scanner: MusicScanner): Express {
 
     writeStream.on('finish', async () => {
       try {
-        const song = await scanner.addUploadedSong(targetPath, {
-          title: safeTitle,
-          artist: safeArtist,
-          album: safeAlbum,
-          duration: duration || undefined,
-          hash: hash || undefined,
-        });
+        const song = await scanner.addUploadedSong(
+          targetPath,
+          {
+            title: safeTitle,
+            artist: safeArtist,
+            album: safeAlbum,
+            duration: duration || undefined,
+            hash: hash || undefined,
+            chapters: parsedMetadata?.chapters,
+            lyrics: parsedMetadata?.lyrics,
+            syncedLyrics: parsedMetadata?.syncedLyrics,
+          },
+          {
+            uploader: rawUploader,
+            visibility: rawVisibility,
+            whitelist,
+            chapters: parsedMetadata?.chapters,
+            lyrics: parsedMetadata?.lyrics,
+            syncedLyrics: parsedMetadata?.syncedLyrics,
+          }
+        );
         res.json({ success: true, song });
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Failed to register uploaded song';
