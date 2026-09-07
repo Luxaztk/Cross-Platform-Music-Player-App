@@ -6,11 +6,13 @@
  * 1. melovista-stream-server: HTTP 206 Direct Streaming Server (Port 4545)
  * 2. melovista-discord-bot: Discord Music Bot & Activity Server (Port 36970 / 8080)
  */
+const path = require('path');
+
 module.exports = {
   apps: [
     {
       name: 'melovista-stream-server',
-      cwd: './apps/server',
+      cwd: path.resolve(__dirname, 'apps/server'),
       script: 'src/index.ts',
       interpreter: 'node',
       node_args: '--import tsx',
@@ -23,12 +25,12 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 4545,
         HOST: '0.0.0.0',
-        MUSIC_DIR: process.env.MUSIC_DIR || './data/music',
+        MUSIC_DIR: process.env.MUSIC_DIR || path.resolve(__dirname, 'data/music'),
       },
     },
     {
       name: 'melovista-discord-bot',
-      cwd: './apps/bot',
+      cwd: path.resolve(__dirname, 'apps/bot'),
       script: 'src/index.ts',
       interpreter: 'node',
       node_args: '--import tsx',
