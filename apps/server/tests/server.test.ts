@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import request from 'supertest';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import type { Request, Response } from 'express';
-import { createApp } from '../src/app.js';
+import { createApp, requestLogger } from '../src/app.js';
 import { MusicScanner } from '../src/library/MusicScanner.js';
 import { streamAudioFile, getMimeType } from '../src/stream/StreamController.js';
 
@@ -387,6 +387,53 @@ describe('MeloVista Streaming Server Suite', () => {
       const streamRes = await request(app).get(`/api/stream/${manualSongId}`);
       expect(streamRes.status).toBe(404);
       expect(scanner.getIndexedSong(manualSongId)).toBeUndefined();
+    });
+  });
+
+  describe('HTTP Request Logger Middleware', () => {
+    it('logs request details to console when enableLogger is true', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const loggedApp = createApp(scanner, { enableLogger: true });
+
+      const res = await request(loggedApp)
+        .get('/api/health')
+        .set('x-client-username', 'test_user');
+
+      expect(res.status).toBe(200);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/\[HTTP\] .* GET \/api\/health 200 \(\d+ms\) \[user: test_user\] - /)
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('directly invokes requestLogger middleware and calls next', () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const req = {
+        method: 'POST',
+        originalUrl: '/api/upload',
+        headers: {},
+        ip: '127.0.0.1',
+      } as unknown as Request;
+
+      let finishCallback: () => void = () => {};
+      const res = {
+        statusCode: 200,
+        on: vi.fn((event: string, cb: () => void) => {
+          if (event === 'finish') finishCallback = cb;
+        }),
+      } as unknown as Response;
+
+      const next = vi.fn();
+      requestLogger(req, res, next);
+      expect(next).toHaveBeenCalled();
+
+      finishCallback();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/\[HTTP\] .* POST \/api\/upload 200 \(\d+ms\) - 127.0.0.1/)
+      );
+
+      consoleSpy.mockRestore();
     });
   });
 });

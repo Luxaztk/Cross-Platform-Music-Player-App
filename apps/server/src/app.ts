@@ -6,10 +6,34 @@ import type { Song, SongVisibility } from '@music/types';
 import { MusicScanner } from './library/MusicScanner.js';
 import { streamAudioFile } from './stream/StreamController.js';
 
-export function createApp(scanner: MusicScanner): Express {
+export interface CreateAppOptions {
+  enableLogger?: boolean;
+}
+
+export function requestLogger(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const now = new Date().toLocaleTimeString('en-GB', { hour12: false });
+    const fromHeader = req.headers?.['x-client-username'];
+    const headerVal = Array.isArray(fromHeader) ? fromHeader[0] : fromHeader;
+    const user = headerVal?.trim() || (req.query?.username as string)?.trim() || undefined;
+    const userInfo = user ? ` [user: ${user}]` : '';
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    console.log(`[HTTP] ${now} ${req.method} ${req.originalUrl} ${res.statusCode} (${duration}ms)${userInfo} - ${ip}`);
+  });
+  next();
+}
+
+export function createApp(scanner: MusicScanner, options?: CreateAppOptions): Express {
   const app = express();
 
   app.set('trust proxy', true);
+
+  // HTTP Request Logger Middleware (real-time stream for PM2 monit & dev)
+  if (options?.enableLogger ?? process.env.NODE_ENV !== 'test') {
+    app.use(requestLogger);
+  }
 
   app.use(cors({
     origin: '*',
