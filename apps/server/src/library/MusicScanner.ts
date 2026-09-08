@@ -117,7 +117,22 @@ export class MusicScanner {
         prunedCount++;
       }
     }
+    // Also trigger asynchronous pruning of storage records missing physical files
+    void this.storage.pruneOrphans();
     return prunedCount;
+  }
+
+  public getTotalSongsCount(): number {
+    this.pruneOrphans();
+    const validRecords = this.storage.getRecords().filter((r) => fs.existsSync(r.physicalPath));
+    const seenIds = new Set(validRecords.map((r) => r.id));
+    let memoryCount = 0;
+    for (const [id, item] of this.songsMap.entries()) {
+      if (!seenIds.has(id) && fs.existsSync(item.physicalPath)) {
+        memoryCount++;
+      }
+    }
+    return validRecords.length + memoryCount;
   }
 
   public async scanDirectory(directoryPath: string): Promise<number> {
@@ -377,12 +392,14 @@ export class MusicScanner {
   public getSongs(username?: string, filterUploaders?: string[]): Song[] {
     this.pruneOrphans();
 
-    const records = this.storage.getRecordsForUser(username, filterUploaders);
+    const rawRecords = this.storage.getRecordsForUser(username, filterUploaders);
+    const records = rawRecords.filter((r) => fs.existsSync(r.physicalPath));
     const seenIds = new Set(records.map((r) => r.id));
     const memorySongs: Song[] = [];
 
     for (const [id, item] of this.songsMap.entries()) {
       if (seenIds.has(id)) continue;
+      if (!fs.existsSync(item.physicalPath)) continue;
       const fakeRecord = {
         id,
         audioHash: item.song.hash || '',

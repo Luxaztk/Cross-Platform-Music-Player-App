@@ -436,4 +436,66 @@ describe('MeloVista Streaming Server Suite', () => {
       consoleSpy.mockRestore();
     });
   });
+
+  describe('Zero-Song State & Health Metrics Accuracy', () => {
+    it('returns totalSongs: 0 when server has no indexed songs', async () => {
+      // Clear all songs
+      scanner.getStorage().clearAll();
+      const res = await request(app).get('/api/health');
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ok');
+      expect(res.body.totalSongs).toBe(0);
+      expect(res.body.userAccessibleSongs).toBeUndefined();
+    });
+
+    it('returns userAccessibleSongs when X-Client-Username is provided', async () => {
+      const res = await request(app)
+        .get('/api/health')
+        .set('x-client-username', 'test_user');
+
+      expect(res.status).toBe(200);
+      expect(typeof res.body.totalSongs).toBe('number');
+      expect(typeof res.body.userAccessibleSongs).toBe('number');
+    });
+
+    it('automatically prunes storage records when physical file does not exist', async () => {
+      const nonExistentPath = path.join(tempDir, 'ghost.mp3');
+      const record = {
+        id: 'srv-ghost-1',
+        audioHash: 'hash_ghost',
+        physicalPath: nonExistentPath,
+        uploader: 'ghost_user',
+        visibility: 'public' as const,
+        whitelist: [],
+        song: {
+          id: 'srv-ghost-1',
+          title: 'Ghost Track',
+          artist: 'Ghost Artist',
+          artists: ['Ghost Artist'],
+          album: 'Ghost Album',
+          duration: 120,
+          genre: 'Test',
+          year: 2026,
+          coverArt: null,
+          filePath: '/api/stream/srv-ghost-1',
+          sourceType: 'stream' as const,
+          streamUrl: '/api/stream/srv-ghost-1',
+          fileSize: 1024,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await scanner.getStorage().addSongRecord(record);
+      expect(scanner.getStorage().getRecord('srv-ghost-1')).toBeDefined();
+
+      // getSongs() must filter out records whose physical file is missing
+      const songs = scanner.getSongs();
+      expect(songs.some((s) => s.id === 'srv-ghost-1')).toBe(false);
+
+      // getTotalSongsCount() must exclude records whose physical file is missing
+      expect(scanner.getTotalSongsCount()).toBe(0);
+    });
+  });
 });
+

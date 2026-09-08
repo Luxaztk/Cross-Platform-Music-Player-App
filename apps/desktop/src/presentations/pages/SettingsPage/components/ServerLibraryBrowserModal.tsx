@@ -340,6 +340,15 @@ export const ServerLibraryBrowserModal: React.FC<ServerLibraryBrowserModalProps>
             <div className="browser-error-state">
               <p className="error-text">{loadError}</p>
             </div>
+          ) : serverSongs.length === 0 ? (
+            <div className="browser-empty-state">
+              <Music size={32} />
+              <p>
+                {t('settings.server.serverEmpty', {
+                  defaultValue: 'Máy chủ hiện chưa có bài hát nào',
+                })}
+              </p>
+            </div>
           ) : filteredSongs.length === 0 ? (
             <div className="browser-empty-state">
               <Music size={32} />

@@ -168,6 +168,7 @@ export interface ServerHealth {
   version: string;
   uptime: number;
   totalSongs: number;
+  userAccessibleSongs?: number;
   memoryUsage: {
     heapUsedMb: number;
     rssMb: number;

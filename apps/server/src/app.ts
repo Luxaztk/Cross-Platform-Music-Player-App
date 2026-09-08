@@ -66,14 +66,19 @@ export function createApp(scanner: MusicScanner, options?: CreateAppOptions): Ex
   };
 
   // Health check & metrics
-  app.get('/api/health', (_req, res) => {
+  app.get('/api/health', (req, res) => {
     const memory = process.memoryUsage();
+    const username = getClientUsername(req);
+    const totalSongs = scanner.getTotalSongsCount();
+    const userAccessibleSongs = username ? scanner.getSongs(username).length : undefined;
+
     res.json({
       status: 'ok',
       service: 'melovista-streaming-server',
       version: '1.0.0',
       uptime: Math.floor(process.uptime()),
-      totalSongs: scanner.getSongs().length,
+      totalSongs,
+      userAccessibleSongs,
       memoryUsage: {
         heapUsedMb: Math.round((memory.heapUsed / 1024 / 1024) * 100) / 100,
         rssMb: Math.round((memory.rss / 1024 / 1024) * 100) / 100,

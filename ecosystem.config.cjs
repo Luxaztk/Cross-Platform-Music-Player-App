@@ -7,6 +7,7 @@
  * 2. melovista-discord-bot: Discord Music Bot & Activity Server (Port 36970 / 8080)
  */
 const path = require('path');
+const fs = require('fs');
 
 module.exports = {
   apps: [
@@ -25,7 +26,7 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 4545,
         HOST: '0.0.0.0',
-        MUSIC_DIR: process.env.MUSIC_DIR || path.resolve(__dirname, 'data/music'),
+        MUSIC_DIR: process.env.MUSIC_DIR || (fs.existsSync(path.resolve(__dirname, 'apps/server/data/music')) ? path.resolve(__dirname, 'apps/server/data/music') : path.resolve(__dirname, 'data/music')),
       },
     },
     {

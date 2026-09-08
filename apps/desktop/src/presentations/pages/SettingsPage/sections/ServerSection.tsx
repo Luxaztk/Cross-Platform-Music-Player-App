@@ -46,6 +46,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
 
   // Multi-uploader identity & visibility state
   const serverUsername = settings?.server?.username ?? '';
+  const serverToken = settings?.server?.token;
   const [draftUsername, setDraftUsername] = useState<string | null>(null);
   const username = draftUsername ?? serverUsername;
 
@@ -86,7 +87,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     let isMounted = true;
     ServerClient.fetchUsers(targetUrl, {
       username: username.trim() || undefined,
-      token: settings?.server?.token,
+      token: serverToken,
     })
       .then((res) => {
         if (isMounted && res.ok) {
@@ -98,7 +99,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
     return () => {
       isMounted = false;
     };
-  }, [displayUrl, username, settings?.server?.token]);
+  }, [displayUrl, username, serverToken]);
 
   const localSongs = useMemo(() => {
     return (songs || []).filter(
@@ -325,12 +326,65 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
       return;
     }
 
+    let targetHost = '';
+    try {
+      targetHost = new URL(targetUrl).host;
+    } catch {
+      targetHost = '';
+    }
+
+    const isSongFromServer = (s: Song): boolean => {
+      if (s.sourceType !== 'stream' && !s.filePath?.startsWith('http') && !s.streamUrl?.startsWith('http')) {
+        return false;
+      }
+      const url = s.streamUrl || s.filePath || '';
+      return url.startsWith(targetUrl) || (targetHost ? url.includes(targetHost) : false);
+    };
+
+    const existingLocalSongs = (songs || []).filter(
+      (s) => s.sourceType !== 'stream' && !!s.filePath && !s.filePath.startsWith('http')
+    );
+    const existingStreamSongs = (songs || []).filter(
+      (s) => s.sourceType === 'stream' || (s.filePath && s.filePath.startsWith('http'))
+    );
+    const serverStreamSongs = existingStreamSongs.filter(isSongFromServer);
+
     setIsSyncing(true);
     const result = await ServerClient.fetchSongs(targetUrl, {
       username: username.trim() || undefined,
-      token: settings?.server?.token,
+      token: serverToken,
     });
     setIsSyncing(false);
+
+    if (result.ok && result.songs.length === 0) {
+      // Server has 0 songs — prune all stream songs from this server
+      if (serverStreamSongs.length > 0) {
+        await handleDeleteSongs(serverStreamSongs.map((s) => s.id));
+        showNotification(
+          'info',
+          t('settings.server.syncZeroSongsCleaned', {
+            count: serverStreamSongs.length,
+            defaultValue: `Máy chủ không có bài hát nào. Đã dọn dẹp ${serverStreamSongs.length} bài stream không còn tồn tại khỏi thư viện!`,
+          })
+        );
+      } else {
+        showNotification(
+          'info',
+          t('settings.server.serverEmpty', {
+            defaultValue: 'Máy chủ hiện chưa có bài hát nào.',
+          })
+        );
+      }
+      // Refresh health status to update server song count to 0
+      const refreshed = await ServerClient.checkHealth(targetUrl, {
+        username: username.trim() || undefined,
+        token: serverToken,
+      });
+      if (refreshed.ok && refreshed.health) {
+        setHealthStatus(refreshed.health);
+      }
+      return;
+    }
 
     if (result.ok && result.songs.length > 0) {
       try {
@@ -363,30 +417,34 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
           return false;
         };
 
-        const existingLocalSongs = (songs || []).filter(
-          (s) => s.sourceType !== 'stream' && !!s.filePath && !s.filePath.startsWith('http')
-        );
-        const existingStreamSongs = (songs || []).filter(
-          (s) => s.sourceType === 'stream' || (s.filePath && s.filePath.startsWith('http'))
-        );
-
         // 1. Clean up redundant stream songs that already exist as local songs in library
         const redundantStreamSongIds = existingStreamSongs
           .filter((streamSong) => existingLocalSongs.some((loc) => isMatchingSong(loc, streamSong)))
           .map((s) => s.id);
 
-        let cleanedDuplicatesCount = 0;
-        if (redundantStreamSongIds.length > 0) {
-          await handleDeleteSongs(redundantStreamSongIds);
-          cleanedDuplicatesCount = redundantStreamSongIds.length;
+        // 2. Clean up orphan stream songs belonging to this server that NO LONGER exist on the server
+        const orphanStreamSongIds = serverStreamSongs
+          .filter(
+            (streamSong) =>
+              !result.songs.some((srvSong) => srvSong.id === streamSong.id || isMatchingSong(srvSong, streamSong))
+          )
+          .map((s) => s.id);
+
+        const toDeleteStreamIds = Array.from(new Set([...redundantStreamSongIds, ...orphanStreamSongIds]));
+
+        let cleanedCount = 0;
+        if (toDeleteStreamIds.length > 0) {
+          await handleDeleteSongs(toDeleteStreamIds);
+          cleanedCount = toDeleteStreamIds.length;
         }
 
-        // 2. Filter songs from server: Only add songs that do NOT exist locally and not already in stream songs
+        // 3. Filter songs from server: Only add songs that do NOT exist locally and not already in stream songs
+        const remainingStreamSongs = existingStreamSongs.filter((s) => !toDeleteStreamIds.includes(s.id));
         const songsToAdd = result.songs.filter((serverSong) => {
           const hasLocal = existingLocalSongs.some((loc) => isMatchingSong(loc, serverSong));
           if (hasLocal) return false;
-          const hasStream = existingStreamSongs.some(
-            (s) => !redundantStreamSongIds.includes(s.id) && (s.id === serverSong.id || isMatchingSong(s, serverSong))
+          const hasStream = remainingStreamSongs.some(
+            (s) => s.id === serverSong.id || isMatchingSong(s, serverSong)
           );
           return !hasStream;
         });
@@ -397,21 +455,30 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
           addedNewCount = importRes.count ?? songsToAdd.length;
         }
 
-        if (cleanedDuplicatesCount > 0 && addedNewCount > 0) {
+        // Refresh health status
+        const refreshed = await ServerClient.checkHealth(targetUrl, {
+          username: username.trim() || undefined,
+          token: serverToken,
+        });
+        if (refreshed.ok && refreshed.health) {
+          setHealthStatus(refreshed.health);
+        }
+
+        if (cleanedCount > 0 && addedNewCount > 0) {
           showNotification(
             'success',
-            t('settings.server.syncSuccessCleanedAndAdded', {
+            t('settings.server.syncSuccessWithPruned', {
               added: addedNewCount,
-              cleaned: cleanedDuplicatesCount,
-              defaultValue: `Đã đồng bộ thành công: Thêm ${addedNewCount} bài mới từ máy chủ, dọn dẹp ${cleanedDuplicatesCount} bài trùng lặp.`,
+              pruned: cleanedCount,
+              defaultValue: `Đã đồng bộ thành công: Thêm ${addedNewCount} bài mới từ máy chủ, dọn dẹp ${cleanedCount} bài không còn trên máy chủ.`,
             })
           );
-        } else if (cleanedDuplicatesCount > 0) {
+        } else if (cleanedCount > 0) {
           showNotification(
             'success',
             t('settings.server.syncSuccessCleanedOnly', {
-              count: cleanedDuplicatesCount,
-              defaultValue: `Tất cả bài hát trên máy chủ đã có sẵn trên máy tính. Đã dọn dẹp ${cleanedDuplicatesCount} bài stream trùng lặp!`,
+              count: cleanedCount,
+              defaultValue: `Tất cả bài hát trên máy chủ đã có sẵn trên máy tính. Đã dọn dẹp ${cleanedCount} bài stream trùng lặp!`,
             })
           );
         } else if (addedNewCount > 0) {
@@ -434,12 +501,10 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
         const msg = err instanceof Error ? err.message : String(err);
         showNotification('error', getLocalizedServerError(msg) || t('settings.server.syncFail'));
       }
-    } else if (result.ok && result.songs.length === 0) {
-      showNotification('info', t('settings.server.noSongs'));
     } else {
       showNotification('error', getLocalizedServerError(result.error) || t('settings.server.syncFail'));
     }
-  }, [displayUrl, songs, handleAddSongs, handleDeleteSongs, showNotification, t, getLocalizedServerError, username, settings?.server?.token]);
+  }, [displayUrl, songs, handleAddSongs, handleDeleteSongs, showNotification, t, getLocalizedServerError, username, serverToken]);
 
   const handlePushLibrary = useCallback(async () => {
     const targetUrl = ServerClient.normalizeUrl(displayUrl);
@@ -954,7 +1019,7 @@ export const ServerSection: React.FC<SettingsSectionProps> = ({ searchQuery }) =
           onClose={() => setIsBrowserModalOpen(false)}
           serverUrl={displayUrl}
           clientUsername={username.trim() || undefined}
-          token={settings?.server?.token}
+          token={serverToken}
           existingSongs={songs || []}
           onSyncSongs={handleSyncSelectedSongs}
         />

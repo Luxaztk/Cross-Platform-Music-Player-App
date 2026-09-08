@@ -29,6 +29,7 @@ export class ServerClient {
 
   public static async checkHealth(
     baseUrl: string,
+    authOrTimeout?: ServerAuthOptions | number,
     timeoutMs: number = 5000
   ): Promise<{ ok: boolean; health?: ServerHealth; error?: string }> {
     const normalized = this.normalizeUrl(baseUrl);
@@ -36,13 +37,22 @@ export class ServerClient {
       return { ok: false, error: 'URL không hợp lệ' };
     }
 
+    const auth: ServerAuthOptions | undefined =
+      typeof authOrTimeout === 'object' ? authOrTimeout : undefined;
+    const actualTimeout =
+      typeof authOrTimeout === 'number' ? authOrTimeout : timeoutMs;
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const timeoutId = setTimeout(() => controller.abort(), actualTimeout);
+
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (auth?.username) headers['X-Client-Username'] = auth.username;
+    if (auth?.token) headers['Authorization'] = `Bearer ${auth.token}`;
 
     try {
       const response = await fetch(`${normalized}/api/health`, {
         method: 'GET',
-        headers: { Accept: 'application/json' },
+        headers,
         signal: controller.signal,
       });
 

@@ -359,6 +359,12 @@ Mục tiêu: Xây dựng hệ sinh thái phát nhạc trực tuyến độ trễ
     - 72/72 core tests Green (9 suites).
     - 40/40 desktop server settings & permissions tests Green (`EditSongPermissionsModal.test.tsx` [6/6], `ServerLibraryBrowserModal.test.tsx` [9/9], `ServerSection.test.tsx` [13/13], `SongRowContextMenu.test.tsx` [3/3], `SongRow.test.tsx` [9/9]).
     - Clean Build `npx tsc --noEmit`, Zero TypeScript errors & 0 ESLint warnings trên toàn bộ Monorepo (Tối ưu React 19 Keyed Component Pattern cho `EditSongPermissionsModal` và triệt tiêu cascading render `useEffect`).
+  - [x] **Sửa lỗi Không Đồng Bộ Trạng Thái Rỗng & Dọn Dẹp Stream Mồ Côi Khi Server Có 0 Bài Hát (Zero-Song Sync & Stream Orphan Cleanup - P0)** *(Hoàn thành 07/09/2026)*:
+    - **Desktop & Mobile Sync**: Khi server rỗng (`songs = 0`), client tự động phát hiện và dọn dẹp sạch toàn bộ bài hát `sourceType: 'stream'` thuộc server khỏi thư viện (giữ nguyên bài local); khi server có bài, tự động dọn dẹp các stream mồ côi đã bị xóa trên server (`orphanStreamSongIds`); cập nhật lại `healthStatus` hiển thị đúng số bài.
+    - **Server Storage & Health**: Sửa endpoint `GET /api/health` trả về chính xác tổng số bài thực tế trên máy chủ `totalSongs` qua `scanner.getTotalSongsCount()` (không bị lọc thành 0 khi các bài hát có quyền riêng tư `private`/`whitelist`) và bổ sung `userAccessibleSongs`. Tự động dọn dẹp các bản ghi mồ côi trong `ServerStorage` khi file vật lý bị xóa trên đĩa cứng máy chủ qua `storage.pruneOrphans()`.
+    - **Audio Engine & Loop Protection**: Phân biệt chính xác thông báo lỗi `player.streamUnavailable` (lỗi bài hát không còn trên server) vs `player.fileNotFound` (lỗi file local bị thiếu) trong `PlayerWithLibrary.tsx`. Bổ sung cơ chế chống loop skip vô hạn (`consecutiveFailuresRef` ngắt sau 5 lần thất bại liên tiếp) trong `PlayerProvider.tsx`.
+    - **UI Empty State**: Bổ sung giao diện Empty State trực quan (`Music` icon, tiêu đề, mô tả rõ ràng) cho `ServerLibraryBrowserModal.tsx` khi kho nhạc server trống.
+    - **Kiểm thử & Type Safety**: 23/23 server tests Green (bổ sung suite `Zero-Song State & Health Metrics Accuracy`), 16/16 `ServerSection.test.tsx` Green, 100% Zero TypeScript errors (`npx tsc -b`).
 
 - [ ] **Phase 6 (Future / Mở Rộng Sau Nếu Cần): Đồng Bộ Đa Nền Tảng & Remote Control**
   - [ ] WebSocket Remote Control: Điều khiển phát nhạc trên PC từ điện thoại và ngược lại.

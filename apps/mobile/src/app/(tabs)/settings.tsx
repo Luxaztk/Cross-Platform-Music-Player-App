@@ -12,7 +12,8 @@ import {
   View,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-import type { ServerHealth } from '@music/types'
+import type { ServerHealth, Song } from '@music/types'
+import { ServerClient } from '@music/core'
 import { useLibraryContext } from '@music/hooks'
 import { useTheme } from '../../presentations/components/Theme'
 import { useLanguage } from '../../presentations/components/Language'
@@ -134,7 +135,7 @@ export default function SettingsScreen() {
   const isDark = themeName === 'dark'
   const { t, language, setLanguage } = useLanguage()
   const { navigationLayout, setNavigationLayout } = useAppShell()
-  const { songs, handleAddSongs } = useLibraryContext()
+  const { songs, handleAddSongs, handleDeleteSongs } = useLibraryContext()
   const { notify } = useNotifications()
 
   const [serverUrl, setServerUrl] = useState('')
@@ -217,31 +218,105 @@ export default function SettingsScreen() {
     const result = await MobileServerSyncService.fetchServerSongs(serverUrl)
     setIsSyncing(false)
 
+    const cleanUrl = ServerClient.normalizeUrl(serverUrl)
+    let targetHost = ''
+    try {
+      targetHost = new URL(cleanUrl).host
+    } catch {
+      targetHost = ''
+    }
+
+    const isSongFromServer = (s: Song): boolean => {
+      if (s.sourceType !== 'stream' && !s.filePath?.startsWith('http') && !s.streamUrl?.startsWith('http')) {
+        return false
+      }
+      const url = s.streamUrl || s.filePath || ''
+      return url.startsWith(cleanUrl) || (targetHost ? url.includes(targetHost) : false)
+    }
+
+    const existingStreamSongs = (songs || []).filter(
+      (s) => s.sourceType === 'stream' || (s.filePath && s.filePath.startsWith('http'))
+    )
+    const serverStreamSongs = existingStreamSongs.filter(isSongFromServer)
+
+    if (result.ok && result.songs.length === 0) {
+      if (serverStreamSongs.length > 0 && handleDeleteSongs) {
+        await handleDeleteSongs(serverStreamSongs.map((s) => s.id))
+        notify({
+          kind: 'info',
+          message: `Máy chủ không có bài hát nào. Đã dọn dẹp ${serverStreamSongs.length} bài stream khỏi thư viện!`,
+        })
+      } else {
+        notify({
+          kind: 'info',
+          message: 'Máy chủ chưa có bài hát nào được quét',
+        })
+      }
+      void MobileServerSyncService.checkConnection(cleanUrl).then((res) => {
+        if (res.ok && res.health) setHealthStatus(res.health)
+      })
+      return
+    }
+
     if (result.ok && result.songs.length > 0) {
       try {
-        const importRes = await handleAddSongs(result.songs)
-        notify({
-          kind: 'success',
-          message: `Đã đồng bộ ${importRes?.count ?? result.songs.length} bài hát từ máy chủ!`,
+        const orphanStreamSongIds = serverStreamSongs
+          .filter((streamSong) => !result.songs.some((srv) => srv.id === streamSong.id))
+          .map((s) => s.id)
+
+        if (orphanStreamSongIds.length > 0 && handleDeleteSongs) {
+          await handleDeleteSongs(orphanStreamSongIds)
+        }
+
+        const remainingStreamSongs = existingStreamSongs.filter((s) => !orphanStreamSongIds.includes(s.id))
+        const songsToAdd = result.songs.filter(
+          (srvSong) => !remainingStreamSongs.some((s) => s.id === srvSong.id)
+        )
+
+        let addedCount = 0
+        if (songsToAdd.length > 0) {
+          const importRes = await handleAddSongs(songsToAdd)
+          addedCount = importRes?.count ?? songsToAdd.length
+        }
+
+        void MobileServerSyncService.checkConnection(cleanUrl).then((res) => {
+          if (res.ok && res.health) setHealthStatus(res.health)
         })
+
+        if (orphanStreamSongIds.length > 0 && addedCount > 0) {
+          notify({
+            kind: 'success',
+            message: `Đã đồng bộ: Thêm ${addedCount} bài mới, dọn dẹp ${orphanStreamSongIds.length} bài không còn trên máy chủ!`,
+          })
+        } else if (orphanStreamSongIds.length > 0) {
+          notify({
+            kind: 'success',
+            message: `Đã dọn dẹp ${orphanStreamSongIds.length} bài stream không còn tồn tại trên máy chủ!`,
+          })
+        } else if (addedCount > 0) {
+          notify({
+            kind: 'success',
+            message: `Đã đồng bộ ${addedCount} bài hát từ máy chủ!`,
+          })
+        } else {
+          notify({
+            kind: 'info',
+            message: 'Thư viện đã đồng bộ hoàn hảo với máy chủ!',
+          })
+        }
       } catch (err: any) {
         notify({
           kind: 'error',
           message: err?.message || 'Lỗi nạp bài hát vào thư viện',
         })
       }
-    } else if (result.ok && result.songs.length === 0) {
-      notify({
-        kind: 'info',
-        message: 'Máy chủ chưa có bài hát nào được quét',
-      })
     } else {
       notify({
         kind: 'error',
         message: result.error || 'Không thể tải danh sách bài hát',
       })
     }
-  }, [serverUrl, handleAddSongs, notify])
+  }, [serverUrl, songs, handleAddSongs, handleDeleteSongs, notify])
 
   return (
     <ScrollView

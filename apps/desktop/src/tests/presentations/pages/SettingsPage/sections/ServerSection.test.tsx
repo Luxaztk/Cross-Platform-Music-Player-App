@@ -81,6 +81,13 @@ describe('ServerSection', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(ServerClient.fetchSongs).mockReset();
+    vi.mocked(ServerClient.fetchSongs).mockResolvedValue({ ok: true, songs: [] });
+    vi.mocked(ServerClient.checkHealth).mockReset();
+    vi.mocked(ServerClient.checkHealth).mockResolvedValue({
+      ok: false,
+      error: 'Not tested yet',
+    });
 
     vi.mocked(useLanguage).mockReturnValue({
       t: mockT,
@@ -475,5 +482,176 @@ describe('ServerSection', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Kho Nhạc Máy Chủ Homelab')).toBeInTheDocument();
+  });
+
+  it('cleans up existing stream songs from library when server has 0 songs', async () => {
+    const user = userEvent.setup();
+    const existingWithStream: Song[] = [
+      ...mockLocalSongs,
+      {
+        id: 'stream-old-1',
+        filePath: 'http://192.168.1.185:4545/api/stream/stream-old-1',
+        streamUrl: 'http://192.168.1.185:4545/api/stream/stream-old-1',
+        title: 'Old Server Song',
+        artist: 'Some Artist',
+        artists: ['Some Artist'],
+        album: 'Old Album',
+        duration: 200,
+        genre: 'Pop',
+        year: 2026,
+        coverArt: null,
+        sourceType: 'stream',
+      },
+    ];
+
+    vi.mocked(useLibraryContext).mockReturnValue({
+      handleAddSongs: mockHandleAddSongs,
+      handleDeleteSongs: mockHandleDeleteSongs,
+      songs: existingWithStream,
+    } as unknown as ReturnType<typeof useLibraryContext>);
+
+    vi.mocked(ServerClient.fetchSongs).mockResolvedValueOnce({
+      ok: true,
+      songs: [],
+    });
+
+    vi.mocked(ServerClient.checkHealth).mockResolvedValue({
+      ok: true,
+      health: {
+        status: 'ok',
+        service: 'melovista-streaming-server',
+        version: '1.0.0',
+        uptime: 50,
+        totalSongs: 0,
+        memoryUsage: { heapUsedMb: 5, rssMb: 10 },
+        timestamp: Date.now(),
+      },
+    });
+
+    render(<ServerSection />);
+
+    await screen.findByText('Đã kết nối thành công tới máy chủ');
+    const syncBtn = screen.getByRole('button', { name: /Đồng bộ tất cả/i });
+    await user.click(syncBtn);
+
+    await waitFor(() => {
+      expect(mockHandleDeleteSongs).toHaveBeenCalledWith(['stream-old-1']);
+    });
+
+    expect(mockShowNotification).toHaveBeenCalledWith(
+      'info',
+      expect.stringContaining('1 bài stream không còn tồn tại')
+    );
+  });
+
+  it('notifies server empty when syncing and server has 0 songs with no stream songs in library', async () => {
+    const user = userEvent.setup();
+    vi.mocked(useLibraryContext).mockReturnValue({
+      handleAddSongs: mockHandleAddSongs,
+      handleDeleteSongs: mockHandleDeleteSongs,
+      songs: mockLocalSongs,
+    } as unknown as ReturnType<typeof useLibraryContext>);
+
+    vi.mocked(ServerClient.fetchSongs).mockResolvedValueOnce({
+      ok: true,
+      songs: [],
+    });
+
+    render(<ServerSection />);
+
+    const syncBtn = screen.getByText('Đồng bộ nhạc');
+    await user.click(syncBtn);
+
+    await waitFor(() => {
+      expect(mockShowNotification).toHaveBeenCalledWith('info', 'Máy chủ hiện chưa có bài hát nào.');
+    });
+    expect(mockHandleDeleteSongs).not.toHaveBeenCalled();
+  });
+
+  it('prunes stream songs that were deleted from server when syncing new list', async () => {
+    const user = userEvent.setup();
+    const existingSongsWithDeletedStream: Song[] = [
+      ...mockLocalSongs,
+      {
+        id: 'stream-to-delete',
+        filePath: 'http://192.168.1.185:4545/api/stream/stream-to-delete',
+        streamUrl: 'http://192.168.1.185:4545/api/stream/stream-to-delete',
+        title: 'Deleted from Server Track',
+        artist: 'Ghost Artist',
+        artists: ['Ghost Artist'],
+        album: 'Ghost Album',
+        duration: 150,
+        genre: 'Pop',
+        year: 2026,
+        coverArt: null,
+        sourceType: 'stream',
+      },
+      {
+        id: 'stream-kept',
+        filePath: 'http://192.168.1.185:4545/api/stream/stream-kept',
+        streamUrl: 'http://192.168.1.185:4545/api/stream/stream-kept',
+        title: 'Kept Track',
+        artist: 'Active Artist',
+        artists: ['Active Artist'],
+        album: 'Active Album',
+        duration: 200,
+        genre: 'Pop',
+        year: 2026,
+        coverArt: null,
+        sourceType: 'stream',
+      },
+    ];
+
+    vi.mocked(useLibraryContext).mockReturnValue({
+      handleAddSongs: mockHandleAddSongs,
+      handleDeleteSongs: mockHandleDeleteSongs,
+      songs: existingSongsWithDeletedStream,
+    } as unknown as ReturnType<typeof useLibraryContext>);
+
+    vi.mocked(ServerClient.fetchSongs).mockResolvedValueOnce({
+      ok: true,
+      songs: [
+        {
+          id: 'stream-kept',
+          filePath: 'http://192.168.1.185:4545/api/stream/stream-kept',
+          streamUrl: 'http://192.168.1.185:4545/api/stream/stream-kept',
+          title: 'Kept Track',
+          artist: 'Active Artist',
+          artists: ['Active Artist'],
+          album: 'Active Album',
+          duration: 200,
+          genre: 'Pop',
+          year: 2026,
+          coverArt: null,
+          sourceType: 'stream',
+        },
+        {
+          id: 'stream-new',
+          filePath: 'http://192.168.1.185:4545/api/stream/stream-new',
+          streamUrl: 'http://192.168.1.185:4545/api/stream/stream-new',
+          title: 'Brand New Track',
+          artist: 'New Artist',
+          artists: ['New Artist'],
+          album: 'New Album',
+          duration: 180,
+          genre: 'Rock',
+          year: 2026,
+          coverArt: null,
+          sourceType: 'stream',
+        },
+      ],
+    });
+
+    render(<ServerSection />);
+
+    const syncBtn = screen.getByText('Đồng bộ nhạc');
+    await user.click(syncBtn);
+
+    await waitFor(() => {
+      expect(mockHandleDeleteSongs).toHaveBeenCalledWith(['stream-to-delete']);
+      expect(mockHandleAddSongs).toHaveBeenCalledWith([
+        expect.objectContaining({ id: 'stream-new' }),
+      ]);
+    });
   });
 });

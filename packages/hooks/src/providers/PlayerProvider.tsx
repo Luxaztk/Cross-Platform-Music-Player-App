@@ -72,6 +72,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   const volumeRef = useRef(volume);
 
   const lastSavedTimeRef = useRef(0);
+  const consecutiveFailuresRef = useRef(0);
 
   const savePlaybackPosition = useCallback((force = false) => {
     const song = currentSongRef.current;
@@ -240,7 +241,10 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         });
         savePlaybackPosition(false);
       },
-      onPlay: () => setUiState((prev: PlayerUiState) => ({ ...prev, isPlaying: true })),
+      onPlay: () => {
+        consecutiveFailuresRef.current = 0;
+        setUiState((prev: PlayerUiState) => ({ ...prev, isPlaying: true }));
+      },
       onPause: () => {
         setUiState((prev: PlayerUiState) => ({ ...prev, isPlaying: false }));
         savePlaybackPosition(true);
@@ -251,6 +255,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         savePlaybackPosition(true);
       },
       onEnd: () => {
+        consecutiveFailuresRef.current = 0;
         progressRef.current = 0;
         setUiState((prev: PlayerUiState) => ({ ...prev, isPlaying: false, progress: 0 }));
         if (currentSongRef.current && (currentSongRef.current.duration || 0) > 600 && onSavePlaybackPositionRef.current) {
@@ -274,19 +279,33 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         });
       },
       onLoadError: () => {
-        // File not found on disk — notify the consumer and auto-skip
+        consecutiveFailuresRef.current += 1;
+        // File not found on disk or server stream dead — notify the consumer and auto-skip
         const failedSong = currentSongRef.current;
         if (failedSong && onFileErrorRef.current) {
           onFileErrorRef.current(failedSong);
+        }
+        if (consecutiveFailuresRef.current >= 5 || consecutiveFailuresRef.current > (queueRef.current.length + 1)) {
+          console.warn('[PlayerProvider] Max consecutive playback failures reached. Halting auto-skip.');
+          consecutiveFailuresRef.current = 0;
+          engineRef.current?.stop();
+          return;
         }
         // Give the UI a tiny moment to show the toast, then skip
         setTimeout(() => playbackIteratorRef.current.next(), 800);
       },
       onPlayError: () => {
+        consecutiveFailuresRef.current += 1;
         // Play errors (e.g. autoplay blocked) — same auto-skip logic
         const failedSong = currentSongRef.current;
         if (failedSong && onFileErrorRef.current) {
           onFileErrorRef.current(failedSong);
+        }
+        if (consecutiveFailuresRef.current >= 5 || consecutiveFailuresRef.current > (queueRef.current.length + 1)) {
+          console.warn('[PlayerProvider] Max consecutive playback failures reached. Halting auto-skip.');
+          consecutiveFailuresRef.current = 0;
+          engineRef.current?.stop();
+          return;
         }
         setTimeout(() => playbackIteratorRef.current.next(), 800);
       },
