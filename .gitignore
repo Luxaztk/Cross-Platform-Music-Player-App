@@ -39,6 +39,7 @@ web-build/
 # Monorepo apps
 apps/*/dist/
 apps/*/build/
+apps/*/release/
 packages/*/dist/
 packages/media
 

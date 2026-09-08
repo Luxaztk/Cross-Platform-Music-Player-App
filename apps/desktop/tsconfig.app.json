@@ -7,7 +7,6 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "types": ["vite/client", "node", "@testing-library/jest-dom/vitest"],
-    "baseUrl": ".",
 
     "skipLibCheck": true,
 

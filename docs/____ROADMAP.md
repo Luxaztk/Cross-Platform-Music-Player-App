@@ -51,7 +51,7 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
   - [x] Synchronized Lyrics: Điều chỉnh offset đa cấp (±1s, ±5s), One-click Sync Now và lưu persistent offset.
   - [x] Window Virtualization Engine: Cuộn mượt mà 60fps với danh sách 5.000+ bài hát.
   - [x] Multi-level Profile Menu (Drill-down UI) và phím tắt toàn cục (Global Hotkeys).
-- [x] **Release Pipeline:** Tự động hóa đóng gói phát hành bản build Windows EXE (`npm run deploy`).
+- [x] **Release Pipeline v3:** Tự động hóa đóng gói phát hành bản build Windows EXE (`npm run deploy`). Tái cấu trúc v3 với Smart Retry (phát hiện tag đã tồn tại → bỏ qua version/tag → chỉ retry build), tách commit thủ công khỏi pipeline (bỏ `commit.txt`), Pre-build Cleanup tự động dọn `win-unpacked/` và prune `.exe` cũ, tối ưu validate (Phase 1 early escape) + build (Phase 3 chỉ Vite).
 
 ### ⏳ Hạng Mục Mở Rộng
 
@@ -365,6 +365,13 @@ Mục tiêu: Xây dựng hệ sinh thái phát nhạc trực tuyến độ trễ
     - **Audio Engine & Loop Protection**: Phân biệt chính xác thông báo lỗi `player.streamUnavailable` (lỗi bài hát không còn trên server) vs `player.fileNotFound` (lỗi file local bị thiếu) trong `PlayerWithLibrary.tsx`. Bổ sung cơ chế chống loop skip vô hạn (`consecutiveFailuresRef` ngắt sau 5 lần thất bại liên tiếp) trong `PlayerProvider.tsx`.
     - **UI Empty State**: Bổ sung giao diện Empty State trực quan (`Music` icon, tiêu đề, mô tả rõ ràng) cho `ServerLibraryBrowserModal.tsx` khi kho nhạc server trống.
     - **Kiểm thử & Type Safety**: 23/23 server tests Green (bổ sung suite `Zero-Song State & Health Metrics Accuracy`), 16/16 `ServerSection.test.tsx` Green, 100% Zero TypeScript errors (`npx tsc -b`).
+  - [x] **Ổn Định Hóa Pipeline Deploy Desktop (Deploy Stabilization v3 - P0)** *(Hoàn thành 08/09/2026)*:
+    - **Tái cấu trúc `deploy.js`**: Tách commit thủ công khỏi pipeline deploy (bỏ hoàn toàn `commit.txt`), user commit tay trước rồi chạy `npm run deploy`. Bổ sung Smart Retry Detection: phát hiện tag đã tồn tại → bỏ qua Phase 2 (SemVer/tag) → chỉ retry Phase 3 (build), không tạo tag rác khi build fail.
+    - **Pre-build Cleanup Engine**: Tự động xóa `win-unpacked/` và `win-unpacked.tmp/` (với `maxRetries: 3`) trước khi chạy Electron Builder, auto-prune `.exe` cũ giữ 2 bản mới nhất.
+    - **Tối ưu build**: Phase 1 validate full (`tsc --noEmit` + `vite build` early escape), Phase 3 chỉ chạy `vite build` (bỏ `tsc -b` lặp).
+    - **Bổ sung `tsconfig.json` exclude**: `release/`, `dist-electron/`, `build/`, `coverage/` ngăn TypeScript scan vào build artifacts.
+    - **Dọn dẹp 3.5 GB**: Xóa 19 bản `.exe` cũ + residue `win-unpacked.tmp/` (3.9 GB → 404 MB).
+    - **Kiểm thử**: 53/53 desktop test files (401 tests), 23/23 server tests, 72/72 core tests, 28/28 utils+hooks tests, Zero TypeScript errors.
 
 - [ ] **Phase 6 (Future / Mở Rộng Sau Nếu Cần): Đồng Bộ Đa Nền Tảng & Remote Control**
   - [ ] WebSocket Remote Control: Điều khiển phát nhạc trên PC từ điện thoại và ngược lại.
