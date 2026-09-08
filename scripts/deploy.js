@@ -247,12 +247,10 @@ const cleanBuildDirectory = (dir) => {
             log(`  ✅ Quarantined locked build directory: ${quarantineRelPath}`, COLORS.green);
             return;
         } catch (renameError) {
-            error(
-                `Không thể dọn thư mục build ${relPath}.\n` +
-                `  Remove failed: ${removeError.message}\n` +
-                `  Rename failed: ${renameError.message}\n` +
-                'Hãy đóng MeloVista, Explorer/terminal đang mở trong win-unpacked, hoặc tạm dừng antivirus rồi retry.'
-            );
+            log(`  ⚠️ Locked directory will be left untouched: ${relPath}`, COLORS.yellow);
+            log(`    Remove failed: ${removeError.message}`, COLORS.yellow);
+            log(`    Rename failed: ${renameError.message}`, COLORS.yellow);
+            log('  → Build will continue in a new isolated output directory.', COLORS.cyan);
         }
     }
 };
@@ -295,7 +293,9 @@ run('npx vite build', 'Vite Build', { cwd: DESKTOP_DIR });
 
 // --- 3c: Build & Publish Electron app ---
 log('\n📦 Packaging & Publishing Electron app...', COLORS.blue);
-const buildCmd = `npx electron-builder build --${TARGET} --publish always`;
+const isolatedOutputDir = `release/deploy-${newVersion}-${Date.now()}`;
+log(`  Isolated output: apps/desktop/${isolatedOutputDir}`, COLORS.cyan);
+const buildCmd = `npx electron-builder build --${TARGET} --publish always -c.directories.output="${isolatedOutputDir}"`;
 run(buildCmd, 'Electron Build & Publish', { 
     cwd: DESKTOP_DIR,
     env: {
