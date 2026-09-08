@@ -225,18 +225,40 @@ log('\n🧹 Cleaning stale build artifacts...', COLORS.blue);
 const winUnpacked = path.join(RELEASE_DIR, 'win-unpacked');
 const winUnpackedTmp = path.join(RELEASE_DIR, 'win-unpacked.tmp');
 
-for (const dir of [winUnpackedTmp, winUnpacked]) {
-    if (fs.existsSync(dir)) {
-        const relPath = path.relative(process.cwd(), dir);
-        log(`  Removing: ${relPath}`, COLORS.yellow);
+const cleanBuildDirectory = (dir) => {
+    if (!fs.existsSync(dir)) return;
+
+    const relPath = path.relative(process.cwd(), dir);
+    log(`  Removing: ${relPath}`, COLORS.yellow);
+
+    try {
+        fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 1000 });
+        log(`  ✅ Removed: ${relPath}`, COLORS.green);
+        return;
+    } catch (removeError) {
+        const quarantineDir = `${dir}.stale-${Date.now()}`;
+        const quarantineRelPath = path.relative(process.cwd(), quarantineDir);
+
+        log(`  ⚠️ Could not remove ${relPath}: ${removeError.message}`, COLORS.yellow);
+        log(`  → Attempting to quarantine it as ${quarantineRelPath}...`, COLORS.yellow);
+
         try {
-            fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 1000 });
-            log(`  ✅ Removed: ${relPath}`, COLORS.green);
-        } catch (e) {
-            log(`  ⚠️ Warning: Could not remove ${relPath}: ${e.message}`, COLORS.yellow);
-            log(`  → Thử đóng VS Code/IDE hoặc kill process đang giữ file.`, COLORS.yellow);
+            fs.renameSync(dir, quarantineDir);
+            log(`  ✅ Quarantined locked build directory: ${quarantineRelPath}`, COLORS.green);
+            return;
+        } catch (renameError) {
+            error(
+                `Không thể dọn thư mục build ${relPath}.\n` +
+                `  Remove failed: ${removeError.message}\n` +
+                `  Rename failed: ${renameError.message}\n` +
+                'Hãy đóng MeloVista, Explorer/terminal đang mở trong win-unpacked, hoặc tạm dừng antivirus rồi retry.'
+            );
         }
     }
+};
+
+for (const dir of [winUnpackedTmp, winUnpacked]) {
+    cleanBuildDirectory(dir);
 }
 
 // Auto-prune old installers (giữ 2 bản mới nhất)
