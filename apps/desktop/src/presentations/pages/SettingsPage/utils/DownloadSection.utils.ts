@@ -1,6 +1,6 @@
 import { type SettingsSectionProps } from './Settings.utils';
 
-export interface DownloadSectionProps extends SettingsSectionProps {}
+export type DownloadSectionProps = SettingsSectionProps;
 
 /**
  * Regex for basic YouTube URL validation.

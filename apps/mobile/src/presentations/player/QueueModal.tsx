@@ -15,7 +15,6 @@ import Feather from '@expo/vector-icons/Feather'
 import { usePlayer } from '@music/hooks'
 import type { QueueItem } from '@music/hooks'
 import { useTheme } from '../components/Theme'
-import { useLanguage } from '../components/Language'
 
 interface QueueModalProps {
   visible: boolean
@@ -24,7 +23,6 @@ interface QueueModalProps {
 
 export function QueueModal({ visible, onClose }: QueueModalProps) {
   const { theme } = useTheme()
-  const { t } = useLanguage()
   const insets = useSafeAreaInsets()
   const { queue, removeFromQueue, reorderQueue } = usePlayer()
 
@@ -36,7 +34,7 @@ export function QueueModal({ visible, onClose }: QueueModalProps) {
     router.back()
   }, [queue, removeFromQueue, onClose])
 
-  const handlePlaySong = useCallback((index: number) => {
+  const handlePlaySong = useCallback((_index: number) => {
     // Implementation for playing a song from queue at specific index
     // This would typically update the player state
   }, [])

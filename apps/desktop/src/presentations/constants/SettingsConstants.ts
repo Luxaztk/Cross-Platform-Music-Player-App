@@ -41,6 +41,11 @@ export const DEFAULT_SETTINGS = {
     token: '' as string,
     defaultVisibility: 'public' as SongVisibility,
     defaultWhitelist: [] as string[],
+  },
+  playback: {
+    excludedSongIds: [] as string[],
+    excludedAlbums: [] as string[],
+    excludedPlaylists: [] as string[],
   }
 };
 

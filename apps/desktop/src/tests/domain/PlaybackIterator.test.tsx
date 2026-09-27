@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { PlayerProvider, usePlayer } from '@music/hooks';
 import { shuffleArray } from '@music/utils';
-import type { Song } from '@music/types';
+import type { Song, PlaybackExclusionSettings } from '@music/types';
 import React from 'react';
 
 // Mock dependencies
@@ -246,4 +246,54 @@ describe('PlaybackIterator (PlayerProvider Hook)', () => {
     // engine.play() phải được gọi, không bị chặn bởi state === 'loaded'
     expect(mockEngineInstance.play).toHaveBeenCalled();
   });
+
+  it('[TC13] Tự động bỏ qua các bài hát bị loại trừ khi phát trong default library context, nhưng phát đầy đủ khi context là explicit', async () => {
+    const exclusionSettings: PlaybackExclusionSettings = {
+      excludedSongIds: ['2'],
+      excludedAlbums: ['Excluded Album'],
+      excludedPlaylists: [],
+    };
+    const testSongs: Song[] = [
+      { id: '1', title: 'Song 1', album: 'Normal Album', filePath: '1.mp3', duration: 100 } as unknown as Song,
+      { id: '2', title: 'Song 2 (Excluded Song)', album: 'Normal Album', filePath: '2.mp3', duration: 100 } as unknown as Song,
+      { id: '3', title: 'Song 3 (Excluded Album)', album: 'Excluded Album', filePath: '3.mp3', duration: 100 } as unknown as Song,
+      { id: '4', title: 'Song 4', album: 'Normal Album', filePath: '4.mp3', duration: 100 } as unknown as Song,
+    ];
+
+    const exclusionWrapper = ({ children }: { children: React.ReactNode }) => (
+      <PlayerProvider exclusionSettings={exclusionSettings}>{children}</PlayerProvider>
+    );
+
+    const { result } = renderHook(() => usePlayer(), { wrapper: exclusionWrapper });
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+
+    // 1. Play với default library context: tự động lọc bỏ Song 2 (song id) và Song 3 (album)
+    act(() => {
+      result.current.playList(testSongs, 0, { type: 'library', isExplicit: false });
+    });
+
+    expect(result.current.currentSong?.id).toBe('1');
+    expect(result.current.queue.length).toBe(1);
+    expect(result.current.queue[0].song.id).toBe('4');
+
+    // Chuyển sang bài tiếp theo, nhảy thẳng sang Song 4
+    act(() => {
+      result.current.next();
+    });
+    expect(result.current.currentSong?.id).toBe('4');
+
+    // 2. Play với explicit context (người dùng mở album trực tiếp hoặc filter whitelist)
+    act(() => {
+      result.current.playList(testSongs, 0, { type: 'album', id: 'Excluded Album', isExplicit: true });
+    });
+
+    // Tất cả 4 bài hát đều được phát đầy đủ khi explicit context = true
+    expect(result.current.currentSong?.id).toBe('1');
+    expect(result.current.queue.length).toBe(3);
+    expect(result.current.queue.map(q => q.song.id)).toEqual(['2', '3', '4']);
+  });
 });
+

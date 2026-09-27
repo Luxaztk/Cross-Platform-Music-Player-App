@@ -6,7 +6,6 @@ import { File } from 'expo-file-system'
 
 import type {
   EngineProgress,
-  LoadOptions,
   LockScreenMetadata,
   PlayerEngine,
   ProgressListener,

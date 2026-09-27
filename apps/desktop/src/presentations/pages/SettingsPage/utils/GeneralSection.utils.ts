@@ -1,6 +1,6 @@
 import { type SettingsSectionProps } from './Settings.utils';
 
-export interface GeneralSectionProps extends SettingsSectionProps {}
+export type GeneralSectionProps = SettingsSectionProps;
 
 /**
  * Supported language options for the application.

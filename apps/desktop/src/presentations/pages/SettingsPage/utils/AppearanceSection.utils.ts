@@ -1,7 +1,7 @@
 import { type ThemeType } from '@components';
 import { type SettingsSectionProps } from './Settings.utils';
 
-export interface AppearanceSectionProps extends SettingsSectionProps {}
+export type AppearanceSectionProps = SettingsSectionProps;
 
 export const getThemes = (t: (key: string) => string): { id: ThemeType; colorVar: string; name: string }[] => [
   { id: 'midnight', colorVar: '--color-primary', name: t('settings.appearance.themeMidnight') },

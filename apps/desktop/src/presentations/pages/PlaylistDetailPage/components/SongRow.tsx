@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { CheckSquare, Square, Play, MoreVertical } from 'lucide-react';
+import { CheckSquare, Square, Play, MoreVertical, Moon } from 'lucide-react';
 import type { Song, Playlist } from '@music/types';
 import { ICON_SIZES } from '@constants';
 import { formatTime } from '@music/utils';
@@ -14,6 +14,7 @@ interface SongRowProps {
   playlists: Playlist[];
   currentPlaylistId: string | undefined;
   hasActiveSelection: boolean;
+  isExcluded?: boolean;
   t: (key: string, options?: Record<string, string | number>) => string;
   appIcon: string;
   onToggleSelect: (id: string, e?: React.MouseEvent) => void;
@@ -35,6 +36,7 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
     isPlaying,
     isActiveMenu,
     hasActiveSelection,
+    isExcluded,
     appIcon,
     t,
     onToggleSelect,
@@ -165,7 +167,24 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
         </div>
 
         <div className="col-album">{song.album || '-'}</div>
-        <div className="col-duration">{formatTime(song.duration || 0)}</div>
+        <div className="col-duration">
+          {isExcluded && (
+            <span
+              className="excluded-indicator"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                marginRight: '6px',
+                color: 'var(--text-muted, rgba(255, 255, 255, 0.45))',
+                verticalAlign: 'middle',
+              }}
+              title={t('playlist.excludedFromDefaultTooltip')}
+            >
+              <Moon size={ICON_SIZES.TINY} />
+            </span>
+          )}
+          {formatTime(song.duration || 0)}
+        </div>
 
         <div className="col-more">
           {!hasActiveSelection && (
@@ -191,7 +210,8 @@ export const SongRow: React.FC<SongRowProps> = React.memo(
       prev.hasActiveSelection === next.hasActiveSelection &&
       prev.index === next.index &&
       prev.playlists === next.playlists &&
-      prev.currentPlaylistId === next.currentPlaylistId
+      prev.currentPlaylistId === next.currentPlaylistId &&
+      prev.isExcluded === next.isExcluded
     );
   },
 );

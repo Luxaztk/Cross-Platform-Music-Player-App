@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Song } from '@music/types';
+import type { Song, PlaybackContext, PlaybackExclusionSettings } from '@music/types';
 import type { IStorageAdapter, IAudioEngine } from '@music/core';
 
 export type RepeatMode = 'OFF' | 'ALL' | 'ONE';
@@ -28,7 +28,7 @@ export interface PlayerContextProps extends PlayerUiState {
   playNext: (song: Song) => void;
   addToQueue: (song: Song) => void;
   addSongsToQueue: (songs: Song[]) => void;
-  playList: (songs: Song[], startIndex: number) => void;
+  playList: (songs: Song[], startIndex: number, context?: PlaybackContext) => void;
   removeFromQueue: (index: number) => void;
   reorderQueue: (startIndex: number, endIndex: number) => void;
 
@@ -49,6 +49,7 @@ export interface PlayerProviderProps {
   storage?: IStorageAdapter;
   engine?: IAudioEngine;
   allSongs?: Song[];
+  exclusionSettings?: PlaybackExclusionSettings;
   onFileError?: (song: Song) => void;
   onSavePlaybackPosition?: (songId: string, position: number) => void;
 }

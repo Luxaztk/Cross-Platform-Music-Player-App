@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { SyncHistoryEntry } from '@music/types';
 import { useLibrary } from '@music/hooks';
 import { useLanguage } from '@hooks'
@@ -17,26 +17,28 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
   const [history, setHistory] = useState<SyncHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchHistory = useCallback(async () => {
-    // Nếu đang đồng bộ ngầm, không nên fetch lịch sử để tránh kết quả không nhất quán
-    if (isSyncing) return;
-
-    setIsLoading(true);
-    try {
-      const data = await getSyncHistory();
-      setHistory(data);
-    } catch (err) {
-      console.error('Failed to fetch sync history:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getSyncHistory, isSyncing]);
-
   useEffect(() => {
-    if (isOpen) {
-      fetchHistory();
-    }
-  }, [isOpen, fetchHistory]);
+    if (!isOpen || isSyncing) return;
+
+    let cancelled = false;
+    const historyRequest = getSyncHistory();
+    queueMicrotask(() => {
+      if (!cancelled) setIsLoading(true);
+    });
+
+    historyRequest
+      .then(data => {
+        if (!cancelled) setHistory(data);
+      })
+      .catch(err => console.error('Failed to fetch sync history:', err))
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [getSyncHistory, isOpen, isSyncing]);
 
   const handleClear = async () => {
     if (window.confirm(t('libraryCleanup.clearHistoryConfirm'))) {

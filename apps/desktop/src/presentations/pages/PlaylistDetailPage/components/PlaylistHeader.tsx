@@ -1,9 +1,8 @@
 import React from 'react';
-import { FileMusic, FolderPlus, Loader2 } from 'lucide-react';
+import { FileMusic, FolderPlus, Loader2, Moon } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { type PlaylistHeaderProps } from '../types';
 import { formatTotalDuration } from '../utils';
-
 
 export const PlaylistHeader: React.FC<PlaylistHeaderProps> = ({
     isLoading,
@@ -19,6 +18,8 @@ export const PlaylistHeader: React.FC<PlaylistHeaderProps> = ({
     onImportFolder,
     onAddFromSystem,
     onEditPlaylist,
+    isPlaylistExcluded,
+    onToggleExcludePlaylist,
     t
 }) => {
     return (
@@ -97,9 +98,27 @@ export const PlaylistHeader: React.FC<PlaylistHeaderProps> = ({
                                         )}
                                     </div>
                                 ) : (
-                                    <button onClick={onAddFromSystem} className="btn-primary-action">
-                                        + {t('playlist.addFromLibrary')}
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <button onClick={onAddFromSystem} className="btn-primary-action">
+                                            + {t('playlist.addFromLibrary')}
+                                        </button>
+                                        {onToggleExcludePlaylist && (
+                                            <button
+                                                type="button"
+                                                onClick={onToggleExcludePlaylist}
+                                                className={`btn-primary-action ${isPlaylistExcluded ? 'active-exclude' : ''}`}
+                                                style={{
+                                                    background: isPlaylistExcluded ? 'var(--color-primary, #10b981)' : 'var(--bg-surface-raised, rgba(255, 255, 255, 0.08))',
+                                                    color: isPlaylistExcluded ? '#fff' : 'var(--text-primary)',
+                                                    border: '1px solid var(--border-subtle, rgba(255, 255, 255, 0.15))',
+                                                }}
+                                                title={isPlaylistExcluded ? t('playlist.unexcludePlaylist') : t('playlist.excludePlaylistFromDefault')}
+                                            >
+                                                <Moon size={ICON_SIZES.SMALL} style={{ marginRight: '6px' }} />
+                                                {isPlaylistExcluded ? t('playlist.excludedFromDefault') : t('playlist.excludeFromDefault')}
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </div>

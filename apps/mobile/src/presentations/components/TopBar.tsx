@@ -1,8 +1,7 @@
-import React, { type ComponentProps, useRef, useCallback, useEffect } from 'react'
-import { Pressable, StyleSheet, Text, View, Animated } from 'react-native'
+import React, { type ComponentProps, useCallback, useEffect } from 'react'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { router, usePathname } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import * as DocumentPicker from 'expo-document-picker'
 import Feather from '@expo/vector-icons/Feather'
 
 import { useTheme } from './Theme'

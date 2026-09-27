@@ -8,7 +8,6 @@ import {
 import type { SlashCommand, BotClient } from '../services/BotClient.js';
 import { guildLanguageStore } from '../services/GuildLanguageStore.js';
 import { createSuccessEmbed } from '../ui/embeds.js';
-import { botT } from '@music/i18n';
 
 export const appCommand: SlashCommand = {
   data: new SlashCommandBuilder()

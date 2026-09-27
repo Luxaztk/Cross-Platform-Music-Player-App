@@ -82,6 +82,8 @@ export interface PlaylistHeaderProps {
     onImportFolder: () => void;
     onAddFromSystem: () => void;
     onEditPlaylist: () => void;
+    isPlaylistExcluded?: boolean;
+    onToggleExcludePlaylist?: () => void;
     t: (key: string, options?: Record<string, string | number>) => string;
 }
 
@@ -125,6 +127,7 @@ export interface VirtualSongListProps {
     onToggleMenu: (sid: string, e: React.MouseEvent) => void;
     onImportFiles?: () => Promise<void>;
     onImportFolder?: () => Promise<void>;
+    isSongExcluded?: (song: Song) => boolean;
     t: (key: string, options?: Record<string, string | number>) => string;
 }
 

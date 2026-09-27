@@ -13,7 +13,6 @@ export const useSearchOverlay = (
   const { appIcon } = useTheme();
   
   const contentRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
@@ -50,18 +49,6 @@ export const useSearchOverlay = (
     }
   }, [selectedIndex]);
 
-  // Click outside to close menu
-  useEffect(() => {
-    const handleClickOut = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setActiveMenuId(null);
-      }
-    };
-    if (activeMenuId) {
-      window.addEventListener('mousedown', handleClickOut);
-    }
-    return () => window.removeEventListener('mousedown', handleClickOut);
-  }, [activeMenuId]);
 
   const handleMoreClick = useCallback((e: React.MouseEvent, songId: string) => {
     e.stopPropagation();
@@ -88,10 +75,7 @@ export const useSearchOverlay = (
       isTrulyEmpty,
       appIcon
     },
-    refs: {
-      contentRef,
-      menuRef
-    },
+    contentRef,
     actions: {
       setActiveMenuId,
       setMenuPlacement,

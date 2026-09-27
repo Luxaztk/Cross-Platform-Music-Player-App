@@ -74,9 +74,20 @@ Bản kế hoạch tổng thể và theo dõi tiến độ đa nền tảng cho 
   - Bổ sung nút bấm vật lý `‹` và `›` (ChevronLeft/ChevronRight) kẹp 2 bên chip Chapter indicator ở góc trái (`NowPlaying.tsx`) hoặc trên cụm `PlaybackControls.tsx`.
   - Kết nối trực tiếp vào `actions.nextChapter` và `actions.prevChapter` đã có sẵn trong `usePlayerBar.ts`.
   - Hỗ trợ phím tắt bàn phím toàn cục (Global Hotkeys: `[` và `]`).
+- [x] **Chế Độ Bỏ Qua Khi Phát Mặc Định (Default Playback Exclusion Engine) v4 (P1):**
+  - [x] **Data Model & In-Memory Index:** Định nghĩa `PlaybackExclusionSettings` (`excludedSongIds`, `excludedAlbums`, `excludedPlaylists`), `PlaybackContext` và hàm thuần túy $O(1)$ `filterPlayableSongs` / `isSongExcludedFromDefault` trong `@music/types` & `@music/utils`. 11/11 tests Green.
+  - [x] **Context-Aware Player Integration:** Tự động bỏ qua các bài/album/playlist đặc biệt khi nghe Thư viện tổng (Library / Shuffle All / Autoplay), nhưng phát trọn vẹn 100% khi người dùng chủ động mở Album, mở Playlist hoặc dùng bộ lọc Filter Whitelist (`isExplicit: true`). Đã kiểm thử `PlaybackIterator.test.tsx` (7/7 Green).
+  - [x] **Nút Gạt 1-Click Trên Header:** Nút Toggle `🌙 Bỏ qua khi nghe Thư viện tổng` trên `PlaylistHeader.tsx` cho phép thiết lập nhanh toàn bộ Album/Playlist.
+  - [x] **Context Menu & Biểu Tượng Tinh Tế:** Tùy chọn bật/tắt trên `SongRowContextMenu.tsx`, hiển thị icon mặt trăng `Moon` 🌙 tinh tế bên cạnh thời lượng trong `SongRow.tsx`.
+  - [x] **Quản Lý Tập Trung Trong Settings:** Tiểu mục trong Cài Đặt Âm Thanh của `SettingsPage` xem thống kê bài/album đang gán cờ và 1-click gỡ cờ nhanh.
+  - [x] **Kiểm thử toàn diện & Clean Build:** Đầy đủ test suite cho `usePlaybackExclusion` (6/6 Green), `exclusion` utils (11/11 Green), `PlaybackIterator` (7/7 Green), `SettingsProvider` (3/3 Green). Zero TypeScript errors (`npx tsc -b` sạch 100%, 408/408 Desktop tests Green).
 
 
 ### 🐛 Bug Fixes & Cải Tiến
+
+- [ ] **Sửa lỗi Queue không tự động dọn các bài/album bị loại trừ khi phát Thư viện tổng (P0):**
+  - **Vấn đề**: Khi phát nhạc từ Thư viện tổng, các bài tiếp theo đã được nạp sẵn vào `queue`. Khi người dùng gán cờ loại trừ (bài hát hoặc album), `queue` không được re-sync/prune nên bài hát bị loại trừ vẫn được phát khi tới lượt.
+  - **Giải pháp**: Theo dõi `currentContextRef`, tự động lọc sạch các bài hát bị loại trừ ra khỏi `queue` và `originalContext` khi `exclusionSettings` thay đổi (chỉ áp dụng với `!isExplicit`). Nếu bài đang phát bị loại trừ, tự động chuyển ngay sang bài tiếp theo. Bổ sung cơ chế phòng thủ trong `playbackIterator.next()`.
 
 - [x] **Tối ưu hóa toàn diện tốc độ khởi động ứng dụng (Fast Startup & Zero-Wait Launch) (P0):**
   - **Khắc phục lỗi Database Bloat (11.4 MB)**: Tự động bóc tách và dọn sạch các mảng bài hát `songs: Song[]` và ảnh Base64 bị lưu nhân bản thừa vào `playlists` trong `melovista-library.json`. Cơ chế Self-Healing Migration trong `MainStorageAdapter.ts` và bộ lọc an toàn trong `LibraryService.updatePlaylist` giúp cắt giảm ngay 11.8 MB (40%) dung lượng file và dung lượng IPC transfer.

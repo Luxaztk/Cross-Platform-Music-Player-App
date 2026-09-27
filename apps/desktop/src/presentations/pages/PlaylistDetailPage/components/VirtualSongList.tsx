@@ -30,6 +30,7 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = React.memo(({
     onImportFiles,
     onImportFolder,
     isImporting,
+    isSongExcluded,
     t
 }) => {
     return (
@@ -58,6 +59,7 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = React.memo(({
                             hasActiveSelection={selectedIds.size > 0}
                             playlists={playlists}
                             currentPlaylistId={currentPlaylistId}
+                            isExcluded={isSongExcluded ? isSongExcluded(song) : false}
                             t={t}
                             appIcon={appIcon}
                             onToggleSelect={onToggleSelect}
@@ -91,8 +93,9 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = React.memo(({
     const playlistsEq = prev.playlists === next.playlists;
     const currentPlaylistIdEq = prev.currentPlaylistId === next.currentPlaylistId;
     const isImportingEq = prev.isImporting === next.isImporting;
+    const isSongExcludedEq = prev.isSongExcluded === next.isSongExcluded;
 
-    const isEqual = isDebouncingEq && isLoadingEq && filteredSongsEq && startIndexEq && totalHeightEq && paddingOffsetEq && selectedIdsEq && currentSongIdEq && activeMenuIdEq && playlistsEq && currentPlaylistIdEq && isImportingEq;
+    const isEqual = isDebouncingEq && isLoadingEq && filteredSongsEq && startIndexEq && totalHeightEq && paddingOffsetEq && selectedIdsEq && currentSongIdEq && activeMenuIdEq && playlistsEq && currentPlaylistIdEq && isImportingEq && isSongExcludedEq;
 
     if (!isEqual) {
         console.log('VirtualSongList re-render! Changed props:', {
@@ -108,6 +111,7 @@ export const VirtualSongList: React.FC<VirtualSongListProps> = React.memo(({
             playlists: !playlistsEq,
             currentPlaylistId: !currentPlaylistIdEq,
             isImporting: !isImportingEq,
+            isSongExcluded: !isSongExcludedEq,
         });
     }
 

@@ -29,6 +29,7 @@ export interface Song {
   uploader?: string; // Username of the uploader on the server
   visibility?: SongVisibility; // Visibility access level
   whitelist?: string[]; // Usernames allowed to access if visibility is 'whitelist'
+  excludeFromDefault?: boolean; // If true, auto-skipped during general library / shuffle playback
 }
 
 export type SongVisibility = 'public' | 'whitelist' | 'private';
@@ -65,6 +66,7 @@ export interface Playlist {
   songIds: string[];
   thumbnail?: string; // Base64 or local URI
   createdAt: string;
+  excludeFromDefault?: boolean; // If true, songs in this playlist are auto-skipped in general library playback
 }
 
 export interface ImportResult {
@@ -239,5 +241,17 @@ export interface UploadSongResponse {
   success: boolean;
   song?: Song;
   error?: string;
+}
+
+export interface PlaybackExclusionSettings {
+  excludedSongIds: string[];
+  excludedAlbums: string[];
+  excludedPlaylists: string[];
+}
+
+export interface PlaybackContext {
+  type: 'library' | 'album' | 'playlist' | 'artist' | 'direct';
+  id?: string;
+  isExplicit: boolean;
 }
 

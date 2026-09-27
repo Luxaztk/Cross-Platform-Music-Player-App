@@ -14,7 +14,7 @@ interface SongResultItemProps {
     onPlayNow: (song: Song) => void;
     onPlayNext: (song: Song) => void;
     onAddToQueue: (song: Song) => void;
-    menuRef: React.RefObject<HTMLDivElement | null>;
+    onCloseMenu: () => void;
     t: (key: string, options?: Record<string, unknown> | string) => string;
 }
 
@@ -30,10 +30,22 @@ export const SongResultItem: React.FC<SongResultItemProps> = ({
     onPlayNow,
     onPlayNext,
     onAddToQueue,
-    menuRef,
+    onCloseMenu,
     t
 }) => {
     const isActive = selectedIndex === globalIdx;
+    const menuRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (activeMenuId !== song.id) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (!menuRef.current?.contains(event.target as Node)) onCloseMenu();
+        };
+
+        window.addEventListener('mousedown', handleClickOutside);
+        return () => window.removeEventListener('mousedown', handleClickOutside);
+    }, [activeMenuId, onCloseMenu, song.id]);
 
     const artistParts = React.useMemo(() => {
         const rawArtist = song.artist || '';

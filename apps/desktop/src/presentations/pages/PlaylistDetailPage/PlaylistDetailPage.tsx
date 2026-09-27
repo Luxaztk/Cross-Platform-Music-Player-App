@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Song } from '@music/types';
 import { EditModal, DeleteConfirmationModal, SongPickerModal, ChapterEditorModal, EditSongPermissionsModal } from '@components';
-import { useSettings } from '@hooks';
+import { useSettings, usePlaybackExclusion } from '@hooks';
 import { usePlaylistDetail } from './usePlaylistDetail';
 import { PlaylistHeader } from './components/PlaylistHeader';
 import { FilterChips } from './components/FilterChips';
@@ -22,6 +22,7 @@ export const PlaylistDetailPage: React.FC = () => {
 
   const { t, appIcon, playlists, allSongs, currentSong, id, libraryFilter } = utils;
   const { settings } = useSettings();
+  const exclusion = usePlaybackExclusion();
 
   const [chapterModalSong, setChapterModalSong] = useState<Song | null>(null);
   const [permissionsModalSong, setPermissionsModalSong] = useState<Song | null>(null);
@@ -44,6 +45,8 @@ export const PlaylistDetailPage: React.FC = () => {
         onImportFolder={actions.onImportFolder}
         onAddFromSystem={actions.onAddFromSystem}
         onEditPlaylist={() => actions.setIsEditModalOpen(true)}
+        isPlaylistExcluded={id ? exclusion.isPlaylistExcluded(id) : false}
+        onToggleExcludePlaylist={id && !state.isLibrary ? () => void exclusion.toggleExcludePlaylist(id) : undefined}
         t={t}
       />
 
@@ -97,6 +100,7 @@ export const PlaylistDetailPage: React.FC = () => {
           onToggleMenu={actions.toggleMenu}
           onImportFiles={actions.onImportFiles}
           onImportFolder={actions.onImportFolder}
+          isSongExcluded={exclusion.isSongExcluded}
           t={t}
         />
       </div>
@@ -108,6 +112,8 @@ export const PlaylistDetailPage: React.FC = () => {
         activeSubMenuId={state.activeSubMenuId}
         playlists={playlists}
         currentPlaylistId={id}
+        isExcluded={activeSong ? exclusion.isSongExcluded(activeSong) : false}
+        isAlbumExcluded={activeSong?.album ? exclusion.isAlbumExcluded(activeSong.album) : false}
         onPlay={() => {
           const idx = state.filteredSongs.findIndex((s) => s.id === activeSong?.id);
           if (idx !== -1) actions.playList(state.filteredSongs, idx);
@@ -122,6 +128,14 @@ export const PlaylistDetailPage: React.FC = () => {
           actions.setActiveMenuId(null);
         }}
         onAddToPlaylist={(pid) => activeSong && actions.onAddSongsToPlaylist(pid, [activeSong.id])}
+        onToggleExcludeSong={() => {
+          if (activeSong) void exclusion.toggleExcludeSong(activeSong);
+          actions.setActiveMenuId(null);
+        }}
+        onToggleExcludeAlbum={() => {
+          if (activeSong?.album) void exclusion.toggleExcludeAlbum(activeSong.album);
+          actions.setActiveMenuId(null);
+        }}
         onEdit={() => {
           if (activeSong) actions.setEditingSong(activeSong);
           actions.setIsEditModalOpen(true);

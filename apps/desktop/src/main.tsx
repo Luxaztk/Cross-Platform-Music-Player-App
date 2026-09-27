@@ -10,19 +10,19 @@ import {
   ErrorBoundary,
 } from '@components'
 import { UIProvider } from '@music/hooks'
-import { ElectronStorageAdapter } from './infrastructure/services/ElectronStorageAdapter'
 import { SettingsProvider, DownloadProvider } from './application/providers'
 import { HotkeysProvider } from './application/context/HotkeysProvider'
 import { PlayerWithLibrary } from './application/providers/PlayerWithLibrary'
 
-const storage = new ElectronStorageAdapter()
+const persistTheme = (theme: string) =>
+  window.electronAPI.saveSettings({ appearance: { theme } })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary componentName="MeloVista App">
       <UIProvider>
         <LanguageProvider>
-          <ThemeProvider storage={storage}>
+          <ThemeProvider onThemeChange={persistTheme}>
             <NotificationProvider>
               <SettingsProvider>
                 <LibraryProvider>

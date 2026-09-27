@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSettings, useLanguage } from '@hooks';
 import { ICON_SIZES } from '@constants';
 import { useAudioDevices, usePlayer } from '@music/hooks';
-import { Volume2, Play, HelpCircle } from 'lucide-react';
+import { Volume2, Play, HelpCircle, Moon } from 'lucide-react';
 import { CustomDropdown, SmartTooltip } from '@components';
 import { 
     type AudioSectionProps, 
@@ -25,6 +25,7 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
 
     const showsDevice = matchesSearch(t('settings.audio.device'), searchQuery) || matchesSearch(t('settings.audio.deviceDesc'), searchQuery);
     const showsTest = matchesSearch(t('settings.audio.test'), searchQuery) || matchesSearch(t('settings.audio.testDesc'), searchQuery);
+    const showsExclusion = matchesSearch(t('settings.audio.exclusionTitle'), searchQuery) || matchesSearch(t('settings.audio.exclusionDesc'), searchQuery);
 
     useEffect(() => {
         return () => {
@@ -249,6 +250,48 @@ export const AudioSection: React.FC<AudioSectionProps> = ({ searchQuery }) => {
                             </div>
                         </div>
                     </>
+                )}
+
+                {showsExclusion && (
+                    <div className="setting-item">
+                        <div className="setting-info">
+                            <h3>{t('settings.audio.exclusionTitle')}</h3>
+                            <p>
+                                {t('settings.audio.exclusionDesc')}
+                                <br />
+                                <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', display: 'inline-block' }}>
+                                    {t('settings.audio.exclusionStats', {
+                                        songs: settings.playback?.excludedSongIds?.length || 0,
+                                        albums: settings.playback?.excludedAlbums?.length || 0,
+                                        playlists: settings.playback?.excludedPlaylists?.length || 0,
+                                    })}
+                                </span>
+                            </p>
+                        </div>
+                        <div className="setting-control">
+                            <button
+                                type="button"
+                                className="test-btn-mini"
+                                disabled={
+                                    (!settings.playback?.excludedSongIds?.length) &&
+                                    (!settings.playback?.excludedAlbums?.length) &&
+                                    (!settings.playback?.excludedPlaylists?.length)
+                                }
+                                onClick={() => {
+                                    updateSettings({
+                                        playback: {
+                                            excludedSongIds: [],
+                                            excludedAlbums: [],
+                                            excludedPlaylists: [],
+                                        },
+                                    });
+                                }}
+                            >
+                                <Moon size={14} />
+                                <span>{t('settings.audio.clearExclusions')}</span>
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>

@@ -6,3 +6,4 @@ export * from './path';
 export * from './array';
 export * from './string';
 export * from './chapterParser';
+export * from './exclusion';

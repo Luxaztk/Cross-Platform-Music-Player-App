@@ -8,21 +8,15 @@ import { useState, useEffect } from 'react';
  */
 export function useDebounce<T>(value: T, delay: number): [T, boolean] {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  const [isDebouncing, setIsDebouncing] = useState<boolean>(false);
 
   useEffect(() => {
-    // If current value is different from original debounced value, start debouncing state
-    if (value !== debouncedValue) {
-      setIsDebouncing(true);
-    }
 
     const timer = setTimeout(() => {
       setDebouncedValue(value);
-      setIsDebouncing(false);
     }, delay);
 
     return () => clearTimeout(timer);
   }, [value, delay]);
 
-  return [debouncedValue, isDebouncing];
+  return [debouncedValue, value !== debouncedValue];
 }

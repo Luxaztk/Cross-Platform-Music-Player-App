@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
   Alert,
   FlatList,
@@ -199,7 +199,7 @@ export default function LibraryScreen() {
     handleDeleteSong,
     handleAddSongsToPlaylist
   } = useLibraryContext()
-  const { playList, currentSong, isPlaying } = usePlayer()
+  const { playList, currentSong } = usePlayer()
   const { registerImportHandler } = useAppShell()
 
   const [sortField, setSortField] = useState<SortField | null>(null)

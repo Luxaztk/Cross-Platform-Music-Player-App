@@ -20,7 +20,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
 }) => {
   const {
     state,
-    refs,
+    contentRef,
     actions,
     utils
   } = useSearchOverlay(query, results, selectedIndex);
@@ -56,7 +56,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
         </div>
       </div>
 
-      <div className="search-overlay-content" ref={refs.contentRef}>
+      <div className="search-overlay-content" ref={contentRef}>
         {results.isSearching && query !== '' ? (
           <div className="searching-state">
             <Loader2 size={24} className="animate-spin" />
@@ -89,7 +89,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                     onPlayNow={(s) => onSelect({ type: 'song', item: s })}
                     onPlayNext={onPlayNext}
                     onAddToQueue={onAddToQueue}
-                    menuRef={refs.menuRef}
+                    onCloseMenu={() => actions.setActiveMenuId(null)}
                     t={t}
                   />
                 ))}
@@ -112,7 +112,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                     onPlayNow={(s) => onSelect({ type: 'song', item: s })}
                     onPlayNext={onPlayNext}
                     onAddToQueue={onAddToQueue}
-                    menuRef={refs.menuRef}
+                    onCloseMenu={() => actions.setActiveMenuId(null)}
                     t={t}
                   />
                 ))}
@@ -135,7 +135,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                     onPlayNow={(s) => onSelect({ type: 'song', item: s })}
                     onPlayNext={onPlayNext}
                     onAddToQueue={onAddToQueue}
-                    menuRef={refs.menuRef}
+                    onCloseMenu={() => actions.setActiveMenuId(null)}
                     t={t}
                   />
                 ))}

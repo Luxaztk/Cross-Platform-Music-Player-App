@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import type { Song, PlayerState } from '@music/types';
-import { shuffleArray } from '@music/utils';
+import type { Song, PlayerState, PlaybackContext } from '@music/types';
+import { shuffleArray, filterPlayableSongs } from '@music/utils';
 import type { IAudioEngine } from '@music/core';
 import { AudioEngine } from '@music/player';
 
@@ -26,6 +26,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   storage, 
   engine: externalEngine,
   allSongs = [] as Song[], 
+  exclusionSettings,
   onFileError,
   onSavePlaybackPosition
 }) => {
@@ -70,6 +71,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   const onFileErrorRef = useRef(onFileError);
   const onSavePlaybackPositionRef = useRef(onSavePlaybackPosition);
   const volumeRef = useRef(volume);
+  const exclusionSettingsRef = useRef(exclusionSettings);
 
   const lastSavedTimeRef = useRef(0);
   const consecutiveFailuresRef = useRef(0);
@@ -106,6 +108,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     onFileErrorRef.current = onFileError;
     onSavePlaybackPositionRef.current = onSavePlaybackPosition;
     volumeRef.current = volume;
+    exclusionSettingsRef.current = exclusionSettings;
   });
 
   const pushToHistory = useCallback((song: Song) => {
@@ -407,17 +410,32 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     }));
   }, []);
 
-  const playList = useCallback((songs: Song[], startIndex: number) => {
+  const playList = useCallback((
+    songs: Song[], 
+    startIndex: number,
+    context: PlaybackContext = { type: 'library', isExplicit: false }
+  ) => {
     if (!songs || songs.length === 0) return;
-    const safeIndex = (startIndex >= 0 && startIndex < songs.length) ? startIndex : 0;
 
-    setOriginalContext(songs);
+    // Filter playable songs based on current playback context (explicit plays all; default excludes marked songs/albums)
+    const playableSongs = filterPlayableSongs(songs, context, exclusionSettingsRef.current);
+    if (playableSongs.length === 0) return;
+
+    const requestedSong = songs[startIndex];
+    let safeIndex = 0;
+    if (requestedSong) {
+      const idx = playableSongs.findIndex(s => s.id === requestedSong.id);
+      if (idx !== -1) {
+        safeIndex = idx;
+      }
+    }
+
+    setOriginalContext(playableSongs);
     
     // Prepare history: preserve current song, then prepend preceding playlist songs
     let newHistory: Song[] = [];
     if (!isShuffleRef.current && safeIndex > 0) {
-      // Reverse preceding songs so the immediately preceding song is at index 0
-      newHistory = songs.slice(0, safeIndex).reverse();
+      newHistory = playableSongs.slice(0, safeIndex).reverse();
     }
     if (currentSongRef.current) {
       newHistory.push(currentSongRef.current);
@@ -425,13 +443,13 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     // Only keep up to 50 history items
     setHistory(newHistory.slice(0, 50));
 
-    const startSong = songs[safeIndex];
+    const startSong = playableSongs[safeIndex];
     let upcomingSongs: Song[];
     if (isShuffleRef.current) {
-      const allOtherSongs = [...songs.slice(0, safeIndex), ...songs.slice(safeIndex + 1)];
+      const allOtherSongs = [...playableSongs.slice(0, safeIndex), ...playableSongs.slice(safeIndex + 1)];
       upcomingSongs = shuffleArray(allOtherSongs);
     } else {
-      upcomingSongs = songs.slice(startIndex + 1);
+      upcomingSongs = playableSongs.slice(safeIndex + 1);
     }
     setQueue(upcomingSongs.map(song => ({ uid: generateUid(), song })));
     playSong(startSong);

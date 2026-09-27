@@ -12,17 +12,18 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
 }) => {
     if (!isVisible) return null;
 
-    const VolumeIcon = () => {
-        if (volume === 0) return <VolumeX size={ICON_SIZES.SMALL} />;
-        if (volume < 0.3) return <Volume size={ICON_SIZES.SMALL} />;
-        if (volume < 0.7) return <Volume1 size={ICON_SIZES.SMALL} />;
-        return <Volume2 size={ICON_SIZES.SMALL} />;
-    };
+    const volumeIcon = volume === 0
+        ? <VolumeX size={ICON_SIZES.SMALL} />
+        : volume < 0.3
+            ? <Volume size={ICON_SIZES.SMALL} />
+            : volume < 0.7
+                ? <Volume1 size={ICON_SIZES.SMALL} />
+                : <Volume2 size={ICON_SIZES.SMALL} />;
 
     return (
         <div className="volume-control">
             <button className="control-btn volume-btn" onClick={onToggleMute}>
-                <VolumeIcon />
+                {volumeIcon}
             </button>
             <input
                 type="range"

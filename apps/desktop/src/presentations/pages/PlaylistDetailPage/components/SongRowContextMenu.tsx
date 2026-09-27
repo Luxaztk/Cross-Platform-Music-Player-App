@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Play, PlaySquare, ListPlus, FolderPlus, ChevronRight, Edit2, Trash2, Keyboard, BookmarkCheck, Shield } from 'lucide-react';
+import { Play, PlaySquare, ListPlus, FolderPlus, ChevronRight, Edit2, Trash2, Keyboard, BookmarkCheck, Shield, Moon, Disc } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import type { Song, Playlist } from '@music/types';
 import { useHotkeysModal } from '@application/context/HotkeysContext';
@@ -30,10 +30,14 @@ interface SongRowContextMenuProps {
     activeSubMenuId: string | null;
     playlists: Playlist[];
     currentPlaylistId?: string;
+    isExcluded?: boolean;
+    isAlbumExcluded?: boolean;
     onPlay: () => void;
     onPlayNext: () => void;
     onAddToQueue: () => void;
     onAddToPlaylist: (pid: string) => void;
+    onToggleExcludeSong?: () => void;
+    onToggleExcludeAlbum?: () => void;
     onEdit: () => void;
     onEditChapters?: () => void;
     onEditPermissions?: () => void;
@@ -50,10 +54,14 @@ export const SongRowContextMenu: React.FC<SongRowContextMenuProps> = ({
     activeSubMenuId,
     playlists,
     currentPlaylistId,
+    isExcluded,
+    isAlbumExcluded,
     onPlay,
     onPlayNext,
     onAddToQueue,
     onAddToPlaylist,
+    onToggleExcludeSong,
+    onToggleExcludeAlbum,
     onEdit,
     onEditChapters,
     onEditPermissions,
@@ -130,6 +138,30 @@ export const SongRowContextMenu: React.FC<SongRowContextMenuProps> = ({
             </div>
           )}
         </div>
+
+        {(onToggleExcludeSong || onToggleExcludeAlbum) && (
+          <>
+            <div className="menu-divider"></div>
+            {onToggleExcludeSong && (
+              <MenuAction
+                icon={<Moon size={ICON_SIZES.XSMALL} />}
+                label={isExcluded ? t('playlist.unexcludeSong') : t('playlist.excludeSongFromDefault')}
+                onClick={onToggleExcludeSong}
+              />
+            )}
+            {song.album && onToggleExcludeAlbum && (
+              <MenuAction
+                icon={<Disc size={ICON_SIZES.XSMALL} />}
+                label={
+                  isAlbumExcluded
+                    ? t('playlist.unexcludeAlbum', { album: song.album })
+                    : t('playlist.excludeAlbumFromDefault', { album: song.album })
+                }
+                onClick={onToggleExcludeAlbum}
+              />
+            )}
+          </>
+        )}
 
         <div className="menu-divider"></div>
         <MenuAction

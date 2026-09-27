@@ -34,10 +34,7 @@ export interface UseSearchOverlayReturn {
         isTrulyEmpty: boolean;
         appIcon: string;
     };
-    refs: {
-        contentRef: React.RefObject<HTMLDivElement | null>;
-        menuRef: React.RefObject<HTMLDivElement | null>;
-    };
+    contentRef: React.RefObject<HTMLDivElement | null>;
     actions: {
         setActiveMenuId: (id: string | null) => void;
         setMenuPlacement: (p: 'top' | 'bottom') => void;

@@ -49,8 +49,8 @@ const error = (msg) => { log(`\n❌ ERROR: ${msg}`, COLORS.red); process.exit(1)
 const run = (cmd, title, options = {}) => {
     log(`\n[${title}] > ${cmd}`, COLORS.blue);
     try {
-        execSync(cmd, { 
-            stdio: 'inherit', 
+        execSync(cmd, {
+            stdio: 'inherit',
             cwd: options.cwd || process.cwd(),
             env: { ...process.env, ...options.env }
         });
@@ -296,7 +296,7 @@ log('\n📦 Packaging & Publishing Electron app...', COLORS.blue);
 const isolatedOutputDir = `release/deploy-${newVersion}-${Date.now()}`;
 log(`  Isolated output: apps/desktop/${isolatedOutputDir}`, COLORS.cyan);
 const buildCmd = `npx electron-builder build --${TARGET} --publish always -c.directories.output="${isolatedOutputDir}"`;
-run(buildCmd, 'Electron Build & Publish', { 
+run(buildCmd, 'Electron Build & Publish', {
     cwd: DESKTOP_DIR,
     env: {
         GH_TOKEN: process.env.GH_TOKEN,

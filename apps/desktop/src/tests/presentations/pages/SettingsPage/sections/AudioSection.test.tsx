@@ -9,7 +9,8 @@ import { useAudioDevices, usePlayer } from '@music/hooks';
 vi.mock('lucide-react', () => ({
   Volume2: () => <svg data-testid="icon-volume" />,
   Play: () => <svg data-testid="icon-play" />,
-  HelpCircle: () => <svg data-testid="icon-help" />
+  HelpCircle: () => <svg data-testid="icon-help" />,
+  Moon: () => <svg data-testid="icon-moon" />
 }));
 
 vi.mock('@components', () => ({

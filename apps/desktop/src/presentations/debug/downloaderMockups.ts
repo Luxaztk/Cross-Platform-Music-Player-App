@@ -2,7 +2,10 @@ import { DOWNLOAD_STATUS, type DownloadItem, type DownloadStatus } from '@music/
 
 // Global debug flags (can be toggled here once for all components)
 export const IS_DEBUG_DOWNLOADER = false;
+// Mutable by design: developers edit these flags to preview different states.
+// eslint-disable-next-line prefer-const
 export let MOCKUP_TYPE: 'single' | 'playlist' = 'single'; // Change to 'playlist' to test playlist UI
+// eslint-disable-next-line prefer-const
 export let MOCKUP_STATE: DownloadStatus = DOWNLOAD_STATUS.SUCCESS; // Change to test different states (fetching, preview, downloading, success, error)
 
 /**

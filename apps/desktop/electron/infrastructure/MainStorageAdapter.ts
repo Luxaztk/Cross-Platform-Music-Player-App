@@ -191,6 +191,7 @@ export class MainStorageAdapter implements IStorageAdapter {
       audio: { ...DEFAULT_SETTINGS.audio, ...(saved.audio || {}) },
       downloads: { ...DEFAULT_SETTINGS.downloads, ...(saved.downloads || {}) },
       server: { ...DEFAULT_SETTINGS.server, ...(saved.server || {}) },
+      playback: { ...DEFAULT_SETTINGS.playback, ...(saved.playback || {}) },
     };
 
     // Ensure downloadPath is never empty when sent to UI
@@ -213,6 +214,7 @@ export class MainStorageAdapter implements IStorageAdapter {
       audio: { ...current.audio, ...(settings.audio || {}) },
       downloads: { ...current.downloads, ...(settings.downloads || {}) },
       server: { ...current.server, ...(settings.server || {}) },
+      playback: { ...current.playback, ...(settings.playback || {}) },
     };
     this.store.set('settings', updated);
   }

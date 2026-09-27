@@ -28,7 +28,6 @@ export default function NowPlayingScreen() {
     isPlaying,
     progress,
     duration,
-    volume,
     repeatMode,
     isShuffle,
     play,
@@ -36,12 +35,14 @@ export default function NowPlayingScreen() {
     next,
     prev,
     seek,
-    setVolume,
     toggleShuffle,
     setRepeatMode,
   } = usePlayer()
 
-  const togglePlayPause = () => { isPlaying ? pause() : play() }
+  const togglePlayPause = () => {
+    if (isPlaying) pause()
+    else play()
+  }
 
   const positionMs = progress * 1000
   const durationMs = (duration || 1) * 1000

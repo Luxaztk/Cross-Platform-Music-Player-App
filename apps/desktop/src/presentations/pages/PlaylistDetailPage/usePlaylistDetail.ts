@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { usePlayer, useLibraryContext } from '@music/hooks';
-import type { Song } from '@music/types';
+import type { Song, PlaybackContext } from '@music/types';
 import { useLanguage, useTheme, useLocalFilter, type SearchKey } from '@hooks';
 import { splitArtists } from '@music/core';
 import { type UsePlaylistDetailReturn } from './types';
@@ -214,7 +214,21 @@ export const usePlaylistDetail = (): UsePlaylistDetailReturn => {
       setSelectedIds,
       setActiveMenuId,
       setActiveSubMenuId,
-      playList,
+      playList: (songs: Song[], index: number) => {
+        const isExplicit = libraryFilter.type !== 'none' || !isLibrary;
+        const context: PlaybackContext = {
+          type: isLibrary
+            ? libraryFilter.type === 'album'
+              ? 'album'
+              : libraryFilter.type === 'artist'
+                ? 'artist'
+                : 'library'
+            : 'playlist',
+          id: !isLibrary ? id : (libraryFilter.values[0] || undefined),
+          isExplicit,
+        };
+        playList(songs, index, context);
+      },
       playNext,
       addToQueue
     },

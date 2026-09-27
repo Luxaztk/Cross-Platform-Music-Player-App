@@ -35,6 +35,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         audio: { ...settings.audio, ...(newSettings.audio || {}) },
         downloads: { ...settings.downloads, ...(newSettings.downloads || {}) },
         server: { ...(settings.server || DEFAULT_SETTINGS.server), ...(newSettings.server || {}) },
+        playback: { ...(settings.playback || DEFAULT_SETTINGS.playback), ...(newSettings.playback || {}) },
       };
 
       await window.electronAPI.saveSettings(updated);

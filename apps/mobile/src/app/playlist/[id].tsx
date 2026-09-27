@@ -280,11 +280,7 @@ export default function PlaylistDetailScreen() {
   const insets = useSafeAreaInsets()
 
   const { setCustomTitle } = useAppShell()
-  useEffect(() => {
-    setCustomTitle(playlist?.name || t.playlists.title) // Reset custom title when entering the screen
-  }, [setCustomTitle])
-
-  const {
+const {
     playlists,
     songs,
     library,
@@ -325,7 +321,11 @@ export default function PlaylistDetailScreen() {
       } as Playlist
     }
     return playlists.find(p => p.id === id) || null
-  }, [id, playlists, library, t])
+  }, [id, playlists, library?.songIds, t.library.allSongs])
+
+  useEffect(() => {
+    setCustomTitle(playlist?.name || t.playlists.title)
+  }, [playlist?.name, setCustomTitle, t.playlists.title])
 
   const playlistSongs = useMemo(() => {
     if (!playlist) return []
