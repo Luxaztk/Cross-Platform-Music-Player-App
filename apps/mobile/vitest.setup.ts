@@ -31,6 +31,13 @@ vi.mock('expo-av', () => ({
   },
 }));
 
+vi.mock('expo-audio', () => ({
+  createAudioPlayer: vi.fn(),
+  setAudioModeAsync: vi.fn(),
+  useAudioPlayer: vi.fn(),
+  useAudioPlayerStatus: vi.fn(),
+}));
+
 // Mock expo-document-picker
 vi.mock('expo-document-picker', () => ({
   getDocumentAsync: vi.fn(),

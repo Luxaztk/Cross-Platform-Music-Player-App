@@ -22,13 +22,14 @@ function AppLayout() {
   const pathname = usePathname()
   const { navigationLayout } = useAppShell()
   const isNowPlaying = pathname === '/now-playing'
+  const isLyrics = pathname === '/lyrics'
   const isSearch = pathname === '/search'
   const isSettings = pathname === '/settings'
 
-  const showBottomNav = !isNowPlaying && !isSearch && navigationLayout === 'tabs'
+  const showBottomNav = !isNowPlaying && !isLyrics && !isSearch && navigationLayout === 'tabs'
 
   // PlayerBar hidden on Now-Playing, Search, and Settings
-  const showPlayerBar = !isNowPlaying && !isSearch && !isSettings
+  const showPlayerBar = !isNowPlaying && !isLyrics && !isSearch && !isSettings
 
   return (
     <View style={{ flex: 1 }}>
@@ -41,6 +42,10 @@ function AppLayout() {
         <Stack.Screen
           name="now-playing"
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="lyrics"
+          options={{ presentation: 'modal', animation: 'slide_from_right' }}
         />
         <Stack.Screen
           name="playlist/[id]"

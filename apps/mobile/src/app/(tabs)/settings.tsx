@@ -286,7 +286,7 @@ export default function SettingsScreen() {
         if (orphanStreamSongIds.length > 0 && addedCount > 0) {
           notify({
             kind: 'success',
-            message: `Đã đồng bộ: Thêm ${addedCount} bài mới, dọn dẹp ${orphanStreamSongIds.length} bài không còn trên máy chủ!`,
+            message: `Đã tải từ máy chủ: Thêm ${addedCount} bài mới, dọn dẹp ${orphanStreamSongIds.length} bài không còn trên máy chủ!`,
           })
         } else if (orphanStreamSongIds.length > 0) {
           notify({
@@ -296,7 +296,7 @@ export default function SettingsScreen() {
         } else if (addedCount > 0) {
           notify({
             kind: 'success',
-            message: `Đã đồng bộ ${addedCount} bài hát từ máy chủ!`,
+            message: `Đã tải ${addedCount} bài hát từ máy chủ!`,
           })
         } else {
           notify({

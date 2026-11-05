@@ -1,5 +1,6 @@
 import Slider from '@react-native-community/slider'
 import { router } from 'expo-router'
+import type { Href } from 'expo-router'
 import React, { useCallback, useState } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -257,6 +258,16 @@ export default function NowPlayingScreen() {
             {currentSong.album}
           </Text>
         ) : null} */}
+      </View>
+
+      <View style={styles.actionButtons}>
+        <Pressable
+          onPress={() => router.push('/lyrics' as Href)}
+          style={[styles.actionBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+        >
+          <Feather name="music" size={18} color={theme.colors.primary} />
+          <Text style={[styles.actionBtnText, { color: theme.colors.text }]}>{t.lyrics.title}</Text>
+        </Pressable>
       </View>
 
       {/* Action buttons */}

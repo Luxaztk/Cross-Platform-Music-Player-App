@@ -108,6 +108,16 @@ export type Translations = {
     recentSearches: string
     clearAll: string
   }
+  lyrics: {
+    title: string
+    noSong: string
+    noLyrics: string
+    searchHint: string
+    searchPlaceholder: string
+    searchResults: string
+    saved: string
+    saveFailed: string
+  }
   songs: {
     playNext: string
     addToQueue: string
@@ -160,9 +170,9 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       serverDesc: 'Stream music directly from your home server (HTTP 206)',
       serverUrlTitle: 'Server URL',
       serverTestBtn: 'Check Connection',
-      serverSyncBtn: 'Sync Songs',
+      serverSyncBtn: 'Pull from Server',
       serverChecking: 'Checking...',
-      serverSyncing: 'Syncing...',
+      serverSyncing: 'Pulling...',
       serverConnected: 'Connected to server successfully',
       serverSaveSuccess: 'Server URL saved',
       cacheTitle: 'Audio Cache (LRU)',
@@ -247,6 +257,16 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       recentSearches: 'Recent searches',
       clearAll: 'Clear all history',
     },
+    lyrics: {
+      title: 'Lyrics',
+      noSong: 'No song selected',
+      noLyrics: 'No lyrics saved for this song',
+      searchHint: 'Search LRCLIB and choose lyrics to save on this device.',
+      searchPlaceholder: 'Song title and artist',
+      searchResults: 'Search results',
+      saved: 'Lyrics saved',
+      saveFailed: 'Could not save lyrics',
+    },
     songs: {
       playNext: 'Play next',
       addToQueue: 'Add to queue',
@@ -297,9 +317,9 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       serverDesc: 'Phát trực tiếp nhạc từ máy chủ gia đình (HTTP 206)',
       serverUrlTitle: 'Địa chỉ Máy Chủ',
       serverTestBtn: 'Kiểm tra kết nối',
-      serverSyncBtn: 'Đồng bộ nhạc',
+      serverSyncBtn: 'Tải từ máy chủ',
       serverChecking: 'Đang kiểm tra...',
-      serverSyncing: 'Đang đồng bộ...',
+      serverSyncing: 'Đang tải về...',
       serverConnected: 'Đã kết nối thành công tới máy chủ',
       serverSaveSuccess: 'Đã lưu cấu hình máy chủ',
       cacheTitle: 'Bộ Nhớ Đệm Âm Thanh (LRU)',
@@ -383,6 +403,16 @@ export const mobileTranslations: Record<LanguageCode, Translations> = {
       clear: 'Xóa',
       recentSearches: 'Tìm kiếm gần đây',
       clearAll: 'Xóa tất cả lịch sử',
+    },
+    lyrics: {
+      title: 'Lời bài hát',
+      noSong: 'Chưa chọn bài hát',
+      noLyrics: 'Bài hát này chưa có lời',
+      searchHint: 'Tìm trên LRCLIB và chọn lời để lưu trên thiết bị.',
+      searchPlaceholder: 'Tên bài hát và nghệ sĩ',
+      searchResults: 'Kết quả tìm kiếm',
+      saved: 'Đã lưu lời bài hát',
+      saveFailed: 'Không thể lưu lời bài hát',
     },
     songs: {
       playNext: 'Phát tiếp theo',

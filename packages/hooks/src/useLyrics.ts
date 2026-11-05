@@ -8,7 +8,7 @@ import { LYRIC_OFFSET } from './constants/index';
 
 export const useLyrics = () => {
   const { currentSong, progress, updateCurrentSongMetadata } = usePlayer();
-  const { repository, handleUpdateSong, handlePatchSong } = useLibrary();
+  const { repository, handlePatchSong } = useLibrary();
   const { offset, adjustOffset, setOffset, resetOffset } = useLyricSync();
   
   const [rawLyrics, setRawLyrics] = useState<string | null>(null);
@@ -100,8 +100,8 @@ export const useLyrics = () => {
       if (success) {
         setRawLyrics(lyrics);
         
-        // 3. Sync Library state
-        handleUpdateSong({ ...currentSong, lyricId });
+        // 3. Sync Library state without overwriting the lyrics persisted by the repository
+        await handlePatchSong(currentSong.id, { syncedLyrics: lyrics, lyricId });
       } else {
         throw new Error('Database save failed');
       }
@@ -115,7 +115,7 @@ export const useLyrics = () => {
       
       return false;
     }
-  }, [currentSong, repository, updateCurrentSongMetadata, handleUpdateSong]);
+  }, [currentSong, repository, updateCurrentSongMetadata, handlePatchSong]);
 
   const patchLyricSearchParam = useCallback(async (searchParam: string) => {
     if (!currentSong) return false;

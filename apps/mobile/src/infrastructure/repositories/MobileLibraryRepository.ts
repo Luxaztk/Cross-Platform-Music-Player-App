@@ -1,6 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { MobileStorageAdapter } from '../storage/MobileStorageAdapter';
 import { importPickedAudioAssets } from './importAudio';
+import { MobileLyricsService } from '../services/MobileLyricsService';
 import type { ILibraryRepository } from '@music/core';
 import type { Song, Playlist, PlaylistDetail, ImportResult, LyricSearchResult, SyncHistoryEntry, SyncStats } from '@music/types';
 
@@ -212,15 +213,34 @@ export class MobileLibraryRepository implements ILibraryRepository {
   }
 
   async getLyrics(songId: string): Promise<string | null> {
-    return null;
+    const songs = await this.storage.getSongs();
+    const song = songs[songId];
+    return song?.syncedLyrics || song?.lyrics || null;
   }
 
   async saveLyrics(songId: string, lyrics: string, lyricId?: number): Promise<boolean> {
-    return false;
+    const updated = await this.storage.patchSong(songId, { syncedLyrics: lyrics, lyricId });
+    if (!updated) return false;
+    if (lyricId !== undefined) {
+      const usage = await this.storage.getLyricUsage();
+      const key = lyricId.toString();
+      usage[key] = (usage[key] || 0) + 1;
+      await this.storage.saveLyricUsage(usage);
+    }
+    return true;
   }
 
   async searchLyrics(query: string): Promise<LyricSearchResult[]> {
-    return [];
+    const [results, usage] = await Promise.all([
+      MobileLyricsService.search(query),
+      this.storage.getLyricUsage(),
+    ]);
+    return results.sort((a, b) => {
+      const usageDiff = (usage[b.id.toString()] || 0) - (usage[a.id.toString()] || 0);
+      if (usageDiff !== 0) return usageDiff;
+      if (Boolean(b.syncedLyrics) !== Boolean(a.syncedLyrics)) return b.syncedLyrics ? 1 : -1;
+      return 0;
+    });
   }
 
   async patchSong(songId: string, updates: Partial<Song>): Promise<Song | null> {
