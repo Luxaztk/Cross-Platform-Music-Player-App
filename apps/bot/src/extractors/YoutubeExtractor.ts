@@ -210,13 +210,19 @@ export class YoutubeExtractor implements BaseExtractor {
     };
   }
 
-  public createStream(track: TrackMetadata): Readable {
+  public createStream(track: TrackMetadata, seekSec: number = 0): Readable {
     const args = [
       '-o', '-',
       '-f', 'bestaudio/best',
       '--quiet',
       '--no-warnings',
     ];
+
+    if (seekSec > 0) {
+      // Let yt-dlp download from the requested section instead of making FFmpeg
+      // consume a non-seekable network pipe from 0:00 up to the target position.
+      args.push('--download-sections', `*${seekSec}-inf`);
+    }
 
     if (this.cookiesPath && fs.existsSync(this.cookiesPath)) {
       args.push('--cookies', this.cookiesPath);

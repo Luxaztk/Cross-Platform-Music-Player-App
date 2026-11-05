@@ -8,12 +8,28 @@ import type { LoopMode, MusicManager } from '../services/MusicManager.js';
 import type { TrackMetadata } from '../extractors/BaseExtractor.js';
 
 export interface ActivityMessage {
-  type: 'JOIN_GUILD' | 'PAUSE_RESUME' | 'SKIP' | 'PREV_TRACK' | 'STOP' | 'SET_VOLUME' | 'SET_LOOP' | 'TOGGLE_SHUFFLE' | 'GET_STATE' | 'PLAY_TRACK' | 'SEEK';
+  type:
+    | 'JOIN_GUILD'
+    | 'PAUSE_RESUME'
+    | 'SKIP'
+    | 'PREV_TRACK'
+    | 'STOP'
+    | 'SET_VOLUME'
+    | 'SET_LOOP'
+    | 'TOGGLE_SHUFFLE'
+    | 'GET_STATE'
+    | 'PLAY_TRACK'
+    | 'SEEK'
+    | 'REMOVE_QUEUE_ITEM'
+    | 'JUMP_TO_QUEUE_ITEM'
+    | 'CLEAR_QUEUE';
   guildId: string;
   query?: string;
+  requestId?: string;
   volume?: number;
   loopMode?: LoopMode;
   seekSec?: number;
+  queueIndex?: number;
 }
 
 // DEP-C2 FIX: Giới hạn kích thước hàng đợi để ngăn abuse (spam /play playlist 10.000 bài)
@@ -23,6 +39,7 @@ export interface ClientConnection {
   ws: WebSocket;
   guildId?: string;
   lastPlayRequestTime?: number;
+  isAlive?: boolean;
 }
 
 export class ActivityServer {
@@ -31,9 +48,9 @@ export class ActivityServer {
   private wss: WebSocketServer | null = null;
   private clients: Set<ClientConnection> = new Set();
   private botClient: BotClient | null = null;
+  private unsubscribeManagerCreated: (() => void) | null = null;
 
   constructor(botClient?: BotClient) {
-    this.botClient = botClient || null;
     this.app = express();
 
     // Robust static path resolution for embedded web app
@@ -137,10 +154,50 @@ export class ActivityServer {
         }
       });
     });
+
+    if (botClient) {
+      this.setBotClient(botClient);
+    }
   }
 
   public setBotClient(client: BotClient): void {
+    this.unsubscribeManagerCreated?.();
     this.botClient = client;
+    for (const [guildId, manager] of client.musicManagers.entries()) {
+      this.ensureManagerListener(guildId, manager);
+    }
+    this.unsubscribeManagerCreated = client.onMusicManagerCreated((guildId, manager) => {
+      this.ensureManagerListener(guildId, manager);
+    });
+  }
+
+  public resolveGuildId(rawGuildId: string): string {
+    if (!this.botClient) return rawGuildId;
+
+    if (rawGuildId !== 'default' && this.botClient.guilds.cache.has(rawGuildId)) {
+      return rawGuildId;
+    }
+
+    for (const [guildId, manager] of this.botClient.musicManagers.entries()) {
+      if (
+        this.botClient.guilds.cache.has(guildId) &&
+        (manager.currentTrack !== null || manager.queue.length > 0)
+      ) {
+        return guildId;
+      }
+    }
+
+    for (const guild of this.botClient.guilds.cache.values()) {
+      const hasActiveHumanVoiceChannel = guild.channels.cache.some(
+        (channel) =>
+          channel.isVoiceBased() &&
+          channel.id !== guild.afkChannelId &&
+          channel.members.some((member) => !member.user.bot)
+      );
+      if (hasActiveHumanVoiceChannel) return guild.id;
+    }
+
+    return this.botClient.guilds.cache.first()?.id || rawGuildId;
   }
 
   private subscribedManagers = new WeakSet<MusicManager>();
@@ -170,6 +227,7 @@ export class ActivityServer {
   }
 
   private tickerInterval: ReturnType<typeof setInterval> | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
   public start(port: number = 36970): Promise<number> {
     return new Promise((resolve, reject) => {
@@ -194,9 +252,31 @@ export class ActivityServer {
         }
       }, 1000);
 
+      this.heartbeatInterval = setInterval(() => {
+        for (const client of this.clients) {
+          if (client.isAlive === false) {
+            client.ws.terminate();
+            this.clients.delete(client);
+            continue;
+          }
+
+          client.isAlive = false;
+          try {
+            client.ws.ping();
+          } catch (err) {
+            console.error('[ActivityServer] heartbeat ping failed:', err);
+            this.clients.delete(client);
+          }
+        }
+      }, 25_000);
+
       this.wss.on('connection', (ws: WebSocket) => {
-        const conn: ClientConnection = { ws };
+        const conn: ClientConnection = { ws, isAlive: true };
         this.clients.add(conn);
+
+        ws.on('pong', () => {
+          conn.isAlive = true;
+        });
 
         ws.on('message', async (data: Buffer | string) => {
           try {
@@ -234,6 +314,13 @@ export class ActivityServer {
         clearInterval(this.tickerInterval);
         this.tickerInterval = null;
       }
+      if (this.heartbeatInterval) {
+        clearInterval(this.heartbeatInterval);
+        this.heartbeatInterval = null;
+      }
+
+      this.unsubscribeManagerCreated?.();
+      this.unsubscribeManagerCreated = null;
 
       for (const client of this.clients) {
         client.ws.close();
@@ -278,10 +365,7 @@ export class ActivityServer {
   private async handleClientMessage(conn: ClientConnection, msg: ActivityMessage): Promise<void> {
     if (!msg.guildId) return;
 
-    const guildId =
-      msg.guildId === 'default' && this.botClient?.guilds.cache.first()
-        ? this.botClient.guilds.cache.first()!.id
-        : msg.guildId;
+    const guildId = this.resolveGuildId(msg.guildId);
 
     conn.guildId = guildId;
 
@@ -327,7 +411,7 @@ export class ActivityServer {
       case 'SKIP': {
         const targetGuild = this.botClient.guilds.cache.get(guildId) || this.botClient.guilds.cache.first();
         musicManager.ensureVoiceConnection(targetGuild);
-        musicManager.skip();
+        await musicManager.skip();
         this.broadcastGuildState(guildId, musicManager);
         break;
       }
@@ -363,6 +447,7 @@ export class ActivityServer {
       case 'PLAY_TRACK': {
         if (msg.query && this.botClient) {
           const query = msg.query.trim();
+          const requestId = msg.requestId;
           if (!query) break;
 
           // E-08: Rate limit / Cooldown kiểm soát spam (1000ms mỗi client)
@@ -372,6 +457,7 @@ export class ActivityServer {
               type: 'ERROR',
               message: 'Vui lòng chờ giây lát trước khi yêu cầu bài hát tiếp theo.',
             });
+            this.sendPlayTrackResult(conn, requestId, false);
             break;
           }
           conn.lastPlayRequestTime = now;
@@ -382,37 +468,44 @@ export class ActivityServer {
               type: 'ERROR',
               message: `Hàng đợi đã đầy (tối đa ${MAX_QUEUE_SIZE} bài). Vui lòng dùng /stop để xóa hàng đợi.`,
             });
+            this.sendPlayTrackResult(conn, requestId, false);
             break;
           }
 
-          const targetGuild = this.botClient.guilds.cache.get(guildId) || this.botClient.guilds.cache.first();
-          musicManager.ensureVoiceConnection(targetGuild);
-
-          this.botClient.streamer
-            .getTrackInfo(query, 'Discord Activity User')
-            .then(async (result) => {
-              if (result.tracks && result.tracks.length > 0) {
-                await musicManager.enqueue(result.tracks);
-                this.broadcastGuildState(guildId, musicManager);
-              } else {
-                // E-03: Báo lỗi nếu không tìm thấy bài hát
-                this.sendToClient(conn, {
-                  type: 'ERROR',
-                  message: `Không tìm thấy bài hát phù hợp cho: "${query}"`,
-                });
-                this.broadcastGuildState(guildId, musicManager);
-              }
-            })
-            .catch((err: unknown) => {
-              const errMsg = err instanceof Error ? err.message : String(err);
-              console.error('[ActivityServer] Play error:', errMsg);
-              // E-03: Gửi thông báo lỗi cho client Activity
+          try {
+            const result = await this.botClient.streamer.getTrackInfo(query, 'Discord Activity User');
+            if (!result.tracks || result.tracks.length === 0) {
               this.sendToClient(conn, {
                 type: 'ERROR',
-                message: `Lỗi khi phát bài hát: ${errMsg}`,
+                message: `Không tìm thấy bài hát phù hợp cho: "${query}"`,
               });
-              this.broadcastGuildState(guildId, musicManager);
+              this.sendPlayTrackResult(conn, requestId, false);
+              break;
+            }
+
+            const targetGuild = this.botClient.guilds.cache.get(guildId);
+            if (!musicManager.ensureVoiceConnection(targetGuild)) {
+              this.sendToClient(conn, {
+                type: 'ERROR',
+                message: 'Hãy tham gia một kênh thoại đang hoạt động trước khi phát nhạc.',
+              });
+              this.sendPlayTrackResult(conn, requestId, false);
+              break;
+            }
+
+            await musicManager.enqueue(result.tracks);
+            this.sendPlayTrackResult(conn, requestId, true);
+            this.broadcastGuildState(guildId, musicManager);
+          } catch (err: unknown) {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            console.error('[ActivityServer] Play error:', errMsg);
+            this.sendToClient(conn, {
+              type: 'ERROR',
+              message: `Lỗi khi phát bài hát: ${errMsg}`,
             });
+            this.sendPlayTrackResult(conn, requestId, false);
+            this.broadcastGuildState(guildId, musicManager);
+          }
         }
         break;
       }
@@ -440,6 +533,28 @@ export class ActivityServer {
         break;
       }
 
+      case 'REMOVE_QUEUE_ITEM': {
+        if (typeof msg.queueIndex === 'number') {
+          musicManager.removeQueueItem(msg.queueIndex);
+          this.broadcastGuildState(guildId, musicManager);
+        }
+        break;
+      }
+
+      case 'JUMP_TO_QUEUE_ITEM': {
+        if (typeof msg.queueIndex === 'number') {
+          await musicManager.jumpToQueueItem(msg.queueIndex);
+          this.broadcastGuildState(guildId, musicManager);
+        }
+        break;
+      }
+
+      case 'CLEAR_QUEUE': {
+        musicManager.clearQueue();
+        this.broadcastGuildState(guildId, musicManager);
+        break;
+      }
+
       default:
         break;
     }
@@ -456,6 +571,18 @@ export class ActivityServer {
       coverArt,
       thumbnail: coverArt,
     };
+  }
+
+  private sendPlayTrackResult(
+    conn: ClientConnection,
+    requestId: string | undefined,
+    ok: boolean
+  ): void {
+    this.sendToClient(conn, {
+      type: 'PLAY_TRACK_RESULT',
+      requestId,
+      ok,
+    });
   }
 
   private sendToClient(conn: ClientConnection, data: Record<string, unknown>): void {

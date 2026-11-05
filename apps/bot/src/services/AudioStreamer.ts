@@ -36,7 +36,7 @@ export class AudioStreamer {
     if (track.source === 'local') {
       inputStream = await this.localExtractor.createStream(track);
     } else {
-      inputStream = this.youtubeExtractor.createStream(track);
+      inputStream = this.youtubeExtractor.createStream(track, options.seek);
     }
 
     // BUG-A4 FIX: Tách rõ input args và output args để -af filter vào đúng output section
@@ -47,7 +47,7 @@ export class AudioStreamer {
     ];
 
     // DESIGN-06: Seek support — -ss trước output để seek hiệu quả
-    if (options.seek && options.seek > 0) {
+    if (track.source === 'local' && options.seek && options.seek > 0) {
       ffmpegInputArgs.push('-ss', String(options.seek));
     }
 

@@ -22,7 +22,7 @@ export const skipCommand: SlashCommand = {
     }
 
     const skippedTitle = musicManager.currentTrack.title;
-    musicManager.skip();
+    await musicManager.skip();
 
     await interaction.reply({
       embeds: [createSuccessEmbed(botT(lang, 'btn.skip'), `**${skippedTitle}**`, lang)],

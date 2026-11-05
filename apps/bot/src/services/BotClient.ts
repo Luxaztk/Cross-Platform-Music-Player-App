@@ -29,6 +29,7 @@ export class BotClient extends Client {
   public commands: Collection<string, SlashCommand> = new Collection();
   public musicManagers: Map<string, MusicManager> = new Map();
   public streamer: AudioStreamer;
+  private musicManagerCreatedListeners = new Set<(guildId: string, manager: MusicManager) => void>();
 
   constructor() {
     super({
@@ -94,9 +95,21 @@ export class BotClient extends Client {
     if (!existing || existing.isDestroyed) {
       const manager = new MusicManager(guildId, this.config.cookiesPath);
       this.musicManagers.set(guildId, manager);
+      for (const listener of this.musicManagerCreatedListeners) {
+        listener(guildId, manager);
+      }
       return manager;
     }
     return existing;
+  }
+
+  public onMusicManagerCreated(
+    listener: (guildId: string, manager: MusicManager) => void
+  ): () => void {
+    this.musicManagerCreatedListeners.add(listener);
+    return () => {
+      this.musicManagerCreatedListeners.delete(listener);
+    };
   }
 
   // DESIGN-09 FIX: Xóa MusicManager khỏi Map sau khi destroy để tránh zombie instances

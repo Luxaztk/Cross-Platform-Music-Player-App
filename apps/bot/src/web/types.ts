@@ -11,7 +11,7 @@ export interface ActivityTrack {
 
 export const getRepeatMode = (mode: string): RepeatMode => {
   const upper = (mode || '').toUpperCase();
-  if (upper === 'ALL') return 'ALL';
-  if (upper === 'ONE') return 'ONE';
+  if (upper === 'ALL' || upper === 'QUEUE') return 'ALL';
+  if (upper === 'ONE' || upper === 'TRACK') return 'ONE';
   return 'OFF';
 };

@@ -37,6 +37,8 @@ export class MusicManager extends EventEmitter {
   private streamer: AudioStreamer;
   private currentResource: AudioResource<TrackMetadata> | null = null;
   private activeCleanup: (() => void) | null = null;
+  private seekOffsetSec: number = 0;
+  private isTransitioning: boolean = false;
   private disconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   // BUG-A2 FIX: Đếm số lần playNext() thất bại liên tiếp để ngăn đệ quy vô hạn
   private consecutiveFailures: number = 0;
@@ -51,9 +53,9 @@ export class MusicManager extends EventEmitter {
 
     this.audioPlayer = createAudioPlayer({
       behaviors: {
-        // IMP-B2 FIX: Dùng Stop thay vì Pause để khi VoiceConnection bị drop tạm thời,
-        // AudioPlayer phát Idle event → handleTrackEnd() tự retry, tránh bot bị đóng băng
-        noSubscriber: NoSubscriberBehavior.Stop,
+        // Preserve the resource while Discord voice is handshaking or changing region.
+        // Stopping here emits a false Idle event and advances the queue unexpectedly.
+        noSubscriber: NoSubscriberBehavior.Pause,
       },
     });
 
@@ -66,8 +68,11 @@ export class MusicManager extends EventEmitter {
   }
 
   public ensureVoiceConnection(guild?: Guild): boolean {
-    if (this.voiceConnection && this.voiceConnection.state.status !== VoiceConnectionStatus.Destroyed) {
-      return true;
+    if (this.voiceConnection) {
+      const status = this.voiceConnection.state.status;
+      if (status !== VoiceConnectionStatus.Destroyed && status !== VoiceConnectionStatus.Disconnected) {
+        return true;
+      }
     }
 
     if (this.lastVoiceChannel && this.lastVoiceChannel.guild) {
@@ -82,9 +87,12 @@ export class MusicManager extends EventEmitter {
     if (guild) {
       // BUG-02 FIX: Filter to VoiceBasedChannel trước để tránh runtime error trên CategoryChannel
       const voiceChannels = guild.channels.cache.filter((c: GuildBasedChannel) => c.isVoiceBased());
-      const activeChannel =
-        voiceChannels.find((c) => c.isVoiceBased() && c.members.size > 0) ||
-        voiceChannels.first();
+      const activeChannel = voiceChannels.find(
+        (c) =>
+          c.isVoiceBased() &&
+          c.id !== guild.afkChannelId &&
+          c.members.some((member) => !member.user.bot)
+      );
       if (activeChannel && activeChannel.isVoiceBased()) {
         this.join(activeChannel);
         return true;
@@ -105,11 +113,12 @@ export class MusicManager extends EventEmitter {
 
     this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
       // BUG-06 FIX: Không xử lý track end nếu manager đã bị destroy
-      if (this.isDestroyed) return;
+      if (this.isDestroyed || this.isTransitioning) return;
       this.handleTrackEnd();
     });
 
     this.audioPlayer.on('error', (error) => {
+      if (this.isDestroyed || this.isTransitioning) return;
       console.error(`[MusicManager Guild ${this.guildId}] AudioPlayer Error:`, error.message);
       if (this.textChannel) {
         this.textChannel.send({
@@ -122,6 +131,7 @@ export class MusicManager extends EventEmitter {
 
   public join(voiceChannel: VoiceBasedChannel, textChannel?: GuildTextBasedChannel): VoiceConnection {
     this.isDestroyed = false;
+    this.lastVoiceChannel = voiceChannel;
     if (textChannel) {
       this.textChannel = textChannel;
     }
@@ -138,6 +148,8 @@ export class MusicManager extends EventEmitter {
           selfDeaf: false,
           selfMute: false,
         });
+      } else if (this.voiceConnection.state.status === VoiceConnectionStatus.Disconnected) {
+        this.voiceConnection.rejoin();
       }
       return this.voiceConnection;
     }
@@ -214,6 +226,7 @@ export class MusicManager extends EventEmitter {
     if (this.queue.length === 0) {
       this.currentTrack = null;
       this.currentResource = null;
+      this.seekOffsetSec = 0;
       this.scheduleDisconnect();
       this.notifyStateChange();
       return false;
@@ -243,6 +256,7 @@ export class MusicManager extends EventEmitter {
     }
     this.previousTrack = this.currentTrack;  // DESIGN-07: Lưu lại bài hiện tại trước khi sang bài mới
     this.currentTrack = nextTrack;
+    this.seekOffsetSec = 0;
 
     try {
       const { resource, cleanup } = await this.streamer.createAudioResource(nextTrack, {
@@ -343,7 +357,7 @@ export class MusicManager extends EventEmitter {
       this.queue.push(this.currentTrack);
     }
 
-    this.playNext();
+    void this.playNext();
   }
 
   public pause(): boolean {
@@ -367,26 +381,40 @@ export class MusicManager extends EventEmitter {
     return ok;
   }
 
-  public skip(): boolean {
+  private async transitionToNextTrack(): Promise<boolean> {
+    if (this.isTransitioning) return false;
+
+    this.isTransitioning = true;
+    try {
+      this.audioPlayer.stop(true);
+      return await this.playNext();
+    } finally {
+      this.isTransitioning = false;
+    }
+  }
+
+  public async skip(): Promise<boolean> {
     if (!this.currentTrack) return false;
-    this.audioPlayer.stop();
-    this.notifyStateChange();
-    return true;
+    return this.transitionToNextTrack();
   }
 
   public stop(): void {
+    this.isTransitioning = true;
     if (this.nowPlayingMessage) {
       this.nowPlayingMessage.edit({ components: [] }).catch(() => { });
       this.nowPlayingMessage = null;
     }
     this.queue = [];
     this.currentTrack = null;
+    this.currentResource = null;
+    this.seekOffsetSec = 0;
     this.isShuffle = false;
     this.audioPlayer.stop(true);
     if (this.activeCleanup) {
       this.activeCleanup();
       this.activeCleanup = null;
     }
+    this.isTransitioning = false;
     this.scheduleDisconnect();
     this.notifyStateChange();
   }
@@ -403,48 +431,75 @@ export class MusicManager extends EventEmitter {
   }
 
   public getPlaybackPosition(): number {
-    return Math.floor((this.currentResource?.playbackDuration || 0) / 1000);
+    return this.seekOffsetSec + Math.floor((this.currentResource?.playbackDuration || 0) / 1000);
   }
 
   // DESIGN-07: Phát lại bài trước (Prev Track)
   public async playPrev(): Promise<boolean> {
-    if (!this.previousTrack) return false;
-    // Đưa bài hiện tại và bài trước trở lại queue đầu
-    if (this.currentTrack) {
-      this.queue.unshift(this.currentTrack);
+    if (!this.currentTrack) return false;
+    if (!this.previousTrack || this.getPlaybackPosition() > 3) {
+      return this.seekTo(0);
     }
-    this.queue.unshift(this.previousTrack);
+
+    const previousTrack = this.previousTrack;
+    this.queue.unshift(this.currentTrack);
+    this.queue.unshift(previousTrack);
     this.previousTrack = null;
-    this.audioPlayer.stop();
-    this.notifyStateChange();
-    return true;
+    return this.transitionToNextTrack();
   }
 
   // DESIGN-06: Seek đến vị trí cụ thể trong bài (tính bằng giây)
   // Lưu ý: @discordjs/voice không hỗ trợ seek native — cách duy nhất là tạo lại stream từ seek position
   public async seekTo(seconds: number): Promise<boolean> {
-    if (!this.currentTrack) return false;
+    if (!this.currentTrack || !Number.isFinite(seconds) || this.isTransitioning) return false;
 
-    // Dừng stream hiện tại
-    if (this.activeCleanup) {
-      this.activeCleanup();
-      this.activeCleanup = null;
-    }
+    const duration = this.currentTrack.duration || 0;
+    const seekSec = Math.max(0, duration > 0 ? Math.min(seconds, duration) : seconds);
+    this.isTransitioning = true;
 
     try {
+      if (this.activeCleanup) {
+        this.activeCleanup();
+        this.activeCleanup = null;
+      }
+
       const { resource, cleanup } = await this.streamer.createAudioResource(this.currentTrack, {
         volume: this.volume,
-        seek: seconds,
+        seek: seekSec,
       });
       this.currentResource = resource;
       this.activeCleanup = cleanup;
+      this.seekOffsetSec = seekSec;
       this.audioPlayer.play(resource);
       this.notifyStateChange();
       return true;
     } catch (err) {
       console.error(`[MusicManager] seekTo failed:`, err);
       return false;
+    } finally {
+      this.isTransitioning = false;
     }
+  }
+
+  public removeQueueItem(index: number): TrackMetadata | null {
+    if (!Number.isInteger(index) || index < 0 || index >= this.queue.length) return null;
+    const [removed] = this.queue.splice(index, 1);
+    this.notifyStateChange();
+    return removed || null;
+  }
+
+  public async jumpToQueueItem(index: number): Promise<boolean> {
+    if (!Number.isInteger(index) || index < 0 || index >= this.queue.length) return false;
+    const [selected] = this.queue.splice(index, 1);
+    this.queue.unshift(selected);
+    return this.transitionToNextTrack();
+  }
+
+  public clearQueue(): number {
+    const removedCount = this.queue.length;
+    this.queue = [];
+    this.notifyStateChange();
+    return removedCount;
   }
 
   public setLoop(mode: LoopMode): LoopMode {
@@ -520,6 +575,7 @@ export class MusicManager extends EventEmitter {
     this.queue = [];
     this.currentTrack = null;
     this.currentResource = null;
+    this.seekOffsetSec = 0;
 
     // Ngắt kết nối voice
     if (this.voiceConnection) {

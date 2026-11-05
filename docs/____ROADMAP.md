@@ -251,6 +251,12 @@ Mục tiêu: Đưa trải nghiệm nghe nhạc chất lượng cao của MeloVis
     - `IMP-B8` Slash Commands SHA-256 Hash Caching (`ready.ts`): Bỏ qua `rest.put(...)` nếu commands không thay đổi khi bot khởi động lại (tránh rate limit đăng ký lệnh).
     - `IMP-B5` SPA Fallback Header `Content-Type: text/html; charset=utf-8` trong `ActivityServer`.
     - `DEP-C1` Bổ sung metrics giám sát hệ thống (`activeGuilds`, `wsClients`, `uptime`, `memoryUsage` heap/rss) vào `/api/health` cho server Pentium N6000 4GB RAM.
+  - [x] **Bot Activity & Playback Sync Deep Fix Sprint (P0)** *(Hoàn thành 30/10/2026)*:
+    - Triệt tiêu Idle race khi seek/skip/prev, lưu seek offset tuyệt đối, sửa YouTube section seek, giữ AudioResource khi voice handshake và ghi nhớ đúng voice channel gần nhất.
+    - Đồng bộ guild thông minh giữa Bot/Activity, tự đăng ký listener cho MusicManager mới, bổ sung WebSocket heartbeat 25 giây và phản hồi `PLAY_TRACK_RESULT` theo `requestId`.
+    - Bổ sung điều khiển queue `REMOVE_QUEUE_ITEM`, `JUMP_TO_QUEUE_ITEM`, `CLEAR_QUEUE`; sửa repeat mapping `track/queue`; tách WebSocket/state sang `useActivityPlayer.ts` và chuẩn hóa UI bằng semantic SCSS.
+    - `/app` gắn `guildId` vào Web Player URL cấu hình qua `ACTIVITY_PUBLIC_URL`; xóa fallback Cloudflare tạm đã chết và build lại bundle `apps/bot/public/`.
+    - Kiểm thử: 27/27 Bot tests Green (gồm regression reconnect và seek-error), Bot Vite + server `tsc` build Green, Activity web typecheck Green, 5/5 `VolumeControl` tests Green, Desktop renderer/node typecheck Green.
 
 - [ ] **Phase 5: Bộ Lọc Âm Thanh Nâng Cao & Tối Ưu Tìm Kiếm (DSP & Search Expansion)**
   - [ ] Tính năng Autocomplete Search cho lệnh `/play` (gợi ý nhanh từ YouTube & thư viện cục bộ).

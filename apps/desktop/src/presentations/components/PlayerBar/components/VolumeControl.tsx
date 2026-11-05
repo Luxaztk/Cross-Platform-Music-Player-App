@@ -22,7 +22,7 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
 
     return (
         <div className="volume-control">
-            <button className="control-btn volume-btn" onClick={onToggleMute}>
+            <button type="button" className="control-btn volume-btn" onClick={onToggleMute}>
                 {volumeIcon}
             </button>
             <input

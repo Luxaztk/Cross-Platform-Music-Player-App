@@ -27,18 +27,28 @@ export const appCommand: SlashCommand = {
       lang
     );
 
-    const tunnelUrl = process.env.ACTIVITY_PUBLIC_URL || 'https://appreciation-proprietary-tsunami-brands.trycloudflare.com';
+    const publicUrl = process.env.ACTIVITY_PUBLIC_URL?.trim();
+    const buttons: ButtonBuilder[] = [];
+    if (publicUrl) {
+      const webPlayerUrl = new URL(publicUrl);
+      if (interaction.guildId) {
+        webPlayerUrl.searchParams.set('guildId', interaction.guildId);
+      }
+      buttons.push(
+        new ButtonBuilder()
+          .setLabel('🌐 Open Web Player (Browser)')
+          .setStyle(ButtonStyle.Link)
+          .setURL(webPlayerUrl.toString())
+      );
+    }
 
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setLabel('🌐 Open Web Player (Browser)')
-        .setStyle(ButtonStyle.Link)
-        .setURL(tunnelUrl),
+    buttons.push(
       new ButtonBuilder()
         .setLabel('🚀 Launch Activity in Discord')
         .setStyle(ButtonStyle.Link)
         .setURL(activityUrl)
     );
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(...buttons);
 
     await interaction.reply({
       embeds: [embed],

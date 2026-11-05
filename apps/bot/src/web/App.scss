@@ -1,0 +1,368 @@
+.activity-app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--bg-primary);
+  color: var(--color-text-main);
+}
+
+.activity-toast {
+  position: fixed;
+  top: calc(var(--spacing-xl) + var(--spacing-lg));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-full);
+  background: rgba(var(--color-error-rgb), 0.95);
+  box-shadow: var(--shadow-md);
+  color: var(--color-inverse);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  animation: activity-fade-in var(--transition-fast);
+
+  button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: var(--font-size-md);
+  }
+}
+
+.activity-header {
+  min-height: calc(var(--spacing-xl) + var(--spacing-md));
+  padding: 0 var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-header);
+}
+
+.activity-brand,
+.activity-header-actions,
+.activity-search,
+.activity-connection,
+.activity-queue-header,
+.activity-queue-header-actions,
+.activity-queue-item,
+.activity-queue-actions {
+  display: flex;
+  align-items: center;
+}
+
+.activity-brand {
+  gap: var(--spacing-sm);
+  min-width: calc(var(--spacing-xl) * 4.5);
+
+  img {
+    width: calc(var(--spacing-lg) - var(--radius-xs));
+    height: calc(var(--spacing-lg) - var(--radius-xs));
+  }
+
+  span {
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    font-weight: 800;
+  }
+}
+
+.activity-search {
+  flex: 1;
+  max-width: calc(var(--spacing-xl) * 12);
+  gap: var(--spacing-sm);
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    outline: none;
+    background: var(--bg-surface);
+    color: var(--color-text-main);
+    font-size: var(--font-size-sm);
+
+    &:focus {
+      border-color: var(--color-primary);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+}
+
+.activity-primary-btn,
+.activity-secondary-btn,
+.activity-queue-header button,
+.activity-queue-actions button {
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-weight: 700;
+  transition: all var(--transition-fast);
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.activity-primary-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 0;
+  background: var(--color-primary);
+  color: var(--color-inverse);
+}
+
+.activity-secondary-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--color-text-main);
+  font-size: var(--font-size-xs);
+
+  &.is-active,
+  &:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-inverse);
+  }
+}
+
+.activity-header-actions {
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  min-width: calc(var(--spacing-xl) * 4.5);
+}
+
+.activity-connection {
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+
+  &.is-online {
+    color: var(--color-success);
+
+    .activity-connection-dot {
+      background: var(--color-success);
+    }
+  }
+}
+
+.activity-connection-dot {
+  width: var(--spacing-xs);
+  height: var(--spacing-xs);
+  border-radius: 50%;
+  background: var(--color-error);
+}
+
+.activity-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: var(--spacing-md);
+  overflow: hidden;
+  padding: var(--spacing-md);
+}
+
+.activity-player {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: flex var(--transition-slow);
+
+  &.with-queue {
+    flex: 1;
+  }
+}
+
+.activity-now-playing-card {
+  width: 100%;
+  max-width: calc(var(--spacing-xl) * 10.5);
+  padding: calc(var(--spacing-lg) + var(--spacing-xs)) calc(var(--spacing-xl) + var(--spacing-sm));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-solid);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+
+  h2 {
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text-main);
+    font-size: var(--font-size-lg);
+  }
+
+  p {
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+  }
+}
+
+.activity-cover {
+  width: calc(var(--spacing-xl) * 3.75);
+  height: calc(var(--spacing-xl) * 3.75);
+  margin: 0 auto var(--spacing-md);
+  overflow: hidden;
+  border: var(--radius-sm) solid var(--color-primary);
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+
+  &.is-playing {
+    animation: activity-spin 12s linear infinite;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.activity-queue-panel {
+  flex: 1;
+  max-width: calc(var(--spacing-xl) * 9.5);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-solid);
+  box-shadow: var(--shadow-md);
+  animation: activity-slide-in var(--transition-fast);
+}
+
+.activity-queue-header {
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--color-text-main);
+  font-size: var(--font-size-sm);
+}
+
+.activity-queue-header-actions,
+.activity-queue-actions {
+  gap: var(--spacing-xs);
+
+  button {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--color-text-muted);
+
+    &:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+  }
+}
+
+.activity-queue-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+.activity-queue-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: calc(var(--spacing-xl) * 2) var(--spacing-md);
+  color: var(--color-text-muted);
+  text-align: center;
+
+  span {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+.activity-queue-item {
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+
+  > img {
+    width: calc(var(--spacing-xl) - var(--radius-sm));
+    height: calc(var(--spacing-xl) - var(--radius-sm));
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+  }
+}
+
+.activity-queue-index {
+  width: var(--spacing-md);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-align: center;
+}
+
+.activity-queue-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  strong,
+  span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  strong {
+    color: var(--color-text-main);
+    font-size: var(--font-size-sm);
+  }
+
+  span {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+  }
+}
+
+.activity-queue-duration {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.activity-player-bar {
+  .player-left,
+  .player-right {
+    min-width: calc(var(--spacing-xl) * 4.5);
+  }
+}
+
+@keyframes activity-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes activity-fade-in {
+  from { opacity: 0; transform: translate(-50%, calc(var(--spacing-sm) * -1)); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes activity-slide-in {
+  from { opacity: 0; transform: translateX(var(--spacing-md)); }
+  to { opacity: 1; transform: translateX(0); }
+}

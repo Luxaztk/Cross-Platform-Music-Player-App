@@ -82,7 +82,7 @@ export async function onInteractionCreate(interaction: Interaction, client: BotC
         }
         // Vô hiệu hóa nút bấm trên tin nhắn hiện tại
         await interaction.update({ components: [] });
-        musicManager.skip();
+        await musicManager.skip();
         break;
       }
 
