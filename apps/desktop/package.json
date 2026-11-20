@@ -71,6 +71,12 @@
     "appId": "com.melovista.app",
     "productName": "Melovista",
     "electronVersion": "41.0.3",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json",
+      "!release{,/**/*}"
+    ],
     "publish": [
       {
         "provider": "github",

@@ -23,6 +23,7 @@ const ROOT_PKG_PATH = path.resolve('package.json');
 const DESKTOP_PKG_PATH = path.resolve('apps/desktop/package.json');
 const DESKTOP_DIR = path.resolve('apps/desktop');
 const RELEASE_DIR = path.join(DESKTOP_DIR, 'release');
+const DEPLOY_RELEASE_DIR = path.resolve('release', 'desktop');
 
 const ARGS = process.argv.slice(2);
 const TYPE = ARGS.find(arg => arg.startsWith('--type='))?.split('=')[1] || 'patch';
@@ -293,8 +294,9 @@ run('npx vite build', 'Vite Build', { cwd: DESKTOP_DIR });
 
 // --- 3c: Build & Publish Electron app ---
 log('\n📦 Packaging & Publishing Electron app...', COLORS.blue);
-const isolatedOutputDir = `release/deploy-${newVersion}-${Date.now()}`;
-log(`  Isolated output: apps/desktop/${isolatedOutputDir}`, COLORS.cyan);
+const isolatedOutputPath = path.join(DEPLOY_RELEASE_DIR, `deploy-${newVersion}-${Date.now()}`);
+const isolatedOutputDir = path.relative(DESKTOP_DIR, isolatedOutputPath).split(path.sep).join('/');
+log(`  Isolated output: ${path.relative(process.cwd(), isolatedOutputPath)}`, COLORS.cyan);
 const buildCmd = `npx electron-builder build --${TARGET} --publish always -c.directories.output="${isolatedOutputDir}"`;
 run(buildCmd, 'Electron Build & Publish', {
     cwd: DESKTOP_DIR,
