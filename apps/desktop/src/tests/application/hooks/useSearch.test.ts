@@ -79,6 +79,25 @@ describe('useSearch', () => {
     expect(result.current.artists[0].name).toBe('Binz');
   });
 
+  it('should group confirmed artist aliases under one canonical artist', () => {
+    const aliasSongs = [
+      { id: 's1', title: 'Song 1', artist: '(S)TRONG' } as Song,
+      { id: 's2', title: 'Song 2', artist: '(S)TRONG Trọng Hiếu' } as Song,
+      { id: 's3', title: 'Song 3', artist: 'BẰNG KIỀU' } as Song,
+      { id: 's4', title: 'Song 4', artist: 'Bằng Kiều' } as Song,
+    ];
+
+    const strongResult = renderHook(() => useSearch(aliasSongs, [], 'TRONG'));
+    expect(strongResult.result.current.artists).toEqual([
+      expect.objectContaining({ name: '(S)TRONG' }),
+    ]);
+
+    const bangKieuResult = renderHook(() => useSearch(aliasSongs, [], 'Kiều'));
+    expect(bangKieuResult.result.current.artists).toEqual([
+      expect.objectContaining({ name: 'Bằng Kiều' }),
+    ]);
+  });
+
   it('should handle missing album field gracefully', () => {
     const noAlbumSongs = [
       { id: 's1', title: 'Song X', artist: 'Artist X' } as Song,

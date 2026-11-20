@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { X, Globe, Users, Lock, Music, AlertCircle, RefreshCw } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { useLanguage } from '@hooks';
+import { useModalBackdropClose } from '@hooks/useModalBackdropClose';
 import { ServerClient } from '@music/core';
 import type { Song, SongVisibility, ServerUserSummary } from '@music/types';
 import { WhitelistBadgeInput } from '../../pages/SettingsPage/components/WhitelistBadgeInput';
@@ -39,6 +40,7 @@ const EditSongPermissionsModalContent: React.FC<ModalContentProps> = ({
   );
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const backdropProps = useModalBackdropClose(onClose, { disabled: isSaving });
 
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -120,7 +122,7 @@ const EditSongPermissionsModalContent: React.FC<ModalContentProps> = ({
   ];
 
   return ReactDOM.createPortal(
-    <div className="edit-song-permissions-overlay" onClick={() => !isSaving && onClose()}>
+    <div className="edit-song-permissions-overlay" {...backdropProps}>
       <div
         className="edit-song-permissions-modal"
         ref={modalRef}

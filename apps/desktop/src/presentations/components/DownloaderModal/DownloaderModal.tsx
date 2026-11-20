@@ -3,6 +3,7 @@ import { X, Download } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { EditModal } from '@components';
 import { DOWNLOAD_STATUS, type DownloadItem } from '@music/types';
+import { useModalBackdropClose } from '@hooks/useModalBackdropClose';
 
 import { useDownloaderModal } from './useDownloaderModal';
 import {
@@ -23,6 +24,7 @@ interface DownloaderModalProps {
 export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClose }) => {
   const { state, refs, actions, utils } = useDownloaderModal(isOpen, onClose);
   const { t } = utils;
+  const backdropProps = useModalBackdropClose(actions.handleClose, { disabled: state.isBusy });
 
   if (!isOpen) return null;
 
@@ -112,7 +114,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
 
   return (
     <>
-      <div className="modal-overlay" onClick={actions.handleClose}>
+      <div className="modal-overlay" {...backdropProps}>
         <div className="downloader-modal" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
             <div className="header-title">
@@ -157,8 +159,13 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
             coverArt: state.editingItem.thumbnail,
           } as unknown as import('@music/types').Song}
           onClose={() => actions.setEditingItem(null)}
-          onSave={(data: Record<string, string>) => {
-            actions.updateMetadata(state.editingItem!.id, data);
+          onSave={(data) => {
+            actions.updateMetadata(state.editingItem!.id, {
+              title: data.title,
+              artist: data.artist,
+              album: data.album,
+              thumbnail: data.coverArt || state.editingItem!.thumbnail,
+            });
             actions.setEditingItem(null);
           }}
         />
@@ -176,7 +183,7 @@ export const DownloaderModal: React.FC<DownloaderModalProps> = ({ isOpen, onClos
             coverArt: '',
           } as unknown as import('@music/types').Song}
           onClose={() => actions.setShowBulkEdit(false)}
-          onSave={(data: Record<string, string>) => {
+          onSave={(data) => {
             const bulkData: Partial<DownloadItem> = {};
             if (data.artist) bulkData.artist = data.artist;
             if (data.album) bulkData.album = data.album;

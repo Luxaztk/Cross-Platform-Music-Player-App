@@ -1,38 +1,32 @@
-import React from 'react';
 import { X } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
+import { useModalBackdropClose } from '@hooks/useModalBackdropClose';
 import { useEditModal } from './useEditModal';
+import { CreatableMetadataInput } from './CreatableMetadataInput';
 import type { Song, Playlist } from '@music/types';
+import type { EditModalProps } from './types';
 import './EditModal.scss';
 
-interface EditModalProps {
-  type: 'playlist' | 'song';
-  data: Song | Playlist | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (updatedData: any) => void;
-  isBulk?: boolean;
-}
-
-export const EditModal: React.FC<EditModalProps> = ({
+export const EditModal = <TData extends Song | Playlist,>({
   type,
   data,
   isOpen,
   onClose,
   onSave,
   isBulk = false,
-}) => {
+}: EditModalProps<TData>) => {
   const { state, actions, utils } = useEditModal(type, data, isOpen, onClose, onSave, isBulk);
   const { t } = utils;
+  const backdropProps = useModalBackdropClose(actions.onClose);
 
   if (!isOpen || !data) return null;
 
   return (
-    <div className="modal-overlay" onClick={actions.onClose}>
+    <div className="modal-overlay" {...backdropProps}>
       <div className={`edit-modal ${isBulk ? 'bulk' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{state.modalTitle}</h2>
-          <button className="close-btn" onClick={actions.onClose} title={t('common.close')}>
+          <button type="button" className="close-btn" onClick={actions.onClose} title={t('common.close')}>
             <X size={ICON_SIZES.MEDIUM} />
           </button>
         </div>
@@ -83,16 +77,19 @@ export const EditModal: React.FC<EditModalProps> = ({
                       />
                     </div>
                   )}
-                  <div className="input-group">
-                    <label className="input-label">{t('modal.songArtist')}</label>
-                    <input
-                      type="text"
-                      value={state.artist}
-                      onChange={(e) => actions.setArtist(e.target.value)}
-                      placeholder={t('modal.songArtist')}
-                      className="modal-input"
-                    />
-                  </div>
+                  <CreatableMetadataInput
+                    id="edit-song-artists"
+                    label={t('modal.songArtist')}
+                    placeholder={t('modal.songArtist')}
+                    options={state.artistOptions}
+                    values={state.artists}
+                    multiple
+                    createLabel={t('modal.createValue')}
+                    noResultsLabel={t('modal.noMetadataResults')}
+                    removeValueLabel={t('modal.removeValue')}
+                    parseValue={actions.parseArtistInput}
+                    onChange={actions.setArtists}
+                  />
                 </>
               )}
             </div>
@@ -110,16 +107,17 @@ export const EditModal: React.FC<EditModalProps> = ({
                 />
               </div>
             ) : (
-              <div className="input-group">
-                <label className="input-label">{t('modal.songAlbum')}</label>
-                <input
-                  type="text"
-                  value={state.album}
-                  onChange={(e) => actions.setAlbum(e.target.value)}
-                  placeholder={t('modal.songAlbum')}
-                  className="modal-input"
-                />
-              </div>
+              <CreatableMetadataInput
+                id="edit-song-album"
+                label={t('modal.songAlbum')}
+                placeholder={t('modal.songAlbum')}
+                options={state.albumOptions}
+                values={state.album ? [state.album] : []}
+                createLabel={t('modal.createValue')}
+                noResultsLabel={t('modal.noMetadataResults')}
+                removeValueLabel={t('modal.removeValue')}
+                onChange={(values) => actions.setAlbum(values[0] ?? '')}
+              />
             )}
           </div>
         </div>
@@ -127,6 +125,7 @@ export const EditModal: React.FC<EditModalProps> = ({
         <div className="modal-footer">
           {!isBulk && <p className="disclaimer">{t('modal.disclaimer')}</p>}
           <button
+            type="button"
             className="save-btn"
             onClick={actions.handleSave}
             disabled={type === 'playlist' ? !state.name.trim() : (!isBulk && !state.title.trim())}

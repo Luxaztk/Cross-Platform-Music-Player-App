@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { usePlayer, useLibraryContext } from '@music/hooks';
 import type { Song, PlaybackContext } from '@music/types';
 import { useLanguage, useTheme, useLocalFilter, type SearchKey } from '@hooks';
-import { splitArtists } from '@music/core';
+import { canonicalizeArtistCredits } from '@music/core';
+import { compareVietnameseText } from '@music/utils';
 import { type UsePlaylistDetailReturn } from './types';
 
 // Sub-hooks
@@ -47,7 +48,7 @@ export const usePlaylistDetail = (): UsePlaylistDetailReturn => {
   const filterKeys = useMemo<SearchKey<Song>[]>(() => [
     (song) => {
       if (libraryFilter.type === 'artist') {
-        return (song.artists || [song.artist]).flatMap(a => splitArtists(a));
+        return canonicalizeArtistCredits(song.artist, song.artists);
       }
       if (libraryFilter.type === 'album') {
         return song.album;
@@ -64,7 +65,7 @@ export const usePlaylistDetail = (): UsePlaylistDetailReturn => {
   );
 
   const filteredSongs = useMemo(() => {
-    return [...filteredByLibrary].sort((a, b) => a.title.localeCompare(b.title));
+    return [...filteredByLibrary].sort((a, b) => compareVietnameseText(a.title, b.title));
   }, [filteredByLibrary]);
 
   const totalDuration = useMemo(() => 

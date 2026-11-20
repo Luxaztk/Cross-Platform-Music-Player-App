@@ -1,8 +1,9 @@
 import path from 'node:path';
+import { copyFileSync, existsSync } from 'node:fs';
 import { app } from 'electron';
 import Store from 'electron-store';
 import type { Song, Playlist, PlayerState, RecentSearch } from '@music/types';
-import type { IStorageAdapter } from '@music/core';
+import { canonicalizeArtistCredits, type IStorageAdapter } from '@music/core';
 import { DEFAULT_SETTINGS, type AppSettings } from '../../src/presentations/constants/SettingsConstants';
 
 interface StoreSchema {
@@ -13,7 +14,10 @@ interface StoreSchema {
   recentSearches: RecentSearch[];
   lyricUsage: Record<string, number>;
   settings: AppSettings;
+  artistCanonicalizationVersion: number;
 }
+
+const ARTIST_CANONICALIZATION_VERSION = 2;
 
 export class MainStorageAdapter implements IStorageAdapter {
   private store: Store<StoreSchema>;
@@ -51,11 +55,48 @@ export class MainStorageAdapter implements IStorageAdapter {
         recentSearches: [],
         lyricUsage: {},
         settings: mergedDefaults as AppSettings,
+        artistCanonicalizationVersion: 0,
       }
     });
 
     // Self-healing migration: Strip any bloated `songs` array accidentally stored in playlists
     this.sanitizeStoredPlaylists();
+    this.canonicalizeStoredSongArtists();
+  }
+
+  private canonicalizeStoredSongArtists(): void {
+    try {
+      const currentVersion = this.store.get('artistCanonicalizationVersion') || 0;
+      if (currentVersion >= ARTIST_CANONICALIZATION_VERSION) return;
+
+      const storedSongs = this.store.get('songs') || {};
+      let changedSongCount = 0;
+      const canonicalSongs: Record<string, Song> = {};
+
+      for (const [id, song] of Object.entries(storedSongs)) {
+        const canonicalArtists = canonicalizeArtistCredits(song.artist, song.artists);
+        const currentArtists = song.artists ?? [];
+        const artistsChanged = canonicalArtists.length !== currentArtists.length
+          || canonicalArtists.some((artist, index) => artist !== currentArtists[index]);
+
+        if (artistsChanged) changedSongCount += 1;
+        canonicalSongs[id] = artistsChanged ? { ...song, artists: canonicalArtists } : song;
+      }
+
+      if (changedSongCount > 0) {
+        const storePath = this.store.path;
+        if (existsSync(storePath)) {
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          copyFileSync(storePath, `${storePath}.artist-backup-${timestamp}`);
+        }
+        this.store.set('songs', canonicalSongs);
+        console.log(`[Storage] Canonicalized artists for ${changedSongCount} stored songs without changing raw artist credits.`);
+      }
+
+      this.store.set('artistCanonicalizationVersion', ARTIST_CANONICALIZATION_VERSION);
+    } catch (err) {
+      console.error('[Storage] Artist canonicalization migration failed:', err);
+    }
   }
 
   private sanitizeStoredPlaylists(): void {

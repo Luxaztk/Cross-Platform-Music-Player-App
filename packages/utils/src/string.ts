@@ -10,3 +10,13 @@ export function normalizeNFC(str: string): string {
     return str.trim();
   }
 }
+
+const VIETNAMESE_SORT_COLLATOR = new Intl.Collator('vi-VN', {
+  usage: 'sort',
+  sensitivity: 'variant',
+  numeric: true,
+});
+
+export function compareVietnameseText(left: string, right: string): number {
+  return VIETNAMESE_SORT_COLLATOR.compare(normalizeNFC(left), normalizeNFC(right));
+}

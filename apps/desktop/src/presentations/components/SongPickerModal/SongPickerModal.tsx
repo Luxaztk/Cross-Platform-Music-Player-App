@@ -3,6 +3,7 @@ import { X, Search, Check, Loader2 } from 'lucide-react';
 import type { Song } from '@music/types';
 import { useSongPicker } from './useSongPicker';
 import { ICON_SIZES } from '@constants';
+import { useModalBackdropClose } from '@hooks/useModalBackdropClose';
 import './SongPickerModal.scss';
 
 interface SongPickerModalProps {
@@ -22,11 +23,12 @@ export const SongPickerModal: React.FC<SongPickerModalProps> = ({
 }) => {
   const { state, actions, utils } = useSongPicker(allSongs, existingSongIds, onAdd, onClose);
   const { t, appIcon } = utils;
+  const backdropProps = useModalBackdropClose(actions.onClose);
 
   if (!isOpen) return null;
 
   return (
-    <div className="song-picker-modal-overlay" onClick={actions.onClose}>
+    <div className="song-picker-modal-overlay" {...backdropProps}>
       <div className="song-picker-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{t('modal.selectSongs')}</h2>

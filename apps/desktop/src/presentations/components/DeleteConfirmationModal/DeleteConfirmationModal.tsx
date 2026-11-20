@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { useLanguage } from '@hooks';
+import { useModalBackdropClose } from '@hooks/useModalBackdropClose';
 import './DeleteConfirmationModal.scss';
 
 interface DeleteConfirmationModalProps {
@@ -28,6 +29,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
   confirmText,
 }) => {
   const { t } = useLanguage();
+  const backdropProps = useModalBackdropClose(onClose);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,7 +44,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" {...backdropProps}>
       <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="header-left">

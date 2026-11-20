@@ -3,6 +3,7 @@ import './HotkeysModal.scss';
 import { ICON_SIZES } from '@constants';
 import { X, PlayCircle, MousePointer2, Layout, Keyboard as KeyboardIcon, Search } from 'lucide-react';
 import { useLanguage } from '@hooks';
+import { useModalBackdropClose } from '@hooks/useModalBackdropClose';
 
 interface HotkeysModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface HotkeysModalProps {
 
 export const HotkeysModal: React.FC<HotkeysModalProps> = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
+  const backdropProps = useModalBackdropClose(onClose);
 
   // Close modal when pressing escape if it's somehow not caught by global listener
   useEffect(() => {
@@ -91,7 +93,7 @@ export const HotkeysModal: React.FC<HotkeysModalProps> = ({ isOpen, onClose }) =
   };
 
   return (
-    <div className="hotkeys-modal-overlay" onClick={onClose}>
+    <div className="hotkeys-modal-overlay" {...backdropProps}>
       <div className="hotkeys-modal" onClick={(e) => e.stopPropagation()}>
         <div className="hotkeys-modal-header">
           <div className="header-title">

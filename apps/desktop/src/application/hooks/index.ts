@@ -14,3 +14,4 @@ export * from './useClusteredSearch';
 export * from './DownloadContext';
 export * from './SettingsContext';
 export * from './usePlaybackExclusion';
+export * from './useModalBackdropClose';

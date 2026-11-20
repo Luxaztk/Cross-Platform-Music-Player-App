@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { SyncHistoryEntry } from '@music/types';
 import { useLibrary } from '@music/hooks';
 import { useLanguage } from '@hooks'
+import { useModalBackdropClose } from '@hooks/useModalBackdropClose';
 import './SyncHistoryModal.scss';
 import { X, History, Trash2, Clock, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
@@ -16,6 +17,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
   const { getSyncHistory, clearSyncHistory, isSyncing } = useLibrary();
   const [history, setHistory] = useState<SyncHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const backdropProps = useModalBackdropClose(onClose, { disabled: isLoading });
 
   useEffect(() => {
     if (!isOpen || isSyncing) return;
@@ -50,7 +52,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
   if (!isOpen) return null;
 
   return (
-    <div className="cleanup-modal-overlay" onClick={onClose}>
+    <div className="cleanup-modal-overlay" {...backdropProps}>
       <div className="cleanup-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div className="title-with-icon">

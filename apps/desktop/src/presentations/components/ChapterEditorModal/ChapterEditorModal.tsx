@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { X, Plus, Play, Trash2, Download, BookmarkCheck, Clock, ArrowLeftRight, VolumeX, Maximize2, Minimize2 } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { useLanguage } from '@hooks';
+import { useModalBackdropClose } from '@hooks/useModalBackdropClose';
 import type { ChapterEditorModalProps } from './types';
 import { useChapterEditor } from './useChapterEditor';
 import './ChapterEditorModal.scss';
@@ -17,6 +18,7 @@ export const ChapterEditorModal: React.FC<ChapterEditorModalProps> = ({
 }) => {
   const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
+  const backdropProps = useModalBackdropClose(onClose);
   const {
     chapters,
     isDirty,
@@ -51,7 +53,7 @@ export const ChapterEditorModal: React.FC<ChapterEditorModalProps> = ({
   if (!isOpen || !song) return null;
 
   return ReactDOM.createPortal(
-    <div className="chapter-editor-overlay" onClick={onClose}>
+    <div className="chapter-editor-overlay" {...backdropProps}>
       <div className={`chapter-editor-modal ${isExpanded ? 'is-expanded' : ''}`} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="modal-header">

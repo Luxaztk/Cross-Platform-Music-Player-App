@@ -16,6 +16,8 @@
     "bot:dev": "npm run dev --workspace=apps/bot",
     "server": "npm run start --workspace=apps/server",
     "server:dev": "npm run dev --workspace=apps/server",
+    "audit:music": "node scripts/audit-music-library.mjs",
+    "test:audit-music": "node --test scripts/audit-music-library.test.mjs",
     "test": "npm run test --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "format": "prettier --write .",
@@ -57,6 +59,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "music-metadata": "^11.12.3",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.0"

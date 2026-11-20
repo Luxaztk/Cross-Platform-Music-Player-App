@@ -124,6 +124,9 @@ export const desktopTranslations = {
       songTitle: 'Tên bài hát',
       songArtist: 'Tác giả',
       songAlbum: 'Album',
+      createValue: 'Tạo mới',
+      noMetadataResults: 'Không có dữ liệu phù hợp',
+      removeValue: 'Xóa',
       choosePhoto: 'Chọn ảnh',
       disclaimer:
         'Bằng cách tiếp tục, bạn đồng ý cho phép Melovista truy cập vào hình ảnh bạn chọn tải lên. Vui lòng đảm bảo bạn có quyền tải lên hình ảnh này.',
@@ -674,6 +677,9 @@ export const desktopTranslations = {
       songTitle: 'Title',
       songArtist: 'Artist',
       songAlbum: 'Album',
+      createValue: 'Create',
+      noMetadataResults: 'No matching metadata',
+      removeValue: 'Remove',
       choosePhoto: 'Choose photo',
       disclaimer:
         'By proceeding, you agree to give Melovista access to the image you choose to upload. Please make sure you have the right to upload the image.',

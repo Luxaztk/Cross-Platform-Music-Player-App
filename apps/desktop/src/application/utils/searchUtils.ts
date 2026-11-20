@@ -1,4 +1,5 @@
 import type { Song } from '@music/types';
+import { compareVietnameseText } from '@music/utils';
 
 /**
  * Normalizes text for searching by performing the following operations:
@@ -84,7 +85,7 @@ export const groupAndSortSongs = (songs: Song[], query: string): ClusteredSongs 
       ? (b.title || '') 
       : ((b[key] as string) || '');
 
-    return valA.localeCompare(valB, 'vi');
+    return compareVietnameseText(valA, valB);
   };
 
   return {

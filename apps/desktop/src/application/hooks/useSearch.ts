@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import Fuse from 'fuse.js';
 import type { Song, Playlist } from '@music/types';
-import { splitArtists } from '@music/core';
+import { canonicalizeArtistCredits, normalizeArtistIdentityKey } from '@music/core';
 import { normalizeText, textMatches } from '../utils/searchUtils';
 import { useDebounce } from './useDebounce';
 
@@ -82,7 +82,7 @@ export const useSearch = (songs: Song[], playlists: Playlist[], query: string, l
     const matchedSongs = songFuse.search(normalizedQuery)
       .filter(({ item }) => {
         const songTitle = item.title;
-        const artists = splitArtists(item.artist);
+        const artists = canonicalizeArtistCredits(item.artist, item.artists);
         
         return textMatches(songTitle, debouncedQuery) || 
                textMatches(item.artist, debouncedQuery) || 
@@ -112,9 +112,9 @@ export const useSearch = (songs: Song[], playlists: Playlist[], query: string, l
       }
 
       // Collect artists
-      const artists = splitArtists(item.artist);
+      const artists = canonicalizeArtistCredits(item.artist, item.artists);
       artists.forEach(name => {
-        const normalizedArtistName = name.toLowerCase().trim();
+        const normalizedArtistName = normalizeArtistIdentityKey(name);
         if (!artistMap.has(normalizedArtistName)) {
           artistMap.set(normalizedArtistName, {
             id: `artist-${name}`,

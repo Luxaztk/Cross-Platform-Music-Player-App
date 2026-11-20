@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { ICON_SIZES } from '@constants';
 import { useLanguage } from '@hooks';
+import { useModalBackdropClose } from '@hooks/useModalBackdropClose';
 import { ServerClient } from '@music/core';
 import type { Song, ServerUserSummary } from '@music/types';
 import { EditSongPermissionsModal } from '@components/EditSongPermissionsModal';
@@ -44,6 +45,7 @@ export const ServerLibraryBrowserModal: React.FC<ServerLibraryBrowserModalProps>
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const backdropProps = useModalBackdropClose(onClose, { disabled: isSyncing });
   const [serverSongs, setServerSongs] = useState<Song[]>([]);
   const [users, setUsers] = useState<ServerUserSummary[]>([]);
   const [selectedUploader, setSelectedUploader] = useState<string>('all');
@@ -203,7 +205,7 @@ export const ServerLibraryBrowserModal: React.FC<ServerLibraryBrowserModalProps>
   if (!isOpen) return null;
 
   return ReactDOM.createPortal(
-    <div className="server-browser-overlay" onClick={onClose}>
+    <div className="server-browser-overlay" {...backdropProps}>
       <div
         className="server-browser-modal"
         onClick={(e) => e.stopPropagation()}

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { Playlist } from '@music/types';
 import { useLibraryContext } from '@music/hooks';
+import { compareVietnameseText } from '@music/utils';
 import { useTheme, useLanguage, useLocalFilter } from '@hooks';
 import { type UseSidebarReturn, type SortMode } from './types';
 
@@ -155,8 +156,8 @@ export const useSidebar = (): UseSidebarReturn => {
   const customPlaylists = useMemo(() => {
     if (sortMode === 'default') return filteredPlaylists;
     return [...filteredPlaylists].sort((a, b) => {
-      if (sortMode === 'az') return a.name.localeCompare(b.name);
-      return b.name.localeCompare(a.name);
+      if (sortMode === 'az') return compareVietnameseText(a.name, b.name);
+      return compareVietnameseText(b.name, a.name);
     });
   }, [filteredPlaylists, sortMode]);
 
